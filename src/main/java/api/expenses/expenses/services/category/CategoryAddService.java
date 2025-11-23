@@ -42,9 +42,9 @@ public class CategoryAddService {
 
         String desc = description.toLowerCase();
 
-        if (StringUtils.containsAny(desc, "netflix", "hbo", "disney+")) {
+        if (Stream.of("netflix", "hbo", "disney+").anyMatch(desc.toLowerCase()::contains)) {
             return this.findCategoryByDescription(CategoryEnum.STREAMING.getDescripcion());
-        } else if (StringUtils.contains(desc, "spotify")) {
+        } else if (desc.toLowerCase().contains("spotify")) {
             return this.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion());
         } else {
             return this.findCategoryByDescription(CategoryEnum.SIN_CATEGORIA.getDescripcion());
