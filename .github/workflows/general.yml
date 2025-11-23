@@ -103,7 +103,6 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ steps.version_getter.outputs.version }}
             ${{ env.IMAGE_NAME }}:latest
