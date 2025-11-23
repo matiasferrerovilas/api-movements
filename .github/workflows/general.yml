@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
 
 env:
   IMAGE_NAME: "mferrerovilas/api-expenses"
@@ -15,13 +15,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
-          java-version: '25'
+          distribution: "temurin"
+          java-version: "25"
 
       - name: Cache Gradle
         uses: actions/cache@v4
@@ -34,9 +34,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Prepare Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew --version
+        run: chmod +x gradlew
 
       - name: Compute Version
         id: version
@@ -54,8 +52,8 @@ jobs:
           echo "${BUILD_VERSION}${PHASE}" > build.version
           echo "${PHASE}" > build.phase
 
-      - name: Build JAR
-        run: ./gradlew clean assemble --stacktrace
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean bootJar --no-daemon --stacktrace
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -65,21 +63,24 @@ jobs:
             build.version
             build.phase
             build/libs/*.jar
-            build/resources/*.jar
 
   deploy:
-    needs: [ build ]
-    runs-on: ubuntu-latest   # <-- FIX
+    needs: [build]
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      - name: Set up QEMU
+      - name: Prepare runtime JAR
+        run: |
+          mv build/libs/*.jar expenses-api.jar
+
+      - name: Set up QEMU (for multi-arch)
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -97,7 +98,7 @@ jobs:
           VERSION=$(cat build.version)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build and Push Docker Image (Multi-Arch)
+      - name: Build & Push Docker Image (Multi-Arch)
         uses: docker/build-push-action@v5
         with:
           context: .
