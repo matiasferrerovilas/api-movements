@@ -24,5 +24,7 @@ public record MovementRecord(Long id,
                              BanksEnum bank,
                              MovementType type,
                              UserRecord users,
-                             UserGroupsRecord userGroups) {
+                             UserGroupsRecord userGroups,
+                             Integer cuotaActual,
+                             Integer cuotasTotales) {
 }

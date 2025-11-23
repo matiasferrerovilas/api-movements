@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ public class MovementGetService {
     private final MovementMapper movementMapper;
 
     @Transactional
-    public Page<MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
+    public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
         var user = userService.getAuthenticatedUserRecord();
         var movements = movementMapper.toRecord(movementRepository.getExpenseBy(user, filter));
         return new PageImpl<>(movements, page, movements.size());

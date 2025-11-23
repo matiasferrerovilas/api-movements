@@ -39,8 +39,17 @@ public interface MovementMapper {
     @Mapping(target = "userGroups", ignore = true)
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
 
+    @Mapping(
+            target = "cuotaActual",
+            expression = "java(movement instanceof api.expenses.expenses.entities.Credito c ? c.getCuotaActual() : null)"
+    )
+    @Mapping(
+            target = "cuotasTotales",
+            expression = "java(movement instanceof api.expenses.expenses.entities.Credito c ? c.getCuotasTotales() : null)"
+    )
     MovementRecord toRecord(Movement movement);
     LastIngresoRecord toLastIngreso(Ingreso ingreso);
+
 
     List<MovementRecord> toRecord(List<Movement> movement);
 

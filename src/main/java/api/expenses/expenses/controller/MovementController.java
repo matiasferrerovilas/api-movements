@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,7 @@ public class MovementController {
             }
     )
     @GetMapping
-    public Page<MovementRecord> getExpensesBy(
+    public Page<@NonNull MovementRecord> getExpensesBy(
             @ParameterObject MovementSearchFilterRecord filter,
             Pageable page) {
         return movementGetService.getExpensesBy(filter, page);
