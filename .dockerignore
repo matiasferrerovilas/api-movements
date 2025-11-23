@@ -1,0 +1,31 @@
+# Gradle cache
+.gradle/
+**/build/
+!build/libs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.class
+
+# Node/React
+node_modules/
+dist/
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Sistema
+.DS_Store
+Thumbs.db
