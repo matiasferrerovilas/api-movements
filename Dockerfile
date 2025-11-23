@@ -8,9 +8,6 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src ./src
 
-# Convertir CRLF → LF
-RUN apk add --no-cache dos2unix && dos2unix gradlew
-
 RUN chmod +x gradlew
 RUN ./gradlew clean assemble -x test --no-daemon
 
