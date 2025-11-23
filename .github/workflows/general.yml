@@ -69,7 +69,8 @@ jobs:
 
   deploy:
     needs: [ build ]
-    runs-on: ubuntu-latest
+    # CAMBIO CLAVE: Usamos el runner ARM64 nativo para compilaciones más rápidas sin emulación QEMU
+    runs-on: ubuntu-latest-arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -79,11 +80,9 @@ jobs:
         with:
           name: build-artifacts
 
-      # 🚨 PASO CRÍTICO: Configurar QEMU para permitir la emulación de ARM64 en un runner AMD64
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      # Se elimina el paso de Set up QEMU ya que el runner es nativo ARM64
 
-      # 🚨 PASO CRÍTICO: Configurar Buildx para usar la funcionalidad multi-plataforma
+      # Configurar Buildx (sigue siendo necesario para la construcción multi-plataforma)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -104,7 +103,8 @@ jobs:
         with:
           context: .
           push: true
-          # Esta línea requiere que QEMU y Buildx estén configurados
+          # La compilación ARM64 ahora es nativa; la AMD64 será por cross-compilación,
+          # lo cual sigue siendo más eficiente que la emulación total.
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.version_getter.outputs.version }}
