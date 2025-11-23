@@ -64,9 +64,6 @@ jobs:
             build.phase
             build/libs/*.jar
 
-      - name: Run Liquibase migrations
-        run: ./gradlew update -PdbName=expenses
-
   deploy:
     needs: [build]
     runs-on: ubuntu-latest
