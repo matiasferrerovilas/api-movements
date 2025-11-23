@@ -14,7 +14,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ServiceMapper {
     @Mapping(target = "currency", source = "currency.symbol", qualifiedByName = "mapCurrency")
-    @Mapping(target = "lastPayment", expression = "java(serviceToAdd.isPaid() != null && serviceToAdd.isPaid() ? java.time.LocalDate.now() : null)")
+    @Mapping(target = "lastPayment", expression = "java(serviceToAdd.isPaid() != null && serviceToAdd.isPaid() ? serviceToAdd.lastPayment() : null)")
     Services toEntity(ServiceToAdd serviceToAdd, @Context CurrencyRepository currencyRepository);
 
     @Mapping(target = "currency.symbol", source = "currency.symbol")
