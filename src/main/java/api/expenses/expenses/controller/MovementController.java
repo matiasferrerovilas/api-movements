@@ -1,0 +1,128 @@
+package api.expenses.expenses.controller;
+
+import api.expenses.expenses.records.movements.MovementToAdd;
+import api.expenses.expenses.records.movements.ExpenseToUpdate;
+import api.expenses.expenses.records.movements.MovementRecord;
+import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
+import api.expenses.expenses.services.movements.MovementGetService;
+import api.expenses.expenses.services.movements.MovementImportFileService;
+import api.expenses.expenses.services.movements.MovementAddService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/v1/expenses")
+@Slf4j
+@Tag(name = "Movements", description = "API para la gestión de gastos personales")
+public class MovementController {
+    private final MovementAddService movementAddService;
+    private final MovementImportFileService movementImportFileService;
+    private final MovementGetService movementGetService;
+
+    @Operation(
+            summary = "Listar gastos",
+            description = "Obtiene una lista paginada de movimientos filtrados.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Listado obtenido correctamente",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(schema = @Schema(implementation = MovementRecord.class))
+                            )
+                    )
+            }
+    )
+    @GetMapping
+    public Page<MovementRecord> getExpensesBy(
+            @ParameterObject MovementSearchFilterRecord filter,
+            Pageable page) {
+        return movementGetService.getExpensesBy(filter, page);
+    }
+
+    @Operation(
+            summary = "Crear un movimiento",
+            description = "Crea un nuevo registro de gasto.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Creado correctamente"),
+                    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            }
+    )
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public MovementRecord saveExpense(
+            @Parameter(description = "Datos del gasto a crear", required = true)
+            @Valid @RequestBody MovementToAdd movementToAdd) {
+        return movementAddService.saveMovement(movementToAdd);
+    }
+
+    @Operation(
+            summary = "Importar movimientos desde archivo",
+            description = "Importa múltiples movimientos desde un archivo bancario.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Archivo procesado correctamente"),
+                    @ApiResponse(responseCode = "400", description = "Formato de archivo inválido")
+            }
+    )
+    @PostMapping(value = "/import-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<MovementRecord> saveExpenseByFile(
+            @Parameter(description = "Archivo bancario", required = true)
+            @RequestParam("file") MultipartFile file,
+
+            @Parameter(description = "Banco del cual proviene el archivo", required = true)
+            @RequestParam("bank") String bank,
+
+            @Parameter(description = "Grupo destino (opcional)")
+            @RequestParam(value = "group", required = false) String group) {
+        return movementImportFileService.importMovementsByFile(file, bank, group);
+    }
+
+    @Operation(
+            summary = "Actualizar un movimiento",
+            description = "Actualiza datos del gasto por ID.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Actualizado correctamente"),
+                    @ApiResponse(responseCode = "404", description = "Movimiento no encontrado")
+            }
+    )
+    @PatchMapping(value = "/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateMovement(
+            @Parameter(description = "Archivo con los gastos a importar", required = true)
+            @Valid @RequestBody ExpenseToUpdate expenseToUpdate,
+            @PathVariable Long id) {
+        movementAddService.updateMovement(expenseToUpdate, id);
+    }
+
+    @Operation(
+            summary = "Eliminar un movimiento",
+            description = "Elimina un gasto existente por ID.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Eliminado correctamente"),
+                    @ApiResponse(responseCode = "404", description = "Movimiento no encontrado")
+            }
+    )
+    @DeleteMapping(value = "/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMovement(@PathVariable Long id) {
+        movementAddService.deleteMovement(id);
+    }
+}

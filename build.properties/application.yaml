@@ -1,0 +1,63 @@
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
+jwt:
+  auth:
+    converter:
+      principle-attribute: preferred_username
+      resource-id: admin-m2
+
+spring:
+  application:
+    name: expenses
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        generate_statistics: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KC_URL_REALM}
+
+
+  liquibase:
+    enabled: false
+
+  main:
+    banner-mode: off
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /docs
+    enabled: true
+    disable-swagger-default-url: true
+    try-it-out-enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+encription:
+  key-store:d9!Q+Ol91dT3

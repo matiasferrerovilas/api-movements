@@ -1,0 +1,167 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'groovy'
+    id 'org.liquibase.gradle' version '2.2.2'
+
+}
+
+group = 'api.expenses'
+version = '1.2.0'
+
+java {
+    sourceCompatibility = '25'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    mapstructVersion = '1.6.3'
+    testcontainersVersion = '1.21.3'
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testAnnotationProcessor "org.springframework.boot:spring-boot-starter-actuator-test"
+
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    testAnnotationProcessor "org.springframework.boot:spring-boot-starter-webmvc-test"
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-validation-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    //WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // OpenAPI/Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+
+    //Logs
+    implementation 'org.apache.commons:commons-text:1.14.0'
+
+    // Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    // Database
+    runtimeOnly 'com.mysql:mysql-connector-j:9.1.0' // Versión actualizada
+
+    // Liquibase
+    implementation 'org.liquibase:liquibase-core'
+    liquibaseRuntime 'org.liquibase:liquibase-core'
+    liquibaseRuntime 'info.picocli:picocli:4.7.6'
+    liquibaseRuntime 'com.mysql:mysql-connector-j:9.1.0'
+
+    // Lombok + MapStruct (orden importante)
+    compileOnly "org.mapstruct:mapstruct:${mapstructVersion}"
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // Observability
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // PDF
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Testcontainers
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "org.testcontainers:mysql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:spock:${testcontainersVersion}"
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation 'org.apache.groovy:groovy-json:5.0.1'
+    testImplementation 'org.apache.groovy:groovy-xml:5.0.1'
+
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+    // Configuración de encoding
+    systemProperty 'file.encoding', 'UTF-8'
+
+    // Performance
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+    // Logging mejorado
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = false
+        showCauses = true
+        showStackTraces = true
+    }
+
+    // Fail fast (opcional)
+    // failFast = true
+}
+tasks.register('printVersion') {
+    doLast {
+        print project.version
+    }
+}
+tasks.withType(Test).configureEach {
+    reports.html.required = false
+    reports.junitXml.required = false
+}
+
+springBoot {
+    buildInfo()
+}
+
+
+// Configuración de compilación
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += [
+            '-parameters',
+            '-Xlint:unchecked',
+            '-Xlint:deprecation'
+    ]
+}
+
+// Configuración de Groovy
+tasks.withType(GroovyCompile).configureEach {
+    groovyOptions.encoding = 'UTF-8'
+}
+
+liquibase {
+    def dbName = System.properties['dbName'] ?: 'expenses'
+    activities {
+        main {
+            changeLogFile 'src/main/resources/db/changelog/changelog.yaml'
+            url "jdbc:mysql://192.168.1.100:3306/$dbName"
+            username 'root'
+            password 'helios'
+        }
+    }
+}

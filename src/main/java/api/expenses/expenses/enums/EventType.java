@@ -1,0 +1,13 @@
+package api.expenses.expenses.enums;
+
+public enum EventType {
+    MOVEMENT_ADDED,
+    MOVEMENT_DELETED,
+    SERVICE_PAID,
+    SERVICE_UPDATED,
+    SERVICE_DELETED,
+    GROUP_ADDED,
+    GROUP_DELETED,
+    INVITATION_CONFIRMED_REJECTED,
+    INVITATION_ADDED
+}
