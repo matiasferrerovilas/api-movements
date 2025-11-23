@@ -67,25 +67,8 @@ jobs:
             build/libs/*.jar
             build/resources/*.jar
 
-  approve:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Require Manual Approval
-        uses: trstringer/manual-approval@v1
-        with:
-          approvers: "mferrero"   # Cambiar si querés usar otro usuario
-          minimum-approvals: 1
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-
   deploy:
-    needs: [ build, approve ]
+    needs: [ build ]
     runs-on: ubuntu-latest
 
     steps:
