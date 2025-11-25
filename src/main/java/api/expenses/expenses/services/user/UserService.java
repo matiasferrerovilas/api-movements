@@ -43,6 +43,20 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public Optional<User> findUserByEmail(){
+        String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getName)
+                .orElseThrow(() -> new PermissionDeniedException("Usuario no autenticado"));
+
+        return userRepository.findByEmail(email);
+    }
+
+    public void changeUserFirstLoginStatus(){
+        var user = getAuthenticatedUser();
+        user.setFirstLogin(false);
+        userRepository.save(user);
+    }
     public User loadOrCreateUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
@@ -60,6 +74,7 @@ public class UserService {
         var user = User.builder()
                 .email(email)
                 .userGroups(Set.of(defaultGroup))
+                .isFirstLogin(false)
                 .build();
 
         return userRepository.save(user);

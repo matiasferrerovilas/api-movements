@@ -1,6 +1,5 @@
 package api.expenses.expenses.security;
 
-import api.expenses.expenses.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -36,8 +35,6 @@ public class JwtAuthenticationConverter implements Converter<@NonNull Jwt, @NonN
     private static final String ROLES_CLAIM = "roles";
     private static final String ROLE_PREFIX = "ROLE_";
 
-    private final UserService userService;
-
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
 
@@ -55,7 +52,6 @@ public class JwtAuthenticationConverter implements Converter<@NonNull Jwt, @NonN
             }
         }
 
-        userService.loadOrCreateUser(principalName);
         return new JwtAuthenticationToken(
                 jwt,
                 authorities,
