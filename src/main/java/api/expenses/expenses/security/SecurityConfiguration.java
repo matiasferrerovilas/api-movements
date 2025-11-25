@@ -40,7 +40,7 @@ public class SecurityConfiguration {
                                 "/webjars/**",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers("/api/onboarding/new-user").permitAll()
+                        .requestMatchers("/api/v1/onboarding/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2
