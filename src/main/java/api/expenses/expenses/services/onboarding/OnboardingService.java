@@ -25,7 +25,7 @@ public class OnboardingService {
     public boolean isFirstLogin() {
         var optional = userService.findUserByEmail();
 
-        return optional.isPresent() && optional.get().isFirstLogin();
+        return optional.isEmpty() || optional.get().isFirstLogin();
     }
 
     @Transactional
