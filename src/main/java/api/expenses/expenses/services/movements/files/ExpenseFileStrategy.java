@@ -57,8 +57,6 @@ public abstract class ExpenseFileStrategy {
                 e.currency().getSymbol(),
                 cuotaActual,
                 cuotaTotales,
-                year,
-                month,
                 getBank(),
                 movementFileToAdd.group()
         );

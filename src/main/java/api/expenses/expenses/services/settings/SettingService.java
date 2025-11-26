@@ -39,8 +39,6 @@ public class SettingService {
                 currency.getSymbol(),
                 0,
                 0,
-                LocalDate.now().getYear(),
-                LocalDate.now().getMonthValue(),
                 BanksEnum.valueOf(ingresoToAdd.bank()),
                 descriptionGroup.getDescription()));
     }

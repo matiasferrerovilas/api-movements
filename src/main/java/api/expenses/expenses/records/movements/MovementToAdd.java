@@ -17,8 +17,6 @@ public record MovementToAdd(
         @NotNull(message = "Debe indicar un tipo de moneda")  String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
-        int year,
-        int month,
         BanksEnum bank,
         String group
 ) { }

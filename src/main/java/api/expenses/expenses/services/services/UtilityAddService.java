@@ -61,8 +61,6 @@ public class UtilityAddService {
                 serviceToAdd.getCurrency().getSymbol(),
                 0,
                 0,
-                LocalDate.now().getYear(),
-                LocalDate.now().getMonthValue(),
                 BanksEnum.GALICIA,
                 serviceToAdd.getUserGroups().getDescription()));
     }
