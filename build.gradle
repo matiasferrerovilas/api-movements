@@ -2,9 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.0'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'groovy'
     id 'org.liquibase.gradle' version '2.2.2'
-
 }
 
 group = 'api.expenses'
@@ -31,9 +29,6 @@ ext {
 
 dependencies {
     // Spring Boot Starters
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    testAnnotationProcessor "org.springframework.boot:spring-boot-starter-actuator-test"
-
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     testAnnotationProcessor "org.springframework.boot:spring-boot-starter-webmvc-test"
 
@@ -44,18 +39,28 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-aspectj-test'
 
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-cache-test'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-data-jpa-test'
+
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-security-test'
+
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-security-oauth2-authorization-server-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     //WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-websocket-test'
 
     // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
 
     //Logs
     implementation 'org.apache.commons:commons-text:1.14.0'
@@ -64,13 +69,13 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
     // Database
-    runtimeOnly 'com.mysql:mysql-connector-j:9.1.0' // Versión actualizada
+    runtimeOnly 'com.mysql:mysql-connector-j:9.5.0'
 
     // Liquibase
     implementation 'org.liquibase:liquibase-core'
     liquibaseRuntime 'org.liquibase:liquibase-core'
     liquibaseRuntime 'info.picocli:picocli:4.7.6'
-    liquibaseRuntime 'com.mysql:mysql-connector-j:9.1.0'
+    liquibaseRuntime 'com.mysql:mysql-connector-j:9.5.0'
 
     // Lombok + MapStruct (orden importante)
     compileOnly "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -81,24 +86,21 @@ dependencies {
 
     // Observability
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testAnnotationProcessor "org.springframework.boot:spring-boot-starter-actuator-test"
 
     // PDF
-    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.6'
 
     // Testing
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.springframework.security:spring-security-test'
 
     // Testcontainers
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:mysql:${testcontainersVersion}"
-    testImplementation "org.testcontainers:spock:${testcontainersVersion}"
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    testImplementation 'org.apache.groovy:groovy-json:5.0.1'
-    testImplementation 'org.apache.groovy:groovy-xml:5.0.1'
+    testImplementation 'org.mockito:mockito-core:5.20.0'
 
 
 }
@@ -120,9 +122,6 @@ tasks.named('test') {
         showCauses = true
         showStackTraces = true
     }
-
-    // Fail fast (opcional)
-    // failFast = true
 }
 tasks.register('printVersion') {
     doLast {
@@ -147,11 +146,6 @@ tasks.withType(JavaCompile).configureEach {
             '-Xlint:unchecked',
             '-Xlint:deprecation'
     ]
-}
-
-// Configuración de Groovy
-tasks.withType(GroovyCompile).configureEach {
-    groovyOptions.encoding = 'UTF-8'
 }
 
 liquibase {
