@@ -14,7 +14,6 @@ import api.expenses.expenses.services.category.CategoryAddService;
 import api.expenses.expenses.services.currencies.CurrencyAddService;
 import api.expenses.expenses.services.groups.GroupGetService;
 import api.expenses.expenses.services.movements.MovementAddService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

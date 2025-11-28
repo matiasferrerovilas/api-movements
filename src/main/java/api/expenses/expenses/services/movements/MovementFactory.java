@@ -2,6 +2,7 @@ package api.expenses.expenses.services.movements;
 
 import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.enums.MovementType;
+import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.category.CategoryResolver;
@@ -27,7 +28,7 @@ public class MovementFactory {
 
     public Movement create(MovementToAdd dto) {
 
-        var strategy = resolveStrategy(dto.type());
+        var strategy = this.resolveStrategy(dto.type());
         var movement = strategy.process(dto);
 
         movement.setCategory(categoryResolver.resolve(dto.category()));
@@ -55,6 +56,6 @@ public class MovementFactory {
         return strategies.stream()
                 .filter(st -> st.match(mt))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid payment method: " + type));
+                .orElseThrow(() -> new BusinessException("Invalid payment method: " + type));
     }
 }
