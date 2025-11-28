@@ -232,4 +232,41 @@ class UtilitiesServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> utilitiesService.deleteService(id));
     }
+
+    @Test
+    @DisplayName("Elimino correctamente el servicio")
+    void deleteServiceOk() {
+        Long id = 10L;
+        var currency = Currency.builder()
+                .symbol("ARS")
+                .build();
+        var serviceEntity = Services.builder()
+                .id(id)
+                .description("Netflix")
+                .currency(currency)
+                .lastPayment(LocalDate.now().minusMonths(1))
+                .build();
+        var recordEsperado = new ServiceRecord(
+                id,
+                "Netflix",
+                BigDecimal.valueOf(500),
+                new CurrencyRecord("ARS"),
+                LocalDate.of(2025, 11, 1),
+                false
+        );
+
+        when(serviceRepository.findByIdWithCurrency(id))
+                .thenReturn(Optional.of(serviceEntity));
+        when(serviceMapper.toRecord(any(Services.class)))
+                .thenReturn(recordEsperado);
+
+        var result = utilitiesService.deleteService(id);
+
+        assertNotNull(result);
+        assertEquals(recordEsperado, result);
+
+        verify(serviceRepository).findByIdWithCurrency(id);
+        verify(serviceRepository).delete(serviceEntity);
+        verify(serviceMapper).toRecord(serviceEntity);
+    }
 }
