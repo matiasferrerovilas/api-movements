@@ -27,7 +27,9 @@ public class UtilitiesService  {
 
     public List<ServiceRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {
         var user = userService.getAuthenticatedUserRecord();
-        return serviceRepository.findByCurrencyAndLastPayment(user,currencySymbol, lastPayment).stream()
+        return serviceRepository.findByCurrencyAndLastPayment(user,
+                        currencySymbol,
+                        lastPayment).stream()
                 .map(serviceMapper::toRecord)
                 .toList();
     }
