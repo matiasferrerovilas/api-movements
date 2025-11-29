@@ -92,8 +92,8 @@ public class ServiceController {
     )
     @PatchMapping("/{id}/payment")
     @ResponseStatus(HttpStatus.OK)
-    public ServiceRecord payService(@PathVariable Long id) {
-        return utilitiesService.payServiceById(id);
+    public void payService(@PathVariable Long id) {
+        utilitiesService.payServiceById(id);
     }
 
     @Operation(
@@ -109,8 +109,8 @@ public class ServiceController {
     )
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ServiceRecord updateService(@PathVariable Long id, @RequestBody UpdateServiceRecord updateService) {
-        return utilitiesService.updateService(id, updateService);
+    public void updateService(@PathVariable Long id, @RequestBody UpdateServiceRecord updateService) {
+        utilitiesService.updateService(id, updateService);
     }
 
     @Operation(

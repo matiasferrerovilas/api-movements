@@ -1,11 +1,10 @@
 package api.expenses.expenses.services.services;
 
-import api.expenses.expenses.aspect.interfaces.PublishMovement;
-import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.mappers.ServiceMapper;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
+import api.expenses.expenses.services.publishing.ServicePublishService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -24,6 +23,7 @@ public class UtilitiesService  {
     private final ServiceRepository serviceRepository;
     private final UtilityAddService utilityAddService;
     private final UserService userService;
+    private final ServicePublishService servicePublishService;
 
     public List<ServiceRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {
         var user = userService.getAuthenticatedUserRecord();
@@ -34,33 +34,35 @@ public class UtilitiesService  {
                 .toList();
     }
 
-    @PublishMovement(eventType = EventType.SERVICE_PAID, routingKey = "/topic/servicios/update")
     @Transactional
-    public ServiceRecord payServiceById(Long id) {
+    public void payServiceById(Long id) {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         utilityAddService.addMovementService(service);
 
         service.setLastPayment(LocalDate.now());
-        return serviceMapper.toRecord(serviceRepository.save(service));
+        var dto = serviceMapper.toRecord(serviceRepository.save(service));
+
+        servicePublishService.publishServicePaid(dto);
     }
 
-    @PublishMovement(eventType = EventType.SERVICE_UPDATED, routingKey = "/topic/servicios/update")
     @Transactional
-    public ServiceRecord updateService(Long id, UpdateServiceRecord updateService) {
+    public void updateService(Long id, UpdateServiceRecord updateService) {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         service.setAmount(updateService.amount());
-        return serviceMapper.toRecord(serviceRepository.save(service));
+        var dto = serviceMapper.toRecord(serviceRepository.save(service));
+        servicePublishService.publishUpdateService(dto);
     }
 
-    @PublishMovement(eventType = EventType.SERVICE_DELETED, routingKey = "/topic/servicios/remove")
-    public ServiceRecord deleteService(Long id) {
+    @Transactional
+    public void deleteService(Long id) {
         var service = serviceRepository.findByIdWithCurrency(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
         serviceRepository.delete(service);
-        return serviceMapper.toRecord(service);
+        var dto = serviceMapper.toRecord(service);
+        servicePublishService.publishDeleteService(dto);
     }
 }

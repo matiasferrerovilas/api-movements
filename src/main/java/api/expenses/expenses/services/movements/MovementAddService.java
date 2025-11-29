@@ -1,12 +1,11 @@
 package api.expenses.expenses.services.movements;
 
-import api.expenses.expenses.aspect.interfaces.PublishMovement;
-import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementRecord;
 import api.expenses.expenses.repositories.MovementRepository;
+import api.expenses.expenses.services.publishing.MovementPublishService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -24,11 +23,17 @@ public class MovementAddService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
+    private final MovementPublishService movementPublishService;
 
-    @PublishMovement(eventType = EventType.MOVEMENT_ADDED, routingKey = "/topic/movimientos/new")
-    public MovementRecord saveMovement(MovementToAdd dto) {
+    @Transactional
+    public MovementRecord saveMovement(@Valid MovementToAdd dto) {
         var movement = movementFactory.create(dto);
-        return movementMapper.toRecord(movementRepository.save(movement));
+        var record = movementMapper.toRecord(movementRepository.save(movement));
+
+        movementPublishService.publishMovementAdded(record);
+
+        log.info("Movimiento guardado: id={}, type={}", record.id(), dto.type());
+        return record;
     }
 
     @Transactional
@@ -39,22 +44,41 @@ public class MovementAddService {
         movementMapper.updateMovement(dto, movement);
         movementFactory.applyUpdates(dto, movement);
         movementRepository.save(movement);
-    }
 
-
-    @PublishMovement(eventType = EventType.MOVEMENT_ADDED, routingKey = "/topic/movimientos/history/list")
-    public List<MovementRecord> saveExpenseAll(List<MovementToAdd> list) {
-        return movementRepository.saveAll(
-                        list.stream().map(movementFactory::create).toList()
-                ).stream()
-                .map(movementMapper::toRecord)
-                .toList();
+        log.info("Movimiento actualizado: id={}", id);
     }
 
     @Transactional
-    @PublishMovement(eventType = EventType.MOVEMENT_DELETED, routingKey = "/topic/movimientos/delete")
-    public Long deleteMovement(Long id) {
+    public List<MovementRecord> saveExpenseAll(List<@Valid MovementToAdd> list) {
+        if (list == null || list.isEmpty()) {
+            log.warn("Intento de guardar lista vacía de movimientos");
+            return List.of();
+        }
+
+        var entities = list.stream()
+                .map(movementFactory::create)
+                .toList();
+
+        var saved = movementRepository.saveAll(entities);
+        var records = saved.stream()
+                .map(movementMapper::toRecord)
+                .toList();
+
+        movementPublishService.publishListMovementAdded(records);
+
+        log.info("Movimientos guardados en batch: total={}", saved.size());
+        return records;
+    }
+
+    @Transactional
+    public void deleteMovement(Long id) {
+        if (!movementRepository.existsById(id)) {
+            throw new EntityNotFoundException("Movimiento con Id" + id + " no existe");
+        }
+
         movementRepository.deleteById(id);
-        return id;
+        movementPublishService.publishDeleteOfMovement(id);
+
+        log.info("Movimiento eliminado correctamente: id={}", id);
     }
 }

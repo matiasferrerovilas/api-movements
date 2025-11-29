@@ -12,6 +12,7 @@ import api.expenses.expenses.records.groups.UserRecord;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
+import api.expenses.expenses.services.publishing.ServicePublishService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +48,9 @@ class UtilitiesServiceTest {
     private UtilityAddService utilityAddService;
     @Mock
     private UserService userService;
+    @Mock
+    private ServicePublishService servicePublishService;
+
 
     @InjectMocks
     private UtilitiesService utilitiesService;
@@ -109,23 +113,25 @@ class UtilitiesServiceTest {
                 .currency(currency)
                 .lastPayment(today.minusMonths(1))
                 .build();
+        var expectedRecord = new ServiceRecord(
+                id, "Netflix", null, new CurrencyRecord("ARS"),
+                LocalDate.now(), true
+        );
 
         when(serviceRepository.findById(id))
                 .thenReturn(Optional.of(serviceEntity));
         when(serviceRepository.save(any(Services.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = utilitiesService.payServiceById(id);
-
-        assertNotNull(result);
-        assertEquals(id, result.id());
-        assertEquals("Netflix", result.description());
-        assertEquals(today, result.lastPayment());
+        utilitiesService.payServiceById(id);
 
         verify(serviceRepository).findById(id);
         verify(utilityAddService).addMovementService(serviceEntity);
         verify(serviceRepository).save(serviceEntity);
-        verifyNoMoreInteractions(utilityAddService, serviceRepository);
+        verify(serviceMapper).toRecord(serviceEntity);
+        verify(servicePublishService).publishServicePaid(expectedRecord);
+        verifyNoMoreInteractions(servicePublishService, serviceRepository, utilityAddService);
+
     }
 
     @Test
@@ -211,16 +217,15 @@ class UtilitiesServiceTest {
         when(serviceMapper.toRecord(any(Services.class)))
                 .thenReturn(recordEsperado);
 
-        var result = utilitiesService.updateService(id, update);
-
-        assertNotNull(result);
-        assertEquals(recordEsperado, result);
+        utilitiesService.updateService(id, update);
 
         assertEquals(BigDecimal.valueOf(500), serviceEntity.getAmount());
 
         verify(serviceRepository).findById(id);
         verify(serviceRepository).save(serviceEntity);
         verify(serviceMapper).toRecord(serviceEntity);
+        verify(servicePublishService).publishUpdateService(any());
+
     }
 
     @Test
@@ -262,13 +267,12 @@ class UtilitiesServiceTest {
         when(serviceMapper.toRecord(any(Services.class)))
                 .thenReturn(recordEsperado);
 
-        var result = utilitiesService.deleteService(id);
-
-        assertNotNull(result);
-        assertEquals(recordEsperado, result);
+        utilitiesService.deleteService(id);
 
         verify(serviceRepository).findByIdWithCurrency(id);
         verify(serviceRepository).delete(serviceEntity);
         verify(serviceMapper).toRecord(serviceEntity);
+        verify(servicePublishService).publishDeleteService(any());
+
     }
 }
