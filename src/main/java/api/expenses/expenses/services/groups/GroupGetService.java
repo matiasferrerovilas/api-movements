@@ -32,7 +32,13 @@ public class GroupGetService {
     }
 
     public UserGroups getGroupByDescription(String description) {
-        return groupRepository.findByDescription(description)
+        if (StringUtils.isBlank(description)) {
+            throw new IllegalArgumentException("La descripción del grupo no puede estar vacía");
+        }
+
+        var normalized = StringUtils.capitalize(description.trim());
+
+        return groupRepository.findByDescription(normalized)
                 .orElseGet(() ->
                         groupRepository.save(UserGroups.builder()
                                 .description(StringUtils.capitalize(description))

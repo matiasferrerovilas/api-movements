@@ -17,6 +17,5 @@ public enum CategoryEnum {
     TECNOLOGIA("Tecnologia"),
     TRANSPORTE("Transporte"),
     VIAJE("Viaje");
-
     private final String descripcion;
 }

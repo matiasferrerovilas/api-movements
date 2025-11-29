@@ -20,17 +20,29 @@ public class CurrencyAddService {
     private final CurrencyRepository currencyRepository;
     private final CurrencyMapper currencyMapper;
 
-    public Currency addCurrency(String currency){
-        return currencyRepository.findBySymbol(currency)
-                .orElseGet(() -> currencyRepository.save(Currency.builder().symbol(currency).description(currency).build()));
+    public Currency addCurrency(String symbol){
+        final String normalizedSymbol = symbol.trim().toUpperCase();
+
+        return currencyRepository.findBySymbol(normalizedSymbol)
+                .orElseGet(() -> {
+                    Currency newCurrency = Currency.builder()
+                            .symbol(normalizedSymbol)
+                            .description(normalizedSymbol)
+                            .build();
+                    return currencyRepository.save(newCurrency);
+                });
     }
 
     public List<CurrencyRecord> getAllCurrencies() {
         return currencyMapper.toRecordList(currencyRepository.findAll());
     }
 
-    public Currency findBySymbol(@NotNull(message = "Debe indicar un tipo de moneda") String currency) {
-        return currencyRepository.findBySymbol(currency)
-                .orElseThrow(()-> new EntityNotFoundException("Currency not found"));
+    public Currency findBySymbol(@NotNull(message = "Debe indicar un tipo de moneda") String symbol) {
+        var normalizedSymbol = symbol.trim().toUpperCase();
+
+        return currencyRepository.findBySymbol(normalizedSymbol)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Currency not found: " + normalizedSymbol
+                ));
     }
 }
