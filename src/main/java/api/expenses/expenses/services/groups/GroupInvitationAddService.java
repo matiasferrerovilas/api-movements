@@ -7,7 +7,6 @@ import api.expenses.expenses.enums.InvitationStatus;
 import api.expenses.expenses.mappers.GroupInvitationMapper;
 import api.expenses.expenses.records.groups.GroupInvitationRecord;
 import api.expenses.expenses.records.groups.InvitationResponseRecord;
-import api.expenses.expenses.records.groups.InviteToGroup;
 import api.expenses.expenses.repositories.GroupInvitationRepository;
 import api.expenses.expenses.repositories.GroupRepository;
 import api.expenses.expenses.repositories.UserRepository;
@@ -31,14 +30,14 @@ public class GroupInvitationAddService {
     private final GroupInvitationMapper groupInvitationMapper;
     private final UserRepository userRepository;
 
-    public List<GroupInvitationRecord> getAllInvitations(){
+    public List<GroupInvitationRecord> getAllInvitations() {
         var user = userService.getAuthenticatedUserRecord();
         return groupInvitationMapper.toRecord(groupInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
     }
 
     @Transactional
     @PublishMovement(eventType = EventType.INVITATION_ADDED, routingKey = "/topic/invitation/new")
-    public List<GroupInvitationRecord> inviteToGroup(Long groupId,List<String> emails) {
+    public List<GroupInvitationRecord> inviteToGroup(Long groupId, List<String> emails) {
         var loggedInUser = userService.getAuthenticatedUser();
         var groupToInvite = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe el grupo en cuestion"));
@@ -72,11 +71,11 @@ public class GroupInvitationAddService {
 
     @Transactional
     @PublishMovement(eventType = EventType.INVITATION_CONFIRMED_REJECTED, routingKey = "/topic/invitation/update")
-    public List<GroupInvitationRecord> acceptRejectInvitation(Long invitationId,InvitationResponseRecord confirmInvitations) {
+    public List<GroupInvitationRecord> acceptRejectInvitation(Long invitationId, InvitationResponseRecord confirmInvitations) {
         var invitation = groupInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe invitacion con ese id"));
 
-        if(!invitation.getStatus().equals(InvitationStatus.PENDING)) {
+        if (!invitation.getStatus().equals(InvitationStatus.PENDING)) {
             log.error("La invitacion no esta en estado PENDING");
             return this.getAllInvitations();
         }

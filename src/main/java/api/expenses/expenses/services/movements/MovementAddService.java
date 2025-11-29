@@ -1,10 +1,7 @@
 package api.expenses.expenses.services.movements;
 
 import api.expenses.expenses.aspect.interfaces.PublishMovement;
-import api.expenses.expenses.entities.Category;
-import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.enums.EventType;
-import api.expenses.expenses.enums.MovementType;
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
@@ -18,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j

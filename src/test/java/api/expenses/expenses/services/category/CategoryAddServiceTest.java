@@ -48,6 +48,7 @@ class CategoryAddServiceTest {
         assertSame(existing, result);
         verify(categoryRepository, never()).save(any());
     }
+
     @Test
     @DisplayName("Debe crear una nueva categoría si no existe")
     void addCategoryCreatesNew() {
@@ -61,6 +62,7 @@ class CategoryAddServiceTest {
         assertEquals("NUEVA", result.getDescription());
         verify(categoryRepository).save(any(Category.class));
     }
+
     @Test
     @DisplayName("Debe mapear correctamente al record al buscar por descripción existente")
     void findCategoryOk() {
@@ -101,7 +103,7 @@ class CategoryAddServiceTest {
     @DisplayName("Debe devolver categoría por lógica de Servicios (Spotify)")
     void getCategoryAtLoadDefaultServicios() {
         Category category = Category.builder().description("SERVICIOS").build();
-        CategoryRecord expected = new CategoryRecord( "SERVICIOS");
+        CategoryRecord expected = new CategoryRecord("SERVICIOS");
 
         when(categoryRepository.findByDescription("SERVICIOS")).thenReturn(Optional.of(category));
         when(categoryMapper.toRecord(category)).thenReturn(expected);

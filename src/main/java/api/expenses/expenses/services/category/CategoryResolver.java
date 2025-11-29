@@ -13,8 +13,7 @@ public class CategoryResolver {
     private final CategoryAddService categoryAddService;
 
     public Category resolve(CategoryRecord record) {
-        if (record == null)
-            return categoryAddService.addCategory(categoryAddService.getDefaultCategory());
+        if (record == null) return categoryAddService.addCategory(categoryAddService.getDefaultCategory());
 
         return categoryAddService.addCategory(record.description());
     }

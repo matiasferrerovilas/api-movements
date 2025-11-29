@@ -19,7 +19,7 @@ public class CategoryAddService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
-    public Category addCategory(String description){
+    public Category addCategory(String description) {
         final String normalized = this.normalize(description);
 
         return categoryRepository.findByDescription(normalized)

@@ -81,7 +81,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     @Query(value = """
 
-            SELECT 
+            SELECT
         ca.description AS category,
         g.year,
         c.symbol AS currencySymbol,
@@ -90,7 +90,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             INNER JOIN currency c ON g.currency_id = c.id
             INNER JOIN category ca ON g.category_id = ca.id
             INNER JOIN users u ON g.user_id = u.id
-            WHERE g.year = :year 
+            WHERE g.year = :year
       AND u.email = :email
             GROUP BY ca.description, g.year, c.symbol
             ORDER BY ca.description, g.year

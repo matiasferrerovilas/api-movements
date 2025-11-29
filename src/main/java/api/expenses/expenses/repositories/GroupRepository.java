@@ -18,7 +18,7 @@ public interface GroupRepository extends JpaRepository<UserGroups, Long> {
 
     @Query(value = """
 
-            SELECT 
+            SELECT
             g.id,
             g.description,
             COUNT(DISTINCT uu.user_id) AS member_count

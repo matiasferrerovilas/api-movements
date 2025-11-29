@@ -15,6 +15,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidCuotas {
     String message() default "La cuota actual no puede ser mayor que las cuotas totales";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }

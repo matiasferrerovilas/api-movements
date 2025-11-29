@@ -4,7 +4,6 @@ import api.expenses.expenses.exceptions.ErrorResponseDTO;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -26,7 +25,10 @@ import java.util.stream.Collectors;
 public class ErrorHandler extends ResponseEntityExceptionHandler {
 
   @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                HttpHeaders headers,
+                                                                HttpStatusCode status,
+                                                                WebRequest request) {
       var details = ex.getBindingResult()
               .getFieldErrors()
               .stream()
@@ -52,7 +54,9 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     var errorResponseDTO = ErrorResponseDTO.builder()
         .title("Parameter type mismatch")
         .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-        .detail(String.format("The value '%s' mismatch the type '%s' of parameter '%s'", ex.getValue(), ex.getParameter().getParameterType(), ex.getParameter().getParameterName()))
+        .detail(String.format("The value '%s' mismatch the type '%s' of parameter '%s'", ex.getValue(),
+                ex.getParameter().getParameterType(),
+                ex.getParameter().getParameterName()))
         .build();
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
   }
@@ -71,7 +75,9 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
   }
 
   @Override
-  protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, org.springframework.http.HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+  protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
+                                                           HttpHeaders headers,
+                                                           HttpStatusCode statusCode, WebRequest request) {
     var errorResponseDTO = ErrorResponseDTO.builder()
         .title("Generic exception handling")
         .statusCode(String.valueOf(statusCode.value()))

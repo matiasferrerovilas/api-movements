@@ -39,11 +39,11 @@ public class UserService {
         return userMapper.toRecord(getAuthenticatedUser());
     }
 
-    public List<User> getUserByEmail(List<String> email){
+    public List<User> getUserByEmail(List<String> email) {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<User> findUserByEmail(){
+    public Optional<User> findUserByEmail() {
         String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .filter(Authentication::isAuthenticated)
                 .map(Authentication::getName)
@@ -52,11 +52,12 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public void changeUserFirstLoginStatus(){
+    public void changeUserFirstLoginStatus() {
         var user = getAuthenticatedUser();
         user.setFirstLogin(false);
         userRepository.save(user);
     }
+
     public User loadOrCreateUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
@@ -64,10 +65,16 @@ public class UserService {
                         return this.createNewUser(email);
                     } catch (DataIntegrityViolationException e) {
                         return userRepository.findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("Fallo en la condición de carrera: El usuario no pudo ser creado ni encontrado después del reintento para el email: " + email));
+                                .orElseThrow(() -> new RuntimeException("""
+                                        Fallo en la condición de carrera:
+                                        El usuario no pudo ser creado ni encontrado después del reintento
+                                        para el email: %s
+                                        """.formatted(email)));
+
                     }
                 });
     }
+
     private User createNewUser(String email) {
         var defaultGroup = defaultGroupService.getDefaultGroup();
 

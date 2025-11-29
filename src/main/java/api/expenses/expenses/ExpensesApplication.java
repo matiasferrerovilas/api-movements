@@ -10,9 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableCaching
 @EnableConfigurationProperties({JwtProperties.class})
 public class ExpensesApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ExpensesApplication.class, args);
-	}
-
+    static void main(String[] args) {
+        SpringApplication.run(ExpensesApplication.class, args);
+    }
 }

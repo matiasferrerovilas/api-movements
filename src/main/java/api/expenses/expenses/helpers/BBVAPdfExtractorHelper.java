@@ -23,14 +23,14 @@ import java.util.regex.Pattern;
 @Slf4j
 public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
 
-    private static final Pattern EXPENSE_PATTERN = Pattern.compile(
-            "(\\d{2}-[A-Za-z]{3}-\\d{2})\\s+" +               // fecha
-                    "(.+?)\\s+" +                                     // descripción
-                    "(?:([A-Z]{3})\\s+)?" +                           // moneda opcional (USD/CLP/...)
-                    "(?:(\\d{1,3}(?:[.\\d]*)?,\\d{2})\\s+)?" +        // importe en moneda extranjera (ej: 11.190,00 o 3,57)
-                    "(\\d{5,})\\s+" +                                 // nro cupón
-                    "(-?\\d{1,3}(?:[.\\d]*)?,\\d{2})?"                  // importe en ARS
-    );
+    private static final Pattern EXPENSE_PATTERN = Pattern.compile("""
+        (\\d{2}-[A-Za-z]{3}-\\d{2})\\s+
+        (.+?)\\s+
+        (?:([A-Z]{3})\\s+)?
+        (?:(\\d{1,3}(?:[.\\d]*)?,\\d{2})\\s+)?
+        (\\d{5,})\\s+
+        (-?\\d{1,3}(?:[.\\d]*)?,\\d{2})?
+        """);
 
     private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");
     private static final Pattern INSTALLMENT_CLEANUP_PATTERN = Pattern.compile("\\s*C\\.\\d{2}/\\d{2}\\s*");
@@ -38,6 +38,12 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
             .parseCaseInsensitive()
             .appendPattern("dd-MMM-yy")
             .toFormatter(Locale.forLanguageTag("es-ES"));
+    private static final int DATE_POSITION = 1;
+    private static final int REFERENCE_POSITION = 2;
+    private static final int FOREIGN_CURRENCY_POSITION = 3;
+    private static final int FOREIGN_AMOUNT_POSITION = 4;
+    private static final int NRO_CUPON_POSITION = 5;
+    private static final int ARS_AMOUNT_POSITION = 6;
 
     public BBVAPdfExtractorHelper(CurrencyRepository currencyRepository) {
         super(currencyRepository);
@@ -85,12 +91,12 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
     }
 
     private ParsedExpense buildParsedExpense(Matcher matcher) {
-        var date = LocalDate.parse(matcher.group(1), DATE_FORMATTER);
-        var fullReference = matcher.group(2).trim();
-        var foreignCurrency = matcher.group(3);
-        var foreignAmount = matcher.group(4);
-        var nroCupon = matcher.group(5);
-        var arsAmount = matcher.group(6);
+        var date = LocalDate.parse(matcher.group(DATE_POSITION), DATE_FORMATTER);
+        var fullReference = matcher.group(REFERENCE_POSITION).trim();
+        var foreignCurrency = matcher.group(FOREIGN_CURRENCY_POSITION);
+        var foreignAmount = matcher.group(FOREIGN_AMOUNT_POSITION);
+        var nroCupon = matcher.group(NRO_CUPON_POSITION);
+        var arsAmount = matcher.group(ARS_AMOUNT_POSITION);
 
         var installment = this.extractInstallment(fullReference);
         var cleanedReference = this.cleanReference(fullReference, installment.isPresent());

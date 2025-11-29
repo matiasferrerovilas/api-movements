@@ -7,6 +7,12 @@
     <module name="Translation"/>
     <module name="FileLength"/>
     <module name="FileTabCharacter"/>
+    <module name="LineLength">
+        <property name="fileExtensions" value="java"/>
+        <property name="max" value="150"/>
+        <property name="ignorePattern"
+                  value="^package.*|^import.*|href\s*=\s*&quot;[^&quot;]*&quot;|http://|https://|ftp://"/>
+    </module>
     <module name="SuppressionSingleFilter">
         <property name="checks" value="MagicNumber"/>
         <property name="files" value="[\\/]test[\\/].*"/>
@@ -53,17 +59,23 @@
         <module name="AvoidNestedBlocks"/>
         <module name="EmptyBlock"/>
         <module name="LeftCurly"/>
-        <module name="NeedBraces"/>
+        <module name="NeedBraces">
+            <property name="allowSingleLineStatement" value="true"/>
+        </module>
         <module name="RightCurly"/>
         <module name="EmptyStatement"/>
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
-        <module name="MagicNumber"/>
+        <module name="MagicNumber">
+            <property name="ignoreAnnotation" value="true"/>
+        </module>
         <module name="MissingSwitchDefault"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="InterfaceIsType"/>
-        <module name="VisibilityModifier"/>
+        <module name="VisibilityModifier">
+            <property name="protectedAllowed" value="true"/>
+        </module>
         <module name="ArrayTypeStyle"/>
         <module name="TodoComment"/>
         <module name="UpperEll"/>

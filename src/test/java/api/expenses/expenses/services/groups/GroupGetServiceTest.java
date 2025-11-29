@@ -63,13 +63,14 @@ class GroupGetServiceTest {
         assertEquals("TEST", result.getFirst().description());
         verify(groupRepository).findGroupsOfUser(1L);
     }
+
     @Test
     @DisplayName("Obtiene los grupos del usuario junto con la cantidad de miembros")
     void getMyGroupsWithCountSuccess() {
         var userRecord = new UserRecord("test@test.com", List.of(), 1L);
 
         var resultExpected = List.of(
-                new GroupsWIthUser(10L,"TEST",  3L)
+                new GroupsWIthUser(10L, "TEST", 3L)
         );
 
         when(userService.getAuthenticatedUserRecord()).thenReturn(userRecord);
@@ -81,6 +82,7 @@ class GroupGetServiceTest {
         assertEquals(3, result.getFirst().memberCount());
         verify(groupRepository).findGroupsByUserIdWithMemberCount(1L);
     }
+
     @Test
     @DisplayName("Obtiene un grupo existente por descripción")
     void getGroupByDescriptionExists() {

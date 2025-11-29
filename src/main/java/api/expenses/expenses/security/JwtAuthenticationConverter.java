@@ -47,7 +47,10 @@ public class JwtAuthenticationConverter implements Converter<@NonNull Jwt, @NonN
             log.warn("El claim principal ('{}') no se encontró en el token JWT. Intentando usar 'sub' como fallback.", principleAttribute);
             principalName = jwt.getClaimAsString(JwtClaimNames.SUB);
             if (principalName == null) {
-                log.error("Ni el claim principal configurado ('{}') ni 'sub' se encontraron en el token JWT. Esto puede causar problemas de autenticación. Usando el ID del JWT como último recurso.", principleAttribute);
+                log.error("""
+                        Ni el claim principal configurado ('{}') ni 'sub' se encontraron en el token JWT.
+                        Esto puede causar problemas de autenticación.
+                        Usando el ID del JWT como último recurso.""", principleAttribute);
                 principalName = jwt.getId();
             }
         }

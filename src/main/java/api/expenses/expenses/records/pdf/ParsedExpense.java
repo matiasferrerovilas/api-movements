@@ -13,4 +13,4 @@ public record ParsedExpense(
         Currency currency,
         BigDecimal amountPesos,
         BigDecimal amountDolares
-) {}
+) { }

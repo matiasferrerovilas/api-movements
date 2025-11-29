@@ -49,7 +49,7 @@ public class Services {
     public boolean getIsPaid() {
         if (lastPayment == null) return false;
         LocalDate now = LocalDate.now();
-        return lastPayment.getYear() == now.getYear() &&
-                lastPayment.getMonthValue() == now.getMonthValue();
+        return lastPayment.getYear() == now.getYear()
+                && lastPayment.getMonthValue() == now.getMonthValue();
     }
 }

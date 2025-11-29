@@ -22,16 +22,24 @@ public class CalculateBalanceService {
     private final MovementRepository movementRepository;
     private final UserService userService;
 
-    public Map<BalanceEnum,Set<BalanceRecord>> getBalance(Integer year, Integer month) {
+    public Map<BalanceEnum, Set<BalanceRecord>> getBalance(Integer year, Integer month) {
         var user = userService.getAuthenticatedUser();
-        var ingresos = movementRepository.getMovimientosByYearMonthEmailAndType(year, month, user.getEmail(), List.of(MovementType.INGRESO.toString()));
-        var movements = movementRepository.getMovimientosByYearMonthEmailAndType(year, month, user.getEmail(), List.of(MovementType.CREDITO.toString(), MovementType.DEBITO.toString()));
+        var ingresos = movementRepository.getMovimientosByYearMonthEmailAndType(year,
+                month,
+                user.getEmail(),
+                List.of(MovementType.INGRESO.toString()));
+
+        var movements = movementRepository.getMovimientosByYearMonthEmailAndType(year,
+                month, user.getEmail(),
+                List.of(MovementType.CREDITO.toString(), MovementType.DEBITO.toString()));
+
         Map<BalanceEnum, Set<BalanceRecord>> result = new HashMap<>();
         result.put(BalanceEnum.INGRESO, ingresos);
         result.put(BalanceEnum.GASTO, movements);
 
         return result;
     }
+
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year) {
         var user = userService.getAuthenticatedUser();
         return movementRepository.getBalanceWithCategoryByYear(year, user.getEmail());

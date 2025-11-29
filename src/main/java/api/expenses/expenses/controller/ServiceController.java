@@ -1,6 +1,5 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.records.groups.GroupsWIthUser;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.ServiceToAdd;
 import api.expenses.expenses.records.services.UpdateServiceRecord;

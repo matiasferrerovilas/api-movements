@@ -31,4 +31,4 @@ public record MovementSearchFilterRecord(
 
         @Schema(description = "Booleano que indica si trae los movimientos actuales o no, si es true el dateFrom dateTo no aplica")
         Boolean isLive
-) {}
+) { }

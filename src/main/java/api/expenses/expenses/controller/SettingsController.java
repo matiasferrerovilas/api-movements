@@ -29,7 +29,7 @@ public class SettingsController {
     )
     @ApiResponse(responseCode = "201", description = "Ingreso registrado")
     @PostMapping
-    public void addIngreso(@RequestBody @Valid IngresoToAdd ingresoToAdd){
+    public void addIngreso(@RequestBody @Valid IngresoToAdd ingresoToAdd) {
         settingService.addIngreso(ingresoToAdd);
     }
 
@@ -39,7 +39,7 @@ public class SettingsController {
     )
     @ApiResponse(responseCode = "200", description = "Ingreso encontrado")
     @GetMapping("/last-ingreso")
-    public LastIngresoRecord getLastIngreso(){
+    public LastIngresoRecord getLastIngreso() {
         return movementGetService.getLastIngreso();
     }
 }

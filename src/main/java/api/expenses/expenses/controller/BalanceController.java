@@ -29,7 +29,8 @@ public class BalanceController {
     )
     @ApiResponse(responseCode = "200", description = "Balance obtenido correctamente")
     @GetMapping
-    public Map<BalanceEnum,Set<BalanceRecord>> getBalance(@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month) {
+    public Map<BalanceEnum, Set<BalanceRecord>> getBalance(@RequestParam(required = false) Integer year,
+                                                           @RequestParam(required = false) Integer month) {
         return calculateBalanceService.getBalance(year, month);
     }
 

@@ -21,7 +21,9 @@ public abstract class ExpenseFileStrategy {
     protected final CategoryAddService categoryAddService;
 
     public abstract boolean match(BanksEnum banksEnum);
+
     public abstract BanksEnum getBank();
+
     public abstract MovementType getBankMethod();
 
     protected abstract BigDecimal resolveAmount(ParsedExpense e);
@@ -31,10 +33,11 @@ public abstract class ExpenseFileStrategy {
 
         List<ParsedExpense> expenses = parser.parse(movementFileToAdd.file());
 
-        return movementAddService.saveExpenseAll(expenses.stream().map(m -> this.processExpense(m,movementFileToAdd))
+        return movementAddService.saveExpenseAll(expenses.stream().map(m -> this.processExpense(m, movementFileToAdd))
                 .toList());
     }
-    private MovementToAdd processExpense(ParsedExpense e, MovementFileToAdd movementFileToAdd){
+
+    private MovementToAdd processExpense(ParsedExpense e, MovementFileToAdd movementFileToAdd) {
         int cuotaActual = 0;
         int cuotaTotales = 0;
         var date = e.date();

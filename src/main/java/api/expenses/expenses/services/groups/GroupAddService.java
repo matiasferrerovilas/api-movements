@@ -4,7 +4,6 @@ import api.expenses.expenses.aspect.interfaces.PublishMovement;
 import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.records.groups.AddGroupRecord;
 import api.expenses.expenses.records.groups.GroupsWIthUser;
-import api.expenses.expenses.records.groups.UserGroupsRecord;
 import api.expenses.expenses.repositories.GroupRepository;
 import api.expenses.expenses.repositories.UserRepository;
 import api.expenses.expenses.services.user.UserService;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +38,7 @@ public class GroupAddService {
     public List<GroupsWIthUser> exitGroup(Long groupId) throws AccessDeniedException {
         var user = userService.getAuthenticatedUserRecord();
 
-        if (!(groupRepository.userBelongsToGroup(user.id(),groupId) > 0)) {
+        if (!(groupRepository.userBelongsToGroup(user.id(), groupId) > 0)) {
             throw new AccessDeniedException("User does not belong to this group");
         }
 

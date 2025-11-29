@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.swing.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +64,7 @@ class GroupInvitationAddServiceTest {
         loggedUserRecord = new UserRecord(loggedUser.getEmail(), List.of(), loggedUser.getId());
         group = UserGroups.builder().id(10L).description("Test").build();
     }
+
     @Test
     @DisplayName("Devuelve las invitaciones pendientes del usuario")
     void getAllInvitations() {
@@ -101,7 +101,7 @@ class GroupInvitationAddServiceTest {
         var savedInvitations = List.of(
                 GroupInvitation.builder().id(100L).user(userA).group(group).build()
         );
-        var mapped = List.of(new GroupInvitationRecord(100L,  null));
+        var mapped = List.of(new GroupInvitationRecord(100L, null));
 
         when(userService.getAuthenticatedUser()).thenReturn(loggedUser);
         when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
@@ -116,6 +116,7 @@ class GroupInvitationAddServiceTest {
         assertEquals(1, result.size());
         verify(groupInvitationRepository).saveAll(any());
     }
+
     @Test
     @DisplayName("No crea invitaciones si ya existen pendientes")
     void inviteToGroupAlreadyInvited() {
@@ -130,7 +131,7 @@ class GroupInvitationAddServiceTest {
                 .user(userA)
                 .status(InvitationStatus.PENDING)
                 .build();
-        var mapped = List.of(new GroupInvitationRecord(50L,  null));
+        var mapped = List.of(new GroupInvitationRecord(50L, null));
 
         when(userService.getAuthenticatedUser()).thenReturn(loggedUser);
         when(userService.getAuthenticatedUserRecord()).thenReturn(loggedUserRecord);
@@ -177,13 +178,13 @@ class GroupInvitationAddServiceTest {
         var invitation = GroupInvitation.builder()
                 .id(1L).status(InvitationStatus.PENDING).user(userToAdd).group(group).build();
 
-        var mapped = List.of(new GroupInvitationRecord(1L,  null));
+        var mapped = List.of(new GroupInvitationRecord(1L, null));
 
         when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(mapped);
         when(userService.getAuthenticatedUserRecord()).thenReturn(new UserRecord("a@test.com", null, 2L));
 
-        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L,true));
+        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L, true));
 
         assertEquals(InvitationStatus.ACCEPTED, invitation.getStatus());
         verify(userRepository).save(userToAdd);
@@ -207,7 +208,7 @@ class GroupInvitationAddServiceTest {
         when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(List.of());
 
-        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L,false));
+        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L, false));
 
         assertEquals(InvitationStatus.REJECTED, invitation.getStatus());
         verify(userRepository, never()).save(any());
@@ -227,7 +228,7 @@ class GroupInvitationAddServiceTest {
         when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(List.of());
 
-        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L,true));
+        var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L, true));
 
         verify(groupInvitationRepository, never()).save(any());
         assertNotNull(result);

@@ -20,14 +20,22 @@ import java.util.regex.Pattern;
 @Slf4j
 public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
 
-    private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile(
-            "(\\d{2}-\\d{2}-\\d{2})\\s+" +
-                    "(.+?)\\s+" +
-                    "(\\d{6})\\s+" +
-                    "([\\d.,]+)(?:\\s+([\\d.,]+))?"
-    );
+    private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile("""
+        (\\d{2}-\\d{2}-\\d{2})\\s+
+        (.+?)\\s+
+        (\\d{6})\\s+
+        ([\\d.,]+)(?:\\s+([\\d.,]+))?
+        """);
+
     private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");
     private static final Pattern REFERENCE_CLEANUP_PATTERN = Pattern.compile("^[*KV]");
+
+    private static final int DATE_POSITION = 1;
+    private static final int REFERENCE_POSITION = 2;
+    private static final int CUPON_POSITION = 3;
+    private static final int FOREIGN_AMOUNT_POSITION = 5;
+    private static final int ARS_AMOUNT_POSITION = 4;
+
 
     public GaliciaPdfExtractorHelper(CurrencyRepository currencyRepository) {
         super(currencyRepository);
@@ -69,9 +77,9 @@ public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
     }
 
     private ParsedExpense buildParsedExpense(Matcher matcher) {
-        var date = parseDate(matcher.group(1));
-        var fullReference = matcher.group(2).trim();
-        var comprobante = matcher.group(3);
+        var date = parseDate(matcher.group(DATE_POSITION));
+        var fullReference = matcher.group(REFERENCE_POSITION).trim();
+        var comprobante = matcher.group(CUPON_POSITION);
 
         var installment = this.extractInstallment(fullReference);
         var cleanedReference = cleanReference(fullReference, installment.isPresent());
@@ -123,10 +131,10 @@ public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
         BigDecimal dolares;
 
         if (hasForeignCurrency) {
-            dolares = parseAmount(matcher.group(5)).orElse(parseAmount(matcher.group(4)).orElse(null));
+            dolares = parseAmount(matcher.group(FOREIGN_AMOUNT_POSITION)).orElse(parseAmount(matcher.group(ARS_AMOUNT_POSITION)).orElse(null));
         } else {
-            pesos = parseAmount(matcher.group(4)).orElse(null);
-            dolares = parseAmount(matcher.group(5)).orElse(null);
+            pesos = parseAmount(matcher.group(ARS_AMOUNT_POSITION)).orElse(null);
+            dolares = parseAmount(matcher.group(FOREIGN_AMOUNT_POSITION)).orElse(null);
         }
 
         return new AmountInfo(pesos, dolares, hasForeignCurrency);

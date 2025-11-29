@@ -32,18 +32,9 @@ checkstyleMain {
     source = 'src/main/java'
 }
 
-tasks.register("initGitHooks", Copy) {
-    from("pre-commit")
-    into(".git/hooks")
-    fileMode = 0o755
-}
-
 ext {
     mapstructVersion = '1.6.3'
     testcontainersVersion = '1.21.3'
-}
-tasks.named("build") {
-    dependsOn("initGitHooks")
 }
 
 dependencies {

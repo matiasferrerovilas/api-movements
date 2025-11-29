@@ -20,7 +20,7 @@ public class CurrencyAddService {
     private final CurrencyRepository currencyRepository;
     private final CurrencyMapper currencyMapper;
 
-    public Currency addCurrency(String symbol){
+    public Currency addCurrency(String symbol) {
         final String normalizedSymbol = symbol.trim().toUpperCase();
 
         return currencyRepository.findBySymbol(normalizedSymbol)

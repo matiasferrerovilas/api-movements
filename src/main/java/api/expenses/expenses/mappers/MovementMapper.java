@@ -17,7 +17,9 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, CurrencyMapper.class, UserMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class,
+        CurrencyMapper.class, UserMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MovementMapper {
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)

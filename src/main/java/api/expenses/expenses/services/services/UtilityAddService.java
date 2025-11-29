@@ -43,13 +43,13 @@ public class UtilityAddService {
         service.setUsers(user);
         service.setUserGroups(group);
 
-        if(service.getIsPaid()){
+        if (service.getIsPaid()) {
             this.addMovementService(service);
         }
         return serviceMapper.toRecord(serviceRepository.save(service));
     }
 
-    public void addMovementService(Services serviceToAdd){
+    public void addMovementService(Services serviceToAdd) {
         var category = categoryAddService.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion());
         String description = StringUtils.join("Servicio Pagado ", serviceToAdd.getDescription());
 

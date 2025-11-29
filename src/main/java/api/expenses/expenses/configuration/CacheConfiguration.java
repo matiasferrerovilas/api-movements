@@ -15,16 +15,17 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfiguration {
 
     public static final String CURRENCY_CACHE = "currency";
+    private static final int DURATION_TIME_DEFAULT = 3;
 
     @Bean
     public CacheManager cacheManager() {
-        List<Cache> caches = List.of(createCache(CURRENCY_CACHE, 3));
+        List<Cache> caches = List.of(createCache(CURRENCY_CACHE, DURATION_TIME_DEFAULT));
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(caches);
-        return  cacheManager;
+        return cacheManager;
     }
 
-    private static CaffeineCache createCache(String cacheName, int durationTime){
+    private static CaffeineCache createCache(String cacheName, int durationTime) {
         return new CaffeineCache(cacheName, Caffeine.newBuilder()
                 .expireAfterWrite(durationTime, TimeUnit.HOURS)
                 .build());

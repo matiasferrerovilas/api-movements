@@ -13,8 +13,7 @@ public class GroupResolver {
     private final GroupGetService groupGetService;
 
     public UserGroups resolve(String groupDescription) {
-        if (groupDescription == null)
-            return defaultGroupService.getDefaultGroup();
+        if (groupDescription == null) return defaultGroupService.getDefaultGroup();
 
         return groupGetService.getGroupByDescription(groupDescription);
     }
