@@ -17,6 +17,7 @@ public interface ServiceRepository extends JpaRepository<Services, Long> {
     SELECT s
     FROM Services s
     JOIN FETCH s.currency c
+    LEFT JOIN FETCH s.userGroups ug
     WHERE (:symbols IS NULL OR c.symbol IN :symbols)
      AND (:lastPayment IS NULL OR s.lastPayment = :lastPayment)
      AND (

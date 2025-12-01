@@ -6,6 +6,8 @@ import api.expenses.expenses.records.BalanceByCategoryRecord;
 import api.expenses.expenses.records.BalanceRecord;
 import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
 import api.expenses.expenses.records.groups.UserRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -71,11 +73,11 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
           )
           OR (:#{#filter.isLive} IS NULL)
       )
-    ORDER BY g.date DESC
 """)
-    List<Movement> getExpenseBy(
+    Page<Movement> getExpenseBy(
             @Param("user") UserRecord user,
-            @Param("filter") MovementSearchFilterRecord filter
+            @Param("filter") MovementSearchFilterRecord filter,
+            Pageable pageable
     );
 
 

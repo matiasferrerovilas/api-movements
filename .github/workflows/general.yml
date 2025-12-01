@@ -55,6 +55,8 @@ jobs:
       - name: Build Spring Boot JAR
         run: ./gradlew clean bootJar --no-daemon --stacktrace
 
+      - name: Run Tests
+        run: ./gradlew test --no-daemon --stacktrace --info
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

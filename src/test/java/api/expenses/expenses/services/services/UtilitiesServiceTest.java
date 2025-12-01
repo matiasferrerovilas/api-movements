@@ -2,7 +2,9 @@ package api.expenses.expenses.services.services;
 
 import api.expenses.expenses.entities.Currency;
 import api.expenses.expenses.entities.Services;
+import api.expenses.expenses.entities.UserGroups;
 import api.expenses.expenses.enums.CurrencyEnum;
+import api.expenses.expenses.enums.GroupsEnum;
 import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.exceptions.PermissionDeniedException;
 import api.expenses.expenses.mappers.ServiceMapperImpl;
@@ -84,8 +86,9 @@ class UtilitiesServiceTest {
                 currencies,
                 lastPayment))
                 .thenReturn(List.of(Services.builder()
-                                .description("EDESUR")
-                                .amount(new BigDecimal("150.30000"))
+                        .description("EDESUR")
+                        .userGroups(UserGroups.builder().description(GroupsEnum.DEFAULT.name()).build())
+                        .amount(new BigDecimal("150.30000"))
                         .build()));
         var result = utilitiesService.getServiceBy(currencies, lastPayment);
         assertNotNull(result);
@@ -112,10 +115,11 @@ class UtilitiesServiceTest {
                 .description("Netflix")
                 .currency(currency)
                 .lastPayment(today.minusMonths(1))
+                .userGroups(UserGroups.builder().description(GroupsEnum.DEFAULT.name()).build())
                 .build();
         var expectedRecord = new ServiceRecord(
                 id, "Netflix", null, new CurrencyRecord("ARS"),
-                LocalDate.now(), true
+                LocalDate.now(), true, GroupsEnum.DEFAULT.name()
         );
 
         when(serviceRepository.findById(id))
@@ -175,7 +179,10 @@ class UtilitiesServiceTest {
     @DisplayName("Fallo al actualizar el monto del servicio dado que no existe")
     void updateServiceFailNotExists() {
         Long id = 10L;
-        var updateRecord = new UpdateServiceRecord(new BigDecimal("1234.0"));
+        var updateRecord = new UpdateServiceRecord(new BigDecimal("1234.0"),
+                null,
+                null,
+                null);
         when(serviceRepository.findById(id))
                 .thenReturn(Optional.empty());
 
@@ -187,7 +194,10 @@ class UtilitiesServiceTest {
     @DisplayName("Actualizo el monto del servicio correctamente")
     void updateServiceOk() {
         Long id = 10L;
-        var update = new UpdateServiceRecord(BigDecimal.valueOf(500));
+        var update = new UpdateServiceRecord(BigDecimal.valueOf(500),
+                null,
+                null,
+                null);
 
         var currency = Currency.builder()
                 .symbol("ARS")
@@ -207,7 +217,7 @@ class UtilitiesServiceTest {
                 BigDecimal.valueOf(500),
                 new CurrencyRecord("ARS"),
                 LocalDate.of(2025, 11, 1),
-                false
+                false, GroupsEnum.DEFAULT.name()
         );
 
         when(serviceRepository.findById(id))
@@ -259,7 +269,8 @@ class UtilitiesServiceTest {
                 BigDecimal.valueOf(500),
                 new CurrencyRecord("ARS"),
                 LocalDate.of(2025, 11, 1),
-                false
+                false,
+                GroupsEnum.DEFAULT.name()
         );
 
         when(serviceRepository.findByIdWithCurrency(id))

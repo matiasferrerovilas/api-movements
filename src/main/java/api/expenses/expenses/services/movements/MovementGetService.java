@@ -27,8 +27,9 @@ public class MovementGetService {
     @Transactional
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
         var user = userService.getAuthenticatedUserRecord();
-        var movements = movementMapper.toRecord(movementRepository.getExpenseBy(user, filter));
-        return new PageImpl<>(movements, page, movements.size());
+        var result = movementRepository.getExpenseBy(user, filter, page);
+
+        return result.map(movementMapper::toRecord);
     }
 
     public LastIngresoRecord getLastIngreso() {

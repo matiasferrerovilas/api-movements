@@ -4,10 +4,13 @@ import api.expenses.expenses.mappers.ServiceMapper;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
+import api.expenses.expenses.services.groups.GroupGetService;
 import api.expenses.expenses.services.publishing.ServicePublishService;
 import api.expenses.expenses.services.user.UserService;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import liquibase.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ public class UtilitiesService  {
     private final UtilityAddService utilityAddService;
     private final UserService userService;
     private final ServicePublishService servicePublishService;
+    private final GroupGetService groupGetService;
 
     public List<ServiceRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {
         var user = userService.getAuthenticatedUserRecord();
@@ -40,7 +44,6 @@ public class UtilitiesService  {
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         utilityAddService.addMovementService(service);
-
         service.setLastPayment(LocalDate.now());
         var dto = serviceMapper.toRecord(serviceRepository.save(service));
 
@@ -52,7 +55,14 @@ public class UtilitiesService  {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
-        service.setAmount(updateService.amount());
+        serviceMapper.updateMovement(updateService, service);
+        if(!StringUtils.isEmpty(updateService.group())){
+            var group = groupGetService.getGroupByDescription(updateService.group());
+            service.setUserGroups(group);
+        }
+        if(updateService.lastPayment() == null){
+            service.setLastPayment(null);
+        }
         var dto = serviceMapper.toRecord(serviceRepository.save(service));
         servicePublishService.publishUpdateService(dto);
     }
