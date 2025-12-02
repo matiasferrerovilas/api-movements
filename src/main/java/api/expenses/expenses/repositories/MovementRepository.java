@@ -24,22 +24,20 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             FROM movements m
             INNER JOIN user_groups ug on ug.id = m.user_group_id\s
             INNER JOIN users u ON u.email = :email
-            WHERE
-            	(:year IS NULL OR m.year = :year)
-                AND (:month IS NULL OR m.month = :month)
-                AND m.movement_type IN (:type)
-                AND m.currency_id IN (:currencies)
-                AND ug.id IN (:groups)
-            	AND(
-                      (m.user_group_id = 1 AND m.user_id = u.id)
-                      OR
-                      (m.user_group_id != 1 AND EXISTS (
-                          SELECT 1
-                          FROM user_user_groups uug
-                          WHERE uug.user_id = u.id
-                            AND uug.group_id = m.user_group_id
-                      ))
-                  )
+            WHERE (:year IS NULL OR m.year = :year)
+                          AND (:month IS NULL OR m.month = :month)
+                          AND m.movement_type IN (:type)
+                          AND m.currency_id IN (:currencies)
+                          AND ug.id IN (:groups)
+                          AND((m.user_group_id = 1 AND m.user_id = u.id)
+                                              OR
+                                          (m.user_group_id != 1 AND EXISTS (
+                                                      SELECT 1
+                                                                  FROM user_user_groups uug
+                                                                              WHERE uug.user_id = u.id
+                                                                                            AND uug.group_id = m.user_group_id
+                                                                                          ))
+                                          )
             """, nativeQuery = true)
     BigDecimal getBalanceByFilters(Integer year, Integer month,
                                    String email,
@@ -103,6 +101,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             where g.id = :id
         """)
     Optional<Movement> findByIdWithCurrency(Long id);
+
     @Query(value = """
             SELECT g
             FROM Ingreso g

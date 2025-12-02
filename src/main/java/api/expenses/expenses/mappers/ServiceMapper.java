@@ -1,9 +1,7 @@
 package api.expenses.expenses.mappers;
 
 import api.expenses.expenses.entities.Currency;
-import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.entities.Services;
-import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.ServiceToAdd;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
@@ -41,6 +39,4 @@ public interface ServiceMapper {
         return currencyRepository.findBySymbol(symbol)
                 .orElseThrow(() -> new RuntimeException("Currency not found: " + symbol));
     }
-
-
 }

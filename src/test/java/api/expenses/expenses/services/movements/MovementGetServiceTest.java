@@ -1,17 +1,12 @@
 package api.expenses.expenses.services.movements;
 
-import api.expenses.expenses.entities.Debito;
 import api.expenses.expenses.entities.Ingreso;
-import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.LastIngresoRecord;
 import api.expenses.expenses.records.groups.UserRecord;
-import api.expenses.expenses.records.movements.MovementRecord;
-import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
 import api.expenses.expenses.repositories.MovementRepository;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,10 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;

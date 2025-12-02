@@ -10,7 +10,6 @@ import api.expenses.expenses.services.user.UserService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import liquibase.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UtilitiesService  {
+public class UtilitiesService {
     private final ServiceMapper serviceMapper;
     private final ServiceRepository serviceRepository;
     private final UtilityAddService utilityAddService;
@@ -56,11 +55,11 @@ public class UtilitiesService  {
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         serviceMapper.updateMovement(updateService, service);
-        if(!StringUtils.isEmpty(updateService.group())){
+        if (!StringUtils.isEmpty(updateService.group())) {
             var group = groupGetService.getGroupByDescription(updateService.group());
             service.setUserGroups(group);
         }
-        if(updateService.lastPayment() == null){
+        if (updateService.lastPayment() == null) {
             service.setLastPayment(null);
         }
         var dto = serviceMapper.toRecord(serviceRepository.save(service));
