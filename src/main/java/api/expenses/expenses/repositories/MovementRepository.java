@@ -3,7 +3,6 @@ package api.expenses.expenses.repositories;
 import api.expenses.expenses.entities.Ingreso;
 import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.records.BalanceByCategoryRecord;
-import api.expenses.expenses.records.BalanceRecord;
 import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
 import api.expenses.expenses.records.groups.UserRecord;
 import org.springframework.data.domain.Page;
@@ -13,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,35 +20,32 @@ import java.util.Set;
 @Repository
 public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
-            SELECT
-                 CASE
-                    WHEN m.movement_type = 'INGRESO' THEN 'INGRESO'
-                    ELSE 'GASTO'
-                 END AS type,
-                m.year,
-                m.month,
-                SUM(m.amount) as total,
-                c.symbol
+            SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
+            INNER JOIN user_groups ug on ug.id = m.user_group_id\s
             INNER JOIN users u ON u.email = :email
-            INNER JOIN currency c ON m.currency_id = c.id
-            WHERE (:year IS NULL OR m.year = :year)
-              AND (:month IS NULL OR m.month = :month)
-              AND m.movement_type IN (:type)
-              AND (
-                  (m.user_group_id = 1 AND m.user_id = u.id)
-                  OR
-                  (m.user_group_id != 1 AND EXISTS (
-                      SELECT 1
-                      FROM user_user_groups uug
-                      WHERE uug.user_id = u.id
-                        AND uug.group_id = m.user_group_id
-                  ))
-              )
-            GROUP BY type, m.year, m.month, c.symbol
-            ORDER BY m.year, m.month;
-                    """, nativeQuery = true)
-    Set<BalanceRecord> getMovimientosByYearMonthEmailAndType(Integer year, Integer month, String email, List<String> type);
+            WHERE
+            	(:year IS NULL OR m.year = :year)
+                AND (:month IS NULL OR m.month = :month)
+                AND m.movement_type IN (:type)
+                AND m.currency_id IN (:currencies)
+                AND ug.id IN (:groups)
+            	AND(
+                      (m.user_group_id = 1 AND m.user_id = u.id)
+                      OR
+                      (m.user_group_id != 1 AND EXISTS (
+                          SELECT 1
+                          FROM user_user_groups uug
+                          WHERE uug.user_id = u.id
+                            AND uug.group_id = m.user_group_id
+                      ))
+                  )
+            """, nativeQuery = true)
+    BigDecimal getBalanceByFilters(Integer year, Integer month,
+                                   String email,
+                                   List<String> type,
+                                   List<Integer> groups,
+                                   List<Integer> currencies);
 
     @Query("""
     SELECT g
