@@ -20,12 +20,12 @@ import java.util.regex.Pattern;
 @Slf4j
 public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
 
-    private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile("""
-        (\\d{2}-\\d{2}-\\d{2})\\s+
-        (.+?)\\s+
-        (\\d{6})\\s+
-        ([\\d.,]+)(?:\\s+([\\d.,]+))?
-        """);
+    private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile(
+            "(\\d{2}-\\d{2}-\\d{2})\\s+" +
+                    "(.+?)\\s+" +
+                    "(\\d{6})\\s+" +
+                    "([\\d.,]+)(?:\\s+([\\d.,]+))?"
+    );
 
     private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");
     private static final Pattern REFERENCE_CLEANUP_PATTERN = Pattern.compile("^[*KV]");
