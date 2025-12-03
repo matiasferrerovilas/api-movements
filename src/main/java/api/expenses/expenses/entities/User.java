@@ -1,6 +1,9 @@
 package api.expenses.expenses.entities;
 
+import api.expenses.expenses.enums.UserType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -48,4 +51,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     private boolean isFirstLogin;
+
+    @Enumerated(EnumType.STRING)
+    private UserType userType;
 }

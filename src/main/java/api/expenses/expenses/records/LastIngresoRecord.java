@@ -9,5 +9,6 @@ public record LastIngresoRecord(Long id,
                                 BigDecimal amount,
                                 String description,
                                 CurrencyRecord currency,
+                                String group,
                                 BanksEnum bank) {
 }
