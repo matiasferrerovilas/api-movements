@@ -5,6 +5,7 @@ import api.expenses.expenses.entities.UserGroups;
 import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.enums.CurrencyEnum;
 import api.expenses.expenses.enums.GroupsEnum;
+import api.expenses.expenses.enums.UserType;
 import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.exceptions.PermissionDeniedException;
 import api.expenses.expenses.records.IngresoToAdd;
@@ -84,6 +85,7 @@ class OnboardingServiceTest {
         OnBoardingForm onBoardingForm = new OnBoardingForm(onBoardingAmount,
                 BanksEnum.GALICIA.name(),
                 CurrencyEnum.ARS.name(),
+                UserType.CONSUMER.name(),
                 List.of(BanksEnum.GALICIA.name(), BanksEnum.BANCO_CIUDAD.name()));
 
         when(defaultGroupService.getDefaultGroup())
@@ -108,6 +110,7 @@ class OnboardingServiceTest {
                 onBoardingAmount,
                 BanksEnum.GALICIA.name(),
                 CurrencyEnum.ARS.name(),
+                UserType.CONSUMER.name(),
                 List.of(BanksEnum.GALICIA.name(), BanksEnum.BANCO_CIUDAD.name()));
 
         when(defaultGroupService.getDefaultGroup())
@@ -124,6 +127,6 @@ class OnboardingServiceTest {
 
         verify(userService).getAuthenticatedUser();
         verify(settingService).addIngreso(any(IngresoToAdd.class));
-        verify(userService, never()).changeUserFirstLoginStatus();
+        verify(userService, never()).changeUserFirstLoginStatus(any());
     }
 }

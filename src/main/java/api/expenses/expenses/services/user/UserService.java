@@ -1,6 +1,7 @@
 package api.expenses.expenses.services.user;
 
 import api.expenses.expenses.entities.User;
+import api.expenses.expenses.enums.UserType;
 import api.expenses.expenses.exceptions.PermissionDeniedException;
 import api.expenses.expenses.mappers.UserMapper;
 import api.expenses.expenses.records.groups.UserRecord;
@@ -52,9 +53,10 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public void changeUserFirstLoginStatus() {
+    public void changeUserFirstLoginStatus(UserType userType) {
         var user = getAuthenticatedUser();
         user.setFirstLogin(false);
+        user.setUserType(userType);
         userRepository.save(user);
     }
 
