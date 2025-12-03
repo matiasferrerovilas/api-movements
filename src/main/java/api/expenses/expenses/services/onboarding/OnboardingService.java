@@ -35,7 +35,7 @@ public class OnboardingService {
         var ingresoGroup = Optional.ofNullable(onBoardingForm.onBoardingAmount().group())
                 .orElse(defaultGroupService.getDefaultGroup().getDescription());
 
-        if(onBoardingForm.bank() != null && onBoardingForm.currency() != null && onBoardingForm.onBoardingAmount().amount() != null) {
+        if (onBoardingForm.bank() != null && onBoardingForm.currency() != null && onBoardingForm.onBoardingAmount().amount() != null) {
             settingService.addIngreso(new IngresoToAdd(onBoardingForm.bank(),
                     onBoardingForm.currency(),
                     onBoardingForm.onBoardingAmount().amount(),

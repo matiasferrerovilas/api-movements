@@ -1,6 +1,5 @@
 package api.expenses.expenses.services.ingreso;
 
-import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.MovementType;
 import api.expenses.expenses.records.movements.MovementToAdd;
