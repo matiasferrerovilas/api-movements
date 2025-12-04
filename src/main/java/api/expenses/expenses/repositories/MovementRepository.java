@@ -2,7 +2,8 @@ package api.expenses.expenses.repositories;
 
 import api.expenses.expenses.entities.Ingreso;
 import api.expenses.expenses.entities.Movement;
-import api.expenses.expenses.records.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByGroup;
 import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
 import api.expenses.expenses.records.groups.UserRecord;
 import org.springframework.data.domain.Page;
@@ -77,22 +78,26 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
 
     @Query(value = """
-
-            SELECT
-        ca.description AS category,
-        g.year,
-        c.symbol AS currencySymbol,
-        SUM(g.amount) AS total
-            FROM movements g
-            INNER JOIN currency c ON g.currency_id = c.id
-            INNER JOIN category ca ON g.category_id = ca.id
-            INNER JOIN users u ON g.user_id = u.id
-            WHERE g.year = :year
-      AND u.email = :email
-            GROUP BY ca.description, g.year, c.symbol
-            ORDER BY ca.description, g.year
+        SELECT
+            ca.description AS category,
+            YEAR(g.`date`) as year,
+            MONTH(g.`date`) as month,
+            c.symbol AS currencySymbol,
+            SUM(g.amount) AS total
+                FROM movements g
+                INNER JOIN currency c ON g.currency_id = c.id
+                INNER JOIN category ca ON g.category_id = ca.id
+                INNER JOIN users u ON g.user_id = u.id
+                WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
+                      AND g.user_group_id IN (:groups)
+          AND u.email = :email
+                GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.user_group_id\s
     """, nativeQuery = true)
-    Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year, String email);
+    Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
+                                                              Integer month,
+                                                              List<Integer> groups,
+                                                              List<String> currencies,
+                                                              String email);
 
     @Query(value = """
             SELECT g
@@ -111,4 +116,23 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             LIMIT 1
         """)
     Optional<Ingreso> getLastIngreso(UserRecord user);
+
+    @Query(value = """
+
+               SELECT
+                      ug.description AS groupDescription,
+                    c.symbol AS currencySymbol,
+                    YEAR(g.`date`) AS year,
+                    MONTH(g.`date`) AS month,
+                    SUM(g.amount) AS total
+                        FROM movements g
+                        INNER JOIN currency c ON g.currency_id = c.id
+                        INNER JOIN user_groups ug on ug.id = g.user_group_id\s
+                        INNER JOIN users u ON g.user_id = u.id
+                        WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month
+                  AND u.email = :email
+                        GROUP BY ug.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
+                        ORDER BY ug.description, YEAR(g.`date`)
+    """, nativeQuery = true)
+    Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, String email);
 }

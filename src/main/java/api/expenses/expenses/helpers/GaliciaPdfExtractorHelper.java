@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
 
     private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile(
-            "(\\d{2}-\\d{2}-\\d{2})\\s+" +
-                    "(.+?)\\s+" +
-                    "(\\d{6})\\s+" +
-                    "([\\d.,]+)(?:\\s+([\\d.,]+))?"
+            "(\\d{2}-\\d{2}-\\d{2})\\s+"
+                    + "(.+?)\\s+"
+                    + "(\\d{6})\\s+"
+                    + "([\\d.,]+)(?:\\s+([\\d.,]+))?"
     );
 
     private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");

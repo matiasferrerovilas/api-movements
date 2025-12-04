@@ -2,7 +2,8 @@ package api.expenses.expenses.services.balance;
 
 import api.expenses.expenses.enums.BalanceEnum;
 import api.expenses.expenses.enums.MovementType;
-import api.expenses.expenses.records.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByGroup;
 import api.expenses.expenses.records.balance.BalanceFilterRecord;
 import api.expenses.expenses.repositories.CurrencyRepository;
 import api.expenses.expenses.repositories.MovementRepository;
@@ -49,8 +50,17 @@ public class CalculateBalanceService {
         return result;
     }
 
-    public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year) {
+    public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
-        return movementRepository.getBalanceWithCategoryByYear(year, user.getEmail());
+        return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.year(),
+                balanceFilterRecord.month(),
+                balanceFilterRecord.groups(),
+                balanceFilterRecord.currencies(),
+                user.getEmail());
+    }
+
+    public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
+        var user = userService.getAuthenticatedUser();
+        return movementRepository.getBalanceByYearAndGroup(year, month, user.getEmail());
     }
 }

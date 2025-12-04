@@ -1,11 +1,15 @@
 package api.expenses.expenses.controller;
 
 import api.expenses.expenses.enums.BalanceEnum;
-import api.expenses.expenses.records.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByCategoryRecord;
+import api.expenses.expenses.records.balance.BalanceByGroup;
 import api.expenses.expenses.records.balance.BalanceFilterRecord;
 import api.expenses.expenses.services.balance.CalculateBalanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -41,7 +45,25 @@ public class BalanceController {
     )
     @ApiResponse(responseCode = "200", description = "Balance por categoría calculado correctamente")
     @GetMapping("/category")
-    public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(@RequestParam Integer year) {
-        return calculateBalanceService.getBalanceWithCategoryByYear(year);
+    public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(@ParameterObject BalanceFilterRecord balanceFilterRecord) {
+        return calculateBalanceService.getBalanceWithCategoryByYear(balanceFilterRecord);
+    }
+    @Operation(
+            summary = "Obtener balance por categoría",
+            description = "Retorna el balance total agrupado por categoría para un año y mes específicos."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Balance calculado correctamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = BalanceByGroup.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Parámetros inválidos"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/group")
+    public Set<BalanceByGroup> getBalanceByYearAndGroup(@RequestParam Integer year, @RequestParam Integer month) {
+        return calculateBalanceService.getBalanceByYearAndGroup(year,month);
     }
 }

@@ -24,12 +24,12 @@ import java.util.regex.Pattern;
 public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
 
     private static final Pattern EXPENSE_PATTERN = Pattern.compile(
-            "(\\d{2}-[A-Za-z]{3}-\\d{2})\\s+" +               // fecha
-                    "(.+?)\\s+" +                                     // descripción
-                    "(?:([A-Z]{3})\\s+)?" +                           // moneda opcional (USD/CLP/...)
-                    "(?:(\\d{1,3}(?:[.\\d]*)?,\\d{2})\\s+)?" +        // importe en moneda extranjera (ej: 11.190,00 o 3,57)
-                    "(\\d{5,})\\s+" +                                 // nro cupón
-                    "(-?\\d{1,3}(?:[.\\d]*)?,\\d{2})?"                  // importe en ARS
+            "(\\d{2}-[A-Za-z]{3}-\\d{2})\\s+"
+                    + "(.+?)\\s+"
+                    + "(?:([A-Z]{3})\\s+)?"
+                    + "(?:(\\d{1,3}(?:[.\\d]*)?,\\d{2})\\s+)?"
+                    + "(\\d{5,})\\s+"
+                    + "(-?\\d{1,3}(?:[.\\d]*)?,\\d{2})?"                  // importe en ARS
     );
 
     private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");
