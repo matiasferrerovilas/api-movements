@@ -23,7 +23,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN user_groups ug on ug.id = m.user_group_id\s
+            INNER JOIN user_groups ug on ug.id = m.user_group_id
             INNER JOIN users u ON u.email = :email
             WHERE (:year IS NULL OR m.year = :year)
                           AND (:month IS NULL OR m.month = :month)
@@ -79,19 +79,30 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     @Query(value = """
         SELECT
-            ca.description AS category,
-            YEAR(g.`date`) as year,
-            MONTH(g.`date`) as month,
-            c.symbol AS currencySymbol,
-            SUM(g.amount) AS total
-                FROM movements g
-                INNER JOIN currency c ON g.currency_id = c.id
-                INNER JOIN category ca ON g.category_id = ca.id
-                INNER JOIN users u ON g.user_id = u.id
-                WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
-                      AND g.user_group_id IN (:groups)
-          AND u.email = :email
-                GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.user_group_id\s
+                    ca.description AS category,
+                    YEAR(g.`date`) as year,
+                    MONTH(g.`date`) as month,
+                    c.symbol AS currencySymbol,
+                    SUM(g.amount) AS total
+                        FROM movements g
+                        INNER JOIN currency c ON g.currency_id = c.id
+                        INNER JOIN category ca ON g.category_id = ca.id
+                                INNER JOIN users u ON u.email = :email
+                            WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
+                                  AND g.movement_type !="INGRESO"
+                                  AND g.user_group_id IN (:groups)
+                              AND c.symbol IN (:currencies)
+                              AND ((g.user_group_id = 1 AND g.user_id = u.id)
+                                           OR
+                                       (g.user_group_id != 1 AND EXISTS (
+                                           SELECT 1
+                                            FROM user_user_groups uug
+                                            WHERE uug.user_id = u.id
+                                                  AND uug.group_id = g.user_group_id
+                                                )
+                                        )
+                                      )
+                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.user_group_id
     """, nativeQuery = true)
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
@@ -127,7 +138,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                     SUM(g.amount) AS total
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
-                        INNER JOIN user_groups ug on ug.id = g.user_group_id\s
+                        INNER JOIN user_groups ug on ug.id = g.user_group_id
                         INNER JOIN users u ON g.user_id = u.id
                         WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month
                   AND u.email = :email

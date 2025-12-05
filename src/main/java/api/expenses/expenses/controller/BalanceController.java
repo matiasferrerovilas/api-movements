@@ -48,6 +48,7 @@ public class BalanceController {
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(@ParameterObject BalanceFilterRecord balanceFilterRecord) {
         return calculateBalanceService.getBalanceWithCategoryByYear(balanceFilterRecord);
     }
+
     @Operation(
             summary = "Obtener balance por categoría",
             description = "Retorna el balance total agrupado por categoría para un año y mes específicos."
@@ -64,6 +65,6 @@ public class BalanceController {
     })
     @GetMapping("/group")
     public Set<BalanceByGroup> getBalanceByYearAndGroup(@RequestParam Integer year, @RequestParam Integer month) {
-        return calculateBalanceService.getBalanceByYearAndGroup(year,month);
+        return calculateBalanceService.getBalanceByYearAndGroup(year, month);
     }
 }
