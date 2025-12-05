@@ -10,7 +10,7 @@ FROM eclipse-temurin:25-jre-alpine AS runtime
 
 WORKDIR /app
 
-COPY build/libs/expenses-[0-9]*.jar expenses-api.jar
+COPY expenses-api.jar expenses-api.jar
 
 EXPOSE 8080
 
