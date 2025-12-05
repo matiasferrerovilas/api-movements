@@ -1,7 +1,10 @@
 # Gradle cache
+# Gradle general
 .gradle/
-**/build/
+build/
 !build/libs/
+!build/libs/*.jar
+
 
 # IDE
 .idea/
