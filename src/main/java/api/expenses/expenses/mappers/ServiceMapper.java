@@ -24,6 +24,7 @@ public interface ServiceMapper {
     @Mapping(target = "currency.symbol", source = "currency.symbol")
     @Mapping(target = "isPaid", expression = "java(services.getIsPaid())")
     @Mapping(target = "group", expression = "java(services.getUserGroups().getDescription())")
+    @Mapping(target = "user", source = "users.email")
     ServiceRecord toRecord(Services services);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

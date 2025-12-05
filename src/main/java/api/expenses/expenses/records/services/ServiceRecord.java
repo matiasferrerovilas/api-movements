@@ -9,5 +9,6 @@ public record ServiceRecord(Long id, String description, BigDecimal amount,
                             CurrencyRecord currency,
                             LocalDate lastPayment,
                             Boolean isPaid,
-                            String group) {
+                            String group,
+                            String user) {
 }

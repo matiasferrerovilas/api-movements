@@ -81,7 +81,8 @@ public class JwtAuthenticationConverter implements Converter<@NonNull Jwt, @NonN
         }
 
         return realmRoles.stream()
-                .map(role -> new SimpleGrantedAuthority(ROLE_PREFIX + role))
+                .filter(role -> role.startsWith(ROLE_PREFIX))
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
     }
 

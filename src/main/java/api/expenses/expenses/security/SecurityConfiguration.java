@@ -4,6 +4,7 @@ import api.expenses.expenses.configuration.properties.JwtProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -39,7 +41,7 @@ public class SecurityConfiguration {
                                 "/webjars/**",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/onboarding/**").permitAll()
+                        .requestMatchers("/api/v1/onboarding/**").hasAnyRole("ADMIN", "FAMILY", "GUEST")
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2
