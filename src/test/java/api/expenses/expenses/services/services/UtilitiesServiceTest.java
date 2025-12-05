@@ -2,6 +2,7 @@ package api.expenses.expenses.services.services;
 
 import api.expenses.expenses.entities.Currency;
 import api.expenses.expenses.entities.Services;
+import api.expenses.expenses.entities.User;
 import api.expenses.expenses.entities.UserGroups;
 import api.expenses.expenses.enums.CurrencyEnum;
 import api.expenses.expenses.enums.GroupsEnum;
@@ -116,10 +117,13 @@ class UtilitiesServiceTest {
                 .currency(currency)
                 .lastPayment(today.minusMonths(1))
                 .userGroups(UserGroups.builder().description(GroupsEnum.DEFAULT.name()).build())
+                .users(User.builder()
+                        .email("test@gmail.com")
+                        .build())
                 .build();
         var expectedRecord = new ServiceRecord(
                 id, "Netflix", null, new CurrencyRecord("ARS"),
-                LocalDate.now(), true, GroupsEnum.DEFAULT.name()
+                LocalDate.now(), true, GroupsEnum.DEFAULT.name(), "test@gmail.com"
         );
 
         when(serviceRepository.findById(id))
@@ -217,7 +221,7 @@ class UtilitiesServiceTest {
                 BigDecimal.valueOf(500),
                 new CurrencyRecord("ARS"),
                 LocalDate.of(2025, 11, 1),
-                false, GroupsEnum.DEFAULT.name()
+                false, GroupsEnum.DEFAULT.name(), "test@gmail.com"
         );
 
         when(serviceRepository.findById(id))
@@ -270,7 +274,7 @@ class UtilitiesServiceTest {
                 new CurrencyRecord("ARS"),
                 LocalDate.of(2025, 11, 1),
                 false,
-                GroupsEnum.DEFAULT.name()
+                GroupsEnum.DEFAULT.name(), "test@gmail.com"
         );
 
         when(serviceRepository.findByIdWithCurrency(id))
