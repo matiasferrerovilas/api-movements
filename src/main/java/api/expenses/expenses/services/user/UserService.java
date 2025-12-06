@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -82,7 +83,7 @@ public class UserService {
 
         var user = User.builder()
                 .email(email)
-                .userGroups(Set.of(defaultGroup))
+                .userGroups(new HashSet<>(List.of(defaultGroup)))
                 .isFirstLogin(false)
                 .build();
 

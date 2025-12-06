@@ -1,6 +1,6 @@
 package api.expenses.expenses.services.movements;
 
-import api.expenses.expenses.entities.Ingreso;
+import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.LastIngresoRecord;
 import api.expenses.expenses.records.groups.UserRecord;
@@ -54,7 +54,7 @@ class MovementGetServiceTest {
     @Test
     @DisplayName("getLastIngreso devuelve LastIngresoRecord cuando existe un ingreso")
     void getLastIngresoSuccess() {
-        var ingresoEntity = mock(Ingreso.class);
+        var ingresoEntity = mock(Movement.class);
         var record = mock(LastIngresoRecord.class);
 
         when(movementRepository.getLastIngreso(any())).thenReturn(Optional.of(ingresoEntity));

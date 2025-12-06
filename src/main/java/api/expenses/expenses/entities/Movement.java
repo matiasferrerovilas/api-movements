@@ -18,9 +18,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -30,13 +30,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "movements")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "movement_type", discriminatorType = DiscriminatorType.STRING)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
-public abstract class Movement {
+@Builder
+public class Movement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -79,8 +77,11 @@ public abstract class Movement {
     @JoinColumn(name = "user_group_id")
     private UserGroups userGroups;
 
-    @Column(name = "movement_type", insertable = false, updatable = false, length = 20)
+    @Column(length = 30)
+    private Integer cuotaActual;
+    @Column(length = 30)
+    private Integer cuotasTotales;
+
     @Enumerated(EnumType.STRING)
     private MovementType type;
-    public abstract MovementType getType();
 }

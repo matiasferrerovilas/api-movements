@@ -1,6 +1,5 @@
 package api.expenses.expenses.repositories;
 
-import api.expenses.expenses.entities.Ingreso;
 import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.records.balance.BalanceByCategoryRecord;
 import api.expenses.expenses.records.balance.BalanceByGroup;
@@ -27,7 +26,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             INNER JOIN users u ON u.email = :email
             WHERE (:year IS NULL OR m.year = :year)
                           AND (:month IS NULL OR m.month = :month)
-                          AND m.movement_type IN (:type)
+                          AND m.type IN (:type)
                           AND m.currency_id IN (:currencies)
                           AND ug.id IN (:groups)
                           AND((m.user_group_id = 1 AND m.user_id = u.id)
@@ -89,7 +88,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                         INNER JOIN category ca ON g.category_id = ca.id
                                 INNER JOIN users u ON u.email = :email
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
-                                  AND g.movement_type !="INGRESO"
+                                  AND g.type !="INGRESO"
                                   AND g.user_group_id IN (:groups)
                               AND c.symbol IN (:currencies)
                               AND ((g.user_group_id = 1 AND g.user_id = u.id)
@@ -120,13 +119,13 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     @Query(value = """
             SELECT g
-            FROM Ingreso g
+            FROM Movement g
             JOIN fetch g.currency c
             WHERE (g.users.email = :#{#user.email})
             ORDER BY g.date DESC
             LIMIT 1
         """)
-    Optional<Ingreso> getLastIngreso(UserRecord user);
+    Optional<Movement> getLastIngreso(UserRecord user);
 
     @Query(value = """
 

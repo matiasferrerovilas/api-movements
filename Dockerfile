@@ -28,6 +28,8 @@ COPY --from=build --chown=appuser:appgroup /app/extracted/spring-boot-loader/ ./
 COPY --from=build --chown=appuser:appgroup /app/extracted/snapshot-dependencies/ ./
 COPY --from=build --chown=appuser:appgroup /app/extracted/application/ ./
 
+ENV SPRING_PROFILES_ACTIVE=prod
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

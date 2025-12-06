@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true
+    username: helios
+    password: vilaswifi
+
+logging:
+  level:
+    root: INFO

@@ -1,6 +1,5 @@
 server:
   port: ${PORT:8080}
-
   forward-headers-strategy: framework
 
 jwt:
@@ -13,9 +12,6 @@ spring:
   application:
     name: expenses
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: false
@@ -30,18 +26,14 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KC_URL_REALM}
-
-
   liquibase:
     enabled: false
-
   main:
     banner-mode: off
+
 logging:
   level:
-    org:
-      springframework:
-        security: INFO
+    org.springframework.security: INFO
     org.hibernate: WARN
     org.hibernate.engine.jdbc.env.internal: ERROR
 
@@ -62,5 +54,3 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
-encription:
-  key-store:d9!Q+Ol91dT3
