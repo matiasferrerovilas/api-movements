@@ -3,7 +3,7 @@ package api.expenses.expenses.services.settings;
 import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.MovementType;
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.category.CategoryAddService;
 import api.expenses.expenses.services.currencies.CurrencyAddService;
@@ -25,13 +25,13 @@ public class SettingService {
     private final CurrencyAddService currencyAddService;
     private final GroupGetService groupGetService;
 
-    public void addIngreso(@Valid IngresoToAdd ingresoToAdd) {
+    public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
         var category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
-        var descriptionGroup = groupGetService.getGroupByDescription(ingresoToAdd.group());
+        var descriptionGroup = groupGetService.getGroupByDescription(incomeToAdd.group());
         String description = "Sueldo Recibido";
-        var currency = currencyAddService.findBySymbol(ingresoToAdd.currency());
+        var currency = currencyAddService.findBySymbol(incomeToAdd.currency());
 
-        movementAddService.saveMovement(new MovementToAdd(ingresoToAdd.amount(),
+        movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
                 LocalDate.now(),
                 description,
                 category.description(),
@@ -39,7 +39,7 @@ public class SettingService {
                 currency.getSymbol(),
                 0,
                 0,
-                BanksEnum.valueOf(ingresoToAdd.bank()),
+                BanksEnum.valueOf(incomeToAdd.bank()),
                 descriptionGroup.getDescription()));
     }
 }

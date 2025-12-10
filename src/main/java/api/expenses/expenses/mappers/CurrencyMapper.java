@@ -10,4 +10,5 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CurrencyMapper {
     List<CurrencyRecord> toRecordList(List<Currency> all);
+    CurrencyRecord toRecord(Currency currency);
 }

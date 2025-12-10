@@ -1,6 +1,6 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.LastIngresoRecord;
 import api.expenses.expenses.services.movements.MovementGetService;
 import api.expenses.expenses.services.settings.SettingService;
@@ -29,8 +29,8 @@ public class SettingsController {
     )
     @ApiResponse(responseCode = "201", description = "Ingreso registrado")
     @PostMapping
-    public void addIngreso(@RequestBody @Valid IngresoToAdd ingresoToAdd) {
-        settingService.addIngreso(ingresoToAdd);
+    public void addIngreso(@RequestBody @Valid IncomeToAdd incomeToAdd) {
+        settingService.addIngreso(incomeToAdd);
     }
 
     @Operation(

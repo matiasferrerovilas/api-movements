@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 @Schema(
         description = "Datos necesarios para agregar un ingreso"
 )
-public record IngresoToAdd(
+public record IncomeToAdd(
         @Schema(
                 description = "Banco o entidad emisora del ingreso",
                 example = "Santander",

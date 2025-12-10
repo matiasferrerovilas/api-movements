@@ -1,8 +1,10 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeRecord;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.services.income.IncomeAddService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +41,7 @@ public class IngresoController {
                     description = "Lista de ingresos a cargar",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = IngresoToAdd.class)
+                            schema = @Schema(implementation = IncomeToAdd.class)
                     )
             ),
             responses = {
@@ -52,7 +57,39 @@ public class IngresoController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void loadIncome(@RequestBody List<IngresoToAdd> ingresoToAdds) {
-        incomeAddService.loadIncome(ingresoToAdds);
+    public void loadIncome(@RequestBody IncomeToAdd incomeToAdds) {
+        incomeAddService.loadIncome(incomeToAdds);
+    }
+
+    @Operation(
+            summary = "Obtener ingresos",
+            description = "Devuelve el listado completo de ingresos configurados para el usuario autenticado.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Listado de ingresos obtenido correctamente",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = IncomeRecord.class)
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Usuario no autenticado"
+                    )
+            }
+    )
+    @GetMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<IncomeRecord> getAllIncomes() {
+        return incomeAddService.getAllIncomes();
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteIncome(@PathVariable Long id) {
+        incomeAddService.deleteIncome(id);
     }
 }

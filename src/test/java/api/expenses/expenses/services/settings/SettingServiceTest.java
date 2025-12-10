@@ -7,7 +7,7 @@ import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.CurrencyEnum;
 import api.expenses.expenses.enums.GroupsEnum;
 import api.expenses.expenses.enums.MovementType;
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.categories.CategoryRecord;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.category.CategoryAddService;
@@ -45,7 +45,7 @@ class SettingServiceTest {
     @Test
     @DisplayName("Agrego Ingreso correctamente")
     void addIngreso() {
-        var ingresoToAdd = new IngresoToAdd(BanksEnum.GALICIA.name(),
+        var ingresoToAdd = new IncomeToAdd(BanksEnum.GALICIA.name(),
                 CurrencyEnum.ARS.name(),
                 new BigDecimal("150000.0"),
                 GroupsEnum.DEFAULT.name());

@@ -8,7 +8,7 @@ import api.expenses.expenses.enums.GroupsEnum;
 import api.expenses.expenses.enums.UserType;
 import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.exceptions.PermissionDeniedException;
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.onboarding.OnBoardingAmount;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
 import api.expenses.expenses.services.groups.DefaultGroupService;
@@ -94,7 +94,7 @@ class OnboardingServiceTest {
         onboardingService.finish(onBoardingForm);
 
         verify(userService).getAuthenticatedUser();
-        verify(settingService).addIngreso(new IngresoToAdd(onBoardingForm.bank(),
+        verify(settingService).addIngreso(new IncomeToAdd(onBoardingForm.bank(),
                 onBoardingForm.currency(),
                 onBoardingForm.onBoardingAmount().amount(),
                 GroupsEnum.DEFAULT.name()));
@@ -120,13 +120,13 @@ class OnboardingServiceTest {
 
         doThrow(new BusinessException("Invalid payment method"))
                 .when(settingService)
-                .addIngreso(any(IngresoToAdd.class));
+                .addIngreso(any(IncomeToAdd.class));
 
         assertThrows(BusinessException.class,
                 () -> onboardingService.finish(onBoardingForm));
 
         verify(userService).getAuthenticatedUser();
-        verify(settingService).addIngreso(any(IngresoToAdd.class));
+        verify(settingService).addIngreso(any(IncomeToAdd.class));
         verify(userService, never()).changeUserFirstLoginStatus(any());
     }
 }

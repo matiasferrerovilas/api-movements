@@ -24,12 +24,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table
+@Table(name = "ingreso")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Ingreso {
+public class Income {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

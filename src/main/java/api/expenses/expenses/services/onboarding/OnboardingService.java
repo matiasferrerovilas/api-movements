@@ -1,7 +1,7 @@
 package api.expenses.expenses.services.onboarding;
 
 import api.expenses.expenses.enums.UserType;
-import api.expenses.expenses.records.income.IngresoToAdd;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.groups.AddGroupRecord;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
 import api.expenses.expenses.services.groups.DefaultGroupService;
@@ -36,7 +36,7 @@ public class OnboardingService {
                 .orElse(defaultGroupService.getDefaultGroup().getDescription());
 
         if (onBoardingForm.bank() != null && onBoardingForm.currency() != null && onBoardingForm.onBoardingAmount().amount() != null) {
-            settingService.addIngreso(new IngresoToAdd(onBoardingForm.bank(),
+            settingService.addIngreso(new IncomeToAdd(onBoardingForm.bank(),
                     onBoardingForm.currency(),
                     onBoardingForm.onBoardingAmount().amount(),
                     ingresoGroup));
