@@ -1,7 +1,7 @@
 package api.expenses.expenses.entities;
 
+
 import api.expenses.expenses.enums.BanksEnum;
-import api.expenses.expenses.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,16 +21,15 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "movements")
+@Table
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Movement {
+public class Ingreso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,33 +37,13 @@ public class Movement {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 60)
-    private String description;
-
-    @Column(nullable = false)
-    private LocalDate date;
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User users;
-
-    @Column(nullable = false)
-    private int year;
-
-    @Column(nullable = false)
-    private int month;
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private BanksEnum bank;
@@ -73,11 +52,8 @@ public class Movement {
     @JoinColumn(name = "user_group_id")
     private UserGroups userGroups;
 
-    @Column(length = 30)
-    private Integer cuotaActual;
-    @Column(length = 30)
-    private Integer cuotasTotales;
-
-    @Enumerated(EnumType.STRING)
-    private MovementType type;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

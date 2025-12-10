@@ -1,7 +1,7 @@
 package api.expenses.expenses.services.onboarding;
 
 import api.expenses.expenses.enums.UserType;
-import api.expenses.expenses.records.IngresoToAdd;
+import api.expenses.expenses.records.income.IngresoToAdd;
 import api.expenses.expenses.records.groups.AddGroupRecord;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
 import api.expenses.expenses.services.groups.DefaultGroupService;

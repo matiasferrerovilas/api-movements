@@ -1,6 +1,6 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.records.IngresoToAdd;
+import api.expenses.expenses.records.income.IngresoToAdd;
 import api.expenses.expenses.records.LastIngresoRecord;
 import api.expenses.expenses.services.movements.MovementGetService;
 import api.expenses.expenses.services.settings.SettingService;

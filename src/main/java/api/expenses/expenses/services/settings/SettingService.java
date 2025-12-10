@@ -3,7 +3,7 @@ package api.expenses.expenses.services.settings;
 import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.MovementType;
-import api.expenses.expenses.records.IngresoToAdd;
+import api.expenses.expenses.records.income.IngresoToAdd;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.category.CategoryAddService;
 import api.expenses.expenses.services.currencies.CurrencyAddService;

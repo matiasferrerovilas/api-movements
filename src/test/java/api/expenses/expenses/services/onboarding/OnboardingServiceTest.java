@@ -8,7 +8,7 @@ import api.expenses.expenses.enums.GroupsEnum;
 import api.expenses.expenses.enums.UserType;
 import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.exceptions.PermissionDeniedException;
-import api.expenses.expenses.records.IngresoToAdd;
+import api.expenses.expenses.records.income.IngresoToAdd;
 import api.expenses.expenses.records.onboarding.OnBoardingAmount;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
 import api.expenses.expenses.services.groups.DefaultGroupService;

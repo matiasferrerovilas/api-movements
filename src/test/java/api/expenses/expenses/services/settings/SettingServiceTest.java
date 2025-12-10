@@ -7,7 +7,7 @@ import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.CurrencyEnum;
 import api.expenses.expenses.enums.GroupsEnum;
 import api.expenses.expenses.enums.MovementType;
-import api.expenses.expenses.records.IngresoToAdd;
+import api.expenses.expenses.records.income.IngresoToAdd;
 import api.expenses.expenses.records.categories.CategoryRecord;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.category.CategoryAddService;

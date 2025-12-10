@@ -70,6 +70,7 @@ public class JwtAuthenticationConverter implements Converter<@NonNull Jwt, @NonN
                     return Collections.emptyMap();
                 });
 
+        @SuppressWarnings("unchecked")
         Collection<String> realmRoles = Optional.ofNullable((Collection<String>) realmAccess.get(ROLES_CLAIM))
                 .orElseGet(() -> {
                     log.debug("El claim '{}' para el reino no está presente o es nulo. No se extraerán roles de reino.", ROLES_CLAIM);
