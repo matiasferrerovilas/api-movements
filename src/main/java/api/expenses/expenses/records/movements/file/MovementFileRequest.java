@@ -9,5 +9,4 @@ public record MovementFileRequest(String extractedText,
                                   String group,
                                   Long userId,
                                   LocalDateTime timestamp
-){
-}
+) { }

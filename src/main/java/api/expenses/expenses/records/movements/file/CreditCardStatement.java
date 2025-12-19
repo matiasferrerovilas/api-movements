@@ -14,4 +14,4 @@ public record CreditCardStatement(
         Integer cuotasTotales,
         String bank,
         String group
-) {}
+) { }
