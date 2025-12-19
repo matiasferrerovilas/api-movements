@@ -15,7 +15,7 @@ import api.expenses.expenses.records.groups.UserRecord;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
-import api.expenses.expenses.services.publishing.ServicePublishService;
+import api.expenses.expenses.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -52,7 +52,7 @@ class UtilitiesServiceTest {
     @Mock
     private UserService userService;
     @Mock
-    private ServicePublishService servicePublishService;
+    private ServicePublishServiceWebSocket servicePublishService;
 
 
     @InjectMocks

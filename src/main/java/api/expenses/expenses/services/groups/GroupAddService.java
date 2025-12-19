@@ -27,6 +27,7 @@ public class GroupAddService {
     public List<GroupsWIthUser> saveGroup(AddGroupRecord addGroupRecord) {
         var user = userService.getAuthenticatedUser();
 
+        //TODO este metodo debe guardar nada mas, no debe fijarse si existe o no.
         var group = groupGetService.getGroupByDescription(addGroupRecord.description());
         user.getUserGroups().add(group);
         userRepository.save(user);

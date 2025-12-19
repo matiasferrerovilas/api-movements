@@ -1,6 +1,7 @@
 package api.expenses.expenses.enums;
 
 public enum EventType {
+    MOVEMENT_FILE_ADDED,
     MOVEMENT_ADDED,
     MOVEMENT_DELETED,
     SERVICE_PAID,

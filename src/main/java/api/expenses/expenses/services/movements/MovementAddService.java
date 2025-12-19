@@ -5,7 +5,7 @@ import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementRecord;
 import api.expenses.expenses.repositories.MovementRepository;
-import api.expenses.expenses.services.publishing.MovementPublishService;
+import api.expenses.expenses.services.publishing.websockets.MovementPublishServiceWebSocket;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -23,7 +23,7 @@ public class MovementAddService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
-    private final MovementPublishService movementPublishService;
+    private final MovementPublishServiceWebSocket movementPublishService;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {

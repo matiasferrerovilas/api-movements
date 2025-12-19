@@ -68,6 +68,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
 
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-amqp-test'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     //WebSocket

@@ -3,6 +3,11 @@ spring:
     url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true
     username: helios
     password: vilaswifi
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: api-movements
+    password: api-movements
 
 logging:
   level:

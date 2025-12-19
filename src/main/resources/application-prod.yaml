@@ -4,7 +4,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  rabbitmq:
+    host: 192.168.1.100
+    port: 5672
+    username: api-movements
+    password: api-movements
 logging:
   level:
     root: INFO

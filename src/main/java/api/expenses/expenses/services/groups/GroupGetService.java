@@ -37,7 +37,7 @@ public class GroupGetService {
         }
 
         var normalized = StringUtils.capitalize(description.trim());
-
+        //TODO Sacar el orElseGet y poner un throw EntityNotFound, no debe crearlo si no existe.
         return groupRepository.findByDescription(normalized)
                 .orElseGet(() ->
                         groupRepository.save(UserGroups.builder()

@@ -6,7 +6,7 @@ import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementRecord;
 import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.repositories.MovementRepository;
-import api.expenses.expenses.services.publishing.MovementPublishService;
+import api.expenses.expenses.services.publishing.websockets.MovementPublishServiceWebSocket;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class MovementAddServiceTest {
     @Mock
     private MovementFactory movementFactory;
     @Mock
-    private MovementPublishService movementPublishService;
+    private MovementPublishServiceWebSocket movementPublishService;
 
     @InjectMocks
     private MovementAddService movementAddService;

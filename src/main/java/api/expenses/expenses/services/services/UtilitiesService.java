@@ -5,7 +5,7 @@ import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
 import api.expenses.expenses.services.groups.GroupGetService;
-import api.expenses.expenses.services.publishing.ServicePublishService;
+import api.expenses.expenses.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.expenses.expenses.services.user.UserService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,7 +25,7 @@ public class UtilitiesService {
     private final ServiceRepository serviceRepository;
     private final UtilityAddService utilityAddService;
     private final UserService userService;
-    private final ServicePublishService servicePublishService;
+    private final ServicePublishServiceWebSocket servicePublishService;
     private final GroupGetService groupGetService;
 
     public List<ServiceRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {

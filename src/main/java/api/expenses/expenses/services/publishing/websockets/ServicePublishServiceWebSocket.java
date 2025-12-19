@@ -1,4 +1,4 @@
-package api.expenses.expenses.services.publishing;
+package api.expenses.expenses.services.publishing.websockets;
 
 import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.records.services.ServiceRecord;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Order(1)
-public class ServicePublishService extends MessageService {
+public class ServicePublishServiceWebSocket extends WebSocketMessageService {
 
-    public ServicePublishService(SimpMessagingTemplate messagingTemplate) {
+    public ServicePublishServiceWebSocket(SimpMessagingTemplate messagingTemplate) {
         super(messagingTemplate);
     }
 

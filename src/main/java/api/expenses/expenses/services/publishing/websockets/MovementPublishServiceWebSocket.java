@@ -1,4 +1,4 @@
-package api.expenses.expenses.services.publishing;
+package api.expenses.expenses.services.publishing.websockets;
 
 import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.records.movements.MovementRecord;
@@ -12,10 +12,10 @@ import java.util.List;
 @Service
 @Slf4j
 @Order(1)
-public class MovementPublishService extends MessageService {
+public class MovementPublishServiceWebSocket extends WebSocketMessageService {
 
 
-    public MovementPublishService(SimpMessagingTemplate messagingTemplate) {
+    public MovementPublishServiceWebSocket(SimpMessagingTemplate messagingTemplate) {
         super(messagingTemplate);
     }
 

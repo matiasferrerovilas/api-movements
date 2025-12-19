@@ -1,12 +1,12 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementRecord;
 import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
-import api.expenses.expenses.services.movements.MovementGetService;
-import api.expenses.expenses.services.movements.MovementImportFileService;
+import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.services.movements.MovementAddService;
+import api.expenses.expenses.services.movements.MovementGetService;
+import api.expenses.expenses.services.movements.files.MovementImportFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -34,8 +34,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -93,7 +91,8 @@ public class MovementController {
             }
     )
     @PostMapping(value = "/import-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public List<MovementRecord> saveExpenseByFile(
+    @ResponseStatus(HttpStatus.CREATED)
+    public void saveExpenseByFile(
             @Parameter(description = "Archivo bancario", required = true)
             @RequestParam("file") MultipartFile file,
 
@@ -102,7 +101,7 @@ public class MovementController {
 
             @Parameter(description = "Grupo destino (opcional)")
             @RequestParam(value = "group", required = false) String group) {
-        return movementImportFileService.importMovementsByFile(file, bank, group);
+        movementImportFileService.importMovementsByFile(file, bank, group);
     }
 
     @Operation(
