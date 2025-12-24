@@ -10,14 +10,14 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface GroupInvitationRepository extends JpaRepository<GroupInvitation, Long> {
-    List<GroupInvitation> findAllByGroupIdAndStatus(Long groupId, InvitationStatus status);
+public interface AccountInvitationRepository extends JpaRepository<GroupInvitation, Long> {
+    List<GroupInvitation> findAllByAccountIdAndStatus(Long groupId, InvitationStatus status);
 
     @Query("""
        SELECT gi
        FROM GroupInvitation gi
        JOIN FETCH gi.user u
-       JOIN FETCH gi.group g
+       JOIN FETCH gi.account g
        JOIN FETCH gi.invitedBy ib
        WHERE gi.user.id = :userId
          AND gi.status = :status

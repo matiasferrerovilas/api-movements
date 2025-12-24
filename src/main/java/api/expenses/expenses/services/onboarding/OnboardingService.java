@@ -1,11 +1,11 @@
 package api.expenses.expenses.services.onboarding;
 
 import api.expenses.expenses.enums.UserType;
-import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.groups.AddGroupRecord;
+import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
+import api.expenses.expenses.services.accounts.AccountAddService;
 import api.expenses.expenses.services.groups.DefaultGroupService;
-import api.expenses.expenses.services.groups.GroupAddService;
 import api.expenses.expenses.services.settings.SettingService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.transaction.Transactional;
@@ -21,7 +21,7 @@ public class OnboardingService {
     private final UserService userService;
     private final SettingService settingService;
     private final DefaultGroupService defaultGroupService;
-    private final GroupAddService groupAddService;
+    private final AccountAddService accountAddService;
 
     public boolean isFirstLogin() {
         var optional = userService.findUserByEmail();
@@ -43,8 +43,8 @@ public class OnboardingService {
         }
 
 
-        onBoardingForm.groups().forEach(group -> {
-            groupAddService.saveGroup(new AddGroupRecord(group));
+        onBoardingForm.groups().forEach(account -> {
+            accountAddService.createAccount(new AddGroupRecord(account));
         });
         userService.changeUserFirstLoginStatus(UserType.valueOf(onBoardingForm.userType()));
     }

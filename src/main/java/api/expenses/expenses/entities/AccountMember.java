@@ -1,6 +1,6 @@
 package api.expenses.expenses.entities;
 
-import api.expenses.expenses.enums.InvitationStatus;
+import api.expenses.expenses.enums.AccountRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,22 +12,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table
+@Table(
+        name = "account_members",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"account_id", "user_id"})
+        }
+)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GroupInvitation {
+public class AccountMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,23 +41,10 @@ public class GroupInvitation {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "invited_by", nullable = false)
-    private User invitedBy;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private InvitationStatus status;
+    @Column(nullable = false)
+    private AccountRole role;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDateTime joinedAt;
 }

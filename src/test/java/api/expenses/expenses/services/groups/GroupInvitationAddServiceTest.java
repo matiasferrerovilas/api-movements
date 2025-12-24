@@ -8,7 +8,7 @@ import api.expenses.expenses.mappers.GroupInvitationMapperImpl;
 import api.expenses.expenses.records.groups.GroupInvitationRecord;
 import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.records.groups.UserRecord;
-import api.expenses.expenses.repositories.GroupInvitationRepository;
+import api.expenses.expenses.repositories.AccountInvitationRepository;
 import api.expenses.expenses.repositories.GroupRepository;
 import api.expenses.expenses.repositories.UserRepository;
 import api.expenses.expenses.services.user.UserService;
@@ -40,7 +40,7 @@ class GroupInvitationAddServiceTest {
     private GroupInvitationAddService service;
 
     @Mock
-    private GroupInvitationRepository groupInvitationRepository;
+    private AccountInvitationRepository accountInvitationRepository;
 
     @Mock
     private UserService userService;
@@ -73,7 +73,7 @@ class GroupInvitationAddServiceTest {
         var mapped = List.of(new GroupInvitationRecord(5L, null));
 
         when(userService.getAuthenticatedUserRecord()).thenReturn(record);
-        when(groupInvitationRepository.findAllByUserIdAndStatus(1L, InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByUserIdAndStatus(1L, InvitationStatus.PENDING))
                 .thenReturn(invitations);
         when(groupInvitationMapper.toRecord(invitations)).thenReturn(mapped);
 
@@ -106,15 +106,15 @@ class GroupInvitationAddServiceTest {
         when(userService.getAuthenticatedUser()).thenReturn(loggedUser);
         when(groupRepository.findById(10L)).thenReturn(Optional.of(group));
         when(userService.getUserByEmail(emails)).thenReturn(List.of(userA, userB));
-        when(groupInvitationRepository.findAllByGroupIdAndStatus(10L, InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByAccountIdAndStatus(10L, InvitationStatus.PENDING))
                 .thenReturn(List.of()); // Nadie invitado aún
-        when(groupInvitationRepository.saveAll(any())).thenReturn(savedInvitations);
+        when(accountInvitationRepository.saveAll(any())).thenReturn(savedInvitations);
         when(groupInvitationMapper.toRecord(savedInvitations)).thenReturn(mapped);
 
         var result = service.inviteToGroup(10L, emails);
 
         assertEquals(1, result.size());
-        verify(groupInvitationRepository).saveAll(any());
+        verify(accountInvitationRepository).saveAll(any());
     }
 
     @Test
@@ -135,7 +135,7 @@ class GroupInvitationAddServiceTest {
 
         when(userService.getAuthenticatedUser()).thenReturn(loggedUser);
         when(userService.getAuthenticatedUserRecord()).thenReturn(loggedUserRecord);
-        when(groupInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
                 .thenReturn(List.of(alreadyPending));
 
         when(groupRepository.findById(10L))
@@ -144,7 +144,7 @@ class GroupInvitationAddServiceTest {
         when(userService.getUserByEmail(emails))
                 .thenReturn(List.of(userA));
 
-        when(groupInvitationRepository.findAllByGroupIdAndStatus(10L, InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByAccountIdAndStatus(10L, InvitationStatus.PENDING))
                 .thenReturn(List.of(alreadyPending));
 
         when(groupInvitationMapper.toRecord(List.of(alreadyPending))).thenReturn(mapped);
@@ -152,7 +152,7 @@ class GroupInvitationAddServiceTest {
         var result = service.inviteToGroup(10L, emails);
 
         assertEquals(mapped, result);
-        verify(groupInvitationRepository, never()).saveAll(any());
+        verify(accountInvitationRepository, never()).saveAll(any());
     }
 
     @Test
@@ -163,7 +163,7 @@ class GroupInvitationAddServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> service.inviteToGroup(99L, List.of("foo@test.com")));
 
-        verify(groupInvitationRepository, never()).saveAll(any());
+        verify(accountInvitationRepository, never()).saveAll(any());
     }
 
     @Test
@@ -180,7 +180,7 @@ class GroupInvitationAddServiceTest {
 
         var mapped = List.of(new GroupInvitationRecord(1L, null));
 
-        when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
+        when(accountInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(mapped);
         when(userService.getAuthenticatedUserRecord()).thenReturn(new UserRecord("a@test.com", null, 2L));
 
@@ -202,10 +202,10 @@ class GroupInvitationAddServiceTest {
                 .build();
 
         when(userService.getAuthenticatedUserRecord()).thenReturn(loggedUserRecord);
-        when(groupInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
                 .thenReturn(List.of());
 
-        when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
+        when(accountInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(List.of());
 
         var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L, false));
@@ -222,15 +222,15 @@ class GroupInvitationAddServiceTest {
                 .id(1L).status(InvitationStatus.ACCEPTED).build();
 
         when(userService.getAuthenticatedUserRecord()).thenReturn(loggedUserRecord);
-        when(groupInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
+        when(accountInvitationRepository.findAllByUserIdAndStatus(loggedUserRecord.id(), InvitationStatus.PENDING))
                 .thenReturn(List.of());
 
-        when(groupInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
+        when(accountInvitationRepository.findById(1L)).thenReturn(Optional.of(invitation));
         when(groupInvitationMapper.toRecord(any())).thenReturn(List.of());
 
         var result = service.acceptRejectInvitation(1L, new InvitationResponseRecord(1L, true));
 
-        verify(groupInvitationRepository, never()).save(any());
+        verify(accountInvitationRepository, never()).save(any());
         assertNotNull(result);
     }
 }

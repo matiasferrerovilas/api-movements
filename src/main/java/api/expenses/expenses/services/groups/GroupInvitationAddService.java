@@ -7,7 +7,7 @@ import api.expenses.expenses.enums.InvitationStatus;
 import api.expenses.expenses.mappers.GroupInvitationMapper;
 import api.expenses.expenses.records.groups.GroupInvitationRecord;
 import api.expenses.expenses.records.groups.InvitationResponseRecord;
-import api.expenses.expenses.repositories.GroupInvitationRepository;
+import api.expenses.expenses.repositories.AccountInvitationRepository;
 import api.expenses.expenses.repositories.GroupRepository;
 import api.expenses.expenses.repositories.UserRepository;
 import api.expenses.expenses.services.user.UserService;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class GroupInvitationAddService {
-    private final GroupInvitationRepository groupInvitationRepository;
+    private final AccountInvitationRepository accountInvitationRepository;
     private final UserService userService;
     private final GroupRepository groupRepository;
     private final GroupInvitationMapper groupInvitationMapper;
@@ -32,7 +32,7 @@ public class GroupInvitationAddService {
 
     public List<GroupInvitationRecord> getAllInvitations() {
         var user = userService.getAuthenticatedUserRecord();
-        return groupInvitationMapper.toRecord(groupInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
+        return groupInvitationMapper.toRecord(accountInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
     }
 
     @Transactional
@@ -44,8 +44,8 @@ public class GroupInvitationAddService {
 
         var usersToInvite = userService.getUserByEmail(emails);
 
-        var pendingInvitations = groupInvitationRepository
-                .findAllByGroupIdAndStatus(groupToInvite.getId(), InvitationStatus.PENDING);
+        var pendingInvitations = accountInvitationRepository
+                .findAllByAccountIdAndStatus(groupToInvite.getId(), InvitationStatus.PENDING);
 
         var alreadyInvitedUserIds = pendingInvitations.stream()
                 .map(inv -> inv.getUser().getId())
@@ -56,7 +56,7 @@ public class GroupInvitationAddService {
                 .filter(user -> !alreadyInvitedUserIds.contains(user.getId()))
                 .map(user -> GroupInvitation.builder()
                         .user(user)
-                        .group(groupToInvite)
+                        //.group(groupToInvite)
                         .invitedBy(loggedInUser)
                         .status(InvitationStatus.PENDING)
                         .build())
@@ -66,13 +66,13 @@ public class GroupInvitationAddService {
             log.info("No se crearon nuevas invitaciones: todos los usuarios ya tienen invitación pendiente o aceptada.");
             return this.getAllInvitations();
         }
-        return groupInvitationMapper.toRecord(groupInvitationRepository.saveAll(newInvitations));
+        return null;//groupInvitationMapper.toRecord(accountInvitationRepository.saveAll(newInvitations));
     }
 
     @Transactional
     @PublishMovement(eventType = EventType.INVITATION_CONFIRMED_REJECTED, routingKey = "/topic/invitation/update")
     public List<GroupInvitationRecord> acceptRejectInvitation(Long invitationId, InvitationResponseRecord confirmInvitations) {
-        var invitation = groupInvitationRepository.findById(invitationId)
+        var invitation = accountInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe invitacion con ese id"));
 
         if (!invitation.getStatus().equals(InvitationStatus.PENDING)) {
@@ -82,12 +82,12 @@ public class GroupInvitationAddService {
 
         var status = confirmInvitations.status() ? InvitationStatus.ACCEPTED : InvitationStatus.REJECTED;
         invitation.setStatus(status);
-        groupInvitationRepository.save(invitation);
+        accountInvitationRepository.save(invitation);
 
         if (status == InvitationStatus.ACCEPTED) {
             var user = invitation.getUser();
-            var group = invitation.getGroup();
-            user.getUserGroups().add(group);
+           // var group = invitation.getGroup();
+          //  user.getUserGroups().add(group);
             userRepository.save(user);
         }
 
