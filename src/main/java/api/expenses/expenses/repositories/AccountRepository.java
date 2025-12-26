@@ -1,6 +1,7 @@
 package api.expenses.expenses.repositories;
 
 import api.expenses.expenses.entities.Account;
+import api.expenses.expenses.projections.AccountSummaryProjection;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,24 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
-
-    @Query(value = """
-        SELECT a.*
-        FROM accounts a
-        INNER JOIN account_members am on am.account_id  = a.id
-        WHERE am.user_id = :userId;
-    """, nativeQuery = true)
-    List<Account> findAllAccountsByMemberId(Long userId);
-
-    @Query("""
-        select distinct a
-        from Account a
-        join fetch a.members m
-        left join fetch a.owner o
-        where m.user.id = :userId
-    """)
-    List<Account> findAllAccountsByMemberIdWithMembers(Long userId);
-
     @Query("""
     select distinct a
     from Account a
@@ -44,4 +27,24 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findAllAccountsByMemberIdWithAllMembers(Long userId);
 
     Optional<Account> findAccountByNameAndOwnerId(@NotNull String name, Long id);
+
+    @Query("""
+    select
+        a.id as accountId,
+        a.name as accountName,
+        o.id as ownerId,
+        o.email as ownerEmail,
+        count(m.id) as membersCount
+    from Account a
+    join a.members m
+    join a.owner o
+    where exists (
+        select 1
+        from AccountMember am
+        where am.account = a
+          and am.user.id = :userId
+    )
+    group by a.id, a.name, o.id, o.email
+""")
+    List<AccountSummaryProjection> findAccountSummariesByMemberUserId(Long userId);
 }

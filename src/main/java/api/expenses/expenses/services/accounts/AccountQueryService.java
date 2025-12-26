@@ -24,7 +24,7 @@ public class AccountQueryService {
 
     public List<AccountRecord> findAllAccountsOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
-        return accountRepository.findAllAccountsByMemberIdWithMembers(owner.getId())
+        return accountRepository.findAllAccountsByMemberIdWithAllMembers(owner.getId())
                 .stream().map(accountMapper::toRecord)
                 .toList();
     }
@@ -33,8 +33,8 @@ public class AccountQueryService {
     @Transactional
     public List<AccountsWithUser> getAllAccountsWithUserCount() {
         var owner = userService.getAuthenticatedUser();
-        return accountRepository.findAllAccountsByMemberId(owner.getId())
-                .stream().map(account -> new AccountsWithUser(account.getId(), account.getName(), account.getMembers().size()))
+        return accountRepository.findAccountSummariesByMemberUserId(owner.getId())
+                .stream().map(account -> new AccountsWithUser(account.getAccountId(), account.getAccountName(), account.getMembersCount(), account.getOwnerEmail()))
                 .toList();
     }
 
