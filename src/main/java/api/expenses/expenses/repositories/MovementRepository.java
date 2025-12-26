@@ -48,10 +48,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query("""
     SELECT g
     FROM Movement g
-    WHERE (
-        (g.userGroups.description = 'DEFAULT' AND g.users.email = :#{#user.email})
-        OR (g.userGroups.description <> 'DEFAULT' AND g.userGroups.description IN :#{#user.userGroups.![description]})
-    )
+    WHERE
+    (:#{#accountsId} IS NULL OR g.account.id IN :#{#accountsId})
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
       AND (:#{#filter.bank} IS NULL OR g.bank IN :#{#filter.bank})
       AND (:#{#filter.type} IS NULL OR g.type IN :#{#filter.type})
@@ -70,7 +68,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
       )
 """)
     Page<Movement> getExpenseBy(
-            @Param("user") UserRecord user,
+            @Param("accountsId") List<Long> accountsId,
             @Param("filter") MovementSearchFilterRecord filter,
             Pageable pageable
     );
@@ -117,11 +115,12 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
         """)
     Optional<Movement> findByIdWithCurrency(Long id);
 
+    //TODO REVISAR ESTO
     @Query(value = """
             SELECT g
             FROM Movement g
             JOIN fetch g.currency c
-            WHERE (g.users.email = :#{#user.email})
+            WHERE (g.owner.email = :#{#user.email})
             ORDER BY g.date DESC
             LIMIT 1
         """)

@@ -22,7 +22,7 @@ public interface MovementMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "userGroups", ignore = true)
+    @Mapping(target = "account", ignore = true)
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
 
 
@@ -30,7 +30,7 @@ public interface MovementMapper {
     LastIngresoRecord toLastIngreso(Movement ingreso);
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "userGroups", ignore = true)
+    @Mapping(target = "account", ignore = true)
     @Mapping(target = "type", source = "type")
     Movement toEntity(MovementToAdd movementToAdd);
 

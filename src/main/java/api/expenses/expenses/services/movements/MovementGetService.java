@@ -2,9 +2,11 @@ package api.expenses.expenses.services.movements;
 
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.LastIngresoRecord;
+import api.expenses.expenses.records.accounts.AccountRecord;
 import api.expenses.expenses.records.movements.MovementRecord;
 import api.expenses.expenses.records.movements.MovementSearchFilterRecord;
 import api.expenses.expenses.repositories.MovementRepository;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -22,13 +24,16 @@ public class MovementGetService {
     private final UserService userService;
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
+    private final AccountQueryService accountQueryService;
 
     @Transactional
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
-        var user = userService.getAuthenticatedUserRecord();
-        var result = movementRepository.getExpenseBy(user, filter, page);
-
-        return result.map(movementMapper::toRecord);
+        var accounts = accountQueryService.findAllAccountsOfLogInUser()
+                .stream()
+                .map(AccountRecord::id)
+                .toList();
+        return movementRepository.getExpenseBy(accounts, filter, page)
+                .map(movementMapper::toRecord);
     }
 
     public LastIngresoRecord getLastIngreso() {

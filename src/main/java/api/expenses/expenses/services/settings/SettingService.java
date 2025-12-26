@@ -5,9 +5,9 @@ import api.expenses.expenses.enums.CategoryEnum;
 import api.expenses.expenses.enums.MovementType;
 import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.movements.MovementToAdd;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import api.expenses.expenses.services.category.CategoryAddService;
 import api.expenses.expenses.services.currencies.CurrencyAddService;
-import api.expenses.expenses.services.groups.GroupGetService;
 import api.expenses.expenses.services.movements.MovementAddService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +23,11 @@ public class SettingService {
     private final MovementAddService movementAddService;
     private final CategoryAddService categoryAddService;
     private final CurrencyAddService currencyAddService;
-    private final GroupGetService groupGetService;
+    private final AccountQueryService accountQueryService;
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
         var category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
-        var descriptionGroup = groupGetService.getGroupByDescription(incomeToAdd.group());
+        var descriptionGroup = accountQueryService.findAccountByName(incomeToAdd.group());
         String description = "Sueldo Recibido";
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency());
 
@@ -40,6 +40,6 @@ public class SettingService {
                 0,
                 0,
                 BanksEnum.valueOf(incomeToAdd.bank()),
-                descriptionGroup.getDescription()));
+                descriptionGroup.getName()));
     }
 }
