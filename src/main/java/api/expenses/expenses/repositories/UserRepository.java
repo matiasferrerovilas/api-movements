@@ -13,7 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = """
      SELECT u
         FROM User u
-        JOIN FETCH u.userGroups
         WHERE u.email = :email
 """)
     Optional<User> findByEmail(String email);
@@ -21,7 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = """
      SELECT u
         FROM User u
-        JOIN FETCH u.userGroups
         WHERE u.email in :email
 """)
     List<User> findByEmail(List<String> email);

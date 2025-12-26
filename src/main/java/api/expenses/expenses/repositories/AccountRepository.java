@@ -11,6 +11,15 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
+
+    @Query(value = """
+        SELECT a.*
+        FROM accounts a
+        INNER JOIN account_members am on am.account_id  = a.id
+        WHERE am.user_id = :userId;
+    """, nativeQuery = true)
+    List<Account> findAllAccountsByMemberId(Long userId);
+
     @Query("""
         select distinct a
         from Account a
@@ -18,7 +27,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
         left join fetch a.owner o
         where m.user.id = :userId
     """)
-    List<Account> findAllAccountsByMemberId(Long userId);
+    List<Account> findAllAccountsByMemberIdWithMembers(Long userId);
 
     Optional<Account> findAccountByNameAndOwnerId(@NotNull String name, Long id);
 }

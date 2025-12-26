@@ -82,7 +82,7 @@ public class IngresoController {
             }
     )
     @GetMapping
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     public List<IncomeRecord> getAllIncomes() {
         return incomeAddService.getAllIncomes();
     }

@@ -1,12 +1,11 @@
 package api.expenses.expenses.services.groups;
 
 import api.expenses.expenses.aspect.interfaces.PublishMovement;
-import api.expenses.expenses.entities.GroupInvitation;
+import api.expenses.expenses.entities.AccountInvitation;
 import api.expenses.expenses.enums.EventType;
 import api.expenses.expenses.enums.InvitationStatus;
 import api.expenses.expenses.mappers.GroupInvitationMapper;
 import api.expenses.expenses.records.groups.GroupInvitationRecord;
-import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.repositories.AccountInvitationRepository;
 import api.expenses.expenses.repositories.GroupRepository;
 import api.expenses.expenses.repositories.UserRepository;
@@ -54,7 +53,7 @@ public class GroupInvitationAddService {
 
         var newInvitations = usersToInvite.stream()
                 .filter(user -> !alreadyInvitedUserIds.contains(user.getId()))
-                .map(user -> GroupInvitation.builder()
+                .map(user -> AccountInvitation.builder()
                         .user(user)
                         //.group(groupToInvite)
                         .invitedBy(loggedInUser)
@@ -67,30 +66,5 @@ public class GroupInvitationAddService {
             return this.getAllInvitations();
         }
         return null;//groupInvitationMapper.toRecord(accountInvitationRepository.saveAll(newInvitations));
-    }
-
-    @Transactional
-    @PublishMovement(eventType = EventType.INVITATION_CONFIRMED_REJECTED, routingKey = "/topic/invitation/update")
-    public List<GroupInvitationRecord> acceptRejectInvitation(Long invitationId, InvitationResponseRecord confirmInvitations) {
-        var invitation = accountInvitationRepository.findById(invitationId)
-                .orElseThrow(() -> new EntityNotFoundException("No existe invitacion con ese id"));
-
-        if (!invitation.getStatus().equals(InvitationStatus.PENDING)) {
-            log.error("La invitacion no esta en estado PENDING");
-            return this.getAllInvitations();
-        }
-
-        var status = confirmInvitations.status() ? InvitationStatus.ACCEPTED : InvitationStatus.REJECTED;
-        invitation.setStatus(status);
-        accountInvitationRepository.save(invitation);
-
-        if (status == InvitationStatus.ACCEPTED) {
-            var user = invitation.getUser();
-           // var group = invitation.getGroup();
-          //  user.getUserGroups().add(group);
-            userRepository.save(user);
-        }
-
-        return this.getAllInvitations();
     }
 }

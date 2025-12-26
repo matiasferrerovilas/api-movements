@@ -5,6 +5,7 @@ import api.expenses.expenses.records.accounts.AccountRecord;
 import api.expenses.expenses.records.accounts.AccountsWithUser;
 import api.expenses.expenses.repositories.AccountRepository;
 import api.expenses.expenses.services.user.UserService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,13 @@ public class AccountQueryService {
 
     public List<AccountRecord> findAllAccountsOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
-        return accountRepository.findAllAccountsByMemberId(owner.getId())
+        return accountRepository.findAllAccountsByMemberIdWithMembers(owner.getId())
                 .stream().map(accountMapper::toRecord)
                 .toList();
     }
 
+
+    @Transactional
     public List<AccountsWithUser> getAllAccountsWithUserCount() {
         var owner = userService.getAuthenticatedUser();
         return accountRepository.findAllAccountsByMemberId(owner.getId())

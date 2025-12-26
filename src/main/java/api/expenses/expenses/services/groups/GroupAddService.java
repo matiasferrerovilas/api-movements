@@ -29,7 +29,7 @@ public class GroupAddService {
 
         //TODO este metodo debe guardar nada mas, no debe fijarse si existe o no.
         var group = groupGetService.getGroupByDescription(addGroupRecord.description());
-        user.getUserGroups().add(group);
+        //user.getUserGroups().add(group);
         userRepository.save(user);
         return groupGetService.getMyGroupsWithCount();
 

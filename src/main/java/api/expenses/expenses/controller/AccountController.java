@@ -1,8 +1,10 @@
 package api.expenses.expenses.controller;
 
+import api.expenses.expenses.records.accounts.AccountInvitationRecord;
 import api.expenses.expenses.records.accounts.AccountRecord;
 import api.expenses.expenses.records.accounts.AccountsWithUser;
 import api.expenses.expenses.records.groups.AddGroupRecord;
+import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.records.groups.InviteToGroup;
 import api.expenses.expenses.services.accounts.AccountAddService;
 import api.expenses.expenses.services.accounts.AccountQueryService;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -90,5 +93,35 @@ public class AccountController {
             @RequestBody InviteToGroup request
     ) {
         invitationService.inviteToAccount(accountId, request.emails());
+    }
+
+    @Operation(
+            summary = "Listar invitaciones recibidas",
+            description = "Devuelve todas las invitaciones con estado PENDING del usuario autenticado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Invitaciones obtenidas correctamente")
+            }
+    )
+    @GetMapping("/invitations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountInvitationRecord> listMyInvitations() {
+        return invitationService.getAllInvitations();
+    }
+
+    @Operation(
+            summary = "Actualizar estado de invitación",
+            description = "Permite aceptar o rechazar una invitación.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Invitación actualizada correctamente"),
+                    @ApiResponse(responseCode = "404", description = "Invitación no encontrada")
+            }
+    )
+    @PatchMapping("/invitations/{invitationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateInvitationStatus(
+            @PathVariable Long invitationId,
+            @RequestBody InvitationResponseRecord body
+    ) {
+        invitationService.acceptRejectInvitation(invitationId, body);
     }
 }

@@ -1,6 +1,5 @@
 package api.expenses.expenses.services.income;
 
-import api.expenses.expenses.entities.UserGroups;
 import api.expenses.expenses.mappers.IncomeMapper;
 import api.expenses.expenses.records.income.IncomeRecord;
 import api.expenses.expenses.records.income.IncomeToAdd;
@@ -41,8 +40,9 @@ public class IncomeAddService {
 
     public List<IncomeRecord> getAllIncomes() {
         var user = userService.getAuthenticatedUser();
-        var groupsIds = user.getUserGroups().stream().map(UserGroups::getId)
-                .toList();
+        var groupsIds = List.of(1L);
+        /*user.getUserGroups().stream().map(UserGroups::getId)
+                .toList();*/
         return incomeMapper.toRecord(incomeRepository.findAllByUserOrGroupsIn(user.getId(), groupsIds));
     }
 

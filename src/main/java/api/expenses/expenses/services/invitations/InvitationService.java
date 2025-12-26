@@ -1,11 +1,16 @@
 package api.expenses.expenses.services.invitations;
 
-import api.expenses.expenses.entities.GroupInvitation;
+import api.expenses.expenses.entities.AccountInvitation;
 import api.expenses.expenses.enums.InvitationStatus;
-import api.expenses.expenses.repositories.AccountRepository;
+import api.expenses.expenses.mappers.AccountInvitationMapper;
+import api.expenses.expenses.records.accounts.AccountInvitationRecord;
+import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.repositories.AccountInvitationRepository;
+import api.expenses.expenses.repositories.AccountRepository;
+import api.expenses.expenses.services.accounts.AccountAddService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,9 +23,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InvitationService {
 
+    private final AccountAddService accountAddService;
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final AccountInvitationRepository accountInvitationRepository;
+    private final AccountInvitationMapper accountInvitationMapper;
 
     public void inviteToAccount(Long accountId, List<String> emails) {
         var accountToInvite = accountRepository.findById(accountId)
@@ -42,7 +49,7 @@ public class InvitationService {
 
         var newInvitations = usersToInvite.stream()
                 .filter(user -> !alreadyInvitedUserIds.contains(user.getId()))
-                .map(user -> GroupInvitation.builder()
+                .map(user -> AccountInvitation.builder()
                         .user(user)
                         .account(accountToInvite)
                         .invitedBy(loggedInUser)
@@ -56,5 +63,29 @@ public class InvitationService {
         }
 
         accountInvitationRepository.saveAll(newInvitations);
+    }
+
+    public List<AccountInvitationRecord> getAllInvitations() {
+        var user = userService.getAuthenticatedUserRecord();
+        return accountInvitationMapper.toRecord(accountInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
+    }
+
+    @Transactional
+    public void acceptRejectInvitation(Long invitationId, InvitationResponseRecord invitationResponseRecord) {
+        var invitation = accountInvitationRepository.findById(invitationId)
+                .orElseThrow(() -> new EntityNotFoundException("No existe invitación con ese id"));
+
+        if (!invitation.getStatus().equals(InvitationStatus.PENDING)) {
+            log.error("La invitación no esta en estado PENDING");
+            return;
+        }
+
+        var status = invitationResponseRecord.status() ? InvitationStatus.ACCEPTED : InvitationStatus.REJECTED;
+        invitation.setStatus(status);
+        accountInvitationRepository.save(invitation);
+
+        if (status == InvitationStatus.ACCEPTED) {
+            accountAddService.addMemberToAccount(invitation.getAccount());
+        }
     }
 }

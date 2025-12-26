@@ -63,6 +63,15 @@ public class AccountAddService {
         //accountPublishServiceWebSocket.publishAccountCreated(accountMapper.toRecord(account));
     }
 
+    public void addMemberToAccount(Account account) {
+        var user = userService.getAuthenticatedUser();
+        account.getMembers().add(AccountMember.builder()
+                .user(user)
+                .role(AccountRole.COLLABORATOR)
+                .build());
+        accountRepository.save(account);
+    }
+
    /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")
     public List<AccountsWithUser> leaveAccount(Long accountId) throws AccessDeniedException {
         var user = userService.getAuthenticatedUserRecord();
