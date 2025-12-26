@@ -29,5 +29,19 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     """)
     List<Account> findAllAccountsByMemberIdWithMembers(Long userId);
 
+    @Query("""
+    select distinct a
+    from Account a
+    join fetch a.members
+    left join fetch a.owner
+    where exists (
+        select 1
+        from AccountMember m
+        where m.account = a
+          and m.user.id = :userId
+    )
+""")
+    List<Account> findAllAccountsByMemberIdWithAllMembers(Long userId);
+
     Optional<Account> findAccountByNameAndOwnerId(@NotNull String name, Long id);
 }

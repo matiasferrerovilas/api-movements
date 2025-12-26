@@ -48,9 +48,9 @@ public class Income {
     @Enumerated(EnumType.STRING)
     private BanksEnum bank;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_group_id")
-    private UserGroups userGroups;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

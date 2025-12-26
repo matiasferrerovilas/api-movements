@@ -12,6 +12,7 @@ import api.expenses.expenses.services.publishing.websockets.AccountPublishServic
 import api.expenses.expenses.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,6 +27,10 @@ public class AccountAddService {
     private final AccountMapper accountMapper;
 
     public void createAccount(AddGroupRecord record) {
+        if(StringUtils.isAllBlank(record.description())) {
+            log.error("Description for group is blank");
+            return;
+        }
         var owner = userService.getAuthenticatedUser();
 
         var account = Account.builder()
@@ -39,6 +44,7 @@ public class AccountAddService {
         }
         var membership = AccountMember.builder()
                 .user(owner)
+                .account(account)
                 .role(AccountRole.OWNER)
                 .build();
         account.getMembers().add(membership);

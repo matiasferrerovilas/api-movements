@@ -1,5 +1,6 @@
 package api.expenses.expenses.services.accounts;
 
+import api.expenses.expenses.entities.Account;
 import api.expenses.expenses.mappers.AccountMapper;
 import api.expenses.expenses.records.accounts.AccountRecord;
 import api.expenses.expenses.records.accounts.AccountsWithUser;
@@ -40,5 +41,10 @@ public class AccountQueryService {
     public boolean verifyAccountExist(@NotNull String name, Long id) {
         return accountRepository.findAccountByNameAndOwnerId(name, id)
                 .isPresent();
+    }
+
+    public Account findAccountByName(String name) {
+        var owner = userService.getAuthenticatedUser();
+        return accountRepository.findAllAccountsByMemberIdWithAllMembers(owner.getId()).getFirst();
     }
 }

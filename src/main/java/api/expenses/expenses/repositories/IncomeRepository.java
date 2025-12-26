@@ -10,11 +10,12 @@ import java.util.List;
 @Repository
 public interface IncomeRepository extends JpaRepository<Income, Long> {
     @Query(value = """
-            SELECT i
-            FROM Income i
-            JOIN FETCH i.currency c
-            JOIN FETCH i.userGroups ug
-            WHERE i.id =:userId OR ug.id IN (:groups)
+        select distinct i
+        from Income i
+        join fetch i.currency
+        join fetch i.account a
+        join a.members m
+        where m.user.id = :userId
 """)
-    List<Income> findAllByUserOrGroupsIn(Long userId, List<Long> groups);
+    List<Income> findAllByUserOrGroupsIn(Long userId);
 }
