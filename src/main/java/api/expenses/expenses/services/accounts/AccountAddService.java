@@ -71,11 +71,14 @@ public class AccountAddService {
 
     public void addMemberToAccount(Account account) {
         var user = userService.getAuthenticatedUser();
-        account.getMembers().add(AccountMember.builder()
+        var membership = AccountMember.builder()
                 .user(user)
+                .account(account)
                 .role(AccountRole.COLLABORATOR)
-                .build());
-        accountRepository.save(account);
+                .build();
+
+        account.getMembers().add(membership);
+        accountMemberRepository.save(membership);
     }
 
    /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")
