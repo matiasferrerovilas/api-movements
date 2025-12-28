@@ -5,7 +5,7 @@ import api.expenses.expenses.records.groups.AddGroupRecord;
 import api.expenses.expenses.records.income.IncomeToAdd;
 import api.expenses.expenses.records.onboarding.OnBoardingForm;
 import api.expenses.expenses.services.accounts.AccountAddService;
-import api.expenses.expenses.services.settings.SettingService;
+import api.expenses.expenses.services.income.IncomeAddService;
 import api.expenses.expenses.services.user.UserAddService;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.transaction.Transactional;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OnboardingService {
     private final UserAddService userAddService;
-    private final SettingService settingService;
+    private final IncomeAddService incomeAddService;
     private final AccountAddService accountAddService;
     private final UserService userService;
     public boolean isFirstLogin() {
@@ -35,7 +35,7 @@ public class OnboardingService {
         });
 
         if (onBoardingForm.onBoardingAmount().bank() != null && onBoardingForm.onBoardingAmount().currency() != null && onBoardingForm.onBoardingAmount().amount() != null) {
-            settingService.addIngreso(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
+            incomeAddService.loadIncome(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
                     onBoardingForm.onBoardingAmount().currency(),
                     onBoardingForm.onBoardingAmount().amount(),
                     onBoardingForm.onBoardingAmount().accountToAdd()));

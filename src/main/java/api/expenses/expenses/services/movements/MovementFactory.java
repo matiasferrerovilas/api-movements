@@ -32,7 +32,7 @@ public class MovementFactory {
         movement.setMonth(movement.getDate().getMonthValue());
 
         movement.setOwner(userService.getAuthenticatedUser());
-        var account = accountQueryService.findAccountByName(dto.group());
+        var account = accountQueryService.findAccountById(dto.accountId());
         movement.setAccount(account);
 
         return movement;

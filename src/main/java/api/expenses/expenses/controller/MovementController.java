@@ -100,8 +100,8 @@ public class MovementController {
             @RequestParam("bank") String bank,
 
             @Parameter(description = "Grupo destino (opcional)")
-            @RequestParam(value = "group", required = false) String group) {
-        movementImportFileService.importMovementsByFile(file, bank, group);
+            @RequestParam(value = "accountId", required = false) Long accountId) {
+        movementImportFileService.importMovementsByFile(file, bank, accountId);
     }
 
     @Operation(

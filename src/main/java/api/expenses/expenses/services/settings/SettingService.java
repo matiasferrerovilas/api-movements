@@ -27,7 +27,7 @@ public class SettingService {
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
         var category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
-        var descriptionGroup = accountQueryService.findAccountByName(incomeToAdd.group());
+        var account = accountQueryService.findAccountByName(incomeToAdd.group());
         String description = "Sueldo Recibido";
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency());
 
@@ -40,6 +40,6 @@ public class SettingService {
                 0,
                 0,
                 BanksEnum.valueOf(incomeToAdd.bank()),
-                descriptionGroup.getName()));
+                account.getId()));
     }
 }

@@ -62,6 +62,6 @@ public class UtilityAddService {
                 0,
                 0,
                 BanksEnum.GALICIA,
-                serviceToAdd.getAccount().getName()));
+                serviceToAdd.getAccount().getId()));
     }
 }

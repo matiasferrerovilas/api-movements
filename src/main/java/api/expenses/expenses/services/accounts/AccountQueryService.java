@@ -54,4 +54,9 @@ public class AccountQueryService {
         return accountRepository.findAccountByNameAndOwnerId(name,owner.getId())
                 .orElseThrow(() -> new EntityNotFoundException("No existe account con ese nombre en ese usuario"));
     }
+
+    public Account findAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("No existe account con ese id"));
+    }
 }

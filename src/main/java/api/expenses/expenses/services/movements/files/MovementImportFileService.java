@@ -4,8 +4,7 @@ import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.exceptions.BusinessException;
 import api.expenses.expenses.helpers.PdfReaderService;
 import api.expenses.expenses.records.movements.MovementFileToAdd;
-import api.expenses.expenses.services.publishing.rabbit.MovementPublishServiceRabbit;
-import api.expenses.expenses.services.user.UserService;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,9 +20,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MovementImportFileService {
     private final Set<ExpenseFileStrategy> expenseFileStrategies;
-    private final MovementPublishServiceRabbit movementPublishServiceRabbit;
-    private final UserService userService;
     private final PdfReaderService pdfReaderService;
+    private final AccountQueryService accountQueryService;
 
     /*
     todo: Terminar es tarea 21, ver ventajas desventajas de implementar rabbit con IA
@@ -51,7 +49,7 @@ public class MovementImportFileService {
         creditCardStatements.forEach(movement -> {
         });
     }*/
-    public void importMovementsByFile(MultipartFile file, String bank, String group) {
+    public void importMovementsByFile(MultipartFile file, String bank, Long accountId) {
         try {
             Path pdfFile = Files.createTempFile("expense-", ".pdf");
             file.transferTo(pdfFile);
@@ -63,7 +61,8 @@ public class MovementImportFileService {
                     .filter(strategy -> strategy.match(banksEnum))
                     .toList();
 
-            var movementFile = new MovementFileToAdd(text, group);
+            var account = accountQueryService.findAccountById(accountId);
+            var movementFile = new MovementFileToAdd(text, account.getId());
             switch (list.size()) {
                 case 0 -> throw new IllegalArgumentException("Invalid bank method");
                 case 1 -> list.getFirst().process(movementFile);
