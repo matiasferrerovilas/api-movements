@@ -1,7 +1,6 @@
 package api.expenses.expenses.repositories;
 
 import api.expenses.expenses.entities.Services;
-import api.expenses.expenses.records.groups.UserRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,19 +13,21 @@ import java.util.Optional;
 @Repository
 public interface ServiceRepository extends JpaRepository<Services, Long> {
     @Query(value = """
-    SELECT s
-    FROM Services s
-    JOIN FETCH s.currency c
-    LEFT JOIN FETCH s.users u
-    LEFT JOIN FETCH s.userGroups ug
-    WHERE (:symbols IS NULL OR c.symbol IN :symbols)
-     AND (:lastPayment IS NULL OR s.lastPayment = :lastPayment)
-     AND (
-        (s.userGroups.description = 'DEFAULT' AND s.users.email = :#{#user.email})
-        OR (s.userGroups.description <> 'DEFAULT' AND s.userGroups.description IN :#{#user.userGroups.![description]})
-    )
+      select distinct s
+        from Services s
+        join fetch s.currency c
+        join fetch s.account a
+        left join fetch s.owner
+        join a.members m
+        where m.user.id = :userId
+          and (:symbols is null or c.symbol in :symbols)
+          and (:lastPayment is null or s.lastPayment = :lastPayment)
 """)
-    List<Services> findByCurrencyAndLastPayment(@Param("user") UserRecord user, List<String> symbols, LocalDate lastPayment);
+    List<Services> findByCurrencyAndLastPayment(
+            @Param("userId") Long userId,
+            @Param("symbols") List<String> symbols,
+            @Param("lastPayment") LocalDate lastPayment
+    );
 
     @Query(value = """
     SELECT s

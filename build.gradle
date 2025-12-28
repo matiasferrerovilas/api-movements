@@ -172,7 +172,7 @@ liquibase {
     activities {
         main {
             changelogFile 'src/main/resources/db/changelog/changelog.yaml'
-            url "jdbc:mysql://192.168.1.100:3306/$dbName"
+            url "jdbc:mysql://localhost:3306/$dbName"
             username 'root'
             password 'helios'
         }

@@ -1,6 +1,6 @@
 package api.expenses.expenses.repositories;
 
-import api.expenses.expenses.entities.GroupInvitation;
+import api.expenses.expenses.entities.AccountInvitation;
 import api.expenses.expenses.enums.InvitationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,19 +10,19 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface GroupInvitationRepository extends JpaRepository<GroupInvitation, Long> {
-    List<GroupInvitation> findAllByGroupIdAndStatus(Long groupId, InvitationStatus status);
+public interface AccountInvitationRepository extends JpaRepository<AccountInvitation, Long> {
+    List<AccountInvitation> findAllByAccountIdAndStatus(Long groupId, InvitationStatus status);
 
     @Query("""
        SELECT gi
-       FROM GroupInvitation gi
-       JOIN FETCH gi.user u
-       JOIN FETCH gi.group g
+       FROM AccountInvitation gi
+       LEFt JOIN FETCH gi.user u
+       JOIN FETCH gi.account g
        JOIN FETCH gi.invitedBy ib
        WHERE gi.user.id = :userId
          AND gi.status = :status
        """)
-    List<GroupInvitation> findAllByUserIdAndStatus(
+    List<AccountInvitation> findAllByUserIdAndStatus(
             @Param("userId") Long userId,
             @Param("status") InvitationStatus status
     );

@@ -11,18 +11,18 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CurrencyMapper.class, UserMapper.class, GroupMapper.class},
+@Mapper(componentModel = "spring", uses = {CurrencyMapper.class, UserMapper.class, AccountMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IncomeMapper {
     @Mapping(target = "currency", ignore = true)
-    @Mapping(target = "userGroups", ignore = true)
+    @Mapping(target = "account", ignore = true)
     @Mapping(
             target = "bank",
             source = "bank",
             qualifiedByName = "bankFromDescription"
     )    Income toEntity(IncomeToAdd incomeToAdd);
 
-    @Mapping(source = "userGroups", target = "groups")
+    @Mapping(source = "account.name", target = "accountName")
     IncomeRecord toRecord(Income income);
     List<IncomeRecord> toRecord(List<Income> income);
 

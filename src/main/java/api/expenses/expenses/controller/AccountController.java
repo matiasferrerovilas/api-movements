@@ -1,19 +1,15 @@
 package api.expenses.expenses.controller;
 
-import api.expenses.expenses.entities.Movement;
+import api.expenses.expenses.records.accounts.AccountInvitationRecord;
+import api.expenses.expenses.records.accounts.AccountRecord;
+import api.expenses.expenses.records.accounts.AccountsWithUser;
 import api.expenses.expenses.records.groups.AddGroupRecord;
-import api.expenses.expenses.records.groups.GroupInvitationRecord;
-import api.expenses.expenses.records.groups.GroupsWIthUser;
 import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.records.groups.InviteToGroup;
-import api.expenses.expenses.records.groups.UserGroupsRecord;
-import api.expenses.expenses.services.groups.GroupAddService;
-import api.expenses.expenses.services.groups.GroupGetService;
-import api.expenses.expenses.services.groups.GroupInvitationAddService;
+import api.expenses.expenses.services.accounts.AccountAddService;
+import api.expenses.expenses.services.accounts.AccountQueryService;
+import api.expenses.expenses.services.invitations.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,20 +24,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
-
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/groups")
-@Tag(name = "Grupos", description = "API para la gestión del grupos")
+@RequestMapping("/v1/account")
+@Tag(name = "Grupos de cuenta", description = "API para la gestión del grupos")
+public class AccountController {
 
-public class GroupController {
-    private final GroupAddService groupAddService;
-    private final GroupInvitationAddService groupInvitationAddService;
-    private final GroupGetService groupGetService;
-
+    private final AccountAddService accountAddService;
+    private final AccountQueryService accountQueryService;
+    private final InvitationService invitationService;
     @Operation(
             summary = "Crear un nuevo grupo",
             description = "Crea un grupo asociado al usuario autenticado.",
@@ -51,8 +44,14 @@ public class GroupController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public List<GroupsWIthUser> createGroup(@RequestBody AddGroupRecord body) {
-        return groupAddService.saveGroup(body);
+    public void createAccount(@RequestBody AddGroupRecord body) {
+        accountAddService.createAccount(body);
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRecord> getAllAccounts() {
+        return accountQueryService.findAllAccountsOfLogInUser();
     }
 
     @Operation(
@@ -63,27 +62,21 @@ public class GroupController {
             }
     )
     @GetMapping("/count")
-    public List<GroupsWIthUser> getMyGroupsWithCount() {
-        return groupGetService.getMyGroupsWithCount();
+    public List<AccountsWithUser> getMyGroupsWithCount() {
+        return accountQueryService.getAllAccountsWithUserCount();
     }
 
     @Operation(
-            summary = "Obtener gastos",
-            description = "Recupera una lista de gastos filtrados por diferentes criterios",
+            summary = "Salir de un grupo",
+            description = "El usuario autenticado abandona un grupo.",
             responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Lista de gastos encontrados",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = Movement.class))
-                            )
-                    )
+                    @ApiResponse(responseCode = "204", description = "Salida del grupo exitosa")
             }
     )
-    @GetMapping
-    public List<UserGroupsRecord> getMyGroups() {
-        return groupGetService.getMyGroups();
+    @DeleteMapping("/{accountId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void exitGroup(@PathVariable Long accountId) {
+        accountAddService.leaveAccount(accountId);
     }
 
     @Operation(
@@ -93,13 +86,13 @@ public class GroupController {
                     @ApiResponse(responseCode = "201", description = "Invitación creada correctamente")
             }
     )
-    @PostMapping("/{groupId}/invitations")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/{accountId}/invitations")
+    @ResponseStatus(HttpStatus.OK)
     public void createInvitation(
-            @PathVariable Long groupId,
+            @PathVariable Long accountId,
             @RequestBody InviteToGroup request
     ) {
-        groupInvitationAddService.inviteToGroup(groupId, request.emails());
+        invitationService.inviteToAccount(accountId, request.emails());
     }
 
     @Operation(
@@ -110,8 +103,9 @@ public class GroupController {
             }
     )
     @GetMapping("/invitations")
-    public List<GroupInvitationRecord> listMyInvitations() {
-        return groupInvitationAddService.getAllInvitations();
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountInvitationRecord> listMyInvitations() {
+        return invitationService.getAllInvitations();
     }
 
     @Operation(
@@ -123,23 +117,11 @@ public class GroupController {
             }
     )
     @PatchMapping("/invitations/{invitationId}")
-    public List<GroupInvitationRecord> updateInvitationStatus(
+    @ResponseStatus(HttpStatus.OK)
+    public void updateInvitationStatus(
             @PathVariable Long invitationId,
             @RequestBody InvitationResponseRecord body
     ) {
-        return groupInvitationAddService.acceptRejectInvitation(invitationId, body);
-    }
-
-    @Operation(
-            summary = "Salir de un grupo",
-            description = "El usuario autenticado abandona un grupo.",
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "Salida del grupo exitosa")
-            }
-    )
-    @DeleteMapping("/{groupId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void exitGroup(@PathVariable Long groupId) throws AccessDeniedException {
-        groupAddService.exitGroup(groupId);
+        invitationService.acceptRejectInvitation(invitationId, body);
     }
 }

@@ -1,6 +1,7 @@
 package api.expenses.expenses.configuration;
 
 import api.expenses.expenses.exceptions.ErrorResponseDTO;
+import api.expenses.expenses.exceptions.PermissionDeniedException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,19 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         .detail("The requested resource was not found")
         .build();
     return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
+  }
+
+  @ExceptionHandler(PermissionDeniedException.class)
+  public ResponseEntity<ErrorResponseDTO> handleNoSuchElementException(PermissionDeniedException ex) {
+
+    log.info("No tiene permisos para realizar la tarea", ex);
+
+    var errorResponseDTO = ErrorResponseDTO.builder()
+            .title("Permisos Insuficiente")
+            .statusCode(String.valueOf(HttpStatus.METHOD_NOT_ALLOWED.value()))
+            .detail(ex.getMessage())
+            .build();
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
   }
 
   @Override

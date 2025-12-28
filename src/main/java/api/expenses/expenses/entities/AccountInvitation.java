@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GroupInvitation {
+public class AccountInvitation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,8 +37,8 @@ public class GroupInvitation {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "group_id", nullable = false)
-    private UserGroups group;
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "invited_by", nullable = false)

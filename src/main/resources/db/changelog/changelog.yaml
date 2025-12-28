@@ -20,3 +20,24 @@ databaseChangeLog:
   - include:
       file: 007_create_table_ingreso.sql
       relativeToChangelogFile: true
+  - include:
+      file: 008_create_table_account_group.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 009_alter_table_group_invitation.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 010_rename_table_group_invitation.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 011_alter_table_ingrersos.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 012_alter_table_services.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 013_alter_table_movement.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 014_drop_table_user_groups.sql
+      relativeToChangelogFile: true

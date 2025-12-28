@@ -37,13 +37,13 @@ public class Services {
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_group_id")
-    private UserGroups userGroups;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User users;
+    private User owner;
 
     @Transient
     public boolean getIsPaid() {

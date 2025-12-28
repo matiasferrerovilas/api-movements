@@ -4,9 +4,9 @@ import api.expenses.expenses.entities.Movement;
 import api.expenses.expenses.mappers.MovementMapper;
 import api.expenses.expenses.records.movements.ExpenseToUpdate;
 import api.expenses.expenses.records.movements.MovementToAdd;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import api.expenses.expenses.services.category.CategoryResolver;
 import api.expenses.expenses.services.currencies.CurrencyResolver;
-import api.expenses.expenses.services.groups.GroupResolver;
 import api.expenses.expenses.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +18,9 @@ import org.springframework.stereotype.Service;
 public class MovementFactory {
     private final CategoryResolver categoryResolver;
     private final CurrencyResolver currencyResolver;
-    private final GroupResolver groupResolver;
     private final UserService userService;
     private final MovementMapper movementMapper;
-
+    private final AccountQueryService accountQueryService;
     public Movement create(MovementToAdd dto) {
 
         var movement = movementMapper.toEntity(dto);
@@ -32,8 +31,9 @@ public class MovementFactory {
         movement.setYear(movement.getDate().getYear());
         movement.setMonth(movement.getDate().getMonthValue());
 
-        movement.setUsers(userService.getAuthenticatedUser());
-        movement.setUserGroups(groupResolver.resolve(dto.group()));
+        movement.setOwner(userService.getAuthenticatedUser());
+        var account = accountQueryService.findAccountById(dto.accountId());
+        movement.setAccount(account);
 
         return movement;
     }

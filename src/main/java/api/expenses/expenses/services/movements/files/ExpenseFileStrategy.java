@@ -40,9 +40,6 @@ public abstract class ExpenseFileStrategy {
     private MovementToAdd processExpense(ParsedExpense e, MovementFileToAdd movementFileToAdd) {
         int cuotaActual = 0;
         int cuotaTotales = 0;
-        var date = e.date();
-        int year = date.getYear();
-        int month = date.getMonthValue();
 
         if (e.installment() != null && !e.installment().isEmpty()) {
             String[] parts = e.installment().split("/");
@@ -61,7 +58,7 @@ public abstract class ExpenseFileStrategy {
                 cuotaActual,
                 cuotaTotales,
                 getBank(),
-                movementFileToAdd.group()
+                movementFileToAdd.accountId()
         );
 
     }

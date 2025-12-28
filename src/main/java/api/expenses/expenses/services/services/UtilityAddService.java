@@ -12,8 +12,8 @@ import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.ServiceToAdd;
 import api.expenses.expenses.repositories.CurrencyRepository;
 import api.expenses.expenses.repositories.ServiceRepository;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import api.expenses.expenses.services.category.CategoryAddService;
-import api.expenses.expenses.services.groups.GroupGetService;
 import api.expenses.expenses.services.movements.MovementAddService;
 import api.expenses.expenses.services.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,15 +33,15 @@ public class UtilityAddService {
     private final MovementAddService movementAddService;
     private final CategoryAddService categoryAddService;
     private final UserService userService;
-    private final GroupGetService groupGetService;
+    private final AccountQueryService accountQueryService;
 
     @PublishMovement(eventType = EventType.SERVICE_PAID, routingKey = "/topic/servicios/new")
     public ServiceRecord save(ServiceToAdd serviceToAdd) {
         var user = userService.getAuthenticatedUser();
-        var group = groupGetService.getGroupByDescription(serviceToAdd.group());
+        var account = accountQueryService.findAccountByName(serviceToAdd.group());
         var service = serviceMapper.toEntity(serviceToAdd, currencyRepository);
-        service.setUsers(user);
-        service.setUserGroups(group);
+        service.setOwner(user);
+        service.setAccount(account);
 
         if (service.getIsPaid()) {
             this.addMovementService(service);
@@ -62,6 +62,6 @@ public class UtilityAddService {
                 0,
                 0,
                 BanksEnum.GALICIA,
-                serviceToAdd.getUserGroups().getDescription()));
+                serviceToAdd.getAccount().getId()));
     }
 }

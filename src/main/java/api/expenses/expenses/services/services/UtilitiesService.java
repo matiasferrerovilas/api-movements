@@ -4,7 +4,7 @@ import api.expenses.expenses.mappers.ServiceMapper;
 import api.expenses.expenses.records.services.ServiceRecord;
 import api.expenses.expenses.records.services.UpdateServiceRecord;
 import api.expenses.expenses.repositories.ServiceRepository;
-import api.expenses.expenses.services.groups.GroupGetService;
+import api.expenses.expenses.services.accounts.AccountQueryService;
 import api.expenses.expenses.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.expenses.expenses.services.user.UserService;
 import io.micrometer.common.util.StringUtils;
@@ -26,11 +26,11 @@ public class UtilitiesService {
     private final UtilityAddService utilityAddService;
     private final UserService userService;
     private final ServicePublishServiceWebSocket servicePublishService;
-    private final GroupGetService groupGetService;
+    private final AccountQueryService accountQueryService;
 
     public List<ServiceRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {
         var user = userService.getAuthenticatedUserRecord();
-        return serviceRepository.findByCurrencyAndLastPayment(user,
+        return serviceRepository.findByCurrencyAndLastPayment(user.id(),
                         currencySymbol,
                         lastPayment).stream()
                 .map(serviceMapper::toRecord)
@@ -56,8 +56,8 @@ public class UtilitiesService {
 
         serviceMapper.updateMovement(updateService, service);
         if (!StringUtils.isEmpty(updateService.group())) {
-            var group = groupGetService.getGroupByDescription(updateService.group());
-            service.setUserGroups(group);
+            var account = accountQueryService.findAccountByName(updateService.group());
+            service.setAccount(account);
         }
         if (updateService.lastPayment() == null) {
             service.setLastPayment(null);

@@ -23,13 +23,13 @@ public interface ServiceMapper {
 
     @Mapping(target = "currency.symbol", source = "currency.symbol")
     @Mapping(target = "isPaid", expression = "java(services.getIsPaid())")
-    @Mapping(target = "group", expression = "java(services.getUserGroups().getDescription())")
-    @Mapping(target = "user", source = "users.email")
+    @Mapping(target = "group", expression = "java(services.getAccount().getName())")
+    @Mapping(target = "user", source = "owner.email")
     ServiceRecord toRecord(Services services);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)
-    @Mapping(target = "userGroups", ignore = true)
+    @Mapping(target = "account", ignore = true)
     void updateMovement(UpdateServiceRecord changesToMovement, @MappingTarget Services service);
 
     @Named("mapCurrency")
