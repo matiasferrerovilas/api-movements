@@ -66,6 +66,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
           )
           OR (:#{#filter.isLive} IS NULL)
       )
+      ORDER BY g.date DESC
 """)
     Page<Movement> getExpenseBy(
             @Param("accountsId") List<Long> accountsId,
