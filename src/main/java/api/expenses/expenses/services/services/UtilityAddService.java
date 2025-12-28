@@ -38,7 +38,7 @@ public class UtilityAddService {
     @PublishMovement(eventType = EventType.SERVICE_PAID, routingKey = "/topic/servicios/new")
     public ServiceRecord save(ServiceToAdd serviceToAdd) {
         var user = userService.getAuthenticatedUser();
-        var account = accountQueryService.findAccountByName(serviceToAdd.group());
+        var account = accountQueryService.findAccountById(serviceToAdd.accountId());
         var service = serviceMapper.toEntity(serviceToAdd, currencyRepository);
         service.setOwner(user);
         service.setAccount(account);

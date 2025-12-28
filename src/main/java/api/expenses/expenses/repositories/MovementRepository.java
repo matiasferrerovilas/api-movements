@@ -22,22 +22,12 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN user_groups ug on ug.id = m.user_group_id
             INNER JOIN users u ON u.email = :email
-            WHERE (:year IS NULL OR m.year = :year)
-                          AND (:month IS NULL OR m.month = :month)
-                          AND m.type IN (:type)
-                          AND m.currency_id IN (:currencies)
-                          AND ug.id IN (:groups)
-                          AND((m.user_group_id = 1 AND m.user_id = u.id)
-                                              OR
-                                          (m.user_group_id != 1 AND EXISTS (
-                                                      SELECT 1
-                                                                  FROM user_user_groups uug
-                                                                              WHERE uug.user_id = u.id
-                                                                                            AND uug.group_id = m.user_group_id
-                                                                                          ))
-                                          )
+            WHERE (:year IS NULL OR YEAR(m.date) = :year)
+                  AND (:month IS NULL OR MONTH(m.`date`) = :month)
+                  AND m.type IN (:type)
+                  AND m.currency_id IN (:currencies)
+                  AND m.account_id IN (:groups)
             """, nativeQuery = true)
     BigDecimal getBalanceByFilters(Integer year, Integer month,
                                    String email,
@@ -88,19 +78,9 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                                 INNER JOIN users u ON u.email = :email
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
                                   AND g.type !="INGRESO"
-                                  AND g.user_group_id IN (:groups)
+                                  AND g.account_id IN (:groups)
                               AND c.symbol IN (:currencies)
-                              AND ((g.user_group_id = 1 AND g.user_id = u.id)
-                                           OR
-                                       (g.user_group_id != 1 AND EXISTS (
-                                           SELECT 1
-                                            FROM user_user_groups uug
-                                            WHERE uug.user_id = u.id
-                                                  AND uug.group_id = g.user_group_id
-                                                )
-                                        )
-                                      )
-                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.user_group_id
+                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.account_id
     """, nativeQuery = true)
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
@@ -128,21 +108,18 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     Optional<Movement> getLastIngreso(UserRecord user);
 
     @Query(value = """
-
-               SELECT
-                      ug.description AS groupDescription,
+            SELECT   ac.name AS groupDescription,
                     c.symbol AS currencySymbol,
                     YEAR(g.`date`) AS year,
                     MONTH(g.`date`) AS month,
                     SUM(g.amount) AS total
-                        FROM movements g
-                        INNER JOIN currency c ON g.currency_id = c.id
-                        INNER JOIN user_groups ug on ug.id = g.user_group_id
-                        INNER JOIN users u ON g.user_id = u.id
-                        WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month
-                  AND u.email = :email
-                        GROUP BY ug.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
-                        ORDER BY ug.description, YEAR(g.`date`)
+            from movements g
+            INNER JOIN currency c ON g.currency_id = c.id
+            INNER JOIN users u ON g.user_id = u.id
+            INNER JOIN accounts ac on ac.id = g.account_id
+            WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month AND u.email = :email
+            GROUP BY ac.name, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
+            ORDER BY ac.name, YEAR(g.`date`)
     """, nativeQuery = true)
     Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, String email);
 }

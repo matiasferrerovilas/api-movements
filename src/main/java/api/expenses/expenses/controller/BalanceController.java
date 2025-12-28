@@ -50,7 +50,7 @@ public class BalanceController {
     }
 
     @Operation(
-            summary = "Obtener balance por categoría",
+            summary = "Obtener balance por grupo",
             description = "Retorna el balance total agrupado por categoría para un año y mes específicos."
     )
     @ApiResponses(value = {
