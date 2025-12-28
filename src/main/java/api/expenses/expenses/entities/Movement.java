@@ -64,12 +64,6 @@ public class Movement {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @Column(nullable = false)
-    private int year;
-
-    @Column(nullable = false)
-    private int month;
-
     @Enumerated(EnumType.STRING)
     private BanksEnum bank;
 

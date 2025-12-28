@@ -28,9 +28,6 @@ public class MovementFactory {
         movement.setCategory(categoryResolver.resolve(dto.category()));
         movement.setCurrency(currencyResolver.resolve(dto.currency()));
 
-        movement.setYear(movement.getDate().getYear());
-        movement.setMonth(movement.getDate().getMonthValue());
-
         movement.setOwner(userService.getAuthenticatedUser());
         var account = accountQueryService.findAccountById(dto.accountId());
         movement.setAccount(account);
