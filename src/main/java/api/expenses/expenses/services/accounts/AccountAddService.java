@@ -27,7 +27,7 @@ public class AccountAddService {
     private final AccountMapper accountMapper;
 
     public void createAccount(AddGroupRecord record) {
-        if(StringUtils.isAllBlank(record.description())) {
+        if (StringUtils.isAllBlank(record.description())) {
             log.error("Description for group is blank");
             return;
         }
@@ -38,8 +38,8 @@ public class AccountAddService {
                 .owner(owner)
                 .build();
 
-        var existingAccount =  accountQueryService.verifyAccountExist(account.getName(),account.getOwner().getId());
-        if(existingAccount){
+        var existingAccount = accountQueryService.verifyAccountExist(account.getName(), account.getOwner().getId());
+        if (existingAccount) {
             return;
         }
         var membership = AccountMember.builder()

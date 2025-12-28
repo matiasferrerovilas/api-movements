@@ -20,6 +20,7 @@ public class OnboardingService {
     private final IncomeAddService incomeAddService;
     private final AccountAddService accountAddService;
     private final UserService userService;
+
     public boolean isFirstLogin() {
         var optional = userService.findUserByEmail();
 
@@ -34,7 +35,9 @@ public class OnboardingService {
             accountAddService.createAccount(new AddGroupRecord(account));
         });
 
-        if (onBoardingForm.onBoardingAmount().bank() != null && onBoardingForm.onBoardingAmount().currency() != null && onBoardingForm.onBoardingAmount().amount() != null) {
+        if (onBoardingForm.onBoardingAmount().bank() != null
+                && onBoardingForm.onBoardingAmount().currency() != null
+                && onBoardingForm.onBoardingAmount().amount() != null) {
             incomeAddService.loadIncome(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
                     onBoardingForm.onBoardingAmount().currency(),
                     onBoardingForm.onBoardingAmount().amount(),

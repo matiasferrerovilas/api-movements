@@ -36,7 +36,10 @@ public class AccountQueryService {
     public List<AccountsWithUser> getAllAccountsWithUserCount() {
         var owner = userService.getAuthenticatedUser();
         return accountRepository.findAccountSummariesByMemberUserId(owner.getId())
-                .stream().map(account -> new AccountsWithUser(account.getAccountId(), account.getAccountName(), account.getMembersCount(), account.getOwnerEmail()))
+                .stream().map(account -> new AccountsWithUser(account.getAccountId(),
+                        account.getAccountName(),
+                        account.getMembersCount(),
+                        account.getOwnerEmail()))
                 .toList();
     }
 
@@ -51,7 +54,7 @@ public class AccountQueryService {
         }
 
         var owner = userService.getAuthenticatedUser();
-        return accountRepository.findAccountByNameAndOwnerId(name,owner.getId())
+        return accountRepository.findAccountByNameAndOwnerId(name, owner.getId())
                 .orElseThrow(() -> new EntityNotFoundException("No existe account con ese nombre en ese usuario"));
     }
 

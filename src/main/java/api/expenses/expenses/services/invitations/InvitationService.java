@@ -36,7 +36,7 @@ public class InvitationService {
         var loggedInUser = userService.getAuthenticatedUser();
         var usersToInvite = userService.getUserByEmail(emails);
 
-        if(usersToInvite.isEmpty()){
+        if (usersToInvite.isEmpty()) {
             log.info("No se crearon nuevas invitaciones: no se encontraron usuarios con los emails proporcionados.");
             return;
         }
