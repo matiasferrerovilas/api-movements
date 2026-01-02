@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 @Slf4j
@@ -19,14 +19,12 @@ public class MovementPublishServiceWebSocket extends WebSocketMessageService {
         super(messagingTemplate);
     }
 
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishMovementAdded(MovementRecord record) {
         this.publish(record, "/topic/movimientos/new", EventType.MOVEMENT_ADDED);
     }
 
-    public void publishListMovementAdded(List<MovementRecord> records) {
-        this.publish(records, "/topic/movimientos/history/list", EventType.MOVEMENT_ADDED);
-    }
-
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishDeleteOfMovement(Long id) {
         this.publish(id, "/topic/movimientos/delete", EventType.MOVEMENT_DELETED);
     }

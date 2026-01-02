@@ -12,6 +12,7 @@ import java.util.List;
 public interface AccountInvitationMapper {
 
     @Mapping(target = "nameAccount", source = "account.name")
+    @Mapping(target = "invitedBy", source = "account.owner.email")
     AccountInvitationRecord toRecord(AccountInvitation account);
 
     List<AccountInvitationRecord> toRecord(List<AccountInvitation> account);

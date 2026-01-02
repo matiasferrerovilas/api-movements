@@ -1,12 +1,12 @@
 package api.expenses.expenses.services.publishing.websockets;
 
 import api.expenses.expenses.enums.EventType;
+import api.expenses.expenses.records.accounts.AccountInvitationRecord;
 import api.expenses.expenses.records.accounts.AccountRecord;
-import api.expenses.expenses.records.groups.GroupInvitationRecord;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 public class AccountPublishServiceWebSocket extends WebSocketMessageService {
@@ -16,14 +16,17 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
         super(messagingTemplate);
     }
 
-    public void publishInvitationAdded(List<GroupInvitationRecord> recordList) {
-        this.publish(recordList, "/topic/invitation/new", EventType.INVITATION_ADDED);
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishInvitationAdded(AccountInvitationRecord accountInvitationRecord) {
+        this.publish(accountInvitationRecord, "/topic/invitation/new", EventType.INVITATION_ADDED);
     }
 
-    public void publishInvitationUpdated(List<GroupInvitationRecord> recordList) {
-        this.publish(recordList, "/topic/invitation/update", EventType.INVITATION_CONFIRMED_REJECTED);
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishInvitationUpdated(AccountInvitationRecord accountInvitationRecord) {
+        this.publish(accountInvitationRecord, "/topic/invitation/update", EventType.INVITATION_CONFIRMED_REJECTED);
     }
 
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishAccountCreated(AccountRecord accountRecord) {
         this.publish(accountRecord, "/topic/account/new", EventType.ACCOUNT_CREATED);
     }

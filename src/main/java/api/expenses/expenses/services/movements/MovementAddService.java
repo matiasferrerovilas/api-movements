@@ -49,10 +49,10 @@ public class MovementAddService {
     }
 
     @Transactional
-    public List<MovementRecord> saveExpenseAll(List<@Valid MovementToAdd> list) {
+    public void saveExpenseAll(List<@Valid MovementToAdd> list) {
         if (list == null || list.isEmpty()) {
             log.warn("Intento de guardar lista vacía de movimientos");
-            return List.of();
+            return;
         }
 
         var entities = list.stream()
@@ -60,14 +60,12 @@ public class MovementAddService {
                 .toList();
 
         var saved = movementRepository.saveAll(entities);
-        var records = saved.stream()
-                .map(movementMapper::toRecord)
-                .toList();
-
-        movementPublishService.publishListMovementAdded(records);
+        saved
+                .forEach(movement -> {
+                    movementPublishService.publishMovementAdded(movementMapper.toRecord(movement));
+                });
 
         log.info("Movimientos guardados en batch: total={}", saved.size());
-        return records;
     }
 
     @Transactional

@@ -10,6 +10,7 @@ import api.expenses.expenses.repositories.AccountMemberRepository;
 import api.expenses.expenses.repositories.AccountRepository;
 import api.expenses.expenses.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.expenses.expenses.services.user.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,7 @@ public class AccountAddService {
     private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
     private final AccountMapper accountMapper;
 
+    @Transactional
     public void createAccount(AddGroupRecord record) {
         if (StringUtils.isAllBlank(record.description())) {
             log.error("Description for group is blank");

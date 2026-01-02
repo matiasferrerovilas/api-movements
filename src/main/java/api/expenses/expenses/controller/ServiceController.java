@@ -75,8 +75,8 @@ public class ServiceController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ServiceRecord saveService(@RequestBody ServiceToAdd serviceToAdd) {
-        return utilityAddService.save(serviceToAdd);
+    public void saveService(@RequestBody ServiceToAdd serviceToAdd) {
+        utilityAddService.save(serviceToAdd);
     }
 
     @Operation(

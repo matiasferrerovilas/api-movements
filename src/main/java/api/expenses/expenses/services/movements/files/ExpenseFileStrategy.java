@@ -3,9 +3,8 @@ package api.expenses.expenses.services.movements.files;
 import api.expenses.expenses.enums.BanksEnum;
 import api.expenses.expenses.enums.MovementType;
 import api.expenses.expenses.helpers.ParserRegistry;
-import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.movements.MovementFileToAdd;
-import api.expenses.expenses.records.movements.MovementRecord;
+import api.expenses.expenses.records.movements.MovementToAdd;
 import api.expenses.expenses.records.pdf.ParsedExpense;
 import api.expenses.expenses.services.category.CategoryAddService;
 import api.expenses.expenses.services.movements.MovementAddService;
@@ -28,12 +27,12 @@ public abstract class ExpenseFileStrategy {
 
     protected abstract BigDecimal resolveAmount(ParsedExpense e);
 
-    public List<MovementRecord> process(MovementFileToAdd movementFileToAdd) {
+    public void process(MovementFileToAdd movementFileToAdd) {
         var parser = parserRegistry.getParser(this.getBank());
 
         List<ParsedExpense> expenses = parser.parse(movementFileToAdd.file());
 
-        return movementAddService.saveExpenseAll(expenses.stream().map(m -> this.processExpense(m, movementFileToAdd))
+        movementAddService.saveExpenseAll(expenses.stream().map(m -> this.processExpense(m, movementFileToAdd))
                 .toList());
     }
 

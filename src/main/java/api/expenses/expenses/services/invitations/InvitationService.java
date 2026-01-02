@@ -8,6 +8,7 @@ import api.expenses.expenses.records.groups.InvitationResponseRecord;
 import api.expenses.expenses.repositories.AccountInvitationRepository;
 import api.expenses.expenses.repositories.AccountRepository;
 import api.expenses.expenses.services.accounts.AccountAddService;
+import api.expenses.expenses.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.expenses.expenses.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -28,7 +29,9 @@ public class InvitationService {
     private final UserService userService;
     private final AccountInvitationRepository accountInvitationRepository;
     private final AccountInvitationMapper accountInvitationMapper;
+    private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
 
+    @Transactional
     public void inviteToAccount(Long accountId, List<String> emails) {
         var accountToInvite = accountRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Account no encontrada"));
@@ -63,6 +66,11 @@ public class InvitationService {
         }
 
         accountInvitationRepository.saveAll(newInvitations);
+
+        newInvitations
+                .stream()
+                .map(accountInvitationMapper::toRecord)
+                .forEach(accountPublishServiceWebSocket::publishInvitationAdded);
     }
 
     public List<AccountInvitationRecord> getAllInvitations() {
@@ -87,5 +95,7 @@ public class InvitationService {
         if (status == InvitationStatus.ACCEPTED) {
             accountAddService.addMemberToAccount(invitation.getAccount());
         }
+
+        accountPublishServiceWebSocket.publishInvitationUpdated(accountInvitationMapper.toRecord(invitation));
     }
 }
