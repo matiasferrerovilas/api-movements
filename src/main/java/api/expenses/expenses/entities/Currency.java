@@ -25,4 +25,5 @@ public class Currency {
     private String description;
     @Column(nullable = false, length = 5)
     private String symbol;
+    private boolean enabled;
 }

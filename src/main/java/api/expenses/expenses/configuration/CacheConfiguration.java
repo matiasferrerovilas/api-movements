@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfiguration {
 
     public static final String CURRENCY_CACHE = "currency";
-    private static final int DURATION_TIME_DEFAULT = 3;
+    private static final int DURATION_TIME_DEFAULT = 5;
 
     @Bean
     public CacheManager cacheManager() {

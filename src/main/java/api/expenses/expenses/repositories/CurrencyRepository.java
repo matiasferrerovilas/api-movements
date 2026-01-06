@@ -21,4 +21,7 @@ public interface CurrencyRepository extends JpaRepository<Currency, Long> {
     where c.symbol in :symbols
 """)
     List<Integer> findAllBySymbol(List<String> symbols);
+
+    @Cacheable(CacheConfiguration.CURRENCY_CACHE)
+    List<Currency> findAllByEnabled(boolean enabled);
 }

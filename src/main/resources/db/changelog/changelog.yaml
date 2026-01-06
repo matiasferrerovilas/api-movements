@@ -44,3 +44,9 @@ databaseChangeLog:
   - include:
       file: 015_alter_table_movement.sql
       relativeToChangelogFile: true
+  - include:
+      file: 016_alter_table_currency.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 017_alter_table_currency.sql
+      relativeToChangelogFile: true

@@ -1,5 +1,6 @@
 package api.expenses.expenses.services.currencies;
 
+import api.expenses.expenses.configuration.CacheConfiguration;
 import api.expenses.expenses.entities.Currency;
 import api.expenses.expenses.mappers.CurrencyMapper;
 import api.expenses.expenses.records.currencies.CurrencyRecord;
@@ -8,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,8 +35,9 @@ public class CurrencyAddService {
                 });
     }
 
-    public List<CurrencyRecord> getAllCurrencies() {
-        return currencyMapper.toRecordList(currencyRepository.findAll());
+  @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE)
+  public List<CurrencyRecord> getAllCurrencies() {
+        return currencyMapper.toRecordList(currencyRepository.findAllByEnabled(true));
     }
 
     public Currency findBySymbol(@NotNull(message = "Debe indicar un tipo de moneda") String symbol) {

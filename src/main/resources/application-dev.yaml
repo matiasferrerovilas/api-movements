@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true
-    username: helios
-    password: vilaswifi
+    username: root
+    password: helios
   rabbitmq:
     host: localhost
     port: 5672
