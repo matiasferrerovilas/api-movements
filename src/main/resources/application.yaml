@@ -10,7 +10,7 @@ jwt:
 
 spring:
   application:
-    name: expenses
+    name: api-movements
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
