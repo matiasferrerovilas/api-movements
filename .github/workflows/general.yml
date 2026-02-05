@@ -5,7 +5,7 @@ on:
     branches: ["main", "develop"]
 
 env:
-  IMAGE_NAME: "mferrerovilas/api-expenses"
+  IMAGE_NAME: "mferrerovilas/api-movements"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
 jobs:
@@ -80,7 +80,7 @@ jobs:
 
       - name: Prepare runtime JAR
         run: |
-          mv build/libs/*.jar expenses-api.jar
+          mv build/libs/*.jar api-movements.jar
 
       - name: Set up QEMU (for multi-arch)
         uses: docker/setup-qemu-action@v3

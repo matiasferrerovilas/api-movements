@@ -13,7 +13,7 @@ COPY src src
 
 RUN ./gradlew clean bootJar --no-daemon
 
-RUN java -Djarmode=layertools -jar build/libs/expenses-*.jar extract --destination extracted
+RUN java -Djarmode=layertools -jar build/libs/api-movements-*.jar extract --destination extracted
 
 
 FROM eclipse-temurin:25-jre-alpine AS runtime
