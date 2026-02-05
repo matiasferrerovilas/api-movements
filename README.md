@@ -1,4 +1,4 @@
-# Expenses API
+# Movemenet API
 
 A robust and scalable RESTful API for managing personal or business expenses, built with Spring Boot and designed for containerized deployment.
 
