@@ -2,7 +2,7 @@ package api.m2.movements.services.category;
 
 import api.m2.movements.entities.Category;
 import api.m2.movements.enums.CategoryEnum;
-import api.expenses.expenses.mappers.CategoryMapperImpl;
+import api.m2.movements.mappers.CategoryMapperImpl;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;

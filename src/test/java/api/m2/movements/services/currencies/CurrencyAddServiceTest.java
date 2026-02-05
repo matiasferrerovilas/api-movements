@@ -1,7 +1,7 @@
 package api.m2.movements.services.currencies;
 
 import api.m2.movements.entities.Currency;
-import api.expenses.expenses.mappers.CurrencyMapperImpl;
+import api.m2.movements.mappers.CurrencyMapperImpl;
 import api.m2.movements.repositories.CurrencyRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
