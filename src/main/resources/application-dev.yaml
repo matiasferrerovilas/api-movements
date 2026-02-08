@@ -3,6 +3,7 @@ spring:
     url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true
     username: root
     password: helios
+    driver-class-name: com.mysql.cj.jdbc.Driver
   rabbitmq:
     host: localhost
     port: 5672

@@ -92,4 +92,25 @@ public class IngresoController {
     public void deleteIncome(@PathVariable Long id) {
         incomeAddService.deleteIncome(id);
     }
+
+
+    @Operation(
+            summary = "Recargar ingreso",
+            description = "Genera un nuevo movimiento basado en un ingreso existente. Se utiliza el ID del ingreso a recargar.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "Movimiento generado correctamente"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Ingreso no encontrado"
+                    )
+            }
+    )
+    @PostMapping("{id}/reload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void reloadIncome(@PathVariable Long id) {
+        incomeAddService.reloadIncome(id);
+    }
 }

@@ -5,7 +5,7 @@ buildscript {
 }
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.0'
+    id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.liquibase.gradle' version '3.1.0'
     id 'checkstyle'
@@ -78,7 +78,7 @@ dependencies {
     testAnnotationProcessor 'org.springframework.boot:spring-boot-starter-websocket-test'
 
     // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
 
     //Logs
     implementation 'org.apache.commons:commons-text:1.14.0'
@@ -87,14 +87,12 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
     // Database
-    runtimeOnly 'com.mysql:mysql-connector-j:9.5.0'
+    runtimeOnly 'com.mysql:mysql-connector-j'
 
     // Liquibase
-    implementation 'org.liquibase:liquibase-core'
-    liquibaseRuntime 'org.liquibase:liquibase-core'
-    liquibaseRuntime 'info.picocli:picocli:4.7.7'
-    liquibaseRuntime 'com.mysql:mysql-connector-j:9.5.0'
-    liquibaseRuntime 'org.apache.commons:commons-lang3:3.20.0'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
+
 
     // Lombok + MapStruct (orden importante)
     compileOnly "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -165,16 +163,4 @@ tasks.withType(JavaCompile).configureEach {
             '-Xlint:unchecked',
             '-Xlint:deprecation'
     ]
-}
-
-liquibase {
-    def dbName = System.properties['dbName'] ?: 'expenses'
-    activities {
-        main {
-            changelogFile 'src/main/resources/db/changelog/changelog.yaml'
-            url "jdbc:mysql://localhost:3306/$dbName"
-            username 'root'
-            password 'helios'
-        }
-    }
 }

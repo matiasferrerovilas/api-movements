@@ -27,7 +27,8 @@ spring:
         jwt:
           issuer-uri: ${KC_URL_REALM}
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/changelog/changelog.yaml
   main:
     banner-mode: off
 
