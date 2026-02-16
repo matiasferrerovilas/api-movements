@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,13 +24,13 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
             INNER JOIN users u ON u.email = :email
-            WHERE (:year IS NULL OR YEAR(m.date) = :year)
-                  AND (:month IS NULL OR MONTH(m.`date`) = :month)
+            WHERE (m.date >= :startDate)
+                  AND (m.date  <= :endDate)
                   AND m.type IN (:type)
                   AND m.currency_id IN (:currencies)
                   AND m.account_id IN (:groups)
             """, nativeQuery = true)
-    BigDecimal getBalanceByFilters(Integer year, Integer month,
+    BigDecimal getBalanceByFilters(LocalDate startDate, LocalDate endDate,
                                    String email,
                                    List<String> type,
                                    List<Integer> groups,

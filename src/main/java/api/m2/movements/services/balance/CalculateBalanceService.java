@@ -30,15 +30,15 @@ public class CalculateBalanceService {
         var user = userService.getAuthenticatedUser();
         var currencies = currencyRepository.findAllBySymbol(balanceFilterRecord.currencies());
         var ingresos = movementRepository.getBalanceByFilters(
-                balanceFilterRecord.year(),
-                balanceFilterRecord.month(),
+                balanceFilterRecord.startDate(),
+                balanceFilterRecord.endDate(),
                 user.getEmail(),
                 List.of(MovementType.INGRESO.toString()),
                 balanceFilterRecord.groups(),
                 currencies);
 
-        var movements = movementRepository.getBalanceByFilters(balanceFilterRecord.year(),
-                balanceFilterRecord.month(), user.getEmail(),
+        var movements = movementRepository.getBalanceByFilters(balanceFilterRecord.startDate(),
+                balanceFilterRecord.endDate(), user.getEmail(),
                 List.of(MovementType.CREDITO.toString(), MovementType.DEBITO.toString()),
                 balanceFilterRecord.groups(),
                 currencies);
@@ -52,8 +52,8 @@ public class CalculateBalanceService {
 
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
-        return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.year(),
-                balanceFilterRecord.month(),
+        return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.startDate().getYear(),
+                balanceFilterRecord.endDate().getMonthValue(),
                 balanceFilterRecord.groups(),
                 balanceFilterRecord.currencies(),
                 user.getEmail());
