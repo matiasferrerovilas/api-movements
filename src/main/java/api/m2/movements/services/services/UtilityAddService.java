@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -46,6 +47,7 @@ public class UtilityAddService {
         if (service.getIsPaid()) {
             this.addMovementService(service);
         }
+
         servicePublishService.publishNewService(
                 serviceMapper
                         .toRecord(serviceRepository.save(service)));
@@ -56,7 +58,7 @@ public class UtilityAddService {
         String description = StringUtils.join("Servicio Pagado ", serviceToAdd.getDescription());
 
         movementAddService.saveMovement(new MovementToAdd(serviceToAdd.getAmount(),
-                LocalDate.now(),
+                Optional.of(serviceToAdd.getLastPayment()).orElseGet(LocalDate::now),
                 description,
                 category.description(),
                 MovementType.DEBITO.name(),
