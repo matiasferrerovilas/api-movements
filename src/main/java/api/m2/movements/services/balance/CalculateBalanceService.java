@@ -39,7 +39,7 @@ public class CalculateBalanceService {
 
         var movements = movementRepository.getBalanceByFilters(balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(), user.getEmail(),
-                List.of(MovementType.CREDITO.toString(), MovementType.DEBITO.toString()),
+                List.of(MovementType.DEBITO.toString()),
                 balanceFilterRecord.groups(),
                 currencies);
 
