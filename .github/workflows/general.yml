@@ -36,20 +36,40 @@ jobs:
       - name: Prepare Gradle
         run: chmod +x gradlew
 
-      - name: Debug Version In CI
+      - name: Compute Version
+        id: version
         shell: bash
         run: |
-          set -x
-          ./gradlew -q printVersion | cat -A
-          BUILD_VERSION=$(./gradlew -q printVersion)
-          echo "VALUE=[$BUILD_VERSION]"
-          echo "REF=[$GITHUB_REF_NAME]"
+          set -euo pipefail
+
+          BUILD_VERSION=$(./gradlew -q printVersion | head -n1 | tr -d '\r\n')
+
+          if [ -z "$BUILD_VERSION" ]; then
+            echo "ERROR: Version is empty"
+            exit 1
+          fi
+
+          if [[ "${GITHUB_REF_NAME}" == "develop" ]] || [[ "${GITHUB_REF_NAME}" == hotfix/* ]]; then
+            PHASE="-SNAPSHOT"
+          else
+            PHASE=""
+          fi
+
+          FINAL_VERSION="${BUILD_VERSION}${PHASE}"
+
+          # Escribir en $GITHUB_OUTPUT para usar en otros steps/jobs si hace falta
+          printf "version=%s\n" "$FINAL_VERSION" >> "$GITHUB_OUTPUT"
+
+          # Guardar en archivos para artifact
+          echo "$FINAL_VERSION" > build.version
+          echo "$PHASE" > build.phase
 
       - name: Build Spring Boot JAR
         run: ./gradlew clean bootJar --no-daemon --stacktrace
 
       - name: Run Tests
         run: ./gradlew test --no-daemon --stacktrace --info
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -60,7 +80,7 @@ jobs:
             build/libs/*.jar
 
   deploy:
-    needs: [build]
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -75,6 +95,14 @@ jobs:
         run: |
           mv build/libs/*.jar api-movements.jar
 
+      - name: Get Build Version
+        id: version_getter
+        run: |
+          VERSION=$(cat build.version)
+          PHASE=$(cat build.phase)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "phase=$PHASE" >> "$GITHUB_OUTPUT"
+
       - name: Set up QEMU (for multi-arch)
         uses: docker/setup-qemu-action@v3
 
@@ -86,12 +114,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Get Build Version
-        id: version_getter
-        run: |
-          VERSION=$(cat build.version)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build & Push Docker Image (Multi-Arch)
         uses: docker/build-push-action@v5
