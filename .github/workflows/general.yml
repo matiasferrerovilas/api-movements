@@ -36,21 +36,14 @@ jobs:
       - name: Prepare Gradle
         run: chmod +x gradlew
 
-      - name: Compute Version
-        id: version
+      - name: Debug Version In CI
+        shell: bash
         run: |
-          BUILD_VERSION=$(./gradlew printVersion --quiet)
-
-          if [[ "${GITHUB_REF_NAME}" == "develop" ]] || [[ "${GITHUB_REF_NAME}" == hotfix/* ]]; then
-            PHASE="-SNAPSHOT"
-          else
-            PHASE=""
-          fi
-
-          echo "version=${BUILD_VERSION}${PHASE}" >> $GITHUB_OUTPUT
-
-          echo "${BUILD_VERSION}${PHASE}" > build.version
-          echo "${PHASE}" > build.phase
+          set -x
+          ./gradlew -q printVersion | cat -A
+          BUILD_VERSION=$(./gradlew -q printVersion)
+          echo "VALUE=[$BUILD_VERSION]"
+          echo "REF=[$GITHUB_REF_NAME]"
 
       - name: Build Spring Boot JAR
         run: ./gradlew clean bootJar --no-daemon --stacktrace
