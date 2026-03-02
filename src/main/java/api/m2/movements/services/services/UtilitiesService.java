@@ -41,9 +41,9 @@ public class UtilitiesService {
     public void payServiceById(Long id) {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
+        service.setLastPayment(LocalDate.now());
 
         utilityAddService.addMovementService(service);
-        service.setLastPayment(LocalDate.now());
         var dto = serviceMapper.toRecord(serviceRepository.save(service));
 
         servicePublishService.publishServicePaid(dto);
