@@ -140,9 +140,9 @@ tasks.named('test') {
         showStackTraces = true
     }
 }
-tasks.register('printVersion') {
+tasks.register("printVersion") {
     doLast {
-        print project.version
+        println(project.version.toString().trim())
     }
 }
 tasks.withType(Test).configureEach {
