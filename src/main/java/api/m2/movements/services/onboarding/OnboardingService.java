@@ -31,9 +31,7 @@ public class OnboardingService {
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser();
 
-        onBoardingForm.accountsToAdd().forEach(account -> {
-            groupAddService.createAccount(new AddGroupRecord(account));
-        });
+        onBoardingForm.accountsToAdd().forEach(account -> groupAddService.createAccount(new AddGroupRecord(account)));
 
         if (onBoardingForm.onBoardingAmount().bank() != null
                 && onBoardingForm.onBoardingAmount().currency() != null
