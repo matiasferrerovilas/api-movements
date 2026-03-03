@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AccountAddService {
+public class GroupAddService {
     private final AccountQueryService accountQueryService;
     private final UserService userService;
     private final AccountRepository accountRepository;
@@ -81,6 +81,22 @@ public class AccountAddService {
 
         account.getMembers().add(membership);
         accountMemberRepository.save(membership);
+    }
+
+    public void updateDefaultGroup(Long id) {
+        var user = userService.getAuthenticatedUserRecord();
+
+        var newDefaultMembership = accountMemberRepository.findMember(id, user.id())
+                .orElseThrow(() -> new PermissionDeniedException("El usuario no pertenece a este grupo"));
+
+        accountMemberRepository.findCurrentDefault(user.id())
+                .ifPresent(df -> {
+                    df.setDefault(false);
+                    accountMemberRepository.save(df);
+                });
+
+        newDefaultMembership.setDefault(true);
+        accountMemberRepository.save(newDefaultMembership);
     }
 
    /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")

@@ -6,7 +6,7 @@ import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.groups.InvitationResponseRecord;
 import api.m2.movements.records.groups.InviteToGroup;
-import api.m2.movements.services.accounts.AccountAddService;
+import api.m2.movements.services.accounts.GroupAddService;
 import api.m2.movements.services.accounts.AccountQueryService;
 import api.m2.movements.services.invitations.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,9 +32,10 @@ import java.util.List;
 @Tag(name = "Grupos de cuenta", description = "API para la gestión del grupos")
 public class AccountController {
 
-    private final AccountAddService accountAddService;
+    private final GroupAddService groupAddService;
     private final AccountQueryService accountQueryService;
     private final InvitationService invitationService;
+
     @Operation(
             summary = "Crear un nuevo grupo",
             description = "Crea un grupo asociado al usuario autenticado.",
@@ -45,7 +46,7 @@ public class AccountController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createAccount(@RequestBody AddGroupRecord body) {
-        accountAddService.createAccount(body);
+        groupAddService.createAccount(body);
     }
 
     @GetMapping
@@ -76,7 +77,7 @@ public class AccountController {
     @DeleteMapping("/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void exitGroup(@PathVariable Long accountId) {
-        accountAddService.leaveAccount(accountId);
+        groupAddService.leaveAccount(accountId);
     }
 
     @Operation(
@@ -123,5 +124,19 @@ public class AccountController {
             @RequestBody InvitationResponseRecord body
     ) {
         invitationService.acceptRejectInvitation(invitationId, body);
+    }
+
+    @Operation(
+            summary = "Actualizar estado de invitación",
+            description = "Permite aceptar o rechazar una invitación.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Invitación actualizada correctamente"),
+                    @ApiResponse(responseCode = "404", description = "Invitación no encontrada")
+            }
+    )
+    @PatchMapping("/{id}/default")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateDefaultGroup(@PathVariable Long id) {
+        groupAddService.updateDefaultGroup(id);
     }
 }

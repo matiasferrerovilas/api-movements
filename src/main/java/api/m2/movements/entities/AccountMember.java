@@ -57,4 +57,5 @@ public class AccountMember {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
+    private boolean isDefault;
 }

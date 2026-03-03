@@ -5,7 +5,7 @@ import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.repositories.UserRepository;
-import api.m2.movements.services.accounts.AccountAddService;
+import api.m2.movements.services.accounts.GroupAddService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserAddService {
 
-    private final AccountAddService accountAddService;
+    private final GroupAddService groupAddService;
     private final UserRepository userRepository;
 
     public User createLogInUser() {
@@ -35,7 +35,7 @@ public class UserAddService {
                 .build();
 
         user = userRepository.save(user);
-        accountAddService.createAccount(new AddGroupRecord("DEFAULT"));
+        groupAddService.createAccount(new AddGroupRecord("DEFAULT"));
         return user;
     }
 

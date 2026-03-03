@@ -7,7 +7,7 @@ import api.m2.movements.records.accounts.AccountInvitationRecord;
 import api.m2.movements.records.groups.InvitationResponseRecord;
 import api.m2.movements.repositories.AccountInvitationRepository;
 import api.m2.movements.repositories.AccountRepository;
-import api.m2.movements.services.accounts.AccountAddService;
+import api.m2.movements.services.accounts.GroupAddService;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InvitationService {
 
-    private final AccountAddService accountAddService;
+    private final GroupAddService groupAddService;
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final AccountInvitationRepository accountInvitationRepository;
@@ -93,7 +93,7 @@ public class InvitationService {
         accountInvitationRepository.save(invitation);
 
         if (status == InvitationStatus.ACCEPTED) {
-            accountAddService.addMemberToAccount(invitation.getAccount());
+            groupAddService.addMemberToAccount(invitation.getAccount());
         }
 
         accountPublishServiceWebSocket.publishInvitationUpdated(accountInvitationMapper.toRecord(invitation));

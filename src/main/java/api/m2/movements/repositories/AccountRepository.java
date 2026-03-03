@@ -29,22 +29,18 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findAccountByNameAndOwnerId(@NotNull String name, Long id);
 
     @Query("""
-    select
-        a.id as accountId,
-        a.name as accountName,
-        o.id as ownerId,
-        o.email as ownerEmail,
-        count(m.id) as membersCount
-    from Account a
-    join a.members m
-    join a.owner o
-    where exists (
-        select 1
-        from AccountMember am
-        where am.account = a
-          and am.user.id = :userId
-    )
-    group by a.id, a.name, o.id, o.email
+        select
+            a.id as accountId,
+            a.name as accountName,
+            o.id as ownerId,
+            o.email as ownerEmail,
+            count(m.id) as membersCount,
+            am.isDefault as isDefault
+        from Account a
+        join a.members m
+        join a.owner o
+        join AccountMember am on am.account = a and am.user.id = :userId
+        group by a.id, a.name, o.id, o.email, am.isDefault
 """)
     List<AccountSummaryProjection> findAccountSummariesByMemberUserId(Long userId);
 }

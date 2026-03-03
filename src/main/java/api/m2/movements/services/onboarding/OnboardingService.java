@@ -4,7 +4,7 @@ import api.m2.movements.enums.UserType;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
-import api.m2.movements.services.accounts.AccountAddService;
+import api.m2.movements.services.accounts.GroupAddService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.user.UserAddService;
 import api.m2.movements.services.user.UserService;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class OnboardingService {
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
-    private final AccountAddService accountAddService;
+    private final GroupAddService groupAddService;
     private final UserService userService;
 
     public boolean isFirstLogin() {
@@ -32,7 +32,7 @@ public class OnboardingService {
         var user = userAddService.createLogInUser();
 
         onBoardingForm.accountsToAdd().forEach(account -> {
-            accountAddService.createAccount(new AddGroupRecord(account));
+            groupAddService.createAccount(new AddGroupRecord(account));
         });
 
         if (onBoardingForm.onBoardingAmount().bank() != null

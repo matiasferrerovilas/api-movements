@@ -22,4 +22,12 @@ public interface AccountMemberRepository extends JpaRepository<AccountMember, Lo
             @Param("accountId") Long accountId,
             @Param("userId") Long userId
     );
+
+    @Query("""
+    SELECT m
+    FROM AccountMember m
+    WHERE m.user.id = :userId
+      AND m.isDefault = true
+""")
+    Optional<AccountMember> findCurrentDefault(@Param("userId") Long userId);
 }

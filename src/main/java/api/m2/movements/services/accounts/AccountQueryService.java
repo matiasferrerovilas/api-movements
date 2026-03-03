@@ -39,7 +39,8 @@ public class AccountQueryService {
                 .stream().map(account -> new AccountsWithUser(account.getAccountId(),
                         account.getAccountName(),
                         account.getMembersCount(),
-                        account.getOwnerEmail()))
+                        account.getOwnerEmail(),
+                        account.getIsDefault()))
                 .toList();
     }
 

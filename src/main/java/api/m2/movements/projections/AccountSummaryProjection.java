@@ -10,4 +10,6 @@ public interface AccountSummaryProjection {
     String getOwnerEmail();
 
     Long getMembersCount();
+    boolean getIsDefault();
+
 }
