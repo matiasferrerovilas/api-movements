@@ -3,7 +3,7 @@ package api.m2.movements.services.user;
 import api.m2.movements.entities.User;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.UserMapper;
-import api.m2.movements.records.groups.UserRecord;
+import api.m2.movements.records.users.UserBaseRecord;
 import api.m2.movements.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario inexistente"));
     }
 
-    public UserRecord getAuthenticatedUserRecord() {
+    public UserBaseRecord getAuthenticatedUserRecord() {
         return userMapper.toRecord(getAuthenticatedUser());
     }
 

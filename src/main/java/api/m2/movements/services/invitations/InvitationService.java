@@ -3,8 +3,8 @@ package api.m2.movements.services.invitations;
 import api.m2.movements.entities.AccountInvitation;
 import api.m2.movements.enums.InvitationStatus;
 import api.m2.movements.mappers.AccountInvitationMapper;
-import api.m2.movements.records.accounts.AccountInvitationRecord;
-import api.m2.movements.records.groups.InvitationResponseRecord;
+import api.m2.movements.records.invite.InvitationToGroupRecord;
+import api.m2.movements.records.invite.InvitationResponseRecord;
 import api.m2.movements.repositories.AccountInvitationRepository;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.groups.GroupAddService;
@@ -73,7 +73,7 @@ public class InvitationService {
                 .forEach(accountPublishServiceWebSocket::publishInvitationAdded);
     }
 
-    public List<AccountInvitationRecord> getAllInvitations() {
+    public List<InvitationToGroupRecord> getAllInvitations() {
         var user = userService.getAuthenticatedUserRecord();
         return accountInvitationMapper.toRecord(accountInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
     }

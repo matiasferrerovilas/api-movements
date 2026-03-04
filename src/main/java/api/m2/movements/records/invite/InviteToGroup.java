@@ -1,4 +1,4 @@
-package api.m2.movements.records.groups;
+package api.m2.movements.records.invite;
 
 import java.util.List;
 

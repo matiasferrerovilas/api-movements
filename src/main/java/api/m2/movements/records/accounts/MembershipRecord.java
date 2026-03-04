@@ -1,11 +1,11 @@
 package api.m2.movements.records.accounts;
 
-import api.m2.movements.records.groups.UserRecord;
+import api.m2.movements.records.users.UserBaseRecord;
 
 import java.util.List;
 
 public record MembershipRecord(Long id,
                                String name,
-                               UserRecord owner,
+                               UserBaseRecord owner,
                                List<AccountMemberRecord> members) {
 }

@@ -4,7 +4,7 @@ import api.m2.movements.entities.Movement;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
-import api.m2.movements.records.groups.UserRecord;
+import api.m2.movements.records.users.UserBaseRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -106,7 +106,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             ORDER BY g.date DESC
             LIMIT 1
         """)
-    Optional<Movement> getLastIngreso(UserRecord user);
+    Optional<Movement> getLastIngreso(UserBaseRecord user);
 
     @Query(value = """
             SELECT   ac.name AS groupDescription,

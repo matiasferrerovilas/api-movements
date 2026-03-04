@@ -1,7 +1,7 @@
 package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.enums.EventType;
-import api.m2.movements.records.accounts.AccountInvitationRecord;
+import api.m2.movements.records.invite.InvitationToGroupRecord;
 import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,13 +18,13 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishInvitationAdded(AccountInvitationRecord accountInvitationRecord) {
-        this.publish(accountInvitationRecord, "/topic/invitation/new", EventType.INVITATION_ADDED);
+    public void publishInvitationAdded(InvitationToGroupRecord invitationToGroupRecord) {
+        this.publish(invitationToGroupRecord, "/topic/invitation/new", EventType.INVITATION_ADDED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishInvitationUpdated(AccountInvitationRecord accountInvitationRecord) {
-        this.publish(accountInvitationRecord, "/topic/invitation/update", EventType.INVITATION_CONFIRMED_REJECTED);
+    public void publishInvitationUpdated(InvitationToGroupRecord invitationToGroupRecord) {
+        this.publish(invitationToGroupRecord, "/topic/invitation/update", EventType.INVITATION_CONFIRMED_REJECTED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

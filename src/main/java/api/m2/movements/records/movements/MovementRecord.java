@@ -3,7 +3,7 @@ package api.m2.movements.records.movements;
 import api.m2.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
-import api.m2.movements.records.groups.UserRecord;
+import api.m2.movements.records.users.UserBaseRecord;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ public record MovementRecord(Long id,
                              CurrencyRecord currency,
                              String bank,
                              String type,
-                             UserRecord owner,
+                             UserBaseRecord owner,
                              AccountBaseRecord account,
                              Integer cuotaActual,
                              Integer cuotasTotales) {

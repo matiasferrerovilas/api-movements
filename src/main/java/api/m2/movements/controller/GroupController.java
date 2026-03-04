@@ -1,13 +1,11 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.projections.MembershipSummaryProjection;
-import api.m2.movements.records.accounts.AccountInvitationRecord;
-import api.m2.movements.records.accounts.AccountMemberRecord;
-import api.m2.movements.records.accounts.GroupRecord;
+import api.m2.movements.records.invite.InvitationToGroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.records.groups.AddGroupRecord;
-import api.m2.movements.records.groups.InvitationResponseRecord;
-import api.m2.movements.records.groups.InviteToGroup;
+import api.m2.movements.records.invite.InvitationResponseRecord;
+import api.m2.movements.records.invite.InviteToGroup;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.groups.MembershipService;
@@ -109,7 +107,7 @@ public class GroupController {
     )
     @GetMapping("/invitations")
     @ResponseStatus(HttpStatus.OK)
-    public List<AccountInvitationRecord> listMyInvitations() {
+    public List<InvitationToGroupRecord> listMyInvitations() {
         return invitationService.getAllInvitations();
     }
 
