@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,6 +49,16 @@ public class UserService {
                 .orElseThrow(() -> new PermissionDeniedException("Usuario no autenticado"));
 
         return userRepository.findByEmail(email);
+    }
+
+    public String getCurrentKeycloakId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken().getSubject();
+        }
+
+        throw new IllegalStateException("No hay un JWT autenticado en el contexto de seguridad");
     }
 }
 

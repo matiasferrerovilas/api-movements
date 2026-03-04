@@ -4,7 +4,7 @@ import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.helpers.PdfReaderService;
 import api.m2.movements.records.movements.MovementFileToAdd;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

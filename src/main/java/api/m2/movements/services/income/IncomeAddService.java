@@ -7,7 +7,7 @@ import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.IncomeRepository;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;

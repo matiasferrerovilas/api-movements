@@ -1,4 +1,4 @@
-package api.m2.movements.services.accounts;
+package api.m2.movements.services.groups;
 
 import api.m2.movements.entities.Account;
 import api.m2.movements.mappers.AccountMapper;

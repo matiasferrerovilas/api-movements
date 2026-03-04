@@ -5,7 +5,7 @@ import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.movements.MovementAddService;

@@ -7,7 +7,7 @@ import api.m2.movements.records.accounts.AccountInvitationRecord;
 import api.m2.movements.records.groups.InvitationResponseRecord;
 import api.m2.movements.repositories.AccountInvitationRepository;
 import api.m2.movements.repositories.AccountRepository;
-import api.m2.movements.services.accounts.GroupAddService;
+import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;

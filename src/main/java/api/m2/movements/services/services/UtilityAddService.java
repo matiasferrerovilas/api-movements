@@ -9,7 +9,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.services.ServiceToAdd;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.ServiceRepository;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket;

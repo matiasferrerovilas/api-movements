@@ -6,7 +6,7 @@ import api.m2.movements.records.accounts.AccountRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.repositories.MovementRepository;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.user.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;

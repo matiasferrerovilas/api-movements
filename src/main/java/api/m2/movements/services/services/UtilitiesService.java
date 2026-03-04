@@ -4,7 +4,7 @@ import api.m2.movements.mappers.ServiceMapper;
 import api.m2.movements.records.services.ServiceRecord;
 import api.m2.movements.records.services.UpdateServiceRecord;
 import api.m2.movements.repositories.ServiceRepository;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import io.micrometer.common.util.StringUtils;

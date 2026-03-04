@@ -3,6 +3,7 @@ package api.m2.movements.services.publishing.websockets;
 import api.m2.movements.enums.EventType;
 import api.m2.movements.records.accounts.AccountInvitationRecord;
 import api.m2.movements.records.accounts.AccountRecord;
+import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
@@ -29,5 +30,10 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishAccountCreated(AccountRecord accountRecord) {
         this.publish(accountRecord, "/topic/account/new", EventType.ACCOUNT_CREATED);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishAccountDefaultUpdated(MembershipDefaultUpdatedEvent membershipDefaultUpdatedEvent) {
+        this.publish(membershipDefaultUpdatedEvent.groupUpdated(), "/topic/account/default/" + membershipDefaultUpdatedEvent.logInuser(), EventType.MEMBERSHIP_UPDATED);
     }
 }

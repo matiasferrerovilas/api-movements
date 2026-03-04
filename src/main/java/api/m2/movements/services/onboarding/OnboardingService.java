@@ -4,7 +4,7 @@ import api.m2.movements.enums.UserType;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
-import api.m2.movements.services.accounts.GroupAddService;
+import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.user.UserAddService;
 import api.m2.movements.services.user.UserService;

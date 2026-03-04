@@ -1,4 +1,4 @@
-package api.m2.movements.services.accounts;
+package api.m2.movements.services.groups;
 
 import api.m2.movements.entities.Account;
 import api.m2.movements.entities.AccountMember;
@@ -6,6 +6,7 @@ import api.m2.movements.enums.AccountRole;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
 import api.m2.movements.records.groups.AddGroupRecord;
+import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
 import api.m2.movements.repositories.AccountMemberRepository;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
@@ -83,9 +84,10 @@ public class GroupAddService {
         accountMemberRepository.save(membership);
     }
 
+    @Transactional
     public void updateDefaultGroup(Long id) {
         var user = userService.getAuthenticatedUserRecord();
-
+        var keycloakUserId = userService.getCurrentKeycloakId();
         var newDefaultMembership = accountMemberRepository.findMember(id, user.id())
                 .orElseThrow(() -> new PermissionDeniedException("El usuario no pertenece a este grupo"));
 
@@ -97,6 +99,12 @@ public class GroupAddService {
 
         newDefaultMembership.setDefault(true);
         accountMemberRepository.save(newDefaultMembership);
+
+        var membershipUpdated = MembershipDefaultUpdatedEvent.builder()
+                .groupUpdated(accountMapper.toRecord(newDefaultMembership.getAccount()))
+                .logInuser(keycloakUserId)
+                .build();
+        accountPublishServiceWebSocket.publishAccountDefaultUpdated(membershipUpdated);
     }
 
    /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")

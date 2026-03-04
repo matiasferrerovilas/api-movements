@@ -4,7 +4,7 @@ import api.m2.movements.entities.Movement;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementToAdd;
-import api.m2.movements.services.accounts.AccountQueryService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.category.CategoryResolver;
 import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.user.UserService;

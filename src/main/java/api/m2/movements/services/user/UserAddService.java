@@ -5,7 +5,7 @@ import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.repositories.UserRepository;
-import api.m2.movements.services.accounts.GroupAddService;
+import api.m2.movements.services.groups.GroupAddService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
