@@ -2,7 +2,7 @@ package api.m2.movements.services.movements;
 
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.LastIngresoRecord;
-import api.m2.movements.records.accounts.AccountRecord;
+import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.repositories.MovementRepository;
@@ -30,7 +30,7 @@ public class MovementGetService {
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
         var accounts = accountQueryService.findAllAccountsOfLogInUser()
                 .stream()
-                .map(AccountRecord::id)
+                .map(GroupRecord::id)
                 .toList();
         return movementRepository.getExpenseBy(accounts, filter, page)
                 .map(movementMapper::toRecord);

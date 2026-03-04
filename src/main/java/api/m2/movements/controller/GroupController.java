@@ -1,7 +1,7 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.records.accounts.AccountInvitationRecord;
-import api.m2.movements.records.accounts.AccountRecord;
+import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.groups.InvitationResponseRecord;
@@ -30,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/v1/account")
 @Tag(name = "Grupos de cuenta", description = "API para la gestión del grupos")
-public class AccountController {
+public class GroupController {
 
     private final GroupAddService groupAddService;
     private final AccountQueryService accountQueryService;
@@ -51,7 +51,7 @@ public class AccountController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<AccountRecord> getAllAccounts() {
+    public List<GroupRecord> getAllAccounts() {
         return accountQueryService.findAllAccountsOfLogInUser();
     }
 
@@ -74,7 +74,7 @@ public class AccountController {
                     @ApiResponse(responseCode = "204", description = "Salida del grupo exitosa")
             }
     )
-    @DeleteMapping("/{accountId}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void exitGroup(@PathVariable Long accountId) {
         groupAddService.leaveAccount(accountId);
@@ -87,7 +87,7 @@ public class AccountController {
                     @ApiResponse(responseCode = "201", description = "Invitación creada correctamente")
             }
     )
-    @PostMapping("/{accountId}/invitations")
+    @PostMapping("/{id}/invitations")
     @ResponseStatus(HttpStatus.OK)
     public void createInvitation(
             @PathVariable Long accountId,

@@ -15,11 +15,11 @@ public interface AccountMemberRepository extends JpaRepository<AccountMember, Lo
         SELECT m
         FROM Account a
         JOIN a.members m
-        WHERE a.id = :accountId
+        WHERE a.id = :groupId
           AND m.user.id = :userId
     """)
     Optional<AccountMember> findMember(
-            @Param("accountId") Long accountId,
+            @Param("groupId") Long groupId,
             @Param("userId") Long userId
     );
 

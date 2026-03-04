@@ -108,11 +108,11 @@ public class GroupAddService {
     }
 
    /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")
-    public List<AccountsWithUser> leaveAccount(Long accountId) throws AccessDeniedException {
+    public List<AccountsWithUser> leaveAccount(Long id) throws AccessDeniedException {
         var user = userService.getAuthenticatedUserRecord();
 
         var membership = accountMemberRepository
-                .findByAccountIdAndUserId(accountId, user.id())
+                .findByAccountIdAndUserId(id, user.id())
                 .orElseThrow(() -> new AccessDeniedException("User does not belong to this account"));
 
         if (membership.getRole() == AccountRole.OWNER) {

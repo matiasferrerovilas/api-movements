@@ -2,7 +2,7 @@ package api.m2.movements.services.groups;
 
 import api.m2.movements.entities.Account;
 import api.m2.movements.mappers.AccountMapper;
-import api.m2.movements.records.accounts.AccountRecord;
+import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.user.UserService;
@@ -24,7 +24,7 @@ public class AccountQueryService {
     private final UserService userService;
     private final AccountMapper accountMapper;
 
-    public List<AccountRecord> findAllAccountsOfLogInUser() {
+    public List<GroupRecord> findAllAccountsOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
         return accountRepository.findAllAccountsByMemberIdWithAllMembers(owner.getId())
                 .stream().map(accountMapper::toRecord)
