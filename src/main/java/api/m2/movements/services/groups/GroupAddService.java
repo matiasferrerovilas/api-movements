@@ -7,7 +7,7 @@ import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
-import api.m2.movements.repositories.AccountMemberRepository;
+import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
@@ -24,7 +24,7 @@ public class GroupAddService {
     private final AccountQueryService accountQueryService;
     private final UserService userService;
     private final AccountRepository accountRepository;
-    private final AccountMemberRepository accountMemberRepository;
+    private final MembershipRepository membershipRepository;
     private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
     private final AccountMapper accountMapper;
 
@@ -59,7 +59,7 @@ public class GroupAddService {
     public void leaveAccount(Long accountId) {
         var user = userService.getAuthenticatedUserRecord();
 
-        var membership = accountMemberRepository
+        var membership = membershipRepository
                 .findMember(accountId, user.id())
                 .orElseThrow(() -> new PermissionDeniedException("User does not belong to this account"));
 
@@ -67,7 +67,7 @@ public class GroupAddService {
             throw new PermissionDeniedException("Owner cannot leave the account");
         }
 
-        accountMemberRepository.delete(membership);
+        membershipRepository.delete(membership);
 
         //accountPublishServiceWebSocket.publishAccountCreated(accountMapper.toRecord(account));
     }
@@ -81,24 +81,24 @@ public class GroupAddService {
                 .build();
 
         account.getMembers().add(membership);
-        accountMemberRepository.save(membership);
+        membershipRepository.save(membership);
     }
 
     @Transactional
     public void updateDefaultGroup(Long id) {
         var user = userService.getAuthenticatedUserRecord();
         var keycloakUserId = userService.getCurrentKeycloakId();
-        var newDefaultMembership = accountMemberRepository.findMember(id, user.id())
+        var newDefaultMembership = membershipRepository.findMember(id, user.id())
                 .orElseThrow(() -> new PermissionDeniedException("El usuario no pertenece a este grupo"));
 
-        accountMemberRepository.findCurrentDefault(user.id())
+        membershipRepository.findCurrentDefault(user.id())
                 .ifPresent(df -> {
                     df.setDefault(false);
-                    accountMemberRepository.save(df);
+                    membershipRepository.save(df);
                 });
 
         newDefaultMembership.setDefault(true);
-        accountMemberRepository.save(newDefaultMembership);
+        membershipRepository.save(newDefaultMembership);
 
         var membershipUpdated = MembershipDefaultUpdatedEvent.builder()
                 .groupUpdated(accountMapper.toRecord(newDefaultMembership.getAccount()))

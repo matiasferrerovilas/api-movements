@@ -29,7 +29,7 @@ public class MovementFactory {
         movement.setCurrency(currencyResolver.resolve(dto.currency()));
 
         movement.setOwner(userService.getAuthenticatedUser());
-        var account = accountQueryService.findAccountById(dto.accountId());
+        var account = accountQueryService.findAccountById(dto.groupId());
         movement.setAccount(account);
 
         return movement;

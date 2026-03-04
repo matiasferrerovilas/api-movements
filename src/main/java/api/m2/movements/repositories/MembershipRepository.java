@@ -1,15 +1,17 @@
 package api.m2.movements.repositories;
 
 import api.m2.movements.entities.AccountMember;
+import api.m2.movements.projections.MembershipSummaryProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountMemberRepository extends JpaRepository<AccountMember, Long> {
+public interface MembershipRepository extends JpaRepository<AccountMember, Long> {
 
     @Query("""
         SELECT m
@@ -30,4 +32,16 @@ public interface AccountMemberRepository extends JpaRepository<AccountMember, Lo
       AND m.isDefault = true
 """)
     Optional<AccountMember> findCurrentDefault(@Param("userId") Long userId);
+
+    @Query("""
+    SELECT 
+        m.account.id as groupId,
+        m.id as membershipId,
+        m.account.name as groupDescription,
+        m.isDefault as isDefault,
+        m.role as role
+    FROM AccountMember m
+    WHERE m.user.id = :userId
+""")
+    List<MembershipSummaryProjection> findAllByUserId(Long userId);
 }

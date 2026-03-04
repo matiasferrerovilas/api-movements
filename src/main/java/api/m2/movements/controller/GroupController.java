@@ -1,6 +1,8 @@
 package api.m2.movements.controller;
 
+import api.m2.movements.projections.MembershipSummaryProjection;
 import api.m2.movements.records.accounts.AccountInvitationRecord;
+import api.m2.movements.records.accounts.AccountMemberRecord;
 import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.records.groups.AddGroupRecord;
@@ -8,6 +10,7 @@ import api.m2.movements.records.groups.InvitationResponseRecord;
 import api.m2.movements.records.groups.InviteToGroup;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.groups.MembershipService;
 import api.m2.movements.services.invitations.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +38,7 @@ public class GroupController {
     private final GroupAddService groupAddService;
     private final AccountQueryService accountQueryService;
     private final InvitationService invitationService;
+    private final MembershipService membershipService;
 
     @Operation(
             summary = "Crear un nuevo grupo",
@@ -49,10 +53,10 @@ public class GroupController {
         groupAddService.createAccount(body);
     }
 
-    @GetMapping
+    @GetMapping("/membership")
     @ResponseStatus(HttpStatus.OK)
-    public List<GroupRecord> getAllAccounts() {
-        return accountQueryService.findAllAccountsOfLogInUser();
+    public List<MembershipSummaryProjection> getAllAccounts() {
+        return membershipService.getAllMemberships();
     }
 
     @Operation(
