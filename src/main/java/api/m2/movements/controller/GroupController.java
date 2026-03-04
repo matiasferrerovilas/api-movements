@@ -90,10 +90,10 @@ public class GroupController {
     @PostMapping("/{id}/invitations")
     @ResponseStatus(HttpStatus.OK)
     public void createInvitation(
-            @PathVariable Long accountId,
+            @PathVariable Long id,
             @RequestBody InviteToGroup request
     ) {
-        invitationService.inviteToAccount(accountId, request.emails());
+        invitationService.inviteToAccount(id, request.emails());
     }
 
     @Operation(
