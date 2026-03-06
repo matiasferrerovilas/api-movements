@@ -8,5 +8,5 @@ import java.time.LocalDate;
 public record ServiceToAdd(String description, BigDecimal amount,
                            CurrencyRecord currency, LocalDate lastPayment,
                            Boolean isPaid,
-                           Long accountId) {
+                           Long groupId) {
 }

@@ -39,7 +39,7 @@ public class UtilityAddService {
     @Transactional
     public void save(ServiceToAdd serviceToAdd) {
         var user = userService.getAuthenticatedUser();
-        var account = accountQueryService.findAccountById(serviceToAdd.accountId());
+        var account = accountQueryService.findAccountById(serviceToAdd.groupId());
         var service = serviceMapper.toEntity(serviceToAdd, currencyRepository);
         service.setOwner(user);
         service.setAccount(account);
