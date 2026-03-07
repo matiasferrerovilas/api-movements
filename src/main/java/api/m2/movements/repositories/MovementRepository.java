@@ -1,6 +1,7 @@
 package api.m2.movements.repositories;
 
 import api.m2.movements.entities.Movement;
+import api.m2.movements.projections.MonthlyEvolutionProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
@@ -123,4 +124,25 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             ORDER BY ac.name, YEAR(g.`date`)
     """, nativeQuery = true)
     Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, String email);
+
+    @Query("""
+    SELECT MONTH(m.date)   AS month,
+           c.symbol        AS currencySymbol,
+           SUM(m.amount)   AS total
+    FROM Movement m
+    JOIN m.currency c
+    WHERE YEAR(m.date) = :year
+      AND m.type IN (
+            api.m2.movements.enums.MovementType.DEBITO,
+            api.m2.movements.enums.MovementType.CREDITO
+          )
+      AND (:#{#accountIds == null || #accountIds.isEmpty()} = true
+           OR m.account.id IN :accountIds)
+    GROUP BY MONTH(m.date), c.symbol
+    ORDER BY MONTH(m.date)
+    """)
+    List<MonthlyEvolutionProjection> findMonthlyEvolution(
+            @Param("year") Integer year,
+            @Param("accountIds") List<Long> accountIds
+    );
 }

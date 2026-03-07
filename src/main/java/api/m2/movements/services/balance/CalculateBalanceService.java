@@ -2,9 +2,11 @@ package api.m2.movements.services.balance;
 
 import api.m2.movements.enums.BalanceEnum;
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.mappers.BalanceEvolutionMapper;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.balance.BalanceFilterRecord;
+import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
@@ -25,6 +27,7 @@ public class CalculateBalanceService {
     private final MovementRepository movementRepository;
     private final UserService userService;
     private final CurrencyRepository currencyRepository;
+    private final BalanceEvolutionMapper balanceEvolutionMapper;
 
     public Map<BalanceEnum, BigDecimal> getBalance(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
@@ -62,5 +65,11 @@ public class CalculateBalanceService {
     public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
         var user = userService.getAuthenticatedUser();
         return movementRepository.getBalanceByYearAndGroup(year, month, user.getEmail());
+    }
+
+    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year, List<Long> groupIds) {
+        return balanceEvolutionMapper.toRecordsWithFilledMonths(
+                movementRepository.findMonthlyEvolution(year, groupIds)
+        );
     }
 }

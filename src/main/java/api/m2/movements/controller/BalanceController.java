@@ -4,6 +4,7 @@ import api.m2.movements.enums.BalanceEnum;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.balance.BalanceFilterRecord;
+import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.services.balance.CalculateBalanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,5 +70,17 @@ public class BalanceController {
     @GetMapping("/group")
     public Set<BalanceByGroup> getBalanceByYearAndGroup(@RequestParam Integer year, @RequestParam Integer month) {
         return calculateBalanceService.getBalanceByYearAndGroup(year, month);
+    }
+
+    @Operation(
+            summary = "Evolución mensual de gastos por moneda",
+            description = "Devuelve los totales de gastos agrupados por mes y moneda para un año dado."
+    )
+    @ApiResponse(responseCode = "200", description = "Evolución calculada correctamente")
+    @GetMapping("/monthly-evolution")
+    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(
+            @RequestParam @Min(2000) @Max(2100) Integer year,
+            @RequestParam(required = false) List<Long> groupIds) {
+        return calculateBalanceService.getMonthlyEvolution(year, groupIds);
     }
 }
