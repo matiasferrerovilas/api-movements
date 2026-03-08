@@ -10,6 +10,7 @@ plugins {
     id 'org.liquibase.gradle' version '3.1.0'
     id 'checkstyle'
     id 'jacoco'
+    id 'groovy'
 }
 
 group = 'api.m2'
@@ -113,6 +114,12 @@ dependencies {
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 
+	testImplementation 'org.spockframework:spock-core:2.4-groovy-5.0'
+	testImplementation 'org.spockframework:spock-spring:2.4-groovy-5.0'
+	implementation 'org.apache.groovy:groovy:5.0.4'
+	testImplementation 'org.apache.groovy:groovy-json:5.0.4'
+	testImplementation 'org.mock-server:mockserver-junit-jupiter:5.15.0'
+
     // Testcontainers
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:mysql:${testcontainersVersion}"
@@ -148,7 +155,7 @@ tasks.register("printVersion") {
 }
 tasks.withType(Test).configureEach {
     reports.html.required = false
-    reports.junitXml.required = false
+    reports.junitXml.required = true
 }
 
 springBoot {
