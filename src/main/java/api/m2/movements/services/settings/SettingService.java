@@ -1,8 +1,11 @@
 package api.m2.movements.services.settings;
 
+import api.m2.movements.entities.Account;
+import api.m2.movements.entities.Currency;
 import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.services.groups.AccountQueryService;
@@ -26,10 +29,10 @@ public class SettingService {
     private final AccountQueryService accountQueryService;
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
-        var category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
-        var account = accountQueryService.findAccountByName(incomeToAdd.group());
+        CategoryRecord category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
+        Account account = accountQueryService.findAccountByName(incomeToAdd.group());
         String description = "Sueldo Recibido";
-        var currency = currencyAddService.findBySymbol(incomeToAdd.currency());
+        Currency currency = currencyAddService.findBySymbol(incomeToAdd.currency());
 
         movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
                 LocalDate.now(),
