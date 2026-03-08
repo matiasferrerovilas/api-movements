@@ -182,4 +182,12 @@ jacocoTestReport {
     reports {
         xml.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, excludes: [
+                    "api/m2/movements/configuration/**",
+                    "api/m2/movements/MovementsApplication*"
+            ])
+        }))
+    }
 }
