@@ -2,6 +2,7 @@ package api.m2.movements.services.currencies;
 
 import api.m2.movements.configuration.CacheConfiguration;
 import api.m2.movements.entities.Currency;
+import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.mappers.CurrencyMapper;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.repositories.CurrencyRepository;
@@ -23,6 +24,9 @@ public class CurrencyAddService {
     private final CurrencyMapper currencyMapper;
 
     public Currency addCurrency(String symbol) {
+        if(symbol == null || symbol.isBlank()) {
+            throw new BusinessException("El simbolo no peude estar vacio");
+        }
         final String normalizedSymbol = symbol.trim().toUpperCase();
 
         return currencyRepository.findBySymbol(normalizedSymbol)
