@@ -6,7 +6,7 @@ import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.mappers.CurrencyMapper;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.repositories.CurrencyRepository;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

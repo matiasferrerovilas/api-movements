@@ -1,15 +1,12 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.services.currencies.CurrencyAddService
-import api.m2.movements.configuration.CacheConfiguration
 import api.m2.movements.entities.Currency
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.repositories.CurrencyRepository
-import jakarta.persistence.EntityNotFoundException
+import api.m2.movements.exceptions.EntityNotFoundException;
 import org.mapstruct.factory.Mappers
-import org.springframework.cache.CacheManager
-import org.springframework.cache.annotation.Cacheable
 import spock.lang.Specification
 import spock.lang.Unroll
 

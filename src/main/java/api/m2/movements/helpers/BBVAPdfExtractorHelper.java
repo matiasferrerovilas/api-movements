@@ -2,10 +2,10 @@ package api.m2.movements.helpers;
 
 import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CurrencyEnum;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.pdf.AmountInfo;
 import api.m2.movements.records.pdf.ParsedExpense;
 import api.m2.movements.repositories.CurrencyRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

@@ -5,7 +5,7 @@ import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.repositories.CategoryRepository;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

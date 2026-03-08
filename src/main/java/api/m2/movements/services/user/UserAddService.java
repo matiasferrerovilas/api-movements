@@ -6,7 +6,7 @@ import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.repositories.UserRepository;
 import api.m2.movements.services.groups.GroupAddService;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;

@@ -6,7 +6,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

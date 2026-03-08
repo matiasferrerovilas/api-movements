@@ -3,7 +3,7 @@ package api.m2.movements.configuration;
 import api.m2.movements.exceptions.ErrorResponseDTO;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

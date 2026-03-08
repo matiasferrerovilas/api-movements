@@ -6,7 +6,7 @@ import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.user.UserService;
-import jakarta.persistence.EntityNotFoundException;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
