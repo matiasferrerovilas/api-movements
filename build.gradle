@@ -116,7 +116,7 @@ dependencies {
 
 	testImplementation 'org.spockframework:spock-core:2.4-groovy-5.0'
 	testImplementation 'org.spockframework:spock-spring:2.4-groovy-5.0'
-	implementation 'org.apache.groovy:groovy:5.0.4'
+    testImplementation 'org.apache.groovy:groovy:5.0.4'
 	testImplementation 'org.apache.groovy:groovy-json:5.0.4'
 	testImplementation 'org.mock-server:mockserver-junit-jupiter:5.15.0'
 
@@ -189,5 +189,25 @@ jacocoTestReport {
                     "api/m2/movements/MovementsApplication*"
             ])
         }))
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        groovy {
+            srcDirs = ['src/test/groovy']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
     }
 }
