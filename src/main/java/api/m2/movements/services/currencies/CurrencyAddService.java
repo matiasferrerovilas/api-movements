@@ -27,7 +27,7 @@ public class CurrencyAddService {
         if(symbol == null || symbol.isBlank()) {
             throw new BusinessException("El simbolo no peude estar vacio");
         }
-        final String normalizedSymbol = symbol.trim().toUpperCase();
+        String normalizedSymbol = symbol.trim().toUpperCase();
 
         return currencyRepository.findBySymbol(normalizedSymbol)
                 .orElseGet(() -> {
