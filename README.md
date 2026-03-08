@@ -1,4 +1,4 @@
-# Movemenet API
+# Movement API
 
 A robust and scalable RESTful API for managing personal or business expenses, built with Spring Boot and designed for containerized deployment.
 
@@ -15,7 +15,7 @@ A robust and scalable RESTful API for managing personal or business expenses, bu
 
 ## Tech Stack
 
-- **Java 21** with **Spring Boot 3.5.5**
+- **Java 25** with **Spring Boot 4.0.2**
 - **MySQL 8.0** Database
 - **Liquibase** for database migrations
 - **MapStruct** for object mapping
@@ -29,7 +29,7 @@ A robust and scalable RESTful API for managing personal or business expenses, bu
 
 ## Prerequisites
 
-- Java 21 JDK
+- Java 25 JDK
 - Docker and Docker Compose (for containerized deployment)
 - MySQL 8.0+ (or use the provided Docker Compose setup)
 - Gradle 8.0+
@@ -40,8 +40,8 @@ A robust and scalable RESTful API for managing personal or business expenses, bu
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/api-expenses.git
-   cd api-expenses
+   git clone https://github.com/yourusername/api-movements.git
+   cd api-movements
    ```
 
 2. **Set up the database**
