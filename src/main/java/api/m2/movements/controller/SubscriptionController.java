@@ -1,8 +1,8 @@
 package api.m2.movements.controller;
 
-import api.m2.movements.records.services.ServiceRecord;
-import api.m2.movements.records.services.ServiceToAdd;
-import api.m2.movements.records.services.UpdateServiceRecord;
+import api.m2.movements.records.services.SubscriptionRecord;
+import api.m2.movements.records.services.SubscriptionToAdd;
+import api.m2.movements.records.services.UpdateSubscriptionRecord;
 import api.m2.movements.services.services.UtilitiesService;
 import api.m2.movements.services.services.UtilityAddService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +30,9 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/services")
-@Tag(name = "Services", description = "API para la gestión de servicios personales")
-public class ServiceController {
+@RequestMapping("/v1/subscriptions")
+@Tag(name = "Subscriptions", description = "API para la gestión de suscripciones personales")
+public class SubscriptionController {
     private final UtilitiesService utilitiesService;
     private final UtilityAddService utilityAddService;
 
@@ -45,13 +45,13 @@ public class ServiceController {
                             description = "Lista de servicios encontrados",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = ServiceRecord.class))
+                                    array = @ArraySchema(schema = @Schema(implementation = SubscriptionRecord.class))
                             )
                     )
             }
     )
     @GetMapping
-    public List<ServiceRecord> getServiceBy(
+    public List<SubscriptionRecord> getSubscriptionBy(
             @Parameter(description = "ID de la moneda para filtrar")
             @RequestParam(required = false) List<String> currencySymbol,
             @Parameter(description = "Fecha de ultimo pago del servicio")
@@ -68,15 +68,15 @@ public class ServiceController {
                             description = "Servicio creado",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = ServiceRecord.class))
+                                    array = @ArraySchema(schema = @Schema(implementation = SubscriptionRecord.class))
                             )
                     )
             }
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void saveService(@RequestBody ServiceToAdd serviceToAdd) {
-        utilityAddService.save(serviceToAdd);
+    public void saveService(@RequestBody SubscriptionToAdd subscriptionToAdd) {
+        utilityAddService.save(subscriptionToAdd);
     }
 
     @Operation(
@@ -86,7 +86,7 @@ public class ServiceController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Servicio pagado correctamente",
-                            content = @Content(schema = @Schema(implementation = ServiceRecord.class))
+                            content = @Content(schema = @Schema(implementation = SubscriptionRecord.class))
                     )
             }
     )
@@ -103,13 +103,13 @@ public class ServiceController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Servicio actualizado correctamente",
-                            content = @Content(schema = @Schema(implementation = ServiceRecord.class))
+                            content = @Content(schema = @Schema(implementation = SubscriptionRecord.class))
                     )
             }
     )
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public void updateService(@PathVariable Long id, @RequestBody UpdateServiceRecord updateService) {
+    public void updateService(@PathVariable Long id, @RequestBody UpdateSubscriptionRecord updateService) {
         utilitiesService.updateService(id, updateService);
     }
 

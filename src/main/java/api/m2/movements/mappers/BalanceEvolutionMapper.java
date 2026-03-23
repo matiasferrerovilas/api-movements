@@ -14,6 +14,8 @@ import java.util.stream.IntStream;
 @Mapper(componentModel = "spring")
 public interface BalanceEvolutionMapper {
 
+    int TOTAL_MONTHS = 12;
+
     BalanceMonthlyEvolutionRecord toRecord(MonthlyEvolutionProjection projection);
 
     List<BalanceMonthlyEvolutionRecord> toRecords(List<MonthlyEvolutionProjection> projections);
@@ -31,7 +33,7 @@ public interface BalanceEvolutionMapper {
                 ));
 
         return byCurrency.entrySet().stream()
-                .flatMap(entry -> IntStream.rangeClosed(1, 12)
+                .flatMap(entry -> IntStream.rangeClosed(1, TOTAL_MONTHS)
                         .mapToObj(month -> new BalanceMonthlyEvolutionRecord(
                                 month,
                                 entry.getKey(),

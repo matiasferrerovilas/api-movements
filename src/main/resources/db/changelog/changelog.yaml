@@ -53,3 +53,9 @@ databaseChangeLog:
   - include:
       file: 018_alter_table_services_add_indexs.sql
       relativeToChangelogFile: true
+  - include:
+        file: 019_alter_table_account_member.sql
+        relativeToChangelogFile: true
+  - include:
+      file: 020_rename_services_to_subscription.sql
+      relativeToChangelogFile: true

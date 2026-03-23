@@ -1,10 +1,10 @@
 package api.m2.movements.mappers;
 
 import api.m2.movements.entities.Currency;
-import api.m2.movements.entities.Services;
-import api.m2.movements.records.services.ServiceRecord;
-import api.m2.movements.records.services.ServiceToAdd;
-import api.m2.movements.records.services.UpdateServiceRecord;
+import api.m2.movements.entities.Subscription;
+import api.m2.movements.records.services.SubscriptionRecord;
+import api.m2.movements.records.services.SubscriptionToAdd;
+import api.m2.movements.records.services.UpdateSubscriptionRecord;
 import api.m2.movements.repositories.CurrencyRepository;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Context;
@@ -16,21 +16,22 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface ServiceMapper {
+public interface SubscriptionMapper {
     @Mapping(target = "currency", source = "currency.symbol", qualifiedByName = "mapCurrency")
-    @Mapping(target = "lastPayment", expression = "java(serviceToAdd.isPaid() != null && serviceToAdd.isPaid() ? serviceToAdd.lastPayment() : null)")
-    Services toEntity(ServiceToAdd serviceToAdd, @Context CurrencyRepository currencyRepository);
+    @Mapping(target = "lastPayment", expression = "java(subscriptionToAdd.isPaid() != null "
+            + "&& subscriptionToAdd.isPaid() ? subscriptionToAdd.lastPayment() : null)")
+    Subscription toEntity(SubscriptionToAdd subscriptionToAdd, @Context CurrencyRepository currencyRepository);
 
     @Mapping(target = "currency.symbol", source = "currency.symbol")
-    @Mapping(target = "isPaid", expression = "java(services.getIsPaid())")
-    @Mapping(target = "group", expression = "java(services.getAccount().getName())")
+    @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
+    @Mapping(target = "group", expression = "java(subscription.getAccount().getName())")
     @Mapping(target = "user", source = "owner.email")
-    ServiceRecord toRecord(Services services);
+    SubscriptionRecord toRecord(Subscription subscription);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "account", ignore = true)
-    void updateMovement(UpdateServiceRecord changesToMovement, @MappingTarget Services service);
+    void updateMovement(UpdateSubscriptionRecord changesToMovement, @MappingTarget Subscription subscription);
 
     @Named("mapCurrency")
     default Currency mapCurrency(String symbol, @Context CurrencyRepository currencyRepository) {
@@ -41,3 +42,4 @@ public interface ServiceMapper {
                 .orElseThrow(() -> new RuntimeException("Currency not found: " + symbol));
     }
 }
+

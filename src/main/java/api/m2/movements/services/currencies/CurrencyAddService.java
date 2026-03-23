@@ -24,7 +24,7 @@ public class CurrencyAddService {
     private final CurrencyMapper currencyMapper;
 
     public Currency addCurrency(String symbol) {
-        if(symbol == null || symbol.isBlank()) {
+        if (symbol == null || symbol.isBlank()) {
             throw new BusinessException("El simbolo no peude estar vacio");
         }
         String normalizedSymbol = symbol.trim().toUpperCase();
@@ -39,8 +39,8 @@ public class CurrencyAddService {
                 });
     }
 
-  @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE)
-  public List<CurrencyRecord> getAllCurrencies() {
+    @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE)
+    public List<CurrencyRecord> getAllCurrencies() {
         return currencyMapper.toRecordList(currencyRepository.findAllByEnabled(true));
     }
 

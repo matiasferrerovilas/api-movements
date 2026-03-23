@@ -1,14 +1,14 @@
 package api.m2.movements.services.services;
 
-import api.m2.movements.entities.Services;
+import api.m2.movements.entities.Subscription;
 import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
-import api.m2.movements.mappers.ServiceMapper;
+import api.m2.movements.mappers.SubscriptionMapper;
 import api.m2.movements.records.movements.MovementToAdd;
-import api.m2.movements.records.services.ServiceToAdd;
+import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.repositories.CurrencyRepository;
-import api.m2.movements.repositories.ServiceRepository;
+import api.m2.movements.repositories.SubscriptionRepository;
 import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.movements.MovementAddService;
@@ -27,8 +27,8 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class UtilityAddService {
-    private final ServiceMapper serviceMapper;
-    private final ServiceRepository serviceRepository;
+    private final SubscriptionMapper serviceMapper;
+    private final SubscriptionRepository serviceRepository;
     private final CurrencyRepository currencyRepository;
     private final MovementAddService movementAddService;
     private final CategoryAddService categoryAddService;
@@ -37,10 +37,10 @@ public class UtilityAddService {
     private final ServicePublishServiceWebSocket servicePublishService;
 
     @Transactional
-    public void save(ServiceToAdd serviceToAdd) {
+    public void save(SubscriptionToAdd subscriptionToAdd) {
         var user = userService.getAuthenticatedUser();
-        var account = accountQueryService.findAccountById(serviceToAdd.groupId());
-        var service = serviceMapper.toEntity(serviceToAdd, currencyRepository);
+        var account = accountQueryService.findAccountById(subscriptionToAdd.groupId());
+        var service = serviceMapper.toEntity(subscriptionToAdd, currencyRepository);
         service.setOwner(user);
         service.setAccount(account);
 
@@ -53,7 +53,7 @@ public class UtilityAddService {
                         .toRecord(serviceRepository.save(service)));
     }
 
-    public void addMovementService(Services serviceToAdd) {
+    public void addMovementService(Subscription serviceToAdd) {
         var category = categoryAddService.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion());
         String description = StringUtils.join("Servicio Pagado ", serviceToAdd.getDescription());
 

@@ -34,7 +34,7 @@ public interface MembershipRepository extends JpaRepository<AccountMember, Long>
     Optional<AccountMember> findCurrentDefault(@Param("userId") Long userId);
 
     @Query("""
-    SELECT 
+    SELECT
         m.account.id as groupId,
         m.id as membershipId,
         m.account.name as groupDescription,

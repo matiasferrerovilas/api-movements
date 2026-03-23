@@ -24,7 +24,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Services {
+public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -34,6 +34,7 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishAccountDefaultUpdated(MembershipDefaultUpdatedEvent membershipDefaultUpdatedEvent) {
-        this.publish(membershipDefaultUpdatedEvent.groupUpdated(), "/topic/account/default/" + membershipDefaultUpdatedEvent.logInuser(), EventType.MEMBERSHIP_UPDATED);
+        this.publish(membershipDefaultUpdatedEvent.groupUpdated(), "/topic/account/default/"
+                + membershipDefaultUpdatedEvent.logInuser(), EventType.MEMBERSHIP_UPDATED);
     }
 }

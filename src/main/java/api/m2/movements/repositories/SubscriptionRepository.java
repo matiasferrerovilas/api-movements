@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.Services;
+import api.m2.movements.entities.Subscription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ServiceRepository extends JpaRepository<Services, Long> {
+public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     @Query(value = """
       select distinct s
-        from Services s
+         from Subscription s
         join fetch s.currency c
         join fetch s.account a
         left join fetch s.owner
@@ -23,7 +23,7 @@ public interface ServiceRepository extends JpaRepository<Services, Long> {
           and (:symbols is null or c.symbol in :symbols)
           and (:lastPayment is null or s.lastPayment = :lastPayment)
 """)
-    List<Services> findByCurrencyAndLastPayment(
+    List<Subscription> findByCurrencyAndLastPayment(
             @Param("userId") Long userId,
             @Param("symbols") List<String> symbols,
             @Param("lastPayment") LocalDate lastPayment
@@ -31,9 +31,10 @@ public interface ServiceRepository extends JpaRepository<Services, Long> {
 
     @Query(value = """
     SELECT s
-    FROM Services s
+    FROM Subscription s
     JOIN FETCH s.currency c
     WHERE s.id = :id
 """)
-    Optional<Services> findByIdWithCurrency(Long id);
+    Optional<Subscription> findByIdWithCurrency(Long id);
 }
+

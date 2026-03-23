@@ -6,4 +6,4 @@ public record BalanceMonthlyEvolutionRecord(
         Integer month,
         String currencySymbol,
         BigDecimal total
-) {}
+) { }
