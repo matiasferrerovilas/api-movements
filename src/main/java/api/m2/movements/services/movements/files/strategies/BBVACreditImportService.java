@@ -1,6 +1,5 @@
 package api.m2.movements.services.movements.files.strategies;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CurrencyEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.helpers.ParserRegistry;
@@ -23,16 +22,16 @@ public class BBVACreditImportService extends ExpenseFileStrategy {
     }
 
     @Override
-    public boolean match(BanksEnum banksEnum) {
-        return BanksEnum.BBVA.equals(banksEnum);
+    public boolean match(String bank) {
+        return "BBVA".equalsIgnoreCase(bank);
     }
     @Override
     public MovementType getBankMethod() {
         return MovementType.CREDITO;
     }
     @Override
-    public BanksEnum getBank() {
-        return BanksEnum.BBVA;
+    public String getBank() {
+        return "BBVA";
     }
 
     @Override

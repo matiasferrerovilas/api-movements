@@ -1,6 +1,5 @@
 package api.m2.movements.services.movements.files;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.helpers.ParserRegistry;
 import api.m2.movements.records.movements.MovementFileToAdd;
@@ -19,9 +18,9 @@ public abstract class ExpenseFileStrategy {
     protected final ParserRegistry parserRegistry;
     protected final CategoryAddService categoryAddService;
 
-    public abstract boolean match(BanksEnum banksEnum);
+    public abstract boolean match(String bank);
 
-    public abstract BanksEnum getBank();
+    public abstract String getBank();
 
     public abstract MovementType getBankMethod();
 

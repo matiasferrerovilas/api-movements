@@ -1,7 +1,6 @@
 package api.m2.movements.services.services;
 
 import api.m2.movements.entities.Subscription;
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.SubscriptionMapper;
@@ -65,7 +64,7 @@ public class UtilityAddService {
                 serviceToAdd.getCurrency().getSymbol(),
                 0,
                 0,
-                BanksEnum.GALICIA,
+                "GALICIA",
                 serviceToAdd.getAccount().getId()));
     }
 }

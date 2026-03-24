@@ -43,7 +43,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     WHERE
     (:#{#accountsId} IS NULL OR g.account.id IN :#{#accountsId})
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
-      AND (:#{#filter.bank} IS NULL OR g.bank IN :#{#filter.bank})
+      AND (:#{#filter.bank} IS NULL OR g.bank.description IN :#{#filter.bank})
       AND (:#{#filter.type} IS NULL OR g.type IN :#{#filter.type})
       AND (:#{#filter.categories} IS NULL OR g.category.description IN :#{#filter.categories})
       AND (:#{#filter.description} IS NULL OR LOWER(g.description) LIKE LOWER(CONCAT('%', :#{#filter.description}, '%')))

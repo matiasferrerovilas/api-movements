@@ -1,6 +1,5 @@
 package api.m2.movements.helpers;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.records.pdf.ParsedExpense;
 import api.m2.movements.repositories.CurrencyRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,11 +43,11 @@ public abstract class PdfExtractprHelper {
 
         try {
             return Optional.of(parseMoney(amountStr.trim()));
-        } catch (Exception e) {
+        } catch (Exception _) {
             log.debug("Failed to parse amount: '{}'", amountStr);
             return Optional.empty();
         }
     }
-    public abstract BanksEnum getBank();
+    public abstract String getBank();
     public abstract List<ParsedExpense> parse(String pdfText);
 }

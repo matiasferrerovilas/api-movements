@@ -1,6 +1,5 @@
 package api.m2.movements.records.movements;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.records.categories.CategoryRecord;
 
 import java.math.BigDecimal;
@@ -14,5 +13,5 @@ public record ExpenseToUpdate(
         String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
-        BanksEnum bank
+        String bank
 ) { }

@@ -1,6 +1,5 @@
 package api.m2.movements.helpers;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CurrencyEnum;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.pdf.AmountInfo;
@@ -32,7 +31,6 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
                     + "(-?\\d{1,3}(?:[.\\d]*)?,\\d{2})?"                  // importe en ARS
     );
 
-    private static final Pattern DATE_LINE_PATTERN = Pattern.compile("^\\d{2}-\\d{2}-\\d{2}.*");
     private static final Pattern INSTALLMENT_CLEANUP_PATTERN = Pattern.compile("\\s*C\\.\\d{2}/\\d{2}\\s*");
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -41,7 +39,6 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
     private static final int DATE_POSITION = 1;
     private static final int REFERENCE_POSITION = 2;
     private static final int FOREIGN_CURRENCY_POSITION = 3;
-    private static final int FOREIGN_AMOUNT_POSITION = 4;
     private static final int NRO_CUPON_POSITION = 5;
     private static final int ARS_AMOUNT_POSITION = 6;
 
@@ -55,8 +52,8 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
     }
 
     @Override
-    public BanksEnum getBank() {
-        return BanksEnum.BBVA;
+    public String getBank() {
+        return "BBVA";
     }
 
     @Override
@@ -94,7 +91,6 @@ public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
         var date = LocalDate.parse(matcher.group(DATE_POSITION), DATE_FORMATTER);
         var fullReference = matcher.group(REFERENCE_POSITION).trim();
         var foreignCurrency = matcher.group(FOREIGN_CURRENCY_POSITION);
-        var foreignAmount = matcher.group(FOREIGN_AMOUNT_POSITION);
         var nroCupon = matcher.group(NRO_CUPON_POSITION);
         var arsAmount = matcher.group(ARS_AMOUNT_POSITION);
 

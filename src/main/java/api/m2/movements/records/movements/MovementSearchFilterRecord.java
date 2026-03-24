@@ -1,6 +1,5 @@
 package api.m2.movements.records.movements;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.MovementType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -15,7 +14,7 @@ public record MovementSearchFilterRecord(
         List<String> currency,
 
         @Schema(description = "Bancos asociados al gasto")
-        List<BanksEnum> bank,
+        List<String> bank,
 
         @Schema(description = "Categorias asociados al gasto")
         List<String> categories,

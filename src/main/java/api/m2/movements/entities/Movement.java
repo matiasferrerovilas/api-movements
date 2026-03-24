@@ -1,6 +1,5 @@
 package api.m2.movements.entities;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,12 +40,7 @@ public class Movement {
     @Column(nullable = false, length = 60)
     private String description;
 
-    @Column(nullable = false)
-    private LocalDate date;
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -64,8 +58,9 @@ public class Movement {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @Enumerated(EnumType.STRING)
-    private BanksEnum bank;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_id")
+    private Bank bank;
 
     @Column(length = 30)
     private Integer cuotaActual;
@@ -74,4 +69,11 @@ public class Movement {
 
     @Enumerated(EnumType.STRING)
     private MovementType type;
+
+    @Column(nullable = false)
+    private LocalDate date;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

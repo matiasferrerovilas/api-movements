@@ -11,7 +11,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
-
 import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {CategoryMapper.class,
@@ -23,14 +22,17 @@ public interface MovementMapper {
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "account", ignore = true)
+    @Mapping(target = "bank", ignore = true)
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
 
-
+    @Mapping(target = "bank", source = "movement.bank.description")
     MovementRecord toRecord(Movement movement);
+    @Mapping(target = "bank", source = "bank.description")
     LastIngresoRecord toLastIngreso(Movement ingreso);
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "account", ignore = true)
+    @Mapping(target = "bank", ignore = true)
     @Mapping(target = "type", source = "type")
     Movement toEntity(MovementToAdd movementToAdd);
 

@@ -1,0 +1,9 @@
+-- liquibase formatted sql
+-- changeset mati:20260324-1
+CREATE TABLE banks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    description VARCHAR(100) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+

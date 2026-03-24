@@ -14,6 +14,7 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         from Income i
         join fetch i.currency
         join fetch i.account a
+        join fetch i.bank b
         join a.members m
         where m.user.id = :userId
 """)

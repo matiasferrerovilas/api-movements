@@ -3,7 +3,6 @@ package api.m2.movements.unit.services
 import api.m2.movements.services.settings.SettingService
 import api.m2.movements.entities.Account
 import api.m2.movements.entities.Currency
-import api.m2.movements.enums.BanksEnum
 import api.m2.movements.enums.CategoryEnum
 import api.m2.movements.enums.MovementType
 import api.m2.movements.records.categories.CategoryRecord
@@ -59,7 +58,7 @@ class SettingServiceTest extends Specification {
             assert m.currency()     == "EUR"
             assert m.cuotaActual()  == 0
             assert m.cuotasTotales() == 0
-            assert m.bank()         == BanksEnum.GALICIA
+            assert m.bank()         == "GALICIA"
             assert m.groupId()      == 1L
         }
     }

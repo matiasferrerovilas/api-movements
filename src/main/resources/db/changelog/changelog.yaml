@@ -59,3 +59,15 @@ databaseChangeLog:
   - include:
       file: 020_rename_services_to_subscription.sql
       relativeToChangelogFile: true
+  - include:
+      file: 021_create_table_bank.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 022_alter_table_movements_add_bank_fk.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 023_insert_banks.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 024_alter_table_ingreso_add_bank_fk.sql
+      relativeToChangelogFile: true

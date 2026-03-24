@@ -72,7 +72,7 @@ public class IncomeAddService {
                 incomeToReload.getCurrency().getSymbol(),
                 null,
                 null,
-                incomeToReload.getBank(),
+                incomeToReload.getBank().getDescription(),
                 incomeToReload.getAccount().getId()
         );
         movementAddService.saveMovement(movementToAdd);

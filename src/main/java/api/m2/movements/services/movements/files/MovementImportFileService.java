@@ -1,6 +1,5 @@
 package api.m2.movements.services.movements.files;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.helpers.PdfReaderService;
 import api.m2.movements.records.movements.MovementFileToAdd;
@@ -56,9 +55,8 @@ public class MovementImportFileService {
             String text = pdfReaderService.extractTextFromPdf(pdfFile);
             Files.deleteIfExists(pdfFile);
 
-            BanksEnum banksEnum = BanksEnum.valueOf(bank.toUpperCase());
             var list = expenseFileStrategies.stream()
-                    .filter(strategy -> strategy.match(banksEnum))
+                    .filter(strategy -> strategy.match(bank))
                     .toList();
 
             var account = accountQueryService.findAccountById(accountId);
@@ -68,7 +66,7 @@ public class MovementImportFileService {
                 case 1 -> list.getFirst().process(movementFile);
                 default -> throw new IllegalArgumentException("Multiple strategies found for bank method");
             }
-        } catch (IOException e) {
+        } catch (IOException _) {
             throw new BusinessException("No se pudo procesar");
         }
     }

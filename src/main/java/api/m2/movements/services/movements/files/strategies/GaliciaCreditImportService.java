@@ -1,6 +1,5 @@
 package api.m2.movements.services.movements.files.strategies;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.helpers.ParserRegistry;
 import api.m2.movements.records.pdf.ParsedExpense;
@@ -22,13 +21,12 @@ public class GaliciaCreditImportService extends ExpenseFileStrategy {
     }
 
     @Override
-    public boolean match(BanksEnum banksEnum) {
-        return BanksEnum.GALICIA.equals(banksEnum);
+    public boolean match(String bank) {
+        return "GALICIA".equalsIgnoreCase(bank);
     }
-
     @Override
-    public BanksEnum getBank() {
-        return BanksEnum.GALICIA;
+    public String getBank() {
+        return "GALICIA";
     }
 
     @Override

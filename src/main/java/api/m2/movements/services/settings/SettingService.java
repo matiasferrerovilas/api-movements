@@ -2,7 +2,6 @@ package api.m2.movements.services.settings;
 
 import api.m2.movements.entities.Account;
 import api.m2.movements.entities.Currency;
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.categories.CategoryRecord;
@@ -42,7 +41,7 @@ public class SettingService {
                 currency.getSymbol(),
                 0,
                 0,
-                BanksEnum.valueOf(incomeToAdd.bank()),
+                incomeToAdd.bank(),
                 account.getId()));
     }
 }

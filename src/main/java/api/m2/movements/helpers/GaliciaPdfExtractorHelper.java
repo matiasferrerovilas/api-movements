@@ -1,6 +1,5 @@
 package api.m2.movements.helpers;
 
-import api.m2.movements.enums.BanksEnum;
 import api.m2.movements.enums.CurrencyEnum;
 import api.m2.movements.records.pdf.AmountInfo;
 import api.m2.movements.records.pdf.ParsedExpense;
@@ -42,8 +41,8 @@ public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
     }
 
     @Override
-    public BanksEnum getBank() {
-        return BanksEnum.GALICIA;
+    public String getBank() {
+        return "GALICIA";
     }
 
     @Override

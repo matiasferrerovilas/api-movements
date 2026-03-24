@@ -1,11 +1,10 @@
 package api.m2.movements.helpers;
 
-import api.m2.movements.enums.BanksEnum;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,7 +13,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ParserRegistry {
     private final List<PdfExtractprHelper> parsers;
-    private final Map<BanksEnum, PdfExtractprHelper> registry = new EnumMap<>(BanksEnum.class);
+    private final Map<String, PdfExtractprHelper> registry = new HashMap<>();
 
     @PostConstruct
     void init() {
@@ -26,7 +25,7 @@ public class ParserRegistry {
         }
     }
 
-    public PdfExtractprHelper getParser(BanksEnum bank) {
+    public PdfExtractprHelper getParser(String bank) {
        return Optional.ofNullable(registry.get(bank))
                 .orElseThrow(() -> new IllegalArgumentException("No parser registered for bank: " + bank));
     }
