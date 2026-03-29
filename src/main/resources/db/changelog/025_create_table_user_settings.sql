@@ -1,5 +1,4 @@
---liquibase formatted sql
-
+-- liquibase formatted sql
 -- changeset mgferrero:025-create-user-settings
 CREATE TABLE user_settings (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
