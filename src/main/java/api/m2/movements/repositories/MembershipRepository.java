@@ -27,7 +27,7 @@ public interface MembershipRepository extends JpaRepository<AccountMember, Long>
 
     @Query("""
     SELECT
-        m.account.id as groupId,
+        m.account.id as accountId,
         m.id as membershipId,
         m.account.name as groupDescription,
         m.role as role
@@ -35,4 +35,7 @@ public interface MembershipRepository extends JpaRepository<AccountMember, Long>
     WHERE m.user.id = :userId
 """)
     List<MembershipSummaryProjection> findAllByUserId(Long userId);
+
+    @Query("SELECT COUNT(m) FROM AccountMember m WHERE m.account.id = :accountId")
+    long countByAccountId(@Param("accountId") Long accountId);
 }

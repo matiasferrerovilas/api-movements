@@ -156,3 +156,55 @@ Los servicios de escritura publican Spring Application Events dentro de `@Transa
 - **`@EqualsAndHashCode` + `@ToString` en entidades bidireccionales** — para evitar recursión infinita (Account, AccountMember).
 - **RabbitMQ** — exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n para importación de archivos. El listener de respuesta está en el código pero comentado.
 - **Testing** — Spock con Groovy para specs, Testcontainers para tests de integración con MySQL real.
+
+## Testing
+
+### TDD obligatorio
+Todo componente nuevo (service, resolver, factory, helper) debe tener su test unitario escrito junto con el código de producción. No se acepta código nuevo sin cobertura de casos principales.
+
+### Ubicación y naming
+- Servicios: `src/test/groovy/api/m2/movements/unit/services/`
+- Clases utilitarias / resolvers: `src/test/groovy/api/m2/movements/unit/unit/`
+- Nombre del archivo: `{NombreClase}Test.groovy` — mismo nombre que la clase Java bajo test
+
+### Reglas generales
+- **Sin `@SpringBootTest`** — los tests unitarios son puramente en memoria, sin contexto Spring
+- **Instanciación manual** — el servicio bajo test se crea via constructor en el bloque `setup()`, inyectando los mocks/stubs como argumentos
+- **`Mock()` vs `Stub()`**:
+  - `Mock()` — cuando hay que verificar que una interacción ocurrió (`1 * service.method(...)`)
+  - `Stub()` — cuando solo se necesita un valor de retorno y no importa si/cuánto se llama
+- **Estructura `given/when/then`** — obligatoria en todos los tests
+- **Nombres de test en inglés** — formato: `"metodo - should comportamiento"` (ej: `"addIngreso - should save movement with correct parameters"`)
+
+### Ejemplo canónico
+`src/test/groovy/api/m2/movements/unit/services/SettingServiceTest.groovy`
+
+```groovy
+class SettingServiceTest extends Specification {
+
+    MovementAddService movementAddService = Mock(MovementAddService)
+    AccountQueryService accountQueryService = Mock(AccountQueryService)
+
+    SettingService service
+
+    def setup() {
+        service = new SettingService(movementAddService, accountQueryService)
+    }
+
+    def "addIngreso - should save movement with correct parameters"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("GALICIA", "EUR", new BigDecimal("1000.00"), "Mi grupo")
+        accountQueryService.findAccountByName("Mi grupo") >> Stub(Account) { getId() >> 1L }
+
+        when:
+        service.addIngreso(incomeToAdd)
+
+        then:
+        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
+            def m = args[0] as MovementToAdd
+            assert m.amount() == new BigDecimal("1000.00")
+            assert m.type()   == MovementType.INGRESO.name()
+        }
+    }
+}
+```

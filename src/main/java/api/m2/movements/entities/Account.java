@@ -61,4 +61,7 @@ public class Account {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    private boolean isActive = true;
 }

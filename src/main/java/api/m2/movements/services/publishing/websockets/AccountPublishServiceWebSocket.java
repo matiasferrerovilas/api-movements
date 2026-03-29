@@ -37,4 +37,9 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
         this.publish(membershipDefaultUpdatedEvent.groupUpdated(), "/topic/account/default/"
                 + membershipDefaultUpdatedEvent.logInuser(), EventType.MEMBERSHIP_UPDATED);
     }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishAccountLeft(GroupRecord groupRecord) {
+        this.publish(groupRecord, "/topic/account/" + groupRecord.id() + "/leave", EventType.ACCOUNT_LEFT);
+    }
 }

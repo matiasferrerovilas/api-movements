@@ -32,15 +32,15 @@ public class GroupAddService {
     private final UserSettingService userSettingService;
 
     @Transactional
-    public void createAccount(AddGroupRecord record) {
-        if (StringUtils.isAllBlank(record.description())) {
+    public void createAccount(AddGroupRecord addGroupRecord) {
+        if (StringUtils.isAllBlank(addGroupRecord.description())) {
             log.error("Description for group is blank");
             return;
         }
         var owner = userService.getAuthenticatedUser();
 
         var account = Account.builder()
-                .name(record.description())
+                .name(addGroupRecord.description())
                 .owner(owner)
                 .build();
 
@@ -59,6 +59,7 @@ public class GroupAddService {
         accountPublishServiceWebSocket.publishAccountCreated(accountMapper.toRecord(account));
     }
 
+    @Transactional
     public void leaveAccount(Long accountId) {
         var user = userService.getAuthenticatedUserRecord();
 
@@ -67,10 +68,17 @@ public class GroupAddService {
                 .orElseThrow(() -> new PermissionDeniedException("User does not belong to this account"));
 
         if (membership.getRole() == AccountRole.OWNER) {
-            throw new PermissionDeniedException("Owner cannot leave the account");
+            long memberCount = membershipRepository.countByAccountId(accountId);
+            if (memberCount > 1) {
+                throw new PermissionDeniedException("Owner cannot leave the account while it has other members");
+            }
+            var account = membership.getAccount();
+            account.setActive(false);
+            accountRepository.save(account);
         }
 
         membershipRepository.delete(membership);
+        accountPublishServiceWebSocket.publishAccountLeft(accountMapper.toRecord(membership.getAccount()));
     }
 
     public void addMemberToAccount(Account account) {

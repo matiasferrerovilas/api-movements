@@ -1,0 +1,2 @@
+ALTER TABLE subscription
+    MODIFY COLUMN amount DECIMAL(15, 2) NULL;

@@ -5,6 +5,7 @@ import api.m2.movements.projections.AccountSummaryProjection;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,10 +24,17 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
         where m.account = a
           and m.user.id = :userId
     )
+    and a.isActive = true
 """)
     List<Account> findAllAccountsByMemberIdWithAllMembers(Long userId);
 
-    Optional<Account> findAccountByNameAndOwnerId(@NotNull String name, Long id);
+    @Query("""
+    select a from Account a
+    where a.name = :name
+      and a.owner.id = :ownerId
+      and a.isActive = true
+""")
+    Optional<Account> findAccountByNameAndOwnerId(@NotNull @Param("name") String name, @Param("ownerId") Long ownerId);
 
     @Query("""
         select
@@ -39,6 +47,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
         join a.members m
         join a.owner o
         join AccountMember am on am.account = a and am.user.id = :userId
+        where a.isActive = true
         group by a.id, a.name, o.id, o.email
 """)
     List<AccountSummaryProjection> findAccountSummariesByMemberUserId(Long userId);
