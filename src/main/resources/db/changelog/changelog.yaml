@@ -69,5 +69,11 @@ databaseChangeLog:
       file: 023_insert_banks.sql
       relativeToChangelogFile: true
   - include:
-      file: 024_alter_table_ingreso_add_bank_fk.sql
+       file: 024_alter_table_ingreso_add_bank_fk.sql
+       relativeToChangelogFile: true
+  - include:
+      file: 025_create_table_user_settings.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 026_alter_table_account_member_drop_is_default.sql
       relativeToChangelogFile: true

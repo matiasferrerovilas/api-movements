@@ -3,6 +3,7 @@ package api.m2.movements.services.groups;
 import api.m2.movements.entities.Account;
 import api.m2.movements.entities.AccountMember;
 import api.m2.movements.enums.AccountRole;
+import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
 import api.m2.movements.records.groups.AddGroupRecord;
@@ -10,6 +11,7 @@ import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
 import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
+import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class GroupAddService {
     private final MembershipRepository membershipRepository;
     private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
     private final AccountMapper accountMapper;
+    private final UserSettingService userSettingService;
 
     @Transactional
     public void createAccount(AddGroupRecord record) {
@@ -68,8 +71,6 @@ public class GroupAddService {
         }
 
         membershipRepository.delete(membership);
-
-        //accountPublishServiceWebSocket.publishAccountCreated(accountMapper.toRecord(account));
     }
 
     public void addMemberToAccount(Account account) {
@@ -91,14 +92,7 @@ public class GroupAddService {
         var newDefaultMembership = membershipRepository.findMember(id, user.id())
                 .orElseThrow(() -> new PermissionDeniedException("El usuario no pertenece a este grupo"));
 
-        membershipRepository.findCurrentDefault(user.id())
-                .ifPresent(df -> {
-                    df.setDefault(false);
-                    membershipRepository.save(df);
-                });
-
-        newDefaultMembership.setDefault(true);
-        membershipRepository.save(newDefaultMembership);
+        userSettingService.upsert(UserSettingKey.DEFAULT_ACCOUNT, newDefaultMembership.getAccount().getId());
 
         var membershipUpdated = MembershipDefaultUpdatedEvent.builder()
                 .groupUpdated(accountMapper.toRecord(newDefaultMembership.getAccount()))
@@ -106,21 +100,4 @@ public class GroupAddService {
                 .build();
         accountPublishServiceWebSocket.publishAccountDefaultUpdated(membershipUpdated);
     }
-
-   /* @PublishMovement(eventType = EventType.ACCOUNT_LEFT, routingKey = "/topic/groups/update")
-    public List<AccountsWithUser> leaveAccount(Long id) throws AccessDeniedException {
-        var user = userService.getAuthenticatedUserRecord();
-
-        var membership = accountMemberRepository
-                .findByAccountIdAndUserId(id, user.id())
-                .orElseThrow(() -> new AccessDeniedException("User does not belong to this account"));
-
-        if (membership.getRole() == AccountRole.OWNER) {
-            throw new AccessDeniedException("Owner cannot leave the account");
-        }
-
-        accountMemberRepository.delete(membership);
-
-        return accountQueryService.getMyAccountsWithCount();
-    }*/
 }

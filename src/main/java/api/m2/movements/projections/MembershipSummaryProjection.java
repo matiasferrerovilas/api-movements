@@ -8,7 +8,5 @@ public interface MembershipSummaryProjection {
     String getGroupDescription();
     Long getMembershipId();
 
-    boolean getIsDefault();
-
     AccountRole getRole();
 }

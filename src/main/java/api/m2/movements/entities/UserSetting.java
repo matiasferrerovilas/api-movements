@@ -1,6 +1,6 @@
 package api.m2.movements.entities;
 
-import api.m2.movements.enums.AccountRole;
+import api.m2.movements.enums.UserSettingKey;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,30 +15,28 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "account_members",
+        name = "user_settings",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"account_id", "user_id"})
+                @UniqueConstraint(columnNames = {"user_id", "setting_key"})
         }
 )
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"account", "user"})
-public class AccountMember {
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserSetting {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,13 +46,15 @@ public class AccountMember {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AccountRole role;
+    @Column(name = "setting_key", nullable = false, length = 50)
+    private UserSettingKey settingKey;
+
+    @Column(name = "setting_value", nullable = false)
+    private Long settingValue;
 
     @CreationTimestamp
-    private LocalDateTime joinedAt;
+    private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

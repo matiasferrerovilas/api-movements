@@ -26,19 +26,10 @@ public interface MembershipRepository extends JpaRepository<AccountMember, Long>
     );
 
     @Query("""
-    SELECT m
-    FROM AccountMember m
-    WHERE m.user.id = :userId
-      AND m.isDefault = true
-""")
-    Optional<AccountMember> findCurrentDefault(@Param("userId") Long userId);
-
-    @Query("""
     SELECT
         m.account.id as groupId,
         m.id as membershipId,
         m.account.name as groupDescription,
-        m.isDefault as isDefault,
         m.role as role
     FROM AccountMember m
     WHERE m.user.id = :userId
