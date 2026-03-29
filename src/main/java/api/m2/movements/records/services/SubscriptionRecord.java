@@ -10,6 +10,7 @@ public record SubscriptionRecord(Long id, String description, BigDecimal amount,
                             LocalDate lastPayment,
                             Boolean isPaid,
                             String group,
+                            Long accountId,
                             String user) {
 }
 

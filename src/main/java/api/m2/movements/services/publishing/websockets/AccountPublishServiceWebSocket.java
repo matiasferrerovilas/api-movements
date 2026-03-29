@@ -19,17 +19,17 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishInvitationAdded(InvitationToGroupRecord invitationToGroupRecord) {
-        this.publish(invitationToGroupRecord, "/topic/invitation/new", EventType.INVITATION_ADDED);
+        this.publish(invitationToGroupRecord, "/topic/invitation/" + invitationToGroupRecord.invitedUserId() + "/new", EventType.INVITATION_ADDED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishInvitationUpdated(InvitationToGroupRecord invitationToGroupRecord) {
-        this.publish(invitationToGroupRecord, "/topic/invitation/update", EventType.INVITATION_CONFIRMED_REJECTED);
+        this.publish(invitationToGroupRecord, "/topic/invitation/" + invitationToGroupRecord.invitedUserId() + "/update", EventType.INVITATION_CONFIRMED_REJECTED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishAccountCreated(GroupRecord groupRecord) {
-        this.publish(groupRecord, "/topic/account/new", EventType.ACCOUNT_CREATED);
+        this.publish(groupRecord, "/topic/account/" + groupRecord.owner().id() + "/new", EventType.ACCOUNT_CREATED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

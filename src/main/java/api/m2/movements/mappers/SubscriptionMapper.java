@@ -25,6 +25,7 @@ public interface SubscriptionMapper {
     @Mapping(target = "currency.symbol", source = "currency.symbol")
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
     @Mapping(target = "group", expression = "java(subscription.getAccount().getName())")
+    @Mapping(target = "accountId", expression = "java(subscription.getAccount().getId())")
     @Mapping(target = "user", source = "owner.email")
     SubscriptionRecord toRecord(Subscription subscription);
 

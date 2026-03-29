@@ -1,6 +1,7 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.mappers.MovementMapper;
+import api.m2.movements.records.movements.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
@@ -70,12 +71,12 @@ public class MovementAddService {
 
     @Transactional
     public void deleteMovement(Long id) {
-        if (!movementRepository.existsById(id)) {
-            throw new EntityNotFoundException("Movimiento con Id" + id + " no existe");
-        }
+        var movement = movementRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Movimiento con Id" + id + " no existe"));
 
+        Long accountId = movement.getAccount().getId();
         movementRepository.deleteById(id);
-        movementPublishService.publishDeleteOfMovement(id);
+        movementPublishService.publishDeleteOfMovement(new MovementDeletedEvent(id, accountId));
 
         log.info("Movimiento eliminado correctamente: id={}", id);
     }

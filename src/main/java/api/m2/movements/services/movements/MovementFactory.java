@@ -1,9 +1,11 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.entities.Movement;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementToAdd;
+import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.category.CategoryResolver;
 import api.m2.movements.services.currencies.CurrencyResolver;
@@ -21,6 +23,8 @@ public class MovementFactory {
     private final UserService userService;
     private final MovementMapper movementMapper;
     private final AccountQueryService accountQueryService;
+    private final BankRepository bankRepository;
+
     public Movement create(MovementToAdd dto) {
 
         var movement = movementMapper.toEntity(dto);
@@ -31,6 +35,12 @@ public class MovementFactory {
         movement.setOwner(userService.getAuthenticatedUser());
         var account = accountQueryService.findAccountById(dto.groupId());
         movement.setAccount(account);
+
+        if (dto.bank() != null) {
+            var bank = bankRepository.findByDescription(dto.bank())
+                    .orElseThrow(() -> new EntityNotFoundException("Banco no encontrado: " + dto.bank()));
+            movement.setBank(bank);
+        }
 
         return movement;
     }

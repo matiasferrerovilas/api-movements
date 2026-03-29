@@ -1,6 +1,7 @@
 package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.enums.EventType;
+import api.m2.movements.records.movements.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -21,11 +22,11 @@ public class MovementPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishMovementAdded(MovementRecord record) {
-        this.publish(record, "/topic/movimientos/new", EventType.MOVEMENT_ADDED);
+        this.publish(record, "/topic/movimientos/" + record.account().id() + "/new", EventType.MOVEMENT_ADDED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishDeleteOfMovement(Long id) {
-        this.publish(id, "/topic/movimientos/delete", EventType.MOVEMENT_DELETED);
+    public void publishDeleteOfMovement(MovementDeletedEvent event) {
+        this.publish(event.movementId(), "/topic/movimientos/" + event.accountId() + "/delete", EventType.MOVEMENT_DELETED);
     }
 }

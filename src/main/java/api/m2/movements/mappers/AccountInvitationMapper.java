@@ -13,6 +13,7 @@ public interface AccountInvitationMapper {
 
     @Mapping(target = "nameAccount", source = "account.name")
     @Mapping(target = "invitedBy", source = "account.owner.email")
+    @Mapping(target = "invitedUserId", source = "user.id")
     InvitationToGroupRecord toRecord(AccountInvitation account);
 
     List<InvitationToGroupRecord> toRecord(List<AccountInvitation> account);
