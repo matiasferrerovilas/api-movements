@@ -7,7 +7,6 @@ import api.m2.movements.records.onboarding.OnBoardingForm;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.user.UserAddService;
-import api.m2.movements.services.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,13 +18,6 @@ public class OnboardingService {
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
     private final GroupAddService groupAddService;
-    private final UserService userService;
-
-    public boolean isFirstLogin() {
-        var optional = userService.findUserByEmail();
-
-        return optional.isEmpty() || optional.get().isFirstLogin();
-    }
 
     @Transactional(rollbackOn = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {

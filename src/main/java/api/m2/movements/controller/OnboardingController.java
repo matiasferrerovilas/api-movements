@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,24 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class OnboardingController {
 
     private final OnboardingService onboardingService;
-    @Operation(
-            summary = "Verifica si es el primer inicio de sesión del usuario",
-            description = "Retorna `true` si el usuario aún no completó el onboarding.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Estado del onboarding",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = Boolean.class)
-                            )
-                    )
-            }
-    )
-    @GetMapping("is-first")
-    public boolean isFirstLogin() {
-        return onboardingService.isFirstLogin();
-    }
 
     @Operation(
             summary = "Completar el onboarding",

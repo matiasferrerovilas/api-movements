@@ -76,7 +76,7 @@ public class GroupController {
                     @ApiResponse(responseCode = "204", description = "Salida del grupo exitosa")
             }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void exitGroup(@PathVariable Long accountId) {
         groupAddService.leaveAccount(accountId);

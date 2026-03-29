@@ -4,6 +4,7 @@ import api.m2.movements.entities.User;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.UserMapper;
 import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.records.users.UserMeRecord;
 import api.m2.movements.repositories.UserRepository;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,20 @@ public class UserService {
         }
 
         throw new IllegalStateException("No hay un JWT autenticado en el contexto de seguridad");
+    }
+
+    public UserMeRecord getMe() {
+        var optional = findUserByEmail();
+        if (optional.isEmpty()) {
+            return new UserMeRecord(null, null, true, null);
+        }
+        var user = optional.get();
+        return new UserMeRecord(
+                user.getId(),
+                user.getEmail(),
+                user.isFirstLogin(),
+                user.getUserType() != null ? user.getUserType().name() : null
+        );
     }
 }
 
