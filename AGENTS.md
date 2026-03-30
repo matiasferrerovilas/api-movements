@@ -153,6 +153,11 @@ Los servicios de escritura publican Spring Application Events dentro de `@Transa
 - Se componen entre sí (ej: `MovementMapper` usa `CategoryMapper`, `CurrencyMapper`, `UserMapper`)
 - Actualizaciones parciales: `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` en métodos `update*()`
 
+## Entorno de Desarrollo
+
+- **IDE:** IntelliJ IDEA con Gradle como build tool.
+- **MapStruct + Lombok:** el procesamiento de anotaciones lo maneja Gradle. No hace falta crear ni configurar `.factorypath` manualmente — IntelliJ lo resuelve solo al sincronizar el proyecto con Gradle.
+
 ## Convenciones del Proyecto
 
 - **DTOs como Java records** — nunca clases para request/response. Organizados en `records/` por subpaquete de dominio.

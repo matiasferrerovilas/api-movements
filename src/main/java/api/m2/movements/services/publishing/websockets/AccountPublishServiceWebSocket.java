@@ -24,7 +24,9 @@ public class AccountPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishInvitationUpdated(InvitationToGroupRecord invitationToGroupRecord) {
-        this.publish(invitationToGroupRecord, "/topic/invitation/" + invitationToGroupRecord.invitedUserId() + "/update", EventType.INVITATION_CONFIRMED_REJECTED);
+        this.publish(invitationToGroupRecord,
+            "/topic/invitation/" + invitationToGroupRecord.invitedUserId() + "/update",
+            EventType.INVITATION_CONFIRMED_REJECTED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

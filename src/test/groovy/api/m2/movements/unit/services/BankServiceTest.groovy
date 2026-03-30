@@ -69,7 +69,6 @@ class BankServiceTest extends Specification {
         def record = new BankRecord(10L, "GALICIA")
 
         userService.getAuthenticatedUser() >> user
-        bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> false
         bankMapper.toRecord(bank) >> record
 
@@ -77,7 +76,7 @@ class BankServiceTest extends Specification {
         def result = service.addBankToUser("galicia")
 
         then:
-        1 * bankRepository.findByDescription("GALICIA")
+        1 * bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         0 * bankRepository.save(_)
         1 * userBankRepository.save(_)
         result.description() == "GALICIA"
@@ -91,7 +90,6 @@ class BankServiceTest extends Specification {
 
         userService.getAuthenticatedUser() >> user
         bankRepository.findByDescription("BANCO NACION") >> Optional.empty()
-        bankRepository.save({ Bank b -> b.description == "BANCO NACION" }) >> savedBank
         userBankRepository.existsByUserIdAndBankId(1L, 99L) >> false
         bankMapper.toRecord(savedBank) >> record
 
@@ -99,7 +97,7 @@ class BankServiceTest extends Specification {
         def result = service.addBankToUser("  banco nacion  ")
 
         then:
-        1 * bankRepository.save({ Bank b -> b.description == "BANCO NACION" })
+        1 * bankRepository.save({ Bank b -> b.description == "BANCO NACION" }) >> savedBank
         1 * userBankRepository.save(_)
         result.description() == "BANCO NACION"
     }
@@ -110,7 +108,6 @@ class BankServiceTest extends Specification {
         def bank = Stub(Bank) { getId() >> 2L; getDescription() >> "BBVA" }
 
         userService.getAuthenticatedUser() >> user
-        bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 2L) >> false
         bankMapper.toRecord(bank) >> new BankRecord(2L, "BBVA")
 
@@ -118,7 +115,7 @@ class BankServiceTest extends Specification {
         service.addBankToUser("  bbva  ")
 
         then:
-        1 * bankRepository.findByDescription("BBVA")
+        1 * bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         0 * bankRepository.findByDescription("  bbva  ")
     }
 

@@ -22,7 +22,8 @@ public class UserController {
 
     @Operation(
             summary = "Obtener datos del usuario autenticado",
-            description = "Retorna el ID interno, email, estado de onboarding y tipo de usuario del usuario autenticado. Si el usuario no existe aún en la base de datos, retorna isFirstLogin=true con los demás campos en null.",
+            description = "Retorna el ID interno, email, estado de onboarding y tipo de usuario del usuario autenticado. "
+                    + "Si el usuario no existe aún en la base de datos, retorna isFirstLogin=true con los demás campos en null.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",

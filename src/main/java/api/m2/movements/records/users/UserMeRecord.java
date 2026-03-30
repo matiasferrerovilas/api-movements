@@ -5,4 +5,4 @@ public record UserMeRecord(
         String email,
         boolean isFirstLogin,
         String userType
-) {}
+) { }
