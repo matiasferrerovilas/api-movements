@@ -61,6 +61,7 @@ api.m2.movements
 | `Movement` | `amount`, `date`, `type`, `description`, `cuotaActual/Total` | `owner → User`, `account → Account`, `category`, `currency`, `bank` |
 | `Income` | `amount` | `user → User`, `bank → Bank`, `currency`, `account → Account` |
 | `Subscription` | `description`, `amount`, `lastPayment`, `@Transient isPaid()` | `owner → User`, `account → Account`, `currency` |
+| `UserBank` | `createdAt` | `user → User`, `bank → Bank` |
 | `UserSetting` | `settingKey: UserSettingKey`, `settingValue: Long` | `user → User` |
 
 > **IMPORTANTE:** `User.id` es un `Long` auto-incremental de DB. El Keycloak subject (`sub` claim del JWT) es un UUID `String` separado. No son intercambiables.
@@ -91,7 +92,14 @@ Retorna `UserMeRecord { id: Long, email, isFirstLogin, userType }`. Si el usuari
 ### `GET /v1/income` / `POST` / `DELETE /{id}` / `POST /{id}/reload`
 ### `GET /v1/subscriptions` / `POST` / `PATCH /{id}/payment` / `PATCH /{id}` / `DELETE /{id}`
 ### `GET /v1/settings/defaults` / `GET /{key}` / `PUT /{key}` / `GET /last-ingreso`
-### `GET /v1/categories` / `GET /v1/currency` / `GET /v1/banks`
+### `GET /v1/banks`
+Retorna los bancos asociados al usuario autenticado (tabla `user_banks`). Lista vacía si no tiene ninguno.
+
+### `POST /v1/banks` — agrega banco al usuario
+Body: `{ "description": "galicia" }`. Sanitiza (trim + uppercase) antes de buscar en `banks`. Si el banco no existe lo crea. Si el usuario ya lo tiene, es idempotente. Retorna `BankRecord`.
+
+### `DELETE /v1/banks/{id}` — quita banco de la lista del usuario
+`{id}` es el `bank_id`. Lanza 404 si el banco no está en la lista del usuario. El banco sigue existiendo en el catálogo global.
 
 ## WebSocket Topics (STOMP)
 
