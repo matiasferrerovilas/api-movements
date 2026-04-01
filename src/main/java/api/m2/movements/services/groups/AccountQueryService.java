@@ -1,10 +1,12 @@
 package api.m2.movements.services.groups;
 
 import api.m2.movements.entities.Account;
+import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
 import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.repositories.AccountRepository;
+import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -23,6 +25,7 @@ public class AccountQueryService {
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final AccountMapper accountMapper;
+    private final MembershipRepository membershipRepository;
 
     public List<GroupRecord> findAllAccountsOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
@@ -61,5 +64,10 @@ public class AccountQueryService {
     public Account findAccountById(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe account con ese id"));
+    }
+
+    public void verifyUserIsMemberOfAccount(Long accountId, Long userId) {
+        membershipRepository.findMember(accountId, userId)
+                .orElseThrow(() -> new PermissionDeniedException("No tienes permiso para operar sobre este recurso"));
     }
 }

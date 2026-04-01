@@ -1,6 +1,8 @@
 package api.m2.movements.services.income;
 
+import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.enums.CategoryEnum;
+import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.IncomeMapper;
 import api.m2.movements.records.income.IncomeRecord;
@@ -55,6 +57,7 @@ public class IncomeAddService {
         return incomeMapper.toRecord(incomeRepository.findAllByUserOrGroupsIn(user.getId()));
     }
 
+    @RequiresMembership(domain = MembershipDomain.INCOME)
     public void deleteIncome(Long id) {
         log.debug("Eliminando Income {}", id);
         var incomeToDelete = incomeRepository.findById(id)
@@ -64,6 +67,7 @@ public class IncomeAddService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.INCOME)
     public void reloadIncome(Long id) {
         log.debug("Reloading Income {}", id);
         var incomeToReload = incomeRepository.findById(id)

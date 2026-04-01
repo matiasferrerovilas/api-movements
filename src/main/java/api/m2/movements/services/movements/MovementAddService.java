@@ -1,5 +1,7 @@
 package api.m2.movements.services.movements;
 
+import api.m2.movements.annotations.RequiresMembership;
+import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.movements.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -38,6 +40,7 @@ public class MovementAddService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.MOVEMENT, idParamIndex = 1)
     public void updateMovement(@Valid ExpenseToUpdate dto, Long id) {
         var movement = movementRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Expense not found with id: " + id));
@@ -70,6 +73,7 @@ public class MovementAddService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.MOVEMENT)
     public void deleteMovement(Long id) {
         var movement = movementRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Movimiento con Id" + id + " no existe"));

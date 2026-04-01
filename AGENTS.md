@@ -148,6 +148,21 @@ Cada dominio tiene servicios separados por responsabilidad: `*AddService` (escri
 ### Event-Driven WebSocket
 Los servicios de escritura publican Spring Application Events dentro de `@Transactional`. Los publishers WS escuchan con `@TransactionalEventListener(phase = AFTER_COMMIT)`.
 
+### AOP — Membership Guard (`@RequiresMembership`)
+Todo método de mutación (update, delete, pay, reload) que opere sobre un recurso perteneciente a una cuenta compartida **debe** anotarse con `@RequiresMembership`. El aspecto `MembershipCheckAspect` intercepta la llamada, resuelve el `accountId` del recurso y verifica que el usuario autenticado sea miembro antes de ejecutar el método.
+
+```java
+// El parámetro id está en el índice 0 por defecto
+@RequiresMembership(domain = MembershipDomain.INCOME)
+public void deleteIncome(Long id) { ... }
+
+// Cuando el id NO está en el primer parámetro, indicar el índice
+@RequiresMembership(domain = MembershipDomain.MOVEMENT, idParamIndex = 1)
+public void updateMovement(@Valid ExpenseToUpdate dto, Long id) { ... }
+```
+
+**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`. Si se agrega un nuevo dominio, extender el enum `MembershipDomain` y el switch en `MembershipCheckAspect.resolveAccountId()`.
+
 ### MapStruct Conventions
 - Todos los mappers usan `componentModel = "spring"`
 - Se componen entre sí (ej: `MovementMapper` usa `CategoryMapper`, `CurrencyMapper`, `UserMapper`)

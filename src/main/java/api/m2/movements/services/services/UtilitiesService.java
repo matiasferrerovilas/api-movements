@@ -1,5 +1,7 @@
 package api.m2.movements.services.services;
 
+import api.m2.movements.annotations.RequiresMembership;
+import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.mappers.SubscriptionMapper;
 import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
@@ -39,9 +41,11 @@ public class UtilitiesService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.SUBSCRIPTION)
     public void payServiceById(Long id) {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado"));
+
         service.setLastPayment(LocalDate.now(ZoneOffset.UTC));
 
         utilityAddService.addMovementService(service);
@@ -51,6 +55,7 @@ public class UtilitiesService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.SUBSCRIPTION)
     public void updateService(Long id, UpdateSubscriptionRecord updateService) {
         var service = serviceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrada"));
@@ -68,9 +73,11 @@ public class UtilitiesService {
     }
 
     @Transactional
+    @RequiresMembership(domain = MembershipDomain.SUBSCRIPTION)
     public void deleteService(Long id) {
         var service = serviceRepository.findByIdWithCurrency(id)
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
+
         serviceRepository.delete(service);
         var dto = serviceMapper.toRecord(service);
         servicePublishService.publishDeleteService(dto);

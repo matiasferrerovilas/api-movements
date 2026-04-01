@@ -131,4 +131,62 @@ class IncomeAddServiceTest extends Specification {
             saved.bank == bank
         })
     }
+
+    // --- deleteIncome ---
+    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
+
+    def "deleteIncome - should delete income when called"() {
+        given:
+        def account = Stub(Account) { getId() >> 1L }
+        def income = new Income(id: 10L, account: account)
+        incomeRepository.findById(10L) >> Optional.of(income)
+
+        when:
+        service.deleteIncome(10L)
+
+        then:
+        1 * incomeRepository.delete(income)
+    }
+
+    def "deleteIncome - should throw EntityNotFoundException when income does not exist"() {
+        given:
+        incomeRepository.findById(999L) >> Optional.empty()
+
+        when:
+        service.deleteIncome(999L)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * incomeRepository.delete(_ as Income)
+    }
+
+    // --- reloadIncome ---
+    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
+
+    def "reloadIncome - should save movement when called"() {
+        given:
+        def account = Stub(Account) { getId() >> 2L }
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
+        def income = new Income(id: 20L, amount: new BigDecimal("100000.00"), account: account, currency: currency, bank: bank)
+        incomeRepository.findById(20L) >> Optional.of(income)
+
+        when:
+        service.reloadIncome(20L)
+
+        then:
+        1 * movementAddService.saveMovement(_)
+    }
+
+    def "reloadIncome - should throw EntityNotFoundException when income does not exist"() {
+        given:
+        incomeRepository.findById(999L) >> Optional.empty()
+
+        when:
+        service.reloadIncome(999L)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * movementAddService.saveMovement(_)
+    }
 }
