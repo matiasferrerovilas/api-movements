@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 @Entity
 @Table
@@ -48,7 +49,7 @@ public class Subscription {
     @Transient
     public boolean getIsPaid() {
         if (lastPayment == null) return false;
-        LocalDate now = LocalDate.now();
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
         return lastPayment.getYear() == now.getYear()
                 && lastPayment.getMonthValue() == now.getMonthValue();
     }

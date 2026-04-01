@@ -1,10 +1,12 @@
 package api.m2.movements.services.settings;
 
+import api.m2.movements.entities.Bank;
 import api.m2.movements.entities.User;
 import api.m2.movements.entities.UserSetting;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.settings.UserSettingResponse;
+import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.UserSettingRepository;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class UserSettingService {
 
     private final UserSettingRepository userSettingRepository;
     private final UserService userService;
+    private final BankRepository bankRepository;
 
     public List<UserSettingResponse> getAll() {
         User user = userService.getAuthenticatedUser();
@@ -57,5 +61,10 @@ public class UserSettingService {
                         .build());
         setting.setSettingValue(value);
         userSettingRepository.saveAndFlush(setting);
+    }
+
+    public Optional<Bank> getDefaultBank(User user) {
+        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
+                .flatMap(s -> bankRepository.findById(s.getSettingValue()));
     }
 }

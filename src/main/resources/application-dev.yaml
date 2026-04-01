@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/expenses?createDatabaseIfNotExist=true&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
     username: root
     password: helios
     driver-class-name: com.mysql.cj.jdbc.Driver

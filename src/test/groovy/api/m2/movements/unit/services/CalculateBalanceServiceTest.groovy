@@ -148,7 +148,7 @@ class CalculateBalanceServiceTest extends Specification {
         given:
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 3, 1),
-                LocalDate.of(2026, 9, 30),
+                LocalDate.of(2026, 3, 31),
                 [1, 2],
                 ["EUR"]
         )
@@ -157,7 +157,7 @@ class CalculateBalanceServiceTest extends Specification {
         ] as Set
 
         movementRepository.getBalanceWithCategoryByYear(
-                2026, 9, [1, 2], ["EUR"], "user@test.com"
+                2026, 3, [1, 2], ["EUR"], "user@test.com"
         ) >> expectedResult
 
         when:
@@ -165,6 +165,23 @@ class CalculateBalanceServiceTest extends Specification {
 
         then:
         result == expectedResult
+    }
+
+    def "getBalanceWithCategoryByYear - should derive year and month from startDate (not endDate)"() {
+        given: "startDate and endDate are in different months to verify which one is used"
+        def filter = new BalanceFilterRecord(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 9, 30),
+                [1],
+                ["EUR"]
+        )
+        movementRepository.getBalanceWithCategoryByYear(*_) >> ([] as Set)
+
+        when:
+        service.getBalanceWithCategoryByYear(filter)
+
+        then: "year and month must come from startDate (2026, 3) — NOT endDate month (9)"
+        1 * movementRepository.getBalanceWithCategoryByYear(2026, 3, [1], ["EUR"], "user@test.com") >> ([] as Set)
     }
 
     def "getBalanceWithCategoryByYear - should return empty set when no data"() {

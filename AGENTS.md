@@ -157,6 +157,7 @@ Los servicios de escritura publican Spring Application Events dentro de `@Transa
 
 - **IDE:** IntelliJ IDEA con Gradle como build tool.
 - **MapStruct + Lombok:** el procesamiento de anotaciones lo maneja Gradle. No hace falta crear ni configurar `.factorypath` manualmente — IntelliJ lo resuelve solo al sincronizar el proyecto con Gradle.
+- **Archivos de IDE:** nunca crear ni modificar archivos de proyecto del IDE (`.project`, `.classpath`, `.settings/`, `.idea/`, `*.iml`, etc.). Estos son gestionados por el IDE y no deben tocarse.
 
 ## Convenciones del Proyecto
 

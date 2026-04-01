@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +46,7 @@ public class CalculateBalanceService {
                 balanceFilterRecord.groups(),
                 currencies);
 
-        Map<BalanceEnum, BigDecimal> result = new HashMap<>();
+        Map<BalanceEnum, BigDecimal> result = new EnumMap<>(BalanceEnum.class);
         result.put(BalanceEnum.INGRESO, ingresos);
         result.put(BalanceEnum.GASTO, movements);
 
@@ -56,7 +56,7 @@ public class CalculateBalanceService {
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
         return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.startDate().getYear(),
-                balanceFilterRecord.endDate().getMonthValue(),
+                balanceFilterRecord.startDate().getMonthValue(),
                 balanceFilterRecord.groups(),
                 balanceFilterRecord.currencies(),
                 user.getEmail());

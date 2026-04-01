@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 @Service
 @Slf4j
@@ -34,7 +35,7 @@ public class SettingService {
         Currency currency = currencyAddService.findBySymbol(incomeToAdd.currency());
 
         movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
-                LocalDate.now(),
+                LocalDate.now(ZoneOffset.UTC),
                 description,
                 category.description(),
                 MovementType.INGRESO.name(),

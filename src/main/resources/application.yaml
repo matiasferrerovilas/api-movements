@@ -21,6 +21,10 @@ spring:
     properties:
       hibernate:
         generate_statistics: false
+        jdbc:
+          time_zone: UTC
+  jackson:
+    time-zone: UTC
   security:
     oauth2:
       resourceserver:

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -40,8 +41,8 @@ public class UtilitiesService {
     @Transactional
     public void payServiceById(Long id) {
         var service = serviceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
-        service.setLastPayment(LocalDate.now());
+                .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado"));
+        service.setLastPayment(LocalDate.now(ZoneOffset.UTC));
 
         utilityAddService.addMovementService(service);
         var dto = serviceMapper.toRecord(serviceRepository.save(service));
@@ -52,7 +53,7 @@ public class UtilitiesService {
     @Transactional
     public void updateService(Long id, UpdateSubscriptionRecord updateService) {
         var service = serviceRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrada"));
 
         serviceMapper.updateMovement(updateService, service);
         if (!StringUtils.isEmpty(updateService.group())) {

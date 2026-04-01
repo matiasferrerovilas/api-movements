@@ -1,0 +1,134 @@
+package api.m2.movements.unit.services
+
+import api.m2.movements.entities.Account
+import api.m2.movements.entities.Bank
+import api.m2.movements.entities.Currency
+import api.m2.movements.entities.Income
+import api.m2.movements.entities.User
+import api.m2.movements.exceptions.EntityNotFoundException
+import api.m2.movements.mappers.IncomeMapper
+import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.repositories.BankRepository
+import api.m2.movements.repositories.IncomeRepository
+import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.income.IncomeAddService
+import api.m2.movements.services.movements.MovementAddService
+import api.m2.movements.services.user.UserService
+import spock.lang.Specification
+
+import java.math.BigDecimal
+import java.util.Optional
+
+class IncomeAddServiceTest extends Specification {
+
+    IncomeRepository incomeRepository = Mock(IncomeRepository)
+    UserService userService = Mock(UserService)
+    IncomeMapper incomeMapper = Mock(IncomeMapper)
+    AccountQueryService accountQueryService = Mock(AccountQueryService)
+    CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    MovementAddService movementAddService = Mock(MovementAddService)
+    BankRepository bankRepository = Mock(BankRepository)
+
+    IncomeAddService service
+
+    def setup() {
+        service = new IncomeAddService(
+                incomeRepository,
+                userService,
+                incomeMapper,
+                accountQueryService,
+                currencyAddService,
+                movementAddService,
+                bankRepository
+        )
+    }
+
+    def "loadIncome - should set bank on income before saving"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("galicia", "ARS", new BigDecimal("150000.00"), "DEFAULT")
+        def income = new Income()
+        def user = Stub(User)
+        def account = Stub(Account)
+        def currency = Stub(Currency)
+        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
+
+        incomeMapper.toEntity(incomeToAdd) >> income
+        userService.getAuthenticatedUser() >> user
+        accountQueryService.findAccountByName("DEFAULT") >> account
+        currencyAddService.findBySymbol("ARS") >> currency
+        bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
+
+        when:
+        service.loadIncome(incomeToAdd)
+
+        then:
+        1 * incomeRepository.save({ Income saved ->
+            saved.bank == bank
+        })
+    }
+
+    def "loadIncome - should sanitize bank name (trim + uppercase) before lookup"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("  bbva  ", "USD", new BigDecimal("500.00"), "DEFAULT")
+        def income = new Income()
+        def bank = Stub(Bank)
+
+        incomeMapper.toEntity(incomeToAdd) >> income
+        userService.getAuthenticatedUser() >> Stub(User)
+        accountQueryService.findAccountByName("DEFAULT") >> Stub(Account)
+        currencyAddService.findBySymbol("USD") >> Stub(Currency)
+        bankRepository.findByDescription("BBVA") >> Optional.of(bank)
+
+        when:
+        service.loadIncome(incomeToAdd)
+
+        then:
+        1 * incomeRepository.save({ Income saved -> saved.bank == bank })
+    }
+
+    def "loadIncome - should throw EntityNotFoundException when bank does not exist"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", "ARS", new BigDecimal("100.00"), "DEFAULT")
+
+        incomeMapper.toEntity(incomeToAdd) >> new Income()
+        userService.getAuthenticatedUser() >> Stub(User)
+        accountQueryService.findAccountByName("DEFAULT") >> Stub(Account)
+        currencyAddService.findBySymbol("ARS") >> Stub(Currency)
+        bankRepository.findByDescription("BANCO_INEXISTENTE") >> Optional.empty()
+
+        when:
+        service.loadIncome(incomeToAdd)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * incomeRepository.save(_)
+    }
+
+    def "loadIncome - should set user, account and currency on income"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("SANTANDER", "ARS", new BigDecimal("200000.00"), "FAMILY")
+        def income = new Income()
+        def user = Stub(User)
+        def account = Stub(Account)
+        def currency = Stub(Currency)
+        def bank = Stub(Bank)
+
+        incomeMapper.toEntity(incomeToAdd) >> income
+        userService.getAuthenticatedUser() >> user
+        accountQueryService.findAccountByName("FAMILY") >> account
+        currencyAddService.findBySymbol("ARS") >> currency
+        bankRepository.findByDescription("SANTANDER") >> Optional.of(bank)
+
+        when:
+        service.loadIncome(incomeToAdd)
+
+        then:
+        1 * incomeRepository.save({ Income saved ->
+            saved.user == user &&
+            saved.account == account &&
+            saved.currency == currency &&
+            saved.bank == bank
+        })
+    }
+}

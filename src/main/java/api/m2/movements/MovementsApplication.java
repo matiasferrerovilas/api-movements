@@ -7,12 +7,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.util.TimeZone;
+
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
 @EnableConfigurationProperties({JwtProperties.class})
 public class MovementsApplication {
-    static void main(String[] args) {
+    public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(MovementsApplication.class, args);
     }
 }

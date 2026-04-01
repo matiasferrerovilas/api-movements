@@ -14,6 +14,7 @@ import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.movements.MovementAddService
 import spock.lang.Specification
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 class SettingServiceTest extends Specification {
 
@@ -51,7 +52,7 @@ class SettingServiceTest extends Specification {
         1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
             def m = args[0] as MovementToAdd
             assert m.amount()      == new BigDecimal("1000.00")
-            assert m.date()        == LocalDate.now()
+            assert m.date()        == LocalDate.now(ZoneOffset.UTC)
             assert m.description() == "Sueldo Recibido"
             assert m.category()     == CategoryEnum.HOGAR.getDescripcion()
             assert m.type()         == MovementType.INGRESO.name()
@@ -79,7 +80,7 @@ class SettingServiceTest extends Specification {
         })
     }
 
-    def "addIngreso - should use today date"() {
+    def "addIngreso - should use today date in UTC"() {
         given:
         def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", "ARS", new BigDecimal("200.00"), "Grupo ARS")
         categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> "HOGAR" }
@@ -90,6 +91,6 @@ class SettingServiceTest extends Specification {
         service.addIngreso(incomeToAdd)
 
         then:
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now() })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now(ZoneOffset.UTC) })
     }
 }
