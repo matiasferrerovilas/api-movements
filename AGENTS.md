@@ -189,6 +189,7 @@ Todo componente nuevo (service, resolver, factory, helper) debe tener su test un
   - `Stub()` — cuando solo se necesita un valor de retorno y no importa si/cuánto se llama
 - **Estructura `given/when/then`** — obligatoria en todos los tests
 - **Nombres de test en inglés** — formato: `"metodo - should comportamiento"` (ej: `"addIngreso - should save movement with correct parameters"`)
+- **Wildcards tipados en mocks** — al usar `_` como matcher de argumento en interacciones o stubs, siempre especificar el tipo: `_ as String`, `_ as MovementToAdd`, etc. Nunca dejar `_` sin tipo cuando el tipo es conocido.
 
 ### Ejemplo canónico
 `src/test/groovy/api/m2/movements/unit/services/SettingServiceTest.groovy`

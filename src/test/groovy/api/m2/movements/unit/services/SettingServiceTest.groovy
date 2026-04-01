@@ -67,7 +67,7 @@ class SettingServiceTest extends Specification {
     def "addIngreso - should always use HOGAR category"() {
         given:
         def incomeToAdd = new IncomeToAdd("BBVA", "USD", new BigDecimal("500.00"), "Otro grupo")
-        categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> CategoryEnum.HOGAR.getDescripcion() }
+        categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> CategoryEnum.HOGAR.getDescripcion() }
         accountQueryService.findAccountByName("Otro grupo") >> Stub(Account) { getId() >> 2L }
         currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
 

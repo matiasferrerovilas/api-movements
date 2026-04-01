@@ -14,7 +14,7 @@ import java.util.TimeZone;
 @EnableScheduling
 @EnableConfigurationProperties({JwtProperties.class})
 public class MovementsApplication {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(MovementsApplication.class, args);
     }
