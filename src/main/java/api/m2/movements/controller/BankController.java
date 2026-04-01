@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -66,7 +67,7 @@ public class BankController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BankRecord addBank(@RequestBody AddBankRequest request) {
+    public BankRecord addBank(@Valid @RequestBody AddBankRequest request) {
         return bankService.addBankToUser(request.description());
     }
 

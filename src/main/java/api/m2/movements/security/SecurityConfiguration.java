@@ -29,7 +29,7 @@ public class SecurityConfiguration {
     private final JwtProperties jwtProperties;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Usamos el CorsConfigurationSource aquí
                 .csrf(AbstractHttpConfigurer::disable)
@@ -41,7 +41,7 @@ public class SecurityConfiguration {
                                 "/webjars/**",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/onboarding/**").hasAnyRole("ADMIN", "FAMILY", "GUEST")
+                        .requestMatchers("/v1/onboarding/**").hasAnyRole("ADMIN", "FAMILY", "GUEST")
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2

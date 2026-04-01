@@ -44,6 +44,7 @@ public class CurrencyAddService {
         return currencyMapper.toRecordList(currencyRepository.findAllByEnabled(true));
     }
 
+    @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE, key = "#symbol.trim().toUpperCase()")
     public Currency findBySymbol(@NotNull(message = "Debe indicar un tipo de moneda") String symbol) {
         var normalizedSymbol = symbol.trim().toUpperCase();
 

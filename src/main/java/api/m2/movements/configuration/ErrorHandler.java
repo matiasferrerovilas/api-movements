@@ -2,6 +2,7 @@ package api.m2.movements.configuration;
 
 import api.m2.movements.exceptions.ErrorResponseDTO;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.exceptions.BusinessException;
 import jakarta.persistence.EntityExistsException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,7 +19,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.naming.AuthenticationException;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -82,10 +83,23 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     var errorResponseDTO = ErrorResponseDTO.builder()
             .title("Permisos Insuficiente")
-            .statusCode(String.valueOf(HttpStatus.METHOD_NOT_ALLOWED.value()))
+            .statusCode(String.valueOf(HttpStatus.FORBIDDEN.value()))
             .detail(ex.getMessage())
             .build();
-    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
+  }
+
+  @ExceptionHandler(BusinessException.class)
+  public ResponseEntity<ErrorResponseDTO> handleBusinessException(BusinessException ex) {
+
+    log.warn("Business rule violation: {}", ex.getMessage());
+
+    var errorResponseDTO = ErrorResponseDTO.builder()
+            .title("Bad Request")
+            .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+            .detail(ex.getMessage())
+            .build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
   }
 
   @Override

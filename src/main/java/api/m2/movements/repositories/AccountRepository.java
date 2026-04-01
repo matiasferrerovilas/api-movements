@@ -42,13 +42,18 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             a.name as accountName,
             o.id as ownerId,
             o.email as ownerEmail,
-            count(m.id) as membersCount
+            count(distinct m.id) as membersCount
         from Account a
         join a.members m
         join a.owner o
-        join AccountMember am on am.account = a and am.user.id = :userId
         where a.isActive = true
+          and exists (
+              select 1
+              from AccountMember am
+              where am.account = a
+                and am.user.id = :userId
+          )
         group by a.id, a.name, o.id, o.email
 """)
-    List<AccountSummaryProjection> findAccountSummariesByMemberUserId(Long userId);
+    List<AccountSummaryProjection> findAccountSummariesByMemberUserId(@Param("userId") Long userId);
 }

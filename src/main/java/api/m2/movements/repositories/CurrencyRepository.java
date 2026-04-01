@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface CurrencyRepository extends JpaRepository<Currency, Long> {
-    @Cacheable(CacheConfiguration.CURRENCY_CACHE)
     Optional<Currency> findBySymbol(String symbol);
 
     @Query(value = """

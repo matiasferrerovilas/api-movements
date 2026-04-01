@@ -8,7 +8,9 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.repositories.MovementRepository;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket;
+import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -27,16 +29,21 @@ public class MovementAddService {
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
     private final MovementPublishServiceWebSocket movementPublishService;
+    private final UserService userService;
+    private final AccountQueryService accountQueryService;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
+        var user = userService.getAuthenticatedUser();
+        accountQueryService.verifyUserIsMemberOfAccount(dto.groupId(), user.getId());
+
         var movement = movementFactory.create(dto);
-        var record = movementMapper.toRecord(movementRepository.save(movement));
+        var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 
-        movementPublishService.publishMovementAdded(record);
+        movementPublishService.publishMovementAdded(movementRecord);
 
-        log.info("Movimiento guardado: id={}, type={}", record.id(), dto.type());
-        return record;
+        log.info("Movimiento guardado: id={}, type={}", movementRecord.id(), dto.type());
+        return movementRecord;
     }
 
     @Transactional
@@ -64,10 +71,11 @@ public class MovementAddService {
                 .toList();
 
         var saved = movementRepository.saveAll(entities);
-        saved
-                .forEach(movement -> {
-                    movementPublishService.publishMovementAdded(movementMapper.toRecord(movement));
-                });
+        saved.forEach(movement ->
+                movementPublishService.publishMovementAdded(
+                        movementMapper.toRecord(movement)
+                )
+        );
 
         log.info("Movimientos guardados en batch: total={}", saved.size());
     }
