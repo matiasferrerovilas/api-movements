@@ -24,7 +24,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN users u ON u.email = :email
+            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
             WHERE (m.date >= :startDate)
                   AND (m.date  <= :endDate)
                   AND m.type IN (:type)
@@ -77,7 +77,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
                         INNER JOIN category ca ON g.category_id = ca.id
-                                INNER JOIN users u ON u.email = :email
+                        INNER JOIN users u ON u.email = :email AND g.user_id = u.id
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
                                   AND g.type !="INGRESO"
                                   AND g.account_id IN (:groups)

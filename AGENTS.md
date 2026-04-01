@@ -168,6 +168,31 @@ public void updateMovement(@Valid ExpenseToUpdate dto, Long id) { ... }
 - Se componen entre sí (ej: `MovementMapper` usa `CategoryMapper`, `CurrencyMapper`, `UserMapper`)
 - Actualizaciones parciales: `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` en métodos `update*()`
 
+### Mappers en tests — nunca mockear
+Los mappers **nunca** se mockean con `Mock()` ni `Stub()` en tests unitarios. Siempre se instancian reales:
+
+- **Mapper sin dependencias** (`uses = {}` vacío o ausente): `Mappers.getMapper(XxxMapper.class)`
+- **Mapper con dependencias** (`uses = {OtroMapper.class, ...}`): `new XxxMapperImpl()` + `ReflectionTestUtils.setField()` para cada campo inyectado
+
+MapStruct con `componentModel = "spring"` genera field injection (`@Autowired`), no constructor injection. Por eso `Mappers.getMapper()` solo funciona para mappers sin dependencias.
+
+```groovy
+// Mapper self-contained
+BankMapper bankMapper = Mappers.getMapper(BankMapper)
+
+// Mapper con dependencias
+MovementMapper movementMapper
+
+def setup() {
+    movementMapper = new MovementMapperImpl()
+    ReflectionTestUtils.setField(movementMapper, "categoryMapper", Mappers.getMapper(CategoryMapper))
+    ReflectionTestUtils.setField(movementMapper, "currencyMapper", Mappers.getMapper(CurrencyMapper))
+    ReflectionTestUtils.setField(movementMapper, "userMapper", Mappers.getMapper(UserMapper))
+}
+```
+
+Como consecuencia, las entidades pasadas al mapper deben tener todos los campos que este accede construidos con `Entity.builder()...build()` — no con `Stub()`. Los stubs de retorno tipo `mapperX.toRecord(...) >> someRecord` deben eliminarse.
+
 ## Entorno de Desarrollo
 
 - **IDE:** IntelliJ IDEA con Gradle como build tool.

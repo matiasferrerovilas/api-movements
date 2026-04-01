@@ -90,7 +90,7 @@ public class GroupController {
             }
     )
     @PostMapping("/{id}/invitations")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     public void createInvitation(
             @PathVariable Long id,
             @RequestBody InviteToGroup request

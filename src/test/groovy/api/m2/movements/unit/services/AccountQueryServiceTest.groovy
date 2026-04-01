@@ -3,22 +3,30 @@ package api.m2.movements.unit.services
 import api.m2.movements.entities.AccountMember
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.mappers.AccountMapper
+import api.m2.movements.mappers.AccountMapperImpl
+import api.m2.movements.mappers.UserMapper
 import api.m2.movements.repositories.AccountRepository
 import api.m2.movements.repositories.MembershipRepository
 import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
+import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
 
 class AccountQueryServiceTest extends Specification {
 
     AccountRepository accountRepository = Mock(AccountRepository)
     UserService userService = Mock(UserService)
-    AccountMapper accountMapper = Mock(AccountMapper)
+    AccountMapper accountMapper
     MembershipRepository membershipRepository = Mock(MembershipRepository)
 
     AccountQueryService service
 
     def setup() {
+        UserMapper userMapper = Mappers.getMapper(UserMapper)
+        accountMapper = new AccountMapperImpl()
+        ReflectionTestUtils.setField(accountMapper, "userMapper", userMapper)
+
         service = new AccountQueryService(
                 accountRepository,
                 userService,

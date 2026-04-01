@@ -1,14 +1,20 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Account
+import api.m2.movements.entities.Category
+import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Movement
 import api.m2.movements.entities.User
+import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.mappers.CategoryMapper
+import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.MovementMapper
+import api.m2.movements.mappers.MovementMapperImpl
+import api.m2.movements.mappers.UserMapper
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
-import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.groups.AccountQueryService
@@ -16,15 +22,16 @@ import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
+import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
 
 import java.time.LocalDate
-import java.util.Optional
 
 class MovementAddServiceTest extends Specification {
 
     MovementRepository movementRepository = Mock(MovementRepository)
-    MovementMapper movementMapper = Mock(MovementMapper)
+    MovementMapper movementMapper
     MovementFactory movementFactory = Mock(MovementFactory)
     MovementPublishServiceWebSocket movementPublishService = Mock(MovementPublishServiceWebSocket)
     UserService userService = Mock(UserService)
@@ -33,6 +40,11 @@ class MovementAddServiceTest extends Specification {
     MovementAddService service
 
     def setup() {
+        movementMapper = new MovementMapperImpl()
+        ReflectionTestUtils.setField(movementMapper, "categoryMapper", Mappers.getMapper(CategoryMapper))
+        ReflectionTestUtils.setField(movementMapper, "currencyMapper", Mappers.getMapper(CurrencyMapper))
+        ReflectionTestUtils.setField(movementMapper, "userMapper", Mappers.getMapper(UserMapper))
+
         service = new MovementAddService(
                 movementRepository,
                 movementMapper,
@@ -44,8 +56,18 @@ class MovementAddServiceTest extends Specification {
     }
 
     def buildMovement(Long accountId) {
-        def account = Stub(Account) { getId() >> accountId }
-        def movement = Stub(Movement) { getAccount() >> account }
+        def account = Account.builder().id(accountId).name("Test Account").build()
+        def movement = Movement.builder()
+                .id(42L)
+                .amount(new BigDecimal("500.00"))
+                .description("Supermercado")
+                .date(LocalDate.now())
+                .type(MovementType.DEBITO)
+                .account(account)
+                .category(Category.builder().description("HOGAR").build())
+                .currency(Currency.builder().id(1L).symbol("ARS").build())
+                .owner(User.builder().id(10L).email("test@test.com").build())
+                .build()
         return movement
     }
 
@@ -59,11 +81,9 @@ class MovementAddServiceTest extends Specification {
         )
         def user = Stub(User) { getId() >> 10L }
         def movement = buildMovement(1L)
-        def record = Stub(MovementRecord) { id() >> 42L }
 
         userService.getAuthenticatedUser() >> user
         movementFactory.create(_ as MovementToAdd) >> movement
-        movementMapper.toRecord(_ as Movement) >> record
 
         when:
         service.saveMovement(dto)

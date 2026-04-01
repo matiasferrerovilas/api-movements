@@ -99,8 +99,8 @@ public class MovementController {
             @Parameter(description = "Banco del cual proviene el archivo", required = true)
             @RequestParam("bank") String bank,
 
-            @Parameter(description = "Grupo destino (opcional)")
-            @RequestParam(value = "groupId", required = false) Long accountId) {
+            @Parameter(description = "Grupo destino", required = true)
+            @RequestParam(value = "groupId") Long accountId) {
         movementImportFileService.importMovementsByFile(file, bank, accountId);
     }
 

@@ -5,11 +5,11 @@ import api.m2.movements.entities.User
 import api.m2.movements.entities.UserBank
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.BankMapper
-import api.m2.movements.records.banks.BankRecord
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.UserBankRepository
 import api.m2.movements.services.banks.BankService
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
 class BankServiceTest extends Specification {
@@ -17,7 +17,7 @@ class BankServiceTest extends Specification {
     BankRepository bankRepository = Mock(BankRepository)
     UserBankRepository userBankRepository = Mock(UserBankRepository)
     UserService userService = Mock(UserService)
-    BankMapper bankMapper = Mock(BankMapper)
+    BankMapper bankMapper = Mappers.getMapper(BankMapper)
 
     BankService service
 
@@ -30,13 +30,11 @@ class BankServiceTest extends Specification {
     def "getAllBanks - should return only banks associated with the authenticated user"() {
         given:
         def user = Stub(User) { getId() >> 1L }
-        def bank = Stub(Bank) { getId() >> 10L; getDescription() >> "GALICIA" }
+        def bank = Bank.builder().id(10L).description("GALICIA").build()
         def userBank = Stub(UserBank) { getBank() >> bank }
-        def record = new BankRecord(10L, "GALICIA")
 
         userService.getAuthenticatedUser() >> user
         userBankRepository.findByUserId(1L) >> [userBank]
-        bankMapper.toRecord(bank) >> record
 
         when:
         def result = service.getAllBanks()
@@ -65,12 +63,10 @@ class BankServiceTest extends Specification {
     def "addBankToUser - should find existing bank and associate it to user"() {
         given:
         def user = Stub(User) { getId() >> 1L }
-        def bank = Stub(Bank) { getId() >> 10L; getDescription() >> "GALICIA" }
-        def record = new BankRecord(10L, "GALICIA")
+        def bank = Bank.builder().id(10L).description("GALICIA").build()
 
         userService.getAuthenticatedUser() >> user
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> false
-        bankMapper.toRecord(bank) >> record
 
         when:
         def result = service.addBankToUser("galicia")
@@ -85,13 +81,11 @@ class BankServiceTest extends Specification {
     def "addBankToUser - should create bank if it does not exist and associate it to user"() {
         given:
         def user = Stub(User) { getId() >> 1L }
-        def savedBank = Stub(Bank) { getId() >> 99L; getDescription() >> "BANCO NACION" }
-        def record = new BankRecord(99L, "BANCO NACION")
+        def savedBank = Bank.builder().id(99L).description("BANCO NACION").build()
 
         userService.getAuthenticatedUser() >> user
         bankRepository.findByDescription("BANCO NACION") >> Optional.empty()
         userBankRepository.existsByUserIdAndBankId(1L, 99L) >> false
-        bankMapper.toRecord(savedBank) >> record
 
         when:
         def result = service.addBankToUser("  banco nacion  ")
@@ -105,11 +99,10 @@ class BankServiceTest extends Specification {
     def "addBankToUser - should sanitize description (trim and uppercase) before lookup"() {
         given:
         def user = Stub(User) { getId() >> 1L }
-        def bank = Stub(Bank) { getId() >> 2L; getDescription() >> "BBVA" }
+        def bank = Bank.builder().id(2L).description("BBVA").build()
 
         userService.getAuthenticatedUser() >> user
         userBankRepository.existsByUserIdAndBankId(1L, 2L) >> false
-        bankMapper.toRecord(bank) >> new BankRecord(2L, "BBVA")
 
         when:
         service.addBankToUser("  bbva  ")
@@ -122,12 +115,11 @@ class BankServiceTest extends Specification {
     def "addBankToUser - should not duplicate association if user already has the bank"() {
         given:
         def user = Stub(User) { getId() >> 1L }
-        def bank = Stub(Bank) { getId() >> 10L; getDescription() >> "GALICIA" }
+        def bank = Bank.builder().id(10L).description("GALICIA").build()
 
         userService.getAuthenticatedUser() >> user
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
-        bankMapper.toRecord(bank) >> new BankRecord(10L, "GALICIA")
 
         when:
         service.addBankToUser("GALICIA")

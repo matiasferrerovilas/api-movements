@@ -6,7 +6,9 @@ import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Income
 import api.m2.movements.entities.User
 import api.m2.movements.exceptions.EntityNotFoundException
+import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.IncomeMapper
+import api.m2.movements.mappers.IncomeMapperImpl
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
@@ -15,16 +17,15 @@ import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
+import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
-
-import java.math.BigDecimal
-import java.util.Optional
 
 class IncomeAddServiceTest extends Specification {
 
     IncomeRepository incomeRepository = Mock(IncomeRepository)
     UserService userService = Mock(UserService)
-    IncomeMapper incomeMapper = Mock(IncomeMapper)
+    IncomeMapper incomeMapper
     AccountQueryService accountQueryService = Mock(AccountQueryService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     MovementAddService movementAddService = Mock(MovementAddService)
@@ -33,6 +34,10 @@ class IncomeAddServiceTest extends Specification {
     IncomeAddService service
 
     def setup() {
+        CurrencyMapper currencyMapper = Mappers.getMapper(CurrencyMapper)
+        incomeMapper = new IncomeMapperImpl()
+        ReflectionTestUtils.setField(incomeMapper, "currencyMapper", currencyMapper)
+
         service = new IncomeAddService(
                 incomeRepository,
                 userService,
@@ -47,13 +52,11 @@ class IncomeAddServiceTest extends Specification {
     def "loadIncome - should set bank on income before saving"() {
         given:
         def incomeToAdd = new IncomeToAdd("galicia", "ARS", new BigDecimal("150000.00"), "DEFAULT")
-        def income = new Income()
         def user = Stub(User)
         def account = Stub(Account)
         def currency = Stub(Currency)
-        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
+        def bank = Bank.builder().id(1L).description("GALICIA").build()
 
-        incomeMapper.toEntity(incomeToAdd) >> income
         userService.getAuthenticatedUser() >> user
         accountQueryService.findAccountByName("DEFAULT") >> account
         currencyAddService.findBySymbol("ARS") >> currency
@@ -71,10 +74,8 @@ class IncomeAddServiceTest extends Specification {
     def "loadIncome - should sanitize bank name (trim + uppercase) before lookup"() {
         given:
         def incomeToAdd = new IncomeToAdd("  bbva  ", "USD", new BigDecimal("500.00"), "DEFAULT")
-        def income = new Income()
-        def bank = Stub(Bank)
+        def bank = Bank.builder().id(2L).description("BBVA").build()
 
-        incomeMapper.toEntity(incomeToAdd) >> income
         userService.getAuthenticatedUser() >> Stub(User)
         accountQueryService.findAccountByName("DEFAULT") >> Stub(Account)
         currencyAddService.findBySymbol("USD") >> Stub(Currency)
@@ -91,7 +92,6 @@ class IncomeAddServiceTest extends Specification {
         given:
         def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", "ARS", new BigDecimal("100.00"), "DEFAULT")
 
-        incomeMapper.toEntity(incomeToAdd) >> new Income()
         userService.getAuthenticatedUser() >> Stub(User)
         accountQueryService.findAccountByName("DEFAULT") >> Stub(Account)
         currencyAddService.findBySymbol("ARS") >> Stub(Currency)
@@ -108,13 +108,11 @@ class IncomeAddServiceTest extends Specification {
     def "loadIncome - should set user, account and currency on income"() {
         given:
         def incomeToAdd = new IncomeToAdd("SANTANDER", "ARS", new BigDecimal("200000.00"), "FAMILY")
-        def income = new Income()
         def user = Stub(User)
         def account = Stub(Account)
         def currency = Stub(Currency)
-        def bank = Stub(Bank)
+        def bank = Bank.builder().id(3L).description("SANTANDER").build()
 
-        incomeMapper.toEntity(incomeToAdd) >> income
         userService.getAuthenticatedUser() >> user
         accountQueryService.findAccountByName("FAMILY") >> account
         currencyAddService.findBySymbol("ARS") >> currency

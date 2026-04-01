@@ -7,11 +7,13 @@ import api.m2.movements.records.invite.InvitationToGroupRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
 import api.m2.movements.repositories.AccountInvitationRepository;
 import api.m2.movements.repositories.AccountRepository;
+import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class InvitationService {
     private final AccountInvitationRepository accountInvitationRepository;
     private final AccountInvitationMapper accountInvitationMapper;
     private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
+    private final AccountQueryService accountQueryService;
 
     @Transactional
     public void inviteToAccount(Long accountId, List<String> emails) {
@@ -37,6 +40,8 @@ public class InvitationService {
                 .orElseThrow(() -> new EntityNotFoundException("Account no encontrada"));
 
         var loggedInUser = userService.getAuthenticatedUser();
+        accountQueryService.verifyUserIsMemberOfAccount(accountToInvite.getId(), loggedInUser.getId());
+
         var usersToInvite = userService.getUserByEmail(emails);
 
         if (usersToInvite.isEmpty()) {
@@ -82,6 +87,11 @@ public class InvitationService {
     public void acceptRejectInvitation(Long invitationId, InvitationResponseRecord invitationResponseRecord) {
         var invitation = accountInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe invitación con ese id"));
+
+        var currentUser = userService.getAuthenticatedUser();
+        if (!invitation.getUser().getId().equals(currentUser.getId())) {
+            throw new PermissionDeniedException("Esta invitación no te pertenece");
+        }
 
         if (!invitation.getStatus().equals(InvitationStatus.PENDING)) {
             log.error("La invitación no esta en estado PENDING");

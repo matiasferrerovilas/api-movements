@@ -13,7 +13,7 @@ import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

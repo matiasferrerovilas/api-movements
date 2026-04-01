@@ -102,6 +102,19 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
   }
 
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
+
+    log.warn("Illegal argument: {}", ex.getMessage());
+
+    var errorResponseDTO = ErrorResponseDTO.builder()
+            .title("Bad Request")
+            .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+            .detail(ex.getMessage())
+            .build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
+  }
+
   @Override
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
                                                            HttpHeaders headers,

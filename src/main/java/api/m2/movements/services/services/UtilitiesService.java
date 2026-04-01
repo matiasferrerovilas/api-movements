@@ -11,7 +11,7 @@ import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebS
 import api.m2.movements.services.user.UserService;
 import io.micrometer.common.util.StringUtils;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

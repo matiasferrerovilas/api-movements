@@ -12,11 +12,12 @@ import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebS
 import api.m2.movements.services.services.UtilitiesService
 import api.m2.movements.services.services.UtilityAddService
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
 class UtilitiesServiceTest extends Specification {
 
-    SubscriptionMapper serviceMapper = Mock(SubscriptionMapper)
+    SubscriptionMapper serviceMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository serviceRepository = Mock(SubscriptionRepository)
     UtilityAddService utilityAddService = Mock(UtilityAddService)
     UserService userService = Mock(UserService)
@@ -37,8 +38,8 @@ class UtilitiesServiceTest extends Specification {
     }
 
     def buildSubscription(Long accountId) {
-        def account = Stub(Account) { getId() >> accountId }
-        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def account = Stub(Account) { getId() >> accountId; getName() >> "Mi cuenta" }
+        def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         return new Subscription(id: 1L, description: "Netflix", amount: new BigDecimal("10.00"),
                 account: account, currency: currency)
     }
@@ -50,7 +51,6 @@ class UtilitiesServiceTest extends Specification {
         given:
         def sub = buildSubscription(1L)
         serviceRepository.findById(10L) >> Optional.of(sub)
-        serviceMapper.toRecord(sub) >> Stub(api.m2.movements.records.services.SubscriptionRecord)
 
         when:
         service.payServiceById(10L)
@@ -80,7 +80,6 @@ class UtilitiesServiceTest extends Specification {
         def sub = buildSubscription(2L)
         def dto = new UpdateSubscriptionRecord(new BigDecimal("15.00"), null, null, "Netflix HD")
         serviceRepository.findById(20L) >> Optional.of(sub)
-        serviceMapper.toRecord(sub) >> Stub(api.m2.movements.records.services.SubscriptionRecord)
 
         when:
         service.updateService(20L, dto)
@@ -108,7 +107,6 @@ class UtilitiesServiceTest extends Specification {
         given:
         def sub = buildSubscription(3L)
         serviceRepository.findByIdWithCurrency(30L) >> Optional.of(sub)
-        serviceMapper.toRecord(sub) >> Stub(api.m2.movements.records.services.SubscriptionRecord)
 
         when:
         service.deleteService(30L)

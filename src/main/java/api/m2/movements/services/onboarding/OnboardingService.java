@@ -7,7 +7,7 @@ import api.m2.movements.records.onboarding.OnBoardingForm;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.user.UserAddService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,7 @@ public class OnboardingService {
     private final IncomeAddService incomeAddService;
     private final GroupAddService groupAddService;
 
-    @Transactional(rollbackOn = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser();
 

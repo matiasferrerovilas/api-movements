@@ -1,8 +1,11 @@
 package api.m2.movements.records.onboarding;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.List;
 
 public record OnBoardingForm(OnBoardingAmount onBoardingAmount,
-                             String userType,
-                             List<String> accountsToAdd) {
+                             @NotBlank String userType,
+                             @NotNull List<String> accountsToAdd) {
 }

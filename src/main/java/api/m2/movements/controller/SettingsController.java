@@ -40,6 +40,7 @@ public class SettingsController {
     )
     @ApiResponse(responseCode = "201", description = "Ingreso registrado")
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public void addIngreso(@RequestBody @Valid IncomeToAdd incomeToAdd) {
         settingService.addIngreso(incomeToAdd);
     }

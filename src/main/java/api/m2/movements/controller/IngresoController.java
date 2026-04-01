@@ -88,7 +88,7 @@ public class IngresoController {
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteIncome(@PathVariable Long id) {
         incomeAddService.deleteIncome(id);
     }

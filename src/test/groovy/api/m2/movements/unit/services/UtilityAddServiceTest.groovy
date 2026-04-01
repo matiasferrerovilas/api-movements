@@ -19,6 +19,7 @@ import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebS
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.services.UtilityAddService
 import api.m2.movements.services.user.UserService
+import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -34,7 +35,7 @@ class UtilityAddServiceTest extends Specification {
 
     def setup() {
         service = new UtilityAddService(
-                Mock(SubscriptionMapper),
+                Mappers.getMapper(SubscriptionMapper),
                 Mock(SubscriptionRepository),
                 Mock(CurrencyRepository),
                 movementAddService,
