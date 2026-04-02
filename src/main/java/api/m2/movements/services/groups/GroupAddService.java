@@ -6,8 +6,8 @@ import api.m2.movements.enums.AccountRole;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
+import api.m2.movements.records.accounts.GroupDetail;
 import api.m2.movements.records.groups.AddGroupRecord;
-import api.m2.movements.records.groups.MembershipDefaultUpdatedEvent;
 import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
@@ -56,7 +56,9 @@ public class GroupAddService {
         account.getMembers().add(membership);
         account = accountRepository.save(account);
 
-        accountPublishServiceWebSocket.publishAccountCreated(accountMapper.toRecord(account));
+        var keycloakSubject = userService.getCurrentKeycloakId();
+        var groupDetail = new GroupDetail(account.getId(), account.getName(), 1, false);
+        accountPublishServiceWebSocket.publishGroupMembershipUpdated(groupDetail, keycloakSubject);
     }
 
     @Transactional
@@ -91,6 +93,10 @@ public class GroupAddService {
 
         account.getMembers().add(membership);
         membershipRepository.save(membership);
+
+        long membersCount = membershipRepository.countByAccountId(account.getId());
+        var groupDetail = new GroupDetail(account.getId(), account.getName(), (int) membersCount, false);
+        accountPublishServiceWebSocket.publishMemberAdded(groupDetail, account.getId());
     }
 
     @Transactional
@@ -102,10 +108,9 @@ public class GroupAddService {
 
         userSettingService.upsert(UserSettingKey.DEFAULT_ACCOUNT, newDefaultMembership.getAccount().getId());
 
-        var membershipUpdated = MembershipDefaultUpdatedEvent.builder()
-                .groupUpdated(accountMapper.toRecord(newDefaultMembership.getAccount()))
-                .logInuser(keycloakUserId)
-                .build();
-        accountPublishServiceWebSocket.publishAccountDefaultUpdated(membershipUpdated);
+        long membersCount = membershipRepository.countByAccountId(id);
+        var account = newDefaultMembership.getAccount();
+        var groupDetail = new GroupDetail(account.getId(), account.getName(), (int) membersCount, true);
+        accountPublishServiceWebSocket.publishGroupMembershipUpdated(groupDetail, keycloakUserId);
     }
 }

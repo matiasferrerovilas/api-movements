@@ -3,10 +3,11 @@ package api.m2.movements.services.groups;
 import api.m2.movements.entities.Account;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.AccountMapper;
+import api.m2.movements.records.accounts.GroupDetail;
 import api.m2.movements.records.accounts.GroupRecord;
-import api.m2.movements.records.accounts.AccountsWithUser;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.repositories.MembershipRepository;
+import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class AccountQueryService {
     private final UserService userService;
     private final AccountMapper accountMapper;
     private final MembershipRepository membershipRepository;
+    private final UserSettingService userSettingService;
 
     public List<GroupRecord> findAllAccountsOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
@@ -36,13 +38,16 @@ public class AccountQueryService {
 
 
     @Transactional
-    public List<AccountsWithUser> getAllAccountsWithUserCount() {
+    public List<GroupDetail> getAllGroupDetails() {
         var owner = userService.getAuthenticatedUser();
+        var defaultAccountId = userSettingService.getDefaultAccountId(owner).orElse(null);
         return accountRepository.findAccountSummariesByMemberUserId(owner.getId())
-                .stream().map(account -> new AccountsWithUser(account.getAccountId(),
-                        account.getAccountName(),
-                        account.getMembersCount(),
-                        account.getOwnerEmail()))
+                .stream()
+                .map(a -> new GroupDetail(
+                        a.getAccountId(),
+                        a.getAccountName(),
+                        a.getMembersCount().intValue(),
+                        a.getAccountId().equals(defaultAccountId)))
                 .toList();
     }
 

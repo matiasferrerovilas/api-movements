@@ -2,7 +2,7 @@ package api.m2.movements.controller;
 
 import api.m2.movements.projections.MembershipSummaryProjection;
 import api.m2.movements.records.invite.InvitationToGroupRecord;
-import api.m2.movements.records.accounts.AccountsWithUser;
+import api.m2.movements.records.accounts.GroupDetail;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
 import api.m2.movements.records.invite.InviteToGroup;
@@ -65,8 +65,8 @@ public class GroupController {
             }
     )
     @GetMapping("/count")
-    public List<AccountsWithUser> getMyGroupsWithCount() {
-        return accountQueryService.getAllAccountsWithUserCount();
+    public List<GroupDetail> getMyGroupsWithCount() {
+        return accountQueryService.getAllGroupDetails();
     }
 
     @Operation(

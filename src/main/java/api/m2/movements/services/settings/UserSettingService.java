@@ -67,4 +67,9 @@ public class UserSettingService {
         return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
                 .flatMap(s -> bankRepository.findById(s.getSettingValue()));
     }
+
+    public Optional<Long> getDefaultAccountId(User user) {
+        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_ACCOUNT)
+                .map(UserSetting::getSettingValue);
+    }
 }
