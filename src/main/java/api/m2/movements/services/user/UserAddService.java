@@ -8,6 +8,7 @@ import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.UserRepository;
+import api.m2.movements.services.category.UserCategoryService;
 import api.m2.movements.services.groups.GroupAddService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.services.settings.UserSettingService;
@@ -29,6 +30,7 @@ public class UserAddService {
     private final AccountRepository accountRepository;
     private final CurrencyRepository currencyRepository;
     private final UserSettingService userSettingService;
+    private final UserCategoryService userCategoryService;
 
     public User createLogInUser() {
         String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
@@ -44,7 +46,8 @@ public class UserAddService {
         user = userRepository.save(user);
         groupAddService.createAccount(new AddGroupRecord("DEFAULT"));
 
-        createDefaultSettings(user);
+        this.createDefaultSettings(user);
+        userCategoryService.addDefaultCategories(user);
 
         return user;
     }

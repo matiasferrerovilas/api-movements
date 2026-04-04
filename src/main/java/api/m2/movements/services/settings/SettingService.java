@@ -2,7 +2,6 @@ package api.m2.movements.services.settings;
 
 import api.m2.movements.entities.Account;
 import api.m2.movements.entities.Currency;
-import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.income.IncomeToAdd;
@@ -29,7 +28,7 @@ public class SettingService {
     private final AccountQueryService accountQueryService;
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
-        CategoryRecord category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
+        CategoryRecord category = categoryAddService.findCategoryByDescription(HOGAR);
         Account account = accountQueryService.findAccountByName(incomeToAdd.group());
         String description = "Sueldo Recibido";
         Currency currency = currencyAddService.findBySymbol(incomeToAdd.currency());
@@ -45,4 +44,6 @@ public class SettingService {
                 incomeToAdd.bank(),
                 account.getId()));
     }
+
+    private static final String HOGAR = "HOGAR";
 }

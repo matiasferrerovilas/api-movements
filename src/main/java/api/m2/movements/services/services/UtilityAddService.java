@@ -2,7 +2,6 @@ package api.m2.movements.services.services;
 
 import api.m2.movements.entities.Bank;
 import api.m2.movements.entities.Subscription;
-import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.SubscriptionMapper;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -57,7 +56,7 @@ public class UtilityAddService {
     }
 
     public void addMovementService(Subscription serviceToAdd) {
-        var category = categoryAddService.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion());
+        var category = categoryAddService.findCategoryByDescription(SERVICIOS);
         String description = StringUtils.join("Servicio Pagado ", serviceToAdd.getDescription());
 
         String defaultBank = userSettingService.getDefaultBank(serviceToAdd.getOwner())
@@ -75,4 +74,6 @@ public class UtilityAddService {
                 defaultBank,
                 serviceToAdd.getAccount().getId()));
     }
+
+    private static final String SERVICIOS = "SERVICIOS";
 }

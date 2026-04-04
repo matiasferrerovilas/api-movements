@@ -33,6 +33,7 @@ public interface MembershipRepository extends JpaRepository<AccountMember, Long>
         m.role as role
     FROM AccountMember m
     WHERE m.user.id = :userId
+      AND m.account.isActive = true
 """)
     List<MembershipSummaryProjection> findAllByUserId(Long userId);
 

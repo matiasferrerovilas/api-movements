@@ -1,7 +1,6 @@
 package api.m2.movements.services.category;
 
 import api.m2.movements.entities.Category;
-import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.repositories.CategoryRepository;
@@ -10,12 +9,16 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryAddService {
+
+    private static final String SIN_CATEGORIA = "SIN_CATEGORIA";
+    private static final String STREAMING     = "STREAMING";
+    private static final String SERVICIOS     = "SERVICIOS";
+
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
@@ -36,27 +39,23 @@ public class CategoryAddService {
         );
     }
 
-    public List<CategoryRecord> getAllCategories() {
-        return categoryMapper.toRecordList(categoryRepository.findAll());
-    }
-
     public String getDefaultCategory() {
-        return CategoryEnum.SIN_CATEGORIA.getDescripcion();
+        return SIN_CATEGORIA;
     }
 
     public CategoryRecord getCategoryAtLoadDefaultByStringHelper(String description) {
         if (StringUtils.isBlank(description)) {
-            return this.findCategoryByDescription(CategoryEnum.SIN_CATEGORIA.getDescripcion());
+            return this.findCategoryByDescription(SIN_CATEGORIA);
         }
 
         String desc = description.toLowerCase();
 
-        if (Stream.of("netflix", "hbo", "disney+").anyMatch(desc.toLowerCase()::contains)) {
-            return this.findCategoryByDescription(CategoryEnum.STREAMING.getDescripcion());
+        if (Stream.of("netflix", "hbo", "disney+").anyMatch(desc::contains)) {
+            return this.findCategoryByDescription(STREAMING);
         } else if (desc.contains("spotify")) {
-            return this.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion());
+            return this.findCategoryByDescription(SERVICIOS);
         } else {
-            return this.findCategoryByDescription(CategoryEnum.SIN_CATEGORIA.getDescripcion());
+            return this.findCategoryByDescription(SIN_CATEGORIA);
         }
     }
 

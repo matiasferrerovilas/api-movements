@@ -1,7 +1,6 @@
 package api.m2.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.IncomeMapper;
@@ -77,7 +76,7 @@ public class IncomeAddService {
                 incomeToReload.getAmount(),
                 LocalDate.now(ZoneOffset.UTC),
                 "Ingreso",
-                CategoryEnum.HOGAR.name(),
+                HOGAR,
                 MovementType.INGRESO.name(),
                 incomeToReload.getCurrency().getSymbol(),
                 null,
@@ -89,4 +88,6 @@ public class IncomeAddService {
 
         log.debug("Income {} recargado", id);
     }
+
+    private static final String HOGAR = "HOGAR";
 }

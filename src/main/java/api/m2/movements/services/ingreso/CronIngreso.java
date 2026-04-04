@@ -1,6 +1,5 @@
 package api.m2.movements.services.ingreso;
 
-import api.m2.movements.enums.CategoryEnum;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.movements.MovementGetService;
@@ -20,7 +19,7 @@ public class CronIngreso {
     public void createIngresoMovement() {
         var lastIngreso = movementGetService.getLastIngreso();
         //var descriptionGroup = groupGetService.getGroupByDescription(lastIngreso.group());
-        var category = categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion());
+        var category = categoryAddService.findCategoryByDescription(HOGAR);
 
         /*movementAddService.saveMovement(new MovementToAdd(lastIngreso.amount(),
                 LocalDate.now(),
@@ -33,4 +32,6 @@ public class CronIngreso {
                 lastIngreso.bank(),
                 descriptionGroup.getDescription()));*/
     }
+
+    private static final String HOGAR = "HOGAR";
 }

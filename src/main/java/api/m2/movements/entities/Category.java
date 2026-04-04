@@ -23,4 +23,6 @@ public class Category {
     private Long id;
     @Column(nullable = false, length = 50, unique = true)
     private String description;
+    @Builder.Default
+    private boolean isDeletable = true;
 }

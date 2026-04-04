@@ -1,6 +1,5 @@
 package api.m2.movements.services.groups;
 
-import api.m2.movements.mappers.MembershipMapper;
 import api.m2.movements.projections.MembershipSummaryProjection;
 import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.services.user.UserService;
@@ -16,7 +15,6 @@ import java.util.List;
 public class MembershipService {
     private final MembershipRepository membershipRepository;
     private final UserService userService;
-    private final MembershipMapper membershipMapper;
 
     public List<MembershipSummaryProjection> getAllMemberships() {
         var user = userService.getAuthenticatedUserRecord();
