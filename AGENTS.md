@@ -207,6 +207,7 @@ Como consecuencia, las entidades pasadas al mapper deben tener todos los campos 
 - **Sin prefix global en controllers** — cada controller declara su propio `/v1/*` en `@RequestMapping`.
 - **Audit fields vía Hibernate** — `@CreationTimestamp` / `@UpdateTimestamp`, no Spring Data `@CreatedDate`.
 - **Enums como seeds de categorías y grupos** — `CategoryEnum` y `GroupsEnum` definen los valores iniciales. `CategoryResolver` usa `SIN_CATEGORIA` como fallback.
+- **Métodos privados con `this.`** — las llamadas a métodos privados dentro de la misma clase siempre se prefijan con `this.` para distinguirlos claramente de llamadas a dependencias inyectadas.
 - **`@EqualsAndHashCode` + `@ToString` en entidades bidireccionales** — para evitar recursión infinita (Account, AccountMember).
 - **RabbitMQ** — exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n para importación de archivos. El listener de respuesta está en el código pero comentado.
 - **Testing** — Spock con Groovy para specs, Testcontainers para tests de integración con MySQL real.

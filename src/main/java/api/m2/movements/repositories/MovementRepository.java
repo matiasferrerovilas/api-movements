@@ -126,6 +126,20 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, String email);
 
     @Query("""
+    SELECT m FROM Movement m
+    WHERE m.description = :description
+      AND m.account.id = :accountId
+      AND YEAR(m.date) = :year
+      AND MONTH(m.date) = :month
+    """)
+    Optional<Movement> findByDescriptionAndAccountAndMonth(
+            @Param("description") String description,
+            @Param("accountId") Long accountId,
+            @Param("year") int year,
+            @Param("month") int month
+    );
+
+    @Query("""
     SELECT MONTH(m.date)   AS month,
            c.symbol        AS currencySymbol,
            SUM(m.amount)   AS total

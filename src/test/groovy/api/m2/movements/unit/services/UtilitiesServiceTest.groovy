@@ -2,10 +2,12 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Account
 import api.m2.movements.entities.Currency
+import api.m2.movements.entities.Movement
 import api.m2.movements.entities.Subscription
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.records.services.UpdateSubscriptionRecord
+import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
@@ -15,6 +17,9 @@ import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
+import java.time.LocalDate
+import java.time.ZoneOffset
+
 class UtilitiesServiceTest extends Specification {
 
     SubscriptionMapper serviceMapper = Mappers.getMapper(SubscriptionMapper)
@@ -23,6 +28,7 @@ class UtilitiesServiceTest extends Specification {
     UserService userService = Mock(UserService)
     ServicePublishServiceWebSocket servicePublishService = Mock(ServicePublishServiceWebSocket)
     AccountQueryService accountQueryService = Mock(AccountQueryService)
+    MovementRepository movementRepository = Mock(MovementRepository)
 
     UtilitiesService service
 
@@ -33,19 +39,19 @@ class UtilitiesServiceTest extends Specification {
                 utilityAddService,
                 userService,
                 servicePublishService,
-                accountQueryService
+                accountQueryService,
+                movementRepository
         )
     }
 
-    def buildSubscription(Long accountId) {
+    def buildSubscription(Long accountId, LocalDate lastPayment = null) {
         def account = Stub(Account) { getId() >> accountId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         return new Subscription(id: 1L, description: "Netflix", amount: new BigDecimal("10.00"),
-                account: account, currency: currency)
+                lastPayment: lastPayment, account: account, currency: currency)
     }
 
     // --- payServiceById ---
-    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "payServiceById - should pay service when called"() {
         given:
@@ -73,11 +79,10 @@ class UtilitiesServiceTest extends Specification {
     }
 
     // --- updateService ---
-    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "updateService - should update service when called"() {
         given:
-        def sub = buildSubscription(2L)
+        def sub = buildSubscription(2L)  // lastPayment null → isPaid false
         def dto = new UpdateSubscriptionRecord(new BigDecimal("15.00"), null, null, "Netflix HD")
         serviceRepository.findById(20L) >> Optional.of(sub)
 
@@ -86,6 +91,7 @@ class UtilitiesServiceTest extends Specification {
 
         then:
         1 * serviceRepository.save(sub)
+        0 * movementRepository.findByDescriptionAndAccountAndMonth(_, _, _, _)
     }
 
     def "updateService - should throw EntityNotFoundException when subscription does not exist"() {
@@ -100,8 +106,65 @@ class UtilitiesServiceTest extends Specification {
         0 * serviceRepository.save(_ as Subscription)
     }
 
+    def "updateService - should update associated movement when subscription isPaid true"() {
+        given:
+        def now = LocalDate.now(ZoneOffset.UTC)
+        def sub = buildSubscription(5L, now)  // isPaid = true
+        def dto = new UpdateSubscriptionRecord(new BigDecimal("20.00"), null, null, "Netflix HD")
+        def movement = new Movement(description: "Servicio Pagado Netflix", amount: new BigDecimal("10.00"))
+
+        serviceRepository.findById(50L) >> Optional.of(sub)
+        serviceRepository.save(sub) >> sub
+        movementRepository.findByDescriptionAndAccountAndMonth(
+                "Servicio Pagado Netflix", 5L, now.year, now.monthValue) >> Optional.of(movement)
+
+        when:
+        service.updateService(50L, dto)
+
+        then:
+        1 * movementRepository.save(movement)
+        movement.amount == new BigDecimal("20.00")
+        movement.description == "Servicio Pagado Netflix HD"
+    }
+
+    def "updateService - should throw EntityNotFoundException when movement not found and isPaid true"() {
+        given:
+        def now = LocalDate.now(ZoneOffset.UTC)
+        def sub = buildSubscription(5L, now)  // isPaid = true
+        def dto = new UpdateSubscriptionRecord(new BigDecimal("20.00"), null, null, null)
+
+        serviceRepository.findById(50L) >> Optional.of(sub)
+        serviceRepository.save(sub) >> sub
+        movementRepository.findByDescriptionAndAccountAndMonth(
+                "Servicio Pagado Netflix", 5L, now.year, now.monthValue) >> Optional.empty()
+
+        when:
+        service.updateService(50L, dto)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * movementRepository.save(_ as Movement)
+    }
+
+    def "updateService - should not touch movements when isPaid false"() {
+        given:
+        // lastPayment en mes anterior → isPaid false
+        def lastMonth = LocalDate.now(ZoneOffset.UTC).minusMonths(1)
+        def sub = buildSubscription(5L, lastMonth)
+        def dto = new UpdateSubscriptionRecord(new BigDecimal("20.00"), null, null, null)
+
+        serviceRepository.findById(50L) >> Optional.of(sub)
+        serviceRepository.save(sub) >> sub
+
+        when:
+        service.updateService(50L, dto)
+
+        then:
+        0 * movementRepository.findByDescriptionAndAccountAndMonth(_, _, _, _)
+        0 * movementRepository.save(_ as Movement)
+    }
+
     // --- deleteService ---
-    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "deleteService - should delete and publish event when called"() {
         given:
