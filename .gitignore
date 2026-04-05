@@ -31,6 +31,7 @@ gradle.properties
 .settings/
 .springBeans
 .sts4-cache/
+.factorypath
 
 ### NetBeans ###
 /nbproject/private/
