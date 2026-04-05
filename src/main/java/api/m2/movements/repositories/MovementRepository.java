@@ -159,4 +159,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             @Param("year") Integer year,
             @Param("accountIds") List<Long> accountIds
     );
+
+    List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);
 }
