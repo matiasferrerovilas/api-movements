@@ -45,6 +45,14 @@ public class UserCategoryService {
     }
 
     @Transactional
+    public void addCategories(User user, List<String> descriptions) {
+        descriptions.forEach(description -> {
+            var category = categoryAddService.addCategory(description);
+            this.resolveUserCategory(user, category);
+        });
+    }
+
+    @Transactional
     public void deleteCategory(Long userCategoryId) {
         var user = userService.getAuthenticatedUser();
         var userCategory = userCategoryRepository.findById(userCategoryId)

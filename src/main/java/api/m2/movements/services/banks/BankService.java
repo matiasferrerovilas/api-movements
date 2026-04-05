@@ -1,6 +1,7 @@
 package api.m2.movements.services.banks;
 
 import api.m2.movements.entities.Bank;
+import api.m2.movements.entities.User;
 import api.m2.movements.entities.UserBank;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.BankMapper;
@@ -33,9 +34,17 @@ public class BankService {
 
     @Transactional
     public BankRecord addBankToUser(String description) {
-        String sanitized = description.trim().toUpperCase();
-
         var user = userService.getAuthenticatedUser();
+        return bankMapper.toRecord(this.resolveUserBank(description, user));
+    }
+
+    @Transactional
+    public Bank addBankToUser(String description, User user) {
+        return this.resolveUserBank(description, user);
+    }
+
+    private Bank resolveUserBank(String description, User user) {
+        String sanitized = description.trim().toUpperCase();
 
         Bank bank = bankRepository.findByDescription(sanitized)
                 .orElseGet(() -> bankRepository.save(Bank.builder().description(sanitized).build()));
@@ -44,7 +53,7 @@ public class BankService {
             userBankRepository.save(UserBank.builder().user(user).bank(bank).build());
         }
 
-        return bankMapper.toRecord(bank);
+        return bank;
     }
 
     @Transactional
