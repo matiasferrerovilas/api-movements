@@ -69,8 +69,8 @@ class UtilityAddServiceTest extends Specification {
         def owner = fixtures.owner as User
         def bank  = Stub(Bank) { getDescription() >> "GALICIA" }
 
-        categoryAddService.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion()) >>
-                Stub(CategoryRecord) { description() >> CategoryEnum.SERVICIOS.getDescripcion() }
+        categoryAddService.findCategoryByDescription("SERVICIOS") >>
+                Stub(CategoryRecord) { description() >> "SERVICIOS" }
         userSettingService.getDefaultBank(owner) >> Optional.of(bank)
 
         when:
@@ -93,8 +93,8 @@ class UtilityAddServiceTest extends Specification {
         def sub   = fixtures.sub as Subscription
         def owner = fixtures.owner as User
 
-        categoryAddService.findCategoryByDescription(CategoryEnum.SERVICIOS.getDescripcion()) >>
-                Stub(CategoryRecord) { description() >> CategoryEnum.SERVICIOS.getDescripcion() }
+        categoryAddService.findCategoryByDescription("SERVICIOS") >>
+                Stub(CategoryRecord) { description() >> "SERVICIOS" }
         userSettingService.getDefaultBank(owner) >> Optional.empty()
 
         when:

@@ -35,7 +35,7 @@ class CategoryResolverTest extends Specification {
     def "resolve - should add category when record is not null"() {
         given:
         def description = "Test Category"
-        def record = new CategoryRecord(description)
+        def record = new CategoryRecord(1L, description, true, true)
         def category = Stub(Category) { getId() >> 1L }
 
         when:

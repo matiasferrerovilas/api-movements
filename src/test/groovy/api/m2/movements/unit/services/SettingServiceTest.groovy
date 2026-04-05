@@ -36,11 +36,11 @@ class SettingServiceTest extends Specification {
     def "addIngreso - should save movement with correct parameters"() {
         given:
         def incomeToAdd = new IncomeToAdd("GALICIA", "EUR", new BigDecimal("1000.00"), "Mi grupo")
-        def category = Stub(CategoryRecord) { description() >> CategoryEnum.HOGAR.getDescripcion() }
+        def category = Stub(CategoryRecord) { description() >> "HOGAR" }
         def account  = Stub(Account)        { getId()       >> 1L }
         def currency = Stub(Currency)       { getSymbol()   >> "EUR" }
 
-        categoryAddService.findCategoryByDescription(CategoryEnum.HOGAR.getDescripcion()) >> category
+        categoryAddService.findCategoryByDescription("HOGAR") >> category
         accountQueryService.findAccountByName("Mi grupo") >> account
         currencyAddService.findBySymbol("EUR") >> currency
 
@@ -53,7 +53,7 @@ class SettingServiceTest extends Specification {
             assert m.amount()      == new BigDecimal("1000.00")
             assert m.date()        == LocalDate.now(ZoneOffset.UTC)
             assert m.description() == "Sueldo Recibido"
-            assert m.category()     == CategoryEnum.HOGAR.getDescripcion()
+            assert m.category()     == "HOGAR"
             assert m.type()         == MovementType.INGRESO.name()
             assert m.currency()     == "EUR"
             assert m.cuotaActual()  == 0
@@ -66,7 +66,7 @@ class SettingServiceTest extends Specification {
     def "addIngreso - should always use HOGAR category"() {
         given:
         def incomeToAdd = new IncomeToAdd("BBVA", "USD", new BigDecimal("500.00"), "Otro grupo")
-        categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> CategoryEnum.HOGAR.getDescripcion() }
+        categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> "HOGAR" }
         accountQueryService.findAccountByName("Otro grupo") >> Stub(Account) { getId() >> 2L }
         currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
 
@@ -75,7 +75,7 @@ class SettingServiceTest extends Specification {
 
         then:
         1 * movementAddService.saveMovement({ MovementToAdd m ->
-            m.category() == CategoryEnum.HOGAR.getDescripcion()
+            m.category() == "HOGAR"
         })
     }
 
