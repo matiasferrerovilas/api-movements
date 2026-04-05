@@ -3,7 +3,6 @@ package api.m2.movements.unit.services
 import api.m2.movements.services.settings.SettingService
 import api.m2.movements.entities.Account
 import api.m2.movements.entities.Currency
-import api.m2.movements.enums.CategoryEnum
 import api.m2.movements.enums.MovementType
 import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.income.IncomeToAdd

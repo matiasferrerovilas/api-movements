@@ -5,7 +5,6 @@ import api.m2.movements.entities.Bank
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Subscription
 import api.m2.movements.entities.User
-import api.m2.movements.enums.CategoryEnum
 import api.m2.movements.enums.MovementType
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.records.categories.CategoryRecord
