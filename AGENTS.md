@@ -1,13 +1,17 @@
-# api-movements
+# api-movements — AGENTS.md
 
-Backend de gestión de finanzas personales para el mercado latinoamericano (Argentina). Permite registrar movimientos, suscripciones, ingresos y cuentas compartidas con actualizaciones en tiempo real vía WebSocket. Producción: `https://movement.eva-core.com`
+Backend de gestión de finanzas personales. Permite registrar movimientos, suscripciones, ingresos y cuentas compartidas con actualizaciones en tiempo real vía WebSocket.
+
+> **Producción:** `https://movement.eva-core.com`
+
+---
 
 ## Tech Stack
 
-| Area | Tecnología |
+| Área | Tecnología |
 |---|---|
 | Language | Java 25 |
-| Framework | Spring Boot 4.0.2 (Gradle 9) |
+| Framework | Spring Boot 4.0.2 / Gradle 9 |
 | Database | MySQL 8 + Liquibase (`ddl-auto: none`) |
 | ORM | Spring Data JPA / Hibernate |
 | Auth | Keycloak — OAuth2 Resource Server, JWT RS256 |
@@ -20,11 +24,34 @@ Backend de gestión de finanzas personales para el mercado latinoamericano (Arge
 | Testing | Spock 2.4 + Testcontainers (MySQL) + Mockito |
 | CI/CD | GitHub Actions → Docker Hub `mferrerovilas/api-movements` (ARM64) |
 
+---
+
+## Regla de Oro: Tests y Checkstyle Obligatorios
+
+> **Todo cambio en el código de producción debe ir acompañado de la ejecución de tests y checkstyle antes de considerarse completo.**
+
+```bash
+# Ejecutar tests
+./gradlew test
+
+# Ejecutar checkstyle
+./gradlew checkstyleMain checkstyleTest
+
+# O ambos juntos
+./gradlew test checkstyleMain checkstyleTest
+```
+
+- **No se acepta código nuevo sin cobertura** de los casos principales.
+- **No se acepta código que rompa tests existentes** sin justificación explícita.
+- **No se acepta código que viole el checkstyle.** Si la regla es incorrecta, se discute antes de saltearla.
+
+---
+
 ## Package Structure
 
 ```
 api.m2.movements
-├── controller/         REST controllers, uno por dominio, todos bajo /v1/*
+├── controller/         REST controllers — uno por dominio, todos bajo /v1/*
 ├── entities/           JPA entities (Lombok @Data + @Builder)
 ├── enums/              Enums de dominio: AccountRole, CategoryEnum, EventType, etc.
 ├── exceptions/         BusinessException, EntityNotFoundException, PermissionDeniedException
@@ -38,7 +65,7 @@ api.m2.movements
 │   ├── movements/
 │   ├── users/          UserBaseRecord, UserMeRecord
 │   └── ...
-├── repositories/       Spring Data JPA, todos extienden JpaRepository
+├── repositories/       Spring Data JPA — todos extienden JpaRepository
 ├── security/           JwtAuthenticationConverter + SecurityConfiguration
 └── services/           Lógica de negocio, organizada por dominio
     ├── balance/
@@ -50,11 +77,13 @@ api.m2.movements
     └── user/           UserService + UserAddService
 ```
 
-## Entities y Relaciones Clave
+---
+
+## Entidades y Relaciones Clave
 
 | Entity | Campos relevantes | Relaciones |
 |---|---|---|
-| `User` | `id: Long` (PK, auto-increment), `email`, `isFirstLogin`, `userType` | base de todo |
+| `User` | `id: Long` (PK auto-increment), `email`, `isFirstLogin`, `userType` | base de todo |
 | `Account` | `id`, `name` | `owner → User`, `members → AccountMember[]` |
 | `AccountMember` | `role: AccountRole` | `user → User`, `account → Account` |
 | `AccountInvitation` | `status: InvitationStatus` | `user → User` (invitado), `invitedBy → User`, `account → Account` |
@@ -64,80 +93,116 @@ api.m2.movements
 | `UserBank` | `createdAt` | `user → User`, `bank → Bank` |
 | `UserSetting` | `settingKey: UserSettingKey`, `settingValue: Long` | `user → User` |
 
-> **IMPORTANTE:** `User.id` es un `Long` auto-incremental de DB. El Keycloak subject (`sub` claim del JWT) es un UUID `String` separado. No son intercambiables.
+> **IMPORTANTE:** `User.id` es un `Long` auto-incremental de DB. El Keycloak subject (`sub` del JWT) es un UUID `String` separado. **No son intercambiables.**
+
+---
 
 ## API Endpoints
 
-### `GET /v1/users/me`
-Retorna `UserMeRecord { id: Long, email, isFirstLogin, userType }`. Si el usuario no existe en DB (nuevo): `{ id: null, email: null, isFirstLogin: true, userType: null }`.
+### Usuarios y Onboarding
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/users/me` | Retorna `UserMeRecord`. Si es nuevo: `{ id: null, isFirstLogin: true }` |
+| `POST` | `/v1/onboarding` | Crea usuario, cuentas e ingreso inicial |
 
-### `POST /v1/onboarding` — crea usuario, cuentas e ingreso inicial
-### `GET /v1/expenses` — movimientos paginados con filtros
-### `POST /v1/expenses` — crear movimiento
-### `POST /v1/expenses/import-file` — importar movimientos desde PDF bancario
-### `PATCH /v1/expenses/{id}` — actualización parcial (MapStruct `IGNORE` null)
-### `DELETE /v1/expenses/{id}`
-### `GET /v1/balance` — balance total (INGRESO/GASTO)
-### `GET /v1/balance/category` — balance por categoría
-### `GET /v1/balance/group` — balance por cuenta
-### `GET /v1/balance/monthly-evolution` — evolución mensual por moneda
-### `POST /v1/account` — crear cuenta/grupo
-### `GET /v1/account/membership` — membresías del usuario
-### `GET /v1/account/count` — cuentas con cantidad de miembros
-### `DELETE /v1/account/{accountId}` — salir de una cuenta
-### `POST /v1/account/{id}/invitations` — invitar usuarios por email
-### `GET /v1/account/invitations` — invitaciones pendientes del usuario
-### `PATCH /v1/account/invitations/{invitationId}` — aceptar/rechazar invitación
-### `PATCH /v1/account/{id}/default` — setear cuenta por defecto
-### `GET /v1/income` / `POST` / `DELETE /{id}` / `POST /{id}/reload`
-### `GET /v1/subscriptions` / `POST` / `PATCH /{id}/payment` / `PATCH /{id}` / `DELETE /{id}`
-### `GET /v1/settings/defaults` / `GET /{key}` / `PUT /{key}` / `GET /last-ingreso`
-### `GET /v1/banks`
-Retorna los bancos asociados al usuario autenticado (tabla `user_banks`). Lista vacía si no tiene ninguno.
+### Movimientos
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/expenses` | Movimientos paginados con filtros |
+| `POST` | `/v1/expenses` | Crear movimiento |
+| `POST` | `/v1/expenses/import-file` | Importar movimientos desde PDF bancario |
+| `PATCH` | `/v1/expenses/{id}` | Actualización parcial (MapStruct `IGNORE` null) |
+| `DELETE` | `/v1/expenses/{id}` | Eliminar movimiento |
 
-### `POST /v1/banks` — agrega banco al usuario
-Body: `{ "description": "galicia" }`. Sanitiza (trim + uppercase) antes de buscar en `banks`. Si el banco no existe lo crea. Si el usuario ya lo tiene, es idempotente. Retorna `BankRecord`.
+### Balance
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/balance` | Balance total (INGRESO/GASTO) |
+| `GET` | `/v1/balance/category` | Balance por categoría |
+| `GET` | `/v1/balance/group` | Balance por cuenta |
+| `GET` | `/v1/balance/monthly-evolution` | Evolución mensual por moneda |
 
-### `DELETE /v1/banks/{id}` — quita banco de la lista del usuario
-`{id}` es el `bank_id`. Lanza 404 si el banco no está en la lista del usuario. El banco sigue existiendo en el catálogo global.
+### Cuentas / Grupos
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/v1/account` | Crear cuenta/grupo |
+| `GET` | `/v1/account/membership` | Membresías del usuario |
+| `GET` | `/v1/account/count` | Cuentas con cantidad de miembros |
+| `DELETE` | `/v1/account/{accountId}` | Salir de una cuenta |
+| `POST` | `/v1/account/{id}/invitations` | Invitar usuarios por email |
+| `GET` | `/v1/account/invitations` | Invitaciones pendientes del usuario |
+| `PATCH` | `/v1/account/invitations/{invitationId}` | Aceptar/rechazar invitación |
+| `PATCH` | `/v1/account/{id}/default` | Setear cuenta por defecto |
 
-## WebSocket Topics (STOMP)
+### Ingresos, Suscripciones, Settings y Bancos
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET/POST` | `/v1/income` | Listar / crear ingreso |
+| `DELETE` | `/v1/income/{id}` | Eliminar ingreso |
+| `POST` | `/v1/income/{id}/reload` | Recargar ingreso |
+| `GET/POST` | `/v1/subscriptions` | Listar / crear suscripción |
+| `PATCH` | `/v1/subscriptions/{id}/payment` | Registrar pago |
+| `PATCH/DELETE` | `/v1/subscriptions/{id}` | Actualizar / eliminar suscripción |
+| `GET` | `/v1/settings/defaults` | Configuración por defecto del usuario |
+| `GET/PUT` | `/v1/settings/{key}` | Leer / actualizar setting específico |
+| `GET` | `/v1/settings/last-ingreso` | Último ingreso registrado |
+| `GET` | `/v1/banks` | Bancos asociados al usuario |
+| `POST` | `/v1/banks` | Agregar banco al usuario (idempotente) |
+| `DELETE` | `/v1/banks/{id}` | Quitar banco de la lista del usuario |
 
-Endpoint SockJS: `/ws`. Todos los mensajes van envueltos en `EventWrapper<T> { eventType: EventType, message: T }`.
+---
 
-**CRÍTICO — hay dos tipos de ID usados en los topics:**
-- Topics de **movimientos/servicios/cuentas**: usan `accountId` (Long, PK de `Account`)
-- Topics de **invitaciones**: usan `userId` (Long, PK de `User` en DB — NO el Keycloak subject)
-- Topic de **default account**: usa el Keycloak `sub` UUID (String) — el único que usa el subject
+## WebSocket (STOMP)
+
+**Endpoint SockJS:** `/ws`  
+Todos los mensajes se envuelven en `EventWrapper<T> { eventType: EventType, message: T }`.
+
+> **CRÍTICO — tipos de ID usados en los topics:**
+> - **Movimientos / servicios / cuentas:** usan `accountId` (`Long`, PK de `Account`)
+> - **Invitaciones:** usan `userId` (`Long`, PK de `User` en DB — **no** el Keycloak subject)
+> - **Default account:** usa el Keycloak `sub` UUID (`String`) — único caso que usa el subject
 
 | Topic | EventType | Payload | Cuándo |
 |---|---|---|---|
-| `/topic/movimientos/{accountId}/new` | `MOVEMENT_ADDED` | `MovementRecord` | Movimiento creado o importado por PDF |
+| `/topic/movimientos/{accountId}/new` | `MOVEMENT_ADDED` | `MovementRecord` | Movimiento creado o importado |
 | `/topic/movimientos/{accountId}/delete` | `MOVEMENT_DELETED` | `Long` (movementId) | Movimiento eliminado |
 | `/topic/servicios/{accountId}/new` | `SERVICE_PAID` | `SubscriptionRecord` | Suscripción creada |
-| `/topic/servicios/{accountId}/update` | `SERVICE_PAID` / `SERVICE_UPDATED` | `SubscriptionRecord` | Suscripción pagada o actualizada |
+| `/topic/servicios/{accountId}/update` | `SERVICE_PAID / SERVICE_UPDATED` | `SubscriptionRecord` | Suscripción pagada o actualizada |
 | `/topic/servicios/{accountId}/remove` | `SERVICE_DELETED` | `SubscriptionRecord` | Suscripción eliminada |
-| `/topic/invitation/{userId}/new` | `INVITATION_ADDED` | `InvitationToGroupRecord` | Invitación enviada — `userId` = `User.id` (Long DB) |
-| `/topic/invitation/{userId}/update` | `INVITATION_CONFIRMED_REJECTED` | `InvitationToGroupRecord` | Invitación aceptada/rechazada — `userId` = `User.id` (Long DB) |
-| `/topic/account/{ownerId}/new` | `ACCOUNT_CREATED` | `GroupRecord` | Cuenta creada — `ownerId` = `User.id` (Long DB) |
-| `/topic/account/default/{keycloakSubject}` | `MEMBERSHIP_UPDATED` | `GroupRecord` | Default account cambiada — usa Keycloak `sub` UUID |
+| `/topic/invitation/{userId}/new` | `INVITATION_ADDED` | `InvitationToGroupRecord` | Invitación enviada |
+| `/topic/invitation/{userId}/update` | `INVITATION_CONFIRMED_REJECTED` | `InvitationToGroupRecord` | Invitación aceptada/rechazada |
+| `/topic/account/{ownerId}/new` | `ACCOUNT_CREATED` | `GroupRecord` | Cuenta creada |
+| `/topic/account/default/{keycloakSubject}` | `MEMBERSHIP_UPDATED` | `GroupRecord` | Default account cambiada |
 
-Todos los publishers usan `@TransactionalEventListener(phase = AFTER_COMMIT)` — el WS push solo ocurre si el commit fue exitoso.
+Todos los publishers usan `@TransactionalEventListener(phase = AFTER_COMMIT)` — el push WS solo ocurre si el commit fue exitoso.
+
+---
 
 ## Seguridad
 
-- **Principal:** el claim `preferred_username` del JWT (generalmente el email) se mapea a `Authentication.getName()`. Con ese email se busca el `User` en DB.
-- **Keycloak subject:** disponible vía `userService.getCurrentKeycloakId()` → `JwtAuthenticationToken.getToken().getSubject()`. Se usa **solo** para el topic `/topic/account/default/{id}`.
-- **Roles:** se leen de `realm_access.roles[]` del JWT. Prefijo `ROLE_` requerido.
-- **Rutas públicas:** `/swagger-ui/**`, `/v3/api-docs/**`, `/ws/**`
-- **Rutas con rol:** `/v1/onboarding/**` requiere `ADMIN`, `FAMILY` o `GUEST`
-- **Resto:** cualquier JWT válido
-- **CORS:** `https://movement.eva-core.com`, `http://localhost:5173`, `http://localhost:8081`
+- **Principal:** el claim `preferred_username` del JWT (email) se mapea a `Authentication.getName()`. Con ese email se busca el `User` en DB.
+- **Keycloak subject:** disponible vía `userService.getCurrentKeycloakId()`. Se usa **solo** para el topic `/topic/account/default/{id}`.
+- **Roles:** se leen de `realm_access.roles[]` del JWT. Requiere prefijo `ROLE_`.
+
+| Rutas | Acceso |
+|---|---|
+| `/swagger-ui/**`, `/v3/api-docs/**`, `/ws/**` | Públicas |
+| `/v1/onboarding/**` | Requiere rol `ADMIN`, `FAMILY` o `GUEST` |
+| Resto | Cualquier JWT válido |
+
+**CORS permitido:** `https://movement.eva-core.com`, `http://localhost:5173`, `http://localhost:8081`
+
+---
 
 ## Patrones de Diseño
 
 ### Service Splitting
-Cada dominio tiene servicios separados por responsabilidad: `*AddService` (escritura), `*GetService` / `*QueryService` (lectura), `*Factory` (construcción de entidades). No existe un `MovementService` monolítico.
+Cada dominio tiene servicios separados por responsabilidad:
+- `*AddService` — escritura
+- `*GetService` / `*QueryService` — lectura
+- `*Factory` — construcción de entidades
+
+No existe ningún servicio monolítico tipo `MovementService`.
 
 ### Factory + Resolver
 `MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, account) a través de `CategoryResolver` y `CurrencyResolver`. `CurrencyResolver` usa cache Caffeine.
@@ -149,10 +214,10 @@ Cada dominio tiene servicios separados por responsabilidad: `*AddService` (escri
 Los servicios de escritura publican Spring Application Events dentro de `@Transactional`. Los publishers WS escuchan con `@TransactionalEventListener(phase = AFTER_COMMIT)`.
 
 ### AOP — Membership Guard (`@RequiresMembership`)
-Todo método de mutación (update, delete, pay, reload) que opere sobre un recurso perteneciente a una cuenta compartida **debe** anotarse con `@RequiresMembership`. El aspecto `MembershipCheckAspect` intercepta la llamada, resuelve el `accountId` del recurso y verifica que el usuario autenticado sea miembro antes de ejecutar el método.
+Todo método de mutación sobre un recurso de cuenta compartida **debe** anotarse con `@RequiresMembership`. El aspecto `MembershipCheckAspect` verifica que el usuario sea miembro antes de ejecutar.
 
 ```java
-// El parámetro id está en el índice 0 por defecto
+// El id está en el índice 0 por defecto
 @RequiresMembership(domain = MembershipDomain.INCOME)
 public void deleteIncome(Long id) { ... }
 
@@ -161,23 +226,36 @@ public void deleteIncome(Long id) { ... }
 public void updateMovement(@Valid ExpenseToUpdate dto, Long id) { ... }
 ```
 
-**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`. Si se agrega un nuevo dominio, extender el enum `MembershipDomain` y el switch en `MembershipCheckAspect.resolveAccountId()`.
+**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`.  
+Para agregar un nuevo dominio: extender `MembershipDomain` y el switch en `MembershipCheckAspect.resolveAccountId()`.
 
-### MapStruct Conventions
-- Todos los mappers usan `componentModel = "spring"`
-- Se componen entre sí (ej: `MovementMapper` usa `CategoryMapper`, `CurrencyMapper`, `UserMapper`)
-- Actualizaciones parciales: `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` en métodos `update*()`
+---
+
+## Convenciones del Proyecto
+
+| Convención | Detalle |
+|---|---|
+| **DTOs como Java records** | Nunca clases para request/response. Organizados en `records/` por subpaquete. |
+| **Dominio en español** | Enums, campos y comentarios en español: `INGRESO`, `GASTO`, `HOGAR`, etc. |
+| **Liquibase es dueño del schema** | `ddl-auto: none`. Nunca modificar el schema sin un changeset nuevo. |
+| **Sin prefix global en controllers** | Cada controller declara su propio `/v1/*` en `@RequestMapping`. |
+| **Audit fields vía Hibernate** | `@CreationTimestamp` / `@UpdateTimestamp`, no Spring Data `@CreatedDate`. |
+| **Métodos privados con `this.`** | Distingue llamadas propias de llamadas a dependencias inyectadas. |
+| **`@EqualsAndHashCode` + `@ToString`** | Obligatorio en entidades bidireccionales para evitar recursión infinita. |
+| **RabbitMQ** | Exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n. |
+
+---
+
+## MapStruct
+
+- Todos los mappers usan `componentModel = "spring"`.
+- Se componen entre sí (ej: `MovementMapper` usa `CategoryMapper`, `CurrencyMapper`, `UserMapper`).
+- Actualizaciones parciales: `@BeanMapping(nullValuePropertyMappingStrategy = IGNORE)` en métodos `update*()`.
 
 ### Mappers en tests — nunca mockear
-Los mappers **nunca** se mockean con `Mock()` ni `Stub()` en tests unitarios. Siempre se instancian reales:
-
-- **Mapper sin dependencias** (`uses = {}` vacío o ausente): `Mappers.getMapper(XxxMapper.class)`
-- **Mapper con dependencias** (`uses = {OtroMapper.class, ...}`): `new XxxMapperImpl()` + `ReflectionTestUtils.setField()` para cada campo inyectado
-
-MapStruct con `componentModel = "spring"` genera field injection (`@Autowired`), no constructor injection. Por eso `Mappers.getMapper()` solo funciona para mappers sin dependencias.
 
 ```groovy
-// Mapper self-contained
+// Mapper sin dependencias
 BankMapper bankMapper = Mappers.getMapper(BankMapper)
 
 // Mapper con dependencias
@@ -191,56 +269,53 @@ def setup() {
 }
 ```
 
-Como consecuencia, las entidades pasadas al mapper deben tener todos los campos que este accede construidos con `Entity.builder()...build()` — no con `Stub()`. Los stubs de retorno tipo `mapperX.toRecord(...) >> someRecord` deben eliminarse.
+MapStruct con `componentModel = "spring"` genera field injection (`@Autowired`), no constructor injection. `Mappers.getMapper()` solo funciona para mappers sin dependencias.
 
-## Entorno de Desarrollo
-
-- **IDE:** IntelliJ IDEA con Gradle como build tool.
-- **MapStruct + Lombok:** el procesamiento de anotaciones lo maneja Gradle. No hace falta crear ni configurar `.factorypath` manualmente — IntelliJ lo resuelve solo al sincronizar el proyecto con Gradle.
-- **Archivos de IDE:** nunca crear ni modificar archivos de proyecto del IDE (`.project`, `.classpath`, `.settings/`, `.idea/`, `*.iml`, etc.). Estos son gestionados por el IDE y no deben tocarse.
-
-## Convenciones del Proyecto
-
-- **DTOs como Java records** — nunca clases para request/response. Organizados en `records/` por subpaquete de dominio.
-- **Dominio en español** — enums, campos y comentarios en español (mercado argentino): `INGRESO`, `GASTO`, `HOGAR`, etc.
-- **Liquibase es dueño del schema** — Hibernate tiene `ddl-auto: none`. Nunca modificar el schema sin un nuevo changeset en `db/changelog/`.
-- **Sin prefix global en controllers** — cada controller declara su propio `/v1/*` en `@RequestMapping`.
-- **Audit fields vía Hibernate** — `@CreationTimestamp` / `@UpdateTimestamp`, no Spring Data `@CreatedDate`.
-- **Enums como seeds de categorías y grupos** — `CategoryEnum` y `GroupsEnum` definen los valores iniciales. `CategoryResolver` usa `SIN_CATEGORIA` como fallback.
-- **Métodos privados con `this.`** — las llamadas a métodos privados dentro de la misma clase siempre se prefijan con `this.` para distinguirlos claramente de llamadas a dependencias inyectadas.
-- **`@EqualsAndHashCode` + `@ToString` en entidades bidireccionales** — para evitar recursión infinita (Account, AccountMember).
-- **RabbitMQ** — exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n para importación de archivos. El listener de respuesta está en el código pero comentado.
-- **Testing** — Spock con Groovy para specs, Testcontainers para tests de integración con MySQL real.
+---
 
 ## Testing
 
-### TDD obligatorio
-Todo componente nuevo (service, resolver, factory, helper) debe tener su test unitario escrito junto con el código de producción. No se acepta código nuevo sin cobertura de casos principales.
+### Reglas generales
+
+- **TDD obligatorio** — todo componente nuevo (service, resolver, factory, helper) debe tener su test escrito junto con el código.
+- **Sin `@SpringBootTest`** — tests unitarios puramente en memoria, sin contexto Spring.
+- **Instanciación manual** — el servicio bajo test se crea vía constructor en `setup()`.
+- **Estructura `given/when/then`** — obligatoria en todos los tests.
+- **Nombres en inglés** — formato: `"metodo - should comportamiento"`.
+
+### `Mock()` vs `Stub()`
+
+| | `Mock()` | `Stub()` |
+|---|---|---|
+| Cuándo usar | Verificar que una interacción ocurrió (`1 * service.method(...)`) | Solo se necesita un valor de retorno |
+
+### Wildcards tipados
+
+Al usar `_` como matcher, siempre especificar el tipo. Nunca dejar `_` sin tipo cuando este es conocido.
+
+```groovy
+// ❌ MAL
+1 * service.save(_)
+
+// ✅ BIEN
+1 * service.save(_ as MovementToAdd)
+```
 
 ### Ubicación y naming
-- Servicios: `src/test/groovy/api/m2/movements/unit/services/`
-- Clases utilitarias / resolvers: `src/test/groovy/api/m2/movements/unit/unit/`
-- Nombre del archivo: `{NombreClase}Test.groovy` — mismo nombre que la clase Java bajo test
 
-### Reglas generales
-- **Sin `@SpringBootTest`** — los tests unitarios son puramente en memoria, sin contexto Spring
-- **Instanciación manual** — el servicio bajo test se crea via constructor en el bloque `setup()`, inyectando los mocks/stubs como argumentos
-- **`Mock()` vs `Stub()`**:
-  - `Mock()` — cuando hay que verificar que una interacción ocurrió (`1 * service.method(...)`)
-  - `Stub()` — cuando solo se necesita un valor de retorno y no importa si/cuánto se llama
-- **Estructura `given/when/then`** — obligatoria en todos los tests
-- **Nombres de test en inglés** — formato: `"metodo - should comportamiento"` (ej: `"addIngreso - should save movement with correct parameters"`)
-- **Wildcards tipados en mocks** — al usar `_` como matcher de argumento en interacciones o stubs, siempre especificar el tipo: `_ as String`, `_ as MovementToAdd`, etc. Nunca dejar `_` sin tipo cuando el tipo es conocido.
+| Tipo | Ubicación |
+|---|---|
+| Servicios | `src/test/groovy/api/m2/movements/unit/services/` |
+| Resolvers / utilitarios | `src/test/groovy/api/m2/movements/unit/unit/` |
+| Nombre | `{NombreClase}Test.groovy` |
 
 ### Ejemplo canónico
-`src/test/groovy/api/m2/movements/unit/services/SettingServiceTest.groovy`
 
 ```groovy
 class SettingServiceTest extends Specification {
 
     MovementAddService movementAddService = Mock(MovementAddService)
     AccountQueryService accountQueryService = Mock(AccountQueryService)
-
     SettingService service
 
     def setup() {
@@ -264,3 +339,11 @@ class SettingServiceTest extends Specification {
     }
 }
 ```
+
+---
+
+## Entorno de Desarrollo
+
+- **IDE:** IntelliJ IDEA con Gradle como build tool.
+- **MapStruct + Lombok:** el procesamiento de anotaciones lo maneja Gradle. No hace falta crear ni configurar `.factorypath` manualmente — IntelliJ lo resuelve al sincronizar con Gradle.
+- **Archivos de IDE:** nunca crear ni modificar `.project`, `.classpath`, `.settings/`, `.idea/`, `*.iml`, etc. Son gestionados por el IDE.
