@@ -22,5 +22,7 @@ public record MovementRecord(Long id,
                              UserBaseRecord owner,
                              AccountBaseRecord account,
                              Integer cuotaActual,
-                             Integer cuotasTotales) {
+                             Integer cuotasTotales,
+                             BigDecimal exchangeRate,
+                             BigDecimal amountUsd) {
 }

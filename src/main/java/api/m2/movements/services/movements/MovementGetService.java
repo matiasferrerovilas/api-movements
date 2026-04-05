@@ -6,6 +6,7 @@ import api.m2.movements.records.accounts.GroupRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.repositories.MovementRepository;
+import api.m2.movements.services.currencies.ExchangeRateService;
 import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -25,6 +26,7 @@ public class MovementGetService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
     private final AccountQueryService accountQueryService;
+    private final ExchangeRateService exchangeRateService;
 
     @Transactional
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
@@ -33,7 +35,8 @@ public class MovementGetService {
                 .map(GroupRecord::id)
                 .toList();
         return movementRepository.getExpenseBy(accounts, filter, page)
-                .map(movementMapper::toRecord);
+                .map(movementMapper::toRecord)
+                .map(exchangeRateService::enrich);
     }
 
     public LastIngresoRecord getLastIngreso() {

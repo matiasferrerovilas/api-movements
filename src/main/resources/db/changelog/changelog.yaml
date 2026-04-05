@@ -95,3 +95,6 @@ databaseChangeLog:
   - include:
       file: 032_alter_table_category_add_is_deletable.sql
       relativeToChangelogFile: true
+  - include:
+      file: 033_alter_table_movements_add_exchange_rate.sql
+      relativeToChangelogFile: true

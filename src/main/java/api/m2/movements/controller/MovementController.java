@@ -4,6 +4,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.records.movements.MovementToAdd;
+import api.m2.movements.services.movements.MigrateExchangeRateService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.movements.MovementGetService;
 import api.m2.movements.services.movements.files.MovementImportFileService;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -44,6 +46,7 @@ public class MovementController {
     private final MovementAddService movementAddService;
     private final MovementImportFileService movementImportFileService;
     private final MovementGetService movementGetService;
+    private final MigrateExchangeRateService migrateExchangeRateService;
 
     @Operation(
             summary = "Listar gastos",
@@ -133,5 +136,18 @@ public class MovementController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMovement(@PathVariable Long id) {
         movementAddService.deleteMovement(id);
+    }
+
+    @Operation(
+            summary = "Migrar exchange_rate",
+            description = "Recalcula el exchange_rate para todos los movimientos que tienen el campo en NULL. Solo ADMIN.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Migración completada"),
+            }
+    )
+    @PostMapping("/migrate-exchange-rate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public int migrateExchangeRate() {
+        return migrateExchangeRateService.migrateAll();
     }
 }

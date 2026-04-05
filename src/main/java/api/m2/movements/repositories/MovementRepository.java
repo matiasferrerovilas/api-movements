@@ -161,4 +161,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     );
 
     List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);
+
+    List<Movement> findAllByExchangeRateIsNull();
 }

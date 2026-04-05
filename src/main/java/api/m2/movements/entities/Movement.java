@@ -76,4 +76,7 @@ public class Movement {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(name = "exchange_rate", precision = 15, scale = 6)
+    private BigDecimal exchangeRate;
 }

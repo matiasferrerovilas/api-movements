@@ -56,5 +56,9 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
+frankfurter:
+  base-url: https://api.frankfurter.dev
+
 encription:
   key-store:d9!Q+Ol91dT3
