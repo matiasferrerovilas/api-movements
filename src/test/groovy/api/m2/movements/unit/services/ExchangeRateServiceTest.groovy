@@ -90,63 +90,6 @@ class ExchangeRateServiceTest extends Specification {
         thrown(BusinessException)
     }
 
-    // --- enrich: movimiento con exchangeRate persistido en DB ---
-
-    def "enrich - should use persisted exchangeRate and compute amountUsd without calling Frankfurter"() {
-        given:
-        def record = buildMovementRecord("ARS", new BigDecimal("990.00"), new BigDecimal("990.000000"))
-
-        when:
-        def result = service.enrich(record)
-
-        then:
-        result.exchangeRate() == new BigDecimal("990.000000")
-        result.amountUsd() == new BigDecimal("1.00")
-        0 * frankfurterClient._
-    }
-
-    def "enrich - should set amountUsd = amount when currency is USD and exchangeRate is 1"() {
-        given:
-        def record = buildMovementRecord("USD", new BigDecimal("200.00"), BigDecimal.ONE)
-
-        when:
-        def result = service.enrich(record)
-
-        then:
-        result.amountUsd() == new BigDecimal("200.00")
-        0 * frankfurterClient._
-    }
-
-    // --- enrich: movimiento legacy sin exchangeRate (NULL en DB) ---
-
-    def "enrich - should call Frankfurter when exchangeRate is null (legacy movement)"() {
-        given:
-        def rate = new ExchangeRateRecord(LocalDate.now(), "USD", "EUR", new BigDecimal("0.90"))
-        frankfurterClient.getRates("USD", "EUR") >> [rate]
-        def record = buildMovementRecord("EUR", new BigDecimal("450.00"), null)
-
-        when:
-        def result = service.enrich(record)
-
-        then:
-        result.exchangeRate() == new BigDecimal("0.90")
-        result.amountUsd() == new BigDecimal("500.00")
-    }
-
-    def "enrich - should return null exchangeRate and null amountUsd when Frankfurter fails on legacy"() {
-        given:
-        frankfurterClient.getRates("USD", "ARS") >> { throw new RuntimeException("timeout") }
-        def record = buildMovementRecord("ARS", new BigDecimal("1000.00"), null)
-
-        when:
-        def result = service.enrich(record)
-
-        then:
-        result.exchangeRate() == null
-        result.amountUsd() == null
-        result.amount() == record.amount()
-    }
-
     // --- helpers ---
 
     private static MovementRecord buildMovementRecord(

@@ -35,8 +35,7 @@ public class MovementGetService {
                 .map(GroupRecord::id)
                 .toList();
         return movementRepository.getExpenseBy(accounts, filter, page)
-                .map(movementMapper::toRecord)
-                .map(exchangeRateService::enrich);
+                .map(movementMapper::toRecord);
     }
 
     public LastIngresoRecord getLastIngreso() {
