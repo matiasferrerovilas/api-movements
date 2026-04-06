@@ -69,7 +69,7 @@ class OnboardingServiceTest extends Specification {
         1 * incomeAddService.loadIncome(_ as IncomeToAdd) >> { List args ->
             def income = args[0] as IncomeToAdd
             assert income.bank() == "GALICIA"
-            assert income.currency() == "ARS"
+            assert income.currency().symbol() == "ARS"
             assert income.amount() == new BigDecimal("1500.00")
             assert income.group() == "DEFAULT"
         }

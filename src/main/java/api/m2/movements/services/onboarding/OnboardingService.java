@@ -3,6 +3,7 @@ package api.m2.movements.services.onboarding;
 import api.m2.movements.entities.User;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.UserType;
+import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.groups.AddGroupRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
@@ -70,7 +71,7 @@ public class OnboardingService {
                 && onBoardingForm.onBoardingAmount().currency() != null
                 && onBoardingForm.onBoardingAmount().amount() != null) {
             incomeAddService.loadIncome(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
-                    onBoardingForm.onBoardingAmount().currency(),
+                    new CurrencyRecord(onBoardingForm.onBoardingAmount().currency(), null),
                     onBoardingForm.onBoardingAmount().amount(),
                     onBoardingForm.onBoardingAmount().accountToAdd()));
         }

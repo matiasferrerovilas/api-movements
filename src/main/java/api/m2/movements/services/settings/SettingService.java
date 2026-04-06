@@ -31,7 +31,7 @@ public class SettingService {
         CategoryRecord category = categoryAddService.findCategoryByDescription(HOGAR);
         Account account = accountQueryService.findAccountByName(incomeToAdd.group());
         String description = "Sueldo Recibido";
-        Currency currency = currencyAddService.findBySymbol(incomeToAdd.currency());
+        Currency currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
 
         movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
                 LocalDate.now(ZoneOffset.UTC),

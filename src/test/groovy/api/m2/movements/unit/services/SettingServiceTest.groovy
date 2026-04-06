@@ -6,6 +6,7 @@ import api.m2.movements.entities.Currency
 import api.m2.movements.enums.MovementType
 import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.currencies.CurrencyAddService
@@ -35,7 +36,7 @@ class SettingServiceTest extends Specification {
 
     def "addIngreso - should save movement with correct parameters"() {
         given:
-        def incomeToAdd = new IncomeToAdd("GALICIA", "EUR", new BigDecimal("1000.00"), "Mi grupo")
+        def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"), "Mi grupo")
         def category = Stub(CategoryRecord) { description() >> "HOGAR" }
         def account  = Stub(Account)        { getId()       >> 1L }
         def currency = Stub(Currency)       { getSymbol()   >> "EUR" }
@@ -65,7 +66,7 @@ class SettingServiceTest extends Specification {
 
     def "addIngreso - should always use HOGAR category"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BBVA", "USD", new BigDecimal("500.00"), "Otro grupo")
+        def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"), "Otro grupo")
         categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> "HOGAR" }
         accountQueryService.findAccountByName("Otro grupo") >> Stub(Account) { getId() >> 2L }
         currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
@@ -81,7 +82,7 @@ class SettingServiceTest extends Specification {
 
     def "addIngreso - should use today date in UTC"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", "ARS", new BigDecimal("200.00"), "Grupo ARS")
+        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"), "Grupo ARS")
         categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> "HOGAR" }
         accountQueryService.findAccountByName(_)        >> Stub(Account)        { getId() >> 3L }
         currencyAddService.findBySymbol(_)              >> Stub(Currency)       { getSymbol() >> "ARS" }

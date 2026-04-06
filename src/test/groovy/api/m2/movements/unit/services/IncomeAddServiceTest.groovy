@@ -10,6 +10,7 @@ import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.IncomeMapper
 import api.m2.movements.mappers.IncomeMapperImpl
 import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.currencies.CurrencyAddService
@@ -51,7 +52,7 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should set bank on income before saving"() {
         given:
-        def incomeToAdd = new IncomeToAdd("galicia", "ARS", new BigDecimal("150000.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("galicia", new CurrencyRecord("ARS", null), new BigDecimal("150000.00"), "DEFAULT")
         def user = Stub(User)
         def account = Stub(Account)
         def currency = Stub(Currency)
@@ -73,7 +74,7 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should sanitize bank name (trim + uppercase) before lookup"() {
         given:
-        def incomeToAdd = new IncomeToAdd("  bbva  ", "USD", new BigDecimal("500.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("  bbva  ", new CurrencyRecord("USD", null), new BigDecimal("500.00"), "DEFAULT")
         def bank = Bank.builder().id(2L).description("BBVA").build()
 
         userService.getAuthenticatedUser() >> Stub(User)
@@ -90,7 +91,7 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should throw EntityNotFoundException when bank does not exist"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", "ARS", new BigDecimal("100.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", new CurrencyRecord("ARS", null), new BigDecimal("100.00"), "DEFAULT")
 
         userService.getAuthenticatedUser() >> Stub(User)
         accountQueryService.findAccountByName("DEFAULT") >> Stub(Account)
@@ -107,7 +108,7 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should set user, account and currency on income"() {
         given:
-        def incomeToAdd = new IncomeToAdd("SANTANDER", "ARS", new BigDecimal("200000.00"), "FAMILY")
+        def incomeToAdd = new IncomeToAdd("SANTANDER", new CurrencyRecord("ARS", null), new BigDecimal("200000.00"), "FAMILY")
         def user = Stub(User)
         def account = Stub(Account)
         def currency = Stub(Currency)

@@ -42,7 +42,7 @@ public class IncomeAddService {
         income.setUser(user);
         var account = accountQueryService.findAccountByName(incomeToAdd.group());
         income.setAccount(account);
-        var currency = currencyAddService.findBySymbol(incomeToAdd.currency());
+        var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
         income.setCurrency(currency);
         var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
                 .orElseThrow(() -> new EntityNotFoundException("Banco no encontrado: " + incomeToAdd.bank()));

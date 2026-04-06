@@ -1,5 +1,6 @@
 package api.m2.movements.records.income;
 
+import api.m2.movements.records.currencies.CurrencyRecord;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
@@ -16,11 +17,9 @@ public record IncomeToAdd(
         String bank,
         @Schema(
                 description = "Moneda del ingreso",
-                example = "ARS",
-                allowableValues = {"ARS", "USD"},
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        String currency,
+        CurrencyRecord currency,
         @Schema(
                 description = "Monto del ingreso",
                 example = "150000.50",
