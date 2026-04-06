@@ -1,6 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Bank
+import api.m2.movements.entities.Currency
 import api.m2.movements.entities.User
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.enums.UserType
@@ -11,6 +12,7 @@ import api.m2.movements.records.onboarding.OnBoardingAmount
 import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.services.banks.BankService
 import api.m2.movements.services.category.UserCategoryService
+import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.groups.GroupAddService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.onboarding.OnboardingService
@@ -26,12 +28,13 @@ class OnboardingServiceTest extends Specification {
     BankService bankService = Mock(BankService)
     UserCategoryService userCategoryService = Mock(UserCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
+    CurrencyAddService currencyAddService = Mock(CurrencyAddService)
 
     OnboardingService service
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, groupAddService,
-                bankService, userCategoryService, userSettingService)
+                bankService, userCategoryService, userSettingService, currencyAddService)
     }
 
     def "finish - should create user, accounts, banks, categories and income when all fields are present"() {
@@ -43,10 +46,12 @@ class OnboardingServiceTest extends Specification {
         def user = Stub(User) { getId() >> 42L }
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
         bankService.addBankToUser("GALICIA", user) >> galiciaBank
         bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
@@ -58,7 +63,9 @@ class OnboardingServiceTest extends Specification {
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
         1 * bankService.addBankToUser("SANTANDER", user) >> santanderBank
         0 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 11L)
+        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, 1L)
         1 * userCategoryService.addCategories(user, categories)
+        1 * userCategoryService.addDefaultCategories(user)
         1 * incomeAddService.loadIncome(_ as IncomeToAdd) >> { List args ->
             def income = args[0] as IncomeToAdd
             assert income.bank() == "GALICIA"
@@ -69,13 +76,134 @@ class OnboardingServiceTest extends Specification {
         1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 42L)
     }
 
+    def "finish - should set first bank as default when no bank has isDefault true"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", false)]
+        def form = new OnBoardingForm(amount, "CONSUMER", [], [], banks)
+        def user = Stub(User) { getId() >> 1L }
+        def galiciaBank = Stub(Bank) { getId() >> 10L }
+        def santanderBank = Stub(Bank) { getId() >> 11L }
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser() >> user
+        bankService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
+        0 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 11L)
+    }
+
+    def "finish - should set only bank as default when there is exactly one bank"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [new BankToAdd("GALICIA", false)])
+        def user = Stub(User) { getId() >> 1L }
+        def galiciaBank = Stub(Bank) { getId() >> 10L }
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser() >> user
+        bankService.addBankToUser("GALICIA", user) >> galiciaBank
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
+    }
+
+    def "finish - should respect explicit isDefault when present"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", true)]
+        def form = new OnBoardingForm(amount, "CONSUMER", [], [], banks)
+        def user = Stub(User) { getId() >> 1L }
+        def galiciaBank = Stub(Bank) { getId() >> 10L }
+        def santanderBank = Stub(Bank) { getId() >> 11L }
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser() >> user
+        bankService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        0 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
+        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 11L)
+    }
+
+    def "finish - should set DEFAULT_CURRENCY to USD"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def user = Stub(User) { getId() >> 1L }
+        def usd = Stub(Currency) { getId() >> 5L }
+
+        userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * currencyAddService.findBySymbol("USD") >> usd
+        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, 5L)
+    }
+
+    def "finish - should always call addDefaultCategories regardless of categoriesToAdd"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def form = new OnBoardingForm(amount, "CONSUMER", [], ["HOGAR"], [])
+        def user = Stub(User) { getId() >> 1L }
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * userCategoryService.addCategories(user, ["HOGAR"])
+        1 * userCategoryService.addDefaultCategories(user)
+    }
+
+    def "finish - should call addDefaultCategories even when categoriesToAdd is empty"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def user = Stub(User) { getId() >> 1L }
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * userCategoryService.addCategories(user, [])
+        1 * userCategoryService.addDefaultCategories(user)
+    }
+
     def "finish - should skip income when bank is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", null, "ARS")
         def form = new OnBoardingForm(amount, "CONSUMER", ["Hogar"], [], [])
         def user = Stub(User) { getId() >> 1L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
@@ -90,8 +218,10 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", "GALICIA", null)
         def form = new OnBoardingForm(amount, "COMPANY", ["Gastos"], [], [])
         def user = Stub(User) { getId() >> 2L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
@@ -106,8 +236,10 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(null, "DEFAULT", "GALICIA", "ARS")
         def form = new OnBoardingForm(amount, "CONSUMER", ["Personal"], [], [])
         def user = Stub(User) { getId() >> 3L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
@@ -122,8 +254,10 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(null, null, null, null)
         def form = new OnBoardingForm(amount, "CONSUMER", ["Alpha", "Beta", "Gamma"], [], [])
         def user = Stub(User) { getId() >> 10L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
@@ -139,51 +273,16 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(null, null, null, null)
         def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
         def user = Stub(User) { getId() >> 5L }
+        def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser() >> user
+        currencyAddService.findBySymbol("USD") >> usd
 
         when:
         service.finish(form)
 
         then:
         0 * bankService.addBankToUser(_ as String, _ as User)
-        0 * userSettingService.upsertForUser(_ as User, UserSettingKey.DEFAULT_BANK, _ as Long)
-    }
-
-    def "finish - should not call addCategories when categoriesToAdd is empty"() {
-        given:
-        def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
-        def user = Stub(User) { getId() >> 6L }
-
-        userAddService.createLogInUser() >> user
-
-        when:
-        service.finish(form)
-
-        then:
-        1 * userCategoryService.addCategories(user, [])
-    }
-
-    def "finish - should not set DEFAULT_BANK when no bank in banksToAdd has isDefault true"() {
-        given:
-        def amount = new OnBoardingAmount(null, null, null, null)
-        def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", false)]
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], banks)
-        def user = Stub(User) { getId() >> 7L }
-        def galiciaBank = Stub(Bank) { getId() >> 10L }
-        def santanderBank = Stub(Bank) { getId() >> 11L }
-
-        userAddService.createLogInUser() >> user
-        bankService.addBankToUser("GALICIA", user) >> galiciaBank
-        bankService.addBankToUser("SANTANDER", user) >> santanderBank
-
-        when:
-        service.finish(form)
-
-        then:
-        1 * bankService.addBankToUser("GALICIA", user)
-        1 * bankService.addBankToUser("SANTANDER", user)
         0 * userSettingService.upsertForUser(_ as User, UserSettingKey.DEFAULT_BANK, _ as Long)
     }
 }
