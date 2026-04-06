@@ -11,8 +11,8 @@ import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
-import api.m2.movements.services.services.UtilitiesService
-import api.m2.movements.services.services.UtilityAddService
+import api.m2.movements.services.subscriptions.UtilitiesService
+import api.m2.movements.services.subscriptions.UtilityAddService
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification

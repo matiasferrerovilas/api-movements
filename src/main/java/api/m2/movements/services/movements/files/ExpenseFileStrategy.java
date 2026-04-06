@@ -45,7 +45,7 @@ public abstract class ExpenseFileStrategy {
             cuotaTotales = Integer.parseInt(parts[1]);
         }
 
-        var categoryDefault = categoryAddService.getCategoryAtLoadDefaultByStringHelper(e.reference());
+        var categoryDefault = categoryAddService.resolveDefaultCategory(e.reference());
         return new MovementToAdd(
                 this.resolveAmount(e),
                 e.date(),

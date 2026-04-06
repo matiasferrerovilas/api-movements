@@ -6,7 +6,6 @@ import api.m2.movements.mappers.AccountInvitationMapper;
 import api.m2.movements.records.invite.InvitationToGroupRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
 import api.m2.movements.repositories.AccountInvitationRepository;
-import api.m2.movements.repositories.AccountRepository;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.groups.GroupAddService;
@@ -27,17 +26,15 @@ import java.util.stream.Collectors;
 public class InvitationService {
 
     private final GroupAddService groupAddService;
-    private final AccountRepository accountRepository;
+    private final AccountQueryService accountQueryService;
     private final UserService userService;
     private final AccountInvitationRepository accountInvitationRepository;
     private final AccountInvitationMapper accountInvitationMapper;
     private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
-    private final AccountQueryService accountQueryService;
 
     @Transactional
     public void inviteToAccount(Long accountId, List<String> emails) {
-        var accountToInvite = accountRepository.findById(accountId)
-                .orElseThrow(() -> new EntityNotFoundException("Account no encontrada"));
+        var accountToInvite = accountQueryService.findAccountById(accountId);
 
         var loggedInUser = userService.getAuthenticatedUser();
         accountQueryService.verifyUserIsMemberOfAccount(accountToInvite.getId(), loggedInUser.getId());

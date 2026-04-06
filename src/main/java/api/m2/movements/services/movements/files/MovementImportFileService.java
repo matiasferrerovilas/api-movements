@@ -49,11 +49,11 @@ public class MovementImportFileService {
         });
     }*/
     public void importMovementsByFile(MultipartFile file, String bank, Long accountId) {
+        Path pdfFile = null;
         try {
-            Path pdfFile = Files.createTempFile("expense-", ".pdf");
+            pdfFile = Files.createTempFile("expense-", ".pdf");
             file.transferTo(pdfFile);
             String text = pdfReaderService.extractTextFromPdf(pdfFile);
-            Files.deleteIfExists(pdfFile);
 
             var list = expenseFileStrategies.stream()
                     .filter(strategy -> strategy.match(bank))
@@ -68,6 +68,14 @@ public class MovementImportFileService {
             }
         } catch (IOException _) {
             throw new BusinessException("No se pudo procesar");
+        } finally {
+            if (pdfFile != null) {
+                try {
+                    Files.deleteIfExists(pdfFile);
+                } catch (IOException e) {
+                    log.warn("No se pudo eliminar el archivo temporal: {}", pdfFile, e);
+                }
+            }
         }
     }
 }

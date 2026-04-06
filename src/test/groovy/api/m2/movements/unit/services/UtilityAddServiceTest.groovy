@@ -16,7 +16,7 @@ import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import api.m2.movements.services.settings.UserSettingService
-import api.m2.movements.services.services.UtilityAddService
+import api.m2.movements.services.subscriptions.UtilityAddService
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification

@@ -1,4 +1,4 @@
-package api.m2.movements.services.services;
+package api.m2.movements.services.subscriptions;
 
 import api.m2.movements.entities.Bank;
 import api.m2.movements.entities.Subscription;

@@ -43,7 +43,7 @@ public class CategoryAddService {
         return SIN_CATEGORIA;
     }
 
-    public CategoryRecord getCategoryAtLoadDefaultByStringHelper(String description) {
+    public CategoryRecord resolveDefaultCategory(String description) {
         if (StringUtils.isBlank(description)) {
             return this.findCategoryByDescription(SIN_CATEGORIA);
         }

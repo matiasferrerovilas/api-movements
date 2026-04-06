@@ -5,22 +5,26 @@ import api.m2.movements.entities.Bank
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Income
 import api.m2.movements.entities.User
+import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.IncomeMapper
-import api.m2.movements.mappers.IncomeMapperImpl
-import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.currencies.CurrencyRecord
+import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
+import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
-import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
+
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 class IncomeAddServiceTest extends Specification {
 
@@ -31,13 +35,12 @@ class IncomeAddServiceTest extends Specification {
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     MovementAddService movementAddService = Mock(MovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
+    CategoryAddService categoryAddService = Mock(CategoryAddService)
 
     IncomeAddService service
 
     def setup() {
-        CurrencyMapper currencyMapper = Mappers.getMapper(CurrencyMapper)
-        incomeMapper = new IncomeMapperImpl()
-        ReflectionTestUtils.setField(incomeMapper, "currencyMapper", currencyMapper)
+        incomeMapper = Mappers.getMapper(IncomeMapper)
 
         service = new IncomeAddService(
                 incomeRepository,
@@ -46,7 +49,8 @@ class IncomeAddServiceTest extends Specification {
                 accountQueryService,
                 currencyAddService,
                 movementAddService,
-                bankRepository
+                bankRepository,
+                categoryAddService
         )
     }
 
@@ -187,5 +191,65 @@ class IncomeAddServiceTest extends Specification {
         then:
         thrown(EntityNotFoundException)
         0 * movementAddService.saveMovement(_)
+    }
+
+    // --- addIngreso ---
+
+    def "addIngreso - should save movement with correct parameters"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"), "Mi grupo")
+        def category = Stub(CategoryRecord) { description() >> "HOGAR" }
+        def account  = Stub(Account)        { getId()       >> 1L }
+        def currency = Stub(Currency)       { getSymbol()   >> "EUR" }
+
+        categoryAddService.findCategoryByDescription("HOGAR") >> category
+        accountQueryService.findAccountByName("Mi grupo") >> account
+        currencyAddService.findBySymbol("EUR") >> currency
+
+        when:
+        service.addIngreso(incomeToAdd)
+
+        then:
+        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
+            def m = args[0] as MovementToAdd
+            assert m.amount()        == new BigDecimal("1000.00")
+            assert m.date()          == LocalDate.now(ZoneOffset.UTC)
+            assert m.description()   == "Sueldo Recibido"
+            assert m.category()      == "HOGAR"
+            assert m.type()          == MovementType.INGRESO.name()
+            assert m.currency()      == "EUR"
+            assert m.cuotaActual()   == 0
+            assert m.cuotasTotales() == 0
+            assert m.bank()          == "GALICIA"
+            assert m.groupId()       == 1L
+        }
+    }
+
+    def "addIngreso - should always use HOGAR category"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"), "Otro grupo")
+        categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> "HOGAR" }
+        accountQueryService.findAccountByName("Otro grupo") >> Stub(Account) { getId() >> 2L }
+        currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
+
+        when:
+        service.addIngreso(incomeToAdd)
+
+        then:
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.category() == "HOGAR" })
+    }
+
+    def "addIngreso - should use today date in UTC"() {
+        given:
+        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"), "Grupo ARS")
+        categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> "HOGAR" }
+        accountQueryService.findAccountByName(_)        >> Stub(Account)        { getId() >> 3L }
+        currencyAddService.findBySymbol(_)              >> Stub(Currency)       { getSymbol() >> "ARS" }
+
+        when:
+        service.addIngreso(incomeToAdd)
+
+        then:
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now(ZoneOffset.UTC) })
     }
 }

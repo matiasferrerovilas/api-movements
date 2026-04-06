@@ -8,7 +8,6 @@ import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.mappers.AccountInvitationMapper
 import api.m2.movements.records.invite.InvitationResponseRecord
 import api.m2.movements.repositories.AccountInvitationRepository
-import api.m2.movements.repositories.AccountRepository
 import api.m2.movements.services.groups.AccountQueryService
 import api.m2.movements.services.groups.GroupAddService
 import api.m2.movements.services.invitations.InvitationService
@@ -20,7 +19,6 @@ import spock.lang.Specification
 class InvitationServiceTest extends Specification {
 
     GroupAddService groupAddService = Mock()
-    AccountRepository accountRepository = Mock()
     UserService userService = Mock()
     AccountInvitationRepository accountInvitationRepository = Mock()
     AccountPublishServiceWebSocket accountPublishServiceWebSocket = Mock()
@@ -35,12 +33,11 @@ class InvitationServiceTest extends Specification {
 
         service = new InvitationService(
                 groupAddService,
-                accountRepository,
+                accountQueryService,
                 userService,
                 accountInvitationRepository,
                 accountInvitationMapper,
-                accountPublishServiceWebSocket,
-                accountQueryService
+                accountPublishServiceWebSocket
         )
     }
 
@@ -51,7 +48,7 @@ class InvitationServiceTest extends Specification {
         def caller = User.builder().id(10L).email("caller@test.com").build()
         def account = Account.builder().id(1L).name("Mi cuenta").owner(caller).build()
 
-        accountRepository.findById(1L) >> Optional.of(account)
+        accountQueryService.findAccountById(1L) >> account
         userService.getAuthenticatedUser() >> caller
         accountQueryService.verifyUserIsMemberOfAccount(1L, 10L) >> {
             throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso")
@@ -71,7 +68,7 @@ class InvitationServiceTest extends Specification {
         def account = Account.builder().id(1L).name("Mi cuenta").owner(caller).build()
         def invited = User.builder().id(20L).email("invited@test.com").build()
 
-        accountRepository.findById(1L) >> Optional.of(account)
+        accountQueryService.findAccountById(1L) >> account
         userService.getAuthenticatedUser() >> caller
         accountQueryService.verifyUserIsMemberOfAccount(1L, 10L) >> {}
         userService.getUserByEmail(["invited@test.com"]) >> [invited]

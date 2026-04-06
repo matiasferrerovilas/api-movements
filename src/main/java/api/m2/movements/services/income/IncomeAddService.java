@@ -4,16 +4,19 @@ import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.IncomeMapper;
+import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.IncomeRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.currencies.CurrencyAddService;
+import api.m2.movements.services.groups.AccountQueryService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class IncomeAddService {
     private final CurrencyAddService currencyAddService;
     private final MovementAddService movementAddService;
     private final BankRepository bankRepository;
+    private final CategoryAddService categoryAddService;
 
     @Transactional
     public void loadIncome(IncomeToAdd incomeToAdd) {
@@ -63,6 +67,23 @@ public class IncomeAddService {
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         incomeRepository.delete(incomeToDelete);
+    }
+
+    public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
+        CategoryRecord category = categoryAddService.findCategoryByDescription(HOGAR);
+        var account = accountQueryService.findAccountByName(incomeToAdd.group());
+        var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
+
+        movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
+                LocalDate.now(ZoneOffset.UTC),
+                "Sueldo Recibido",
+                category.description(),
+                MovementType.INGRESO.name(),
+                currency.getSymbol(),
+                0,
+                0,
+                incomeToAdd.bank(),
+                account.getId()));
     }
 
     @Transactional

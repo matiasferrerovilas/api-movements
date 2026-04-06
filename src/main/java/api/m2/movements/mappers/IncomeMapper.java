@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CurrencyMapper.class, UserMapper.class, AccountMapper.class},
+@Mapper(componentModel = "spring", uses = {UserMapper.class, AccountMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IncomeMapper {
     @Mapping(target = "currency", ignore = true)

@@ -83,6 +83,7 @@ public class GroupAddService {
         accountPublishServiceWebSocket.publishAccountLeft(accountMapper.toRecord(membership.getAccount()));
     }
 
+    @Transactional
     public void addMemberToAccount(Account account) {
         var user = userService.getAuthenticatedUser();
         var membership = AccountMember.builder()
