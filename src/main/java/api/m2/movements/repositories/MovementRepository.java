@@ -160,6 +160,30 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             @Param("accountIds") List<Long> accountIds
     );
 
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount), 0)
+            FROM movements m
+            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
+            WHERE YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type = :type
+            """, nativeQuery = true)
+    BigDecimal getTotalByTypeAndMonth(String email, Integer year, Integer month, String type);
+
+    @Query(value = """
+            SELECT ca.description
+            FROM movements m
+            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
+            INNER JOIN category ca ON m.category_id = ca.id
+            WHERE YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type IN ('DEBITO', 'CREDITO')
+            GROUP BY ca.description
+            ORDER BY SUM(m.amount) DESC
+            LIMIT 1
+            """, nativeQuery = true)
+    Optional<String> getTopCategoryByMonth(String email, Integer year, Integer month);
+
     List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);
 
     List<Movement> findAllByExchangeRateIsNull();
