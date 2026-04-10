@@ -5,6 +5,7 @@ import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord;
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord;
+import api.m2.movements.entities.User;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +21,15 @@ public class MonthlySummaryService {
 
     private final MovementRepository movementRepository;
     private final UserService userService;
+    private final MonthlySummarySnapshotService snapshotService;
 
     public MonthlySummaryResponse getSummary(Integer year, Integer month) {
-        var email = userService.getAuthenticatedUser().getEmail();
+        User user = userService.getAuthenticatedUser();
+        return snapshotService.find(user, year, month)
+                .orElseGet(() -> this.computeSummary(user.getEmail(), year, month));
+    }
 
+    public MonthlySummaryResponse computeSummary(String email, Integer year, Integer month) {
         YearMonth prev = YearMonth.of(year, month).minusMonths(1);
         int prevYear = prev.getYear();
         int prevMonth = prev.getMonthValue();

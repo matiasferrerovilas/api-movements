@@ -5,6 +5,7 @@ import api.m2.movements.enums.MovementType
 import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.MonthlySummaryService
+import api.m2.movements.services.balance.MonthlySummarySnapshotService
 import api.m2.movements.services.user.UserService
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -13,6 +14,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     MovementRepository movementRepository = Mock()
     UserService userService = Mock()
+    MonthlySummarySnapshotService snapshotService = Mock()
 
     MonthlySummaryService service
 
@@ -21,7 +23,7 @@ class MonthlySummaryServiceTest extends Specification {
     }
 
     def setup() {
-        service = new MonthlySummaryService(movementRepository, userService)
+        service = new MonthlySummaryService(movementRepository, userService, snapshotService)
         userService.getAuthenticatedUser() >> user
     }
 
@@ -35,36 +37,80 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalByTypeAndMonth("user@test.com", year, month, type, currency) >> value
     }
 
-    // ── getSummary: estructura general ────────────────────────────────────────
+    // ── cache-first: snapshot hit ──────────────────────────────────────────────
 
-    def "getSummary - should return year and month in response"() {
+    def "getSummary - should return snapshot from cache when it exists"() {
         given:
+        def cached = new MonthlySummaryResponse(2025, 4, null, [])
+        snapshotService.find(user, 2025, 4) >> Optional.of(cached)
+
+        when:
+        def result = service.getSummary(2025, 4)
+
+        then:
+        result == cached
+        0 * movementRepository._
+    }
+
+    def "getSummary - should call userService exactly once on cache hit"() {
+        given:
+        def cached = new MonthlySummaryResponse(2025, 4, null, [])
+        snapshotService.find(user, 2025, 4) >> Optional.of(cached)
+
+        when:
+        service.getSummary(2025, 4)
+
+        then:
+        1 * userService.getAuthenticatedUser() >> user
+    }
+
+    // ── cache-first: snapshot miss → calcula on-demand ────────────────────────
+
+    def "getSummary - should compute on-demand when snapshot is absent"() {
+        given:
+        snapshotService.find(_ as User, *_) >> Optional.empty()
         stubCurrencies([], 2025, 4, 2025, 3)
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
         def result = service.getSummary(2025, 4)
+
+        then:
+        result != null
+        result.year() == 2025
+        result.month() == 4
+    }
+
+    // ── computeSummary: estructura general ────────────────────────────────────
+
+    def "computeSummary - should return year and month in response"() {
+        given:
+        stubCurrencies([], 2025, 4, 2025, 3)
+        movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
+
+        when:
+        def result = service.computeSummary("user@test.com", 2025, 4)
 
         then:
         result.year() == 2025
         result.month() == 4
     }
 
-    def "getSummary - should return empty porMoneda when no currencies found"() {
+    def "computeSummary - should return empty porMoneda when no currencies found"() {
         given:
         stubCurrencies([], 2025, 4, 2025, 3)
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.computeSummary("user@test.com", 2025, 4)
 
         then:
         result.porMoneda().isEmpty()
     }
 
-    // ── getSummary: porMoneda ─────────────────────────────────────────────────
+    // ── computeSummary: porMoneda ─────────────────────────────────────────────
 
-    def "getSummary - should return one entry per currency with correct totals"() {
+    def "computeSummary - should return one entry per currency with correct totals"() {
         given:
         stubCurrencies(["ARS"], 2025, 4, 2025, 3)
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "ARS", new BigDecimal("150000.00"))
@@ -75,7 +121,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.computeSummary("user@test.com", 2025, 4)
         def ars = result.porMoneda().find { it.currency() == "ARS" }
 
         then:
@@ -86,7 +132,7 @@ class MonthlySummaryServiceTest extends Specification {
         ars.categoriaConMayorGasto() == "HOGAR"
     }
 
-    def "getSummary - should return two entries when two currencies exist"() {
+    def "computeSummary - should return two entries when two currencies exist"() {
         given:
         stubCurrencies(["ARS", "USD"], 2025, 4, 2025, 3)
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
@@ -94,14 +140,14 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.computeSummary("user@test.com", 2025, 4)
 
         then:
         result.porMoneda().size() == 2
         result.porMoneda().collect { it.currency() }.containsAll(["ARS", "USD"])
     }
 
-    def "getSummary - should return null categoriaConMayorGasto when no DEBITO movements"() {
+    def "computeSummary - should return null categoriaConMayorGasto when no DEBITO movements"() {
         given:
         stubCurrencies(["USD"], 2025, 4, 2025, 3)
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
@@ -109,13 +155,13 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.computeSummary("user@test.com", 2025, 4)
 
         then:
         result.porMoneda().first().categoriaConMayorGasto() == null
     }
 
-    def "getSummary - should set diferencia negativa when gastado > ingresado"() {
+    def "computeSummary - should set diferencia negativa when gastado > ingresado"() {
         given:
         stubCurrencies(["ARS"], 2025, 6, 2025, 5)
         stubTotalByCurrency(2025, 6, MovementType.INGRESO.name(), "ARS", new BigDecimal("5000.00"))
@@ -126,15 +172,15 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 6)
+        def result = service.computeSummary("user@test.com", 2025, 6)
 
         then:
         result.porMoneda().first().diferencia() == new BigDecimal("-3000.00")
     }
 
-    // ── getSummary: comparacionVsMesAnterior ──────────────────────────────────
+    // ── computeSummary: comparacionVsMesAnterior ──────────────────────────────
 
-    def "getSummary - should calculate comparacion vs mes anterior correctly"() {
+    def "computeSummary - should calculate comparacion vs mes anterior correctly"() {
         given:
         stubCurrencies(["ARS"], 2025, 4, 2025, 3)
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "ARS", new BigDecimal("150000.00"))
@@ -145,7 +191,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def comparacion = service.getSummary(2025, 4).porMoneda().first().comparacionVsMesAnterior()
+        def comparacion = service.computeSummary("user@test.com", 2025, 4).porMoneda().first().comparacionVsMesAnterior()
 
         then:
         comparacion.totalIngresadoMesAnterior() == new BigDecimal("140000.00")
@@ -154,9 +200,9 @@ class MonthlySummaryServiceTest extends Specification {
         comparacion.diferenciaIngreso() == new BigDecimal("10000.00")
     }
 
-    // ── getSummary: totalUnificadoUSD ─────────────────────────────────────────
+    // ── computeSummary: totalUnificadoUSD ─────────────────────────────────────
 
-    def "getSummary - should return totalUnificadoUSD with converted amounts"() {
+    def "computeSummary - should return totalUnificadoUSD with converted amounts"() {
         given:
         stubCurrencies([], 2025, 4, 2025, 3)
         movementRepository.getTotalInUsdByTypeAndMonth("user@test.com", 2025, 4, MovementType.INGRESO.name()) >> new BigDecimal("850.50")
@@ -165,7 +211,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth("user@test.com", 2025, 3, MovementType.DEBITO.name()) >> new BigDecimal("590.00")
 
         when:
-        def usd = service.getSummary(2025, 4).totalUnificadoUSD()
+        def usd = service.computeSummary("user@test.com", 2025, 4).totalUnificadoUSD()
 
         then:
         usd.totalIngresado() == new BigDecimal("850.50")
@@ -179,13 +225,13 @@ class MonthlySummaryServiceTest extends Specification {
 
     // ── enero: mes anterior es diciembre del año previo ────────────────────────
 
-    def "getSummary - should use December of previous year when month is January"() {
+    def "computeSummary - should use December of previous year when month is January"() {
         given:
         movementRepository.findDistinctCurrenciesByMonth("user@test.com", 2025, 1, 2024, 12) >> []
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        service.getSummary(2025, 1)
+        service.computeSummary("user@test.com", 2025, 1)
 
         then:
         1 * movementRepository.getTotalInUsdByTypeAndMonth("user@test.com", 2024, 12, MovementType.INGRESO.name()) >> BigDecimal.ZERO
@@ -194,7 +240,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     // ── moneda sin movimientos en mes actual aparece igual ────────────────────
 
-    def "getSummary - should include currency with zeros when only present in previous month"() {
+    def "computeSummary - should include currency with zeros when only present in previous month"() {
         given: "USD solo tuvo movimientos en marzo, no en abril"
         stubCurrencies(["USD"], 2025, 4, 2025, 3)
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "USD", BigDecimal.ZERO)
@@ -205,7 +251,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.computeSummary("user@test.com", 2025, 4)
         def usd = result.porMoneda().find { it.currency() == "USD" }
 
         then:
@@ -215,10 +261,11 @@ class MonthlySummaryServiceTest extends Specification {
         usd.comparacionVsMesAnterior().totalIngresadoMesAnterior() == new BigDecimal("200.00")
     }
 
-    // ── autenticación ──────────────────────────────────────────────────────────
+    // ── getSummary: userService solo se llama una vez ──────────────────────────
 
     def "getSummary - should call userService exactly once regardless of currency count"() {
         given:
+        snapshotService.find(_ as User, *_) >> Optional.empty()
         stubCurrencies(["ARS", "USD", "EUR"], 2025, 4, 2025, 3)
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
@@ -234,13 +281,13 @@ class MonthlySummaryServiceTest extends Specification {
     // ── @Unroll ────────────────────────────────────────────────────────────────
 
     @Unroll
-    def "getSummary - should return non-null response for year=#year month=#month"() {
+    def "computeSummary - should return non-null response for year=#year month=#month"() {
         given:
         movementRepository.findDistinctCurrenciesByMonth(*_) >> []
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        MonthlySummaryResponse result = service.getSummary(year, month)
+        MonthlySummaryResponse result = service.computeSummary("user@test.com", year, month)
 
         then:
         result != null

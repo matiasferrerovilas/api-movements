@@ -98,3 +98,6 @@ databaseChangeLog:
   - include:
       file: 033_alter_table_movements_add_exchange_rate.sql
       relativeToChangelogFile: true
+  - include:
+      file: 034_create_table_monthly_summary_snapshot.sql
+      relativeToChangelogFile: true

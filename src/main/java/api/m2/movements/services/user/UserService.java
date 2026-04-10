@@ -1,12 +1,14 @@
 package api.m2.movements.services.user;
 
 import api.m2.movements.entities.User;
+import api.m2.movements.enums.UserSettingKey;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.UserMapper;
 import api.m2.movements.records.users.UserBaseRecord;
 import api.m2.movements.records.users.UserMeRecord;
 import api.m2.movements.repositories.UserRepository;
-import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.repositories.UserSettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserSettingRepository userSettingRepository;
 
     public User getAuthenticatedUser() {
         String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
@@ -31,7 +34,7 @@ public class UserService {
                 .map(Authentication::getName)
                 .orElseThrow(() -> new PermissionDeniedException("Usuario no autenticado"));
 
-        return  userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario inexistente"));
     }
 
@@ -75,5 +78,8 @@ public class UserService {
                 user.getUserType() != null ? user.getUserType().name() : null
         );
     }
-}
 
+    public List<User> getUsersWithMonthlySnapshotEnabled() {
+        return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
+    }
+}
