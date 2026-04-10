@@ -2,6 +2,7 @@ package api.m2.movements.aspect;
 
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.repositories.BudgetRepository;
 import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.SubscriptionRepository;
@@ -25,6 +26,7 @@ public class MembershipCheckAspect {
     private final MovementRepository movementRepository;
     private final IncomeRepository incomeRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final BudgetRepository budgetRepository;
 
     @Before("@annotation(requiresMembership)")
     public void checkMembership(JoinPoint joinPoint, RequiresMembership requiresMembership) {
@@ -50,6 +52,9 @@ public class MembershipCheckAspect {
                     .getAccount().getId();
             case SUBSCRIPTION -> subscriptionRepository.findById(entityId)
                     .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado: " + entityId))
+                    .getAccount().getId();
+            case BUDGET -> budgetRepository.findById(entityId)
+                    .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + entityId))
                     .getAccount().getId();
         };
     }

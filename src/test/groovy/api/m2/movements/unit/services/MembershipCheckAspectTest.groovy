@@ -3,6 +3,7 @@ package api.m2.movements.unit.services
 import api.m2.movements.annotations.RequiresMembership
 import api.m2.movements.aspect.MembershipCheckAspect
 import api.m2.movements.entities.Account
+import api.m2.movements.entities.Budget
 import api.m2.movements.entities.Income
 import api.m2.movements.entities.Movement
 import api.m2.movements.entities.Subscription
@@ -10,6 +11,7 @@ import api.m2.movements.entities.User
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.SubscriptionRepository
@@ -28,6 +30,7 @@ class MembershipCheckAspectTest extends Specification {
     MovementRepository movementRepository = Mock(MovementRepository)
     IncomeRepository incomeRepository = Mock(IncomeRepository)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
+    BudgetRepository budgetRepository = Mock(BudgetRepository)
 
     MembershipCheckAspect aspect
 
@@ -37,7 +40,8 @@ class MembershipCheckAspectTest extends Specification {
                 accountQueryService,
                 movementRepository,
                 incomeRepository,
-                subscriptionRepository
+                subscriptionRepository,
+                budgetRepository
         )
     }
 
@@ -226,5 +230,40 @@ class MembershipCheckAspectTest extends Specification {
 
         then:
         thrown(PermissionDeniedException)
+    }
+
+    // --- BUDGET domain ---
+
+    def "checkMembership - should verify membership for BUDGET domain"() {
+        given:
+        def account = buildAccount(4L)
+        def budget = Stub(Budget) { getAccount() >> account }
+        def user = Stub(User) { getId() >> 42L }
+        def ann = annotation(MembershipDomain.BUDGET)
+        def joinPoint = buildJoinPoint(40L)
+
+        budgetRepository.findById(40L) >> Optional.of(budget)
+        userService.getAuthenticatedUser() >> user
+
+        when:
+        aspect.checkMembership(joinPoint, ann)
+
+        then:
+        1 * accountQueryService.verifyUserIsMemberOfAccount(4L, 42L)
+    }
+
+    def "checkMembership - should throw EntityNotFoundException when BUDGET does not exist"() {
+        given:
+        def ann = annotation(MembershipDomain.BUDGET)
+        def joinPoint = buildJoinPoint(999L)
+
+        budgetRepository.findById(999L) >> Optional.empty()
+
+        when:
+        aspect.checkMembership(joinPoint, ann)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * accountQueryService.verifyUserIsMemberOfAccount(_ as Long, _ as Long)
     }
 }
