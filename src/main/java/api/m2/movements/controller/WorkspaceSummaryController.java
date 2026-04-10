@@ -1,6 +1,6 @@
 package api.m2.movements.controller;
 
-import api.m2.movements.records.balance.MonthlySummaryRecord;
+import api.m2.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.services.balance.MonthlySummaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,7 +29,7 @@ public class WorkspaceSummaryController {
     )
     @ApiResponse(responseCode = "200", description = "Resumen calculado correctamente")
     @GetMapping("/{id}/summary/monthly")
-    public MonthlySummaryRecord getMonthlySummary(
+    public MonthlySummaryResponse getMonthlySummary(
             @PathVariable Long id,
             @RequestParam @Min(2000) @Max(2100) Integer year,
             @RequestParam @Min(1) @Max(12) Integer month) {

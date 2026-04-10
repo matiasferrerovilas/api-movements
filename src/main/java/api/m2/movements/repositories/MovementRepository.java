@@ -164,25 +164,51 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
             INNER JOIN users u ON u.email = :email AND m.user_id = u.id
+            INNER JOIN currency c ON m.currency_id = c.id
             WHERE YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type = :type
+              AND c.symbol = :currency
             """, nativeQuery = true)
-    BigDecimal getTotalByTypeAndMonth(String email, Integer year, Integer month, String type);
+    BigDecimal getTotalByTypeAndMonth(String email, Integer year, Integer month, String type, String currency);
+
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
+            FROM movements m
+            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
+            WHERE YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type = :type
+              AND m.exchange_rate IS NOT NULL
+            """, nativeQuery = true)
+    BigDecimal getTotalInUsdByTypeAndMonth(String email, Integer year, Integer month, String type);
 
     @Query(value = """
             SELECT ca.description
             FROM movements m
             INNER JOIN users u ON u.email = :email AND m.user_id = u.id
             INNER JOIN category ca ON m.category_id = ca.id
+            INNER JOIN currency c ON m.currency_id = c.id
             WHERE YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type IN ('DEBITO', 'CREDITO')
+              AND c.symbol = :currency
             GROUP BY ca.description
             ORDER BY SUM(m.amount) DESC
             LIMIT 1
             """, nativeQuery = true)
-    Optional<String> getTopCategoryByMonth(String email, Integer year, Integer month);
+    Optional<String> getTopCategoryByMonth(String email, Integer year, Integer month, String currency);
+
+    @Query(value = """
+            SELECT DISTINCT c.symbol
+            FROM movements m
+            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE (YEAR(m.date) = :year AND MONTH(m.date) = :month)
+               OR (YEAR(m.date) = :prevYear AND MONTH(m.date) = :prevMonth)
+            """, nativeQuery = true)
+    List<String> findDistinctCurrenciesByMonth(String email, Integer year, Integer month,
+                                               Integer prevYear, Integer prevMonth);
 
     List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);
 
