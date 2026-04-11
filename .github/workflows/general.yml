@@ -102,7 +102,7 @@ jobs:
           # upload-artifact silently skips empty dirs, so we add a placeholder to guarantee it is
           # included in the artifact and present in the deploy job when Docker runs the COPY step.
           mkdir -p extracted/snapshot-dependencies
-          touch extracted/snapshot-dependencies/.gitkeep
+          touch extracted/snapshot-dependencies/placeholder
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
