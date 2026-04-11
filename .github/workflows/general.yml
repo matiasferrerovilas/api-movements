@@ -98,6 +98,8 @@ jobs:
         run: |
           mkdir -p extracted
           java -Djarmode=layertools -jar build/libs/api-movements-*.jar extract --destination extracted
+          # snapshot-dependencies only exists when SNAPSHOT deps are present; ensure the dir always exists
+          mkdir -p extracted/snapshot-dependencies
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
