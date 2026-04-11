@@ -1,32 +1,17 @@
-FROM eclipse-temurin:25-jdk-alpine AS build
-
-RUN apk add --no-cache unzip
-
-WORKDIR /app
-
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle/ gradle/
-
-RUN ./gradlew dependencies --no-daemon
-
-COPY src src
-
-RUN ./gradlew clean bootJar --no-daemon
-
-RUN java -Djarmode=layertools -jar build/libs/api-movements-*.jar extract --destination extracted
-
-
-FROM eclipse-temurin:25-jre-alpine AS runtime
+FROM eclipse-temurin:25-jre-alpine
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 WORKDIR /app
 
-COPY --from=build --chown=appuser:appgroup /app/extracted/dependencies/ ./
-COPY --from=build --chown=appuser:appgroup /app/extracted/spring-boot-loader/ ./
-COPY --from=build --chown=appuser:appgroup /app/extracted/snapshot-dependencies/ ./
-COPY --from=build --chown=appuser:appgroup /app/extracted/application/ ./
+# Las layers son extraídas en CI antes del build Docker (job build → Extract Spring Boot Layers)
+# Orden: dependencias primero (cambian poco) → app al final (cambia siempre)
+# Esto maximiza el cache de Docker layers en builds sucesivos
+COPY --chown=appuser:appgroup extracted/dependencies/ ./
+COPY --chown=appuser:appgroup extracted/spring-boot-loader/ ./
+COPY --chown=appuser:appgroup extracted/snapshot-dependencies/ ./
+COPY --chown=appuser:appgroup extracted/application/ ./
 
 ENV SPRING_PROFILES_ACTIVE=prod
 
