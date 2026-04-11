@@ -39,8 +39,8 @@ public class Subscription {
     private Currency currency;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

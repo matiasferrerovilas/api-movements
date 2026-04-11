@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Account
 import api.m2.movements.entities.Bank
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Subscription
 import api.m2.movements.entities.User
+import api.m2.movements.entities.Workspace
 import api.m2.movements.enums.MovementType
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.records.categories.CategoryRecord
@@ -12,7 +12,7 @@ import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.category.CategoryAddService
-import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import api.m2.movements.services.settings.UserSettingService
@@ -40,7 +40,7 @@ class UtilityAddServiceTest extends Specification {
                 movementAddService,
                 categoryAddService,
                 Mock(UserService),
-                Mock(AccountQueryService),
+                Mock(WorkspaceQueryService),
                 Mock(ServicePublishServiceWebSocket),
                 userSettingService
         )
@@ -48,7 +48,7 @@ class UtilityAddServiceTest extends Specification {
 
     def buildSubscription() {
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
-        def account  = Stub(Account)  { getId()     >> 10L }
+        def workspace  = Stub(Workspace)  { getId()     >> 10L }
         def owner    = Stub(User)
 
         def sub = Stub(Subscription) {
@@ -56,7 +56,7 @@ class UtilityAddServiceTest extends Specification {
             getLastPayment() >> LocalDate.of(2026, 3, 1)
             getDescription() >> "Netflix"
             getCurrency()    >> currency
-            getAccount()     >> account
+            getWorkspace()   >> workspace
             getOwner()       >> owner
         }
         return [sub: sub, owner: owner]
@@ -83,7 +83,7 @@ class UtilityAddServiceTest extends Specification {
             assert m.amount()   == new BigDecimal("500.00")
             assert m.type()     == MovementType.DEBITO.name()
             assert m.currency() == "ARS"
-            assert m.groupId()  == 10L
+            assert m.workspaceId()  == 10L
         }
     }
 
@@ -129,14 +129,14 @@ class UtilityAddServiceTest extends Specification {
     def "addMovementService - should fallback to today UTC when lastPayment is null"() {
         given:
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
-        def account  = Stub(Account)  { getId()     >> 10L }
+        def workspace  = Stub(Workspace)  { getId()     >> 10L }
         def owner    = Stub(User)
         def sub = Stub(Subscription) {
             getAmount()      >> new BigDecimal("100.00")
             getLastPayment() >> null
             getDescription() >> "Spotify"
             getCurrency()    >> currency
-            getAccount()     >> account
+            getWorkspace()   >> workspace
             getOwner()       >> owner
         }
 

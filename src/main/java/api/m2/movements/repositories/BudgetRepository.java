@@ -17,19 +17,19 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             SELECT b FROM Budget b
             JOIN FETCH b.category
             JOIN FETCH b.currency
-            WHERE b.account.id = :accountId
+            WHERE b.workspace.id = :workspaceId
               AND b.currency.symbol = :currencySymbol
               AND (b.year IS NULL OR (b.year = :year AND b.month = :month))
             """)
     List<Budget> findByAccountAndPeriod(
-            @Param("accountId") Long accountId,
+            @Param("workspaceId") Long workspaceId,
             @Param("currencySymbol") String currencySymbol,
             @Param("year") int year,
             @Param("month") int month
     );
 
-    Optional<Budget> findByAccountIdAndCategoryIdAndCurrencyId(
-            Long accountId, Long categoryId, Long currencyId
+    Optional<Budget> findByWorkspaceIdAndCategoryIdAndCurrencyId(
+            Long workspaceId, Long categoryId, Long currencyId
     );
 
     @Query(value = """
@@ -37,7 +37,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             FROM movements m
             INNER JOIN category ca ON m.category_id = ca.id
             INNER JOIN currency c  ON m.currency_id  = c.id
-            WHERE m.account_id   = :accountId
+            WHERE m.workspace_id   = :workspaceId
               AND ca.description = :categoryDescription
               AND c.symbol       = :currencySymbol
               AND YEAR(m.date)   = :year
@@ -45,7 +45,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
               AND m.type        != 'INGRESO'
             """, nativeQuery = true)
     BigDecimal sumSpentByCategoryAndPeriod(
-            @Param("accountId") Long accountId,
+            @Param("workspaceId") Long workspaceId,
             @Param("categoryDescription") String categoryDescription,
             @Param("currencySymbol") String currencySymbol,
             @Param("year") int year,

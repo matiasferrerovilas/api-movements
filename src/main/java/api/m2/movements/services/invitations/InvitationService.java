@@ -1,15 +1,15 @@
 package api.m2.movements.services.invitations;
 
-import api.m2.movements.entities.AccountInvitation;
+import api.m2.movements.entities.WorkspaceInvitation;
 import api.m2.movements.enums.InvitationStatus;
-import api.m2.movements.mappers.AccountInvitationMapper;
-import api.m2.movements.records.invite.InvitationToGroupRecord;
+import api.m2.movements.mappers.WorkspaceInvitationMapper;
+import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
-import api.m2.movements.repositories.AccountInvitationRepository;
+import api.m2.movements.repositories.WorkspaceInvitationRepository;
 import api.m2.movements.exceptions.PermissionDeniedException;
-import api.m2.movements.services.groups.AccountQueryService;
-import api.m2.movements.services.groups.GroupAddService;
-import api.m2.movements.services.publishing.websockets.AccountPublishServiceWebSocket;
+import api.m2.movements.services.workspaces.WorkspaceAddService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
+import api.m2.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,19 +25,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InvitationService {
 
-    private final GroupAddService groupAddService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceAddService workspaceAddService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
-    private final AccountInvitationRepository accountInvitationRepository;
-    private final AccountInvitationMapper accountInvitationMapper;
-    private final AccountPublishServiceWebSocket accountPublishServiceWebSocket;
+    private final WorkspaceInvitationRepository workspaceInvitationRepository;
+    private final WorkspaceInvitationMapper workspaceInvitationMapper;
+    private final WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket;
 
     @Transactional
-    public void inviteToAccount(Long accountId, List<String> emails) {
-        var accountToInvite = accountQueryService.findAccountById(accountId);
+    public void inviteToAccount(Long workspaceId, List<String> emails) {
+        var workspaceToInvite = workspaceQueryService.findWorkspaceById(workspaceId);
 
         var loggedInUser = userService.getAuthenticatedUser();
-        accountQueryService.verifyUserIsMemberOfAccount(accountToInvite.getId(), loggedInUser.getId());
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceToInvite.getId(), loggedInUser.getId());
 
         var usersToInvite = userService.getUserByEmail(emails);
 
@@ -45,8 +45,8 @@ public class InvitationService {
             log.info("No se crearon nuevas invitaciones: no se encontraron usuarios con los emails proporcionados.");
             return;
         }
-        var pendingInvitations = accountInvitationRepository
-                .findAllByAccountIdAndStatus(accountToInvite.getId(), InvitationStatus.PENDING);
+        var pendingInvitations = workspaceInvitationRepository
+                .findAllByWorkspaceIdAndStatus(workspaceToInvite.getId(), InvitationStatus.PENDING);
 
         var alreadyInvitedUserIds = pendingInvitations.stream()
                 .map(inv -> inv.getUser().getId())
@@ -54,9 +54,9 @@ public class InvitationService {
 
         var newInvitations = usersToInvite.stream()
                 .filter(user -> !alreadyInvitedUserIds.contains(user.getId()))
-                .map(user -> AccountInvitation.builder()
+                .map(user -> WorkspaceInvitation.builder()
                         .user(user)
-                        .account(accountToInvite)
+                        .workspace(workspaceToInvite)
                         .invitedBy(loggedInUser)
                         .status(InvitationStatus.PENDING)
                         .build())
@@ -67,22 +67,23 @@ public class InvitationService {
             return;
         }
 
-        accountInvitationRepository.saveAll(newInvitations);
+        workspaceInvitationRepository.saveAll(newInvitations);
 
         newInvitations
                 .stream()
-                .map(accountInvitationMapper::toRecord)
-                .forEach(accountPublishServiceWebSocket::publishInvitationAdded);
+                .map(workspaceInvitationMapper::toRecord)
+                .forEach(workspacePublishServiceWebSocket::publishInvitationAdded);
     }
 
-    public List<InvitationToGroupRecord> getAllInvitations() {
+    public List<InvitationToWorkspaceRecord> getAllInvitations() {
         var user = userService.getAuthenticatedUserRecord();
-        return accountInvitationMapper.toRecord(accountInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
+        return workspaceInvitationMapper.toRecord(
+                workspaceInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
     }
 
     @Transactional
     public void acceptRejectInvitation(Long invitationId, InvitationResponseRecord invitationResponseRecord) {
-        var invitation = accountInvitationRepository.findById(invitationId)
+        var invitation = workspaceInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe invitación con ese id"));
 
         var currentUser = userService.getAuthenticatedUser();
@@ -97,12 +98,12 @@ public class InvitationService {
 
         var status = invitationResponseRecord.status() ? InvitationStatus.ACCEPTED : InvitationStatus.REJECTED;
         invitation.setStatus(status);
-        accountInvitationRepository.save(invitation);
+        workspaceInvitationRepository.save(invitation);
 
         if (status == InvitationStatus.ACCEPTED) {
-            groupAddService.addMemberToAccount(invitation.getAccount());
+            workspaceAddService.addMemberToWorkspace(invitation.getWorkspace());
         }
 
-        accountPublishServiceWebSocket.publishInvitationUpdated(accountInvitationMapper.toRecord(invitation));
+        workspacePublishServiceWebSocket.publishInvitationUpdated(workspaceInvitationMapper.toRecord(invitation));
     }
 }

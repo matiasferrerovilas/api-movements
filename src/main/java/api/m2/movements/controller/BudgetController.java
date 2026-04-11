@@ -53,11 +53,11 @@ public class BudgetController {
     )
     @GetMapping
     public List<BudgetRecord> getBudgets(
-            @Parameter(description = "ID de la cuenta") @RequestParam Long accountId,
+            @Parameter(description = "ID del workspace") @RequestParam Long workspaceId,
             @Parameter(description = "Símbolo de moneda (ej: ARS, USD)") @RequestParam String currency,
             @Parameter(description = "Año del período") @RequestParam int year,
             @Parameter(description = "Mes del período (1-12)") @RequestParam int month) {
-        return budgetQueryService.getByAccount(accountId, currency, year, month);
+        return budgetQueryService.getByAccount(workspaceId, currency, year, month);
     }
 
     @Operation(

@@ -1,13 +1,13 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.projections.MembershipSummaryProjection;
-import api.m2.movements.records.invite.InvitationToGroupRecord;
-import api.m2.movements.records.accounts.GroupDetail;
-import api.m2.movements.records.groups.AddGroupRecord;
+import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
+import api.m2.movements.records.workspaces.WorkspaceDetail;
+import api.m2.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
-import api.m2.movements.records.invite.InviteToGroup;
-import api.m2.movements.services.groups.GroupAddService;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.records.invite.InviteToWorkspace;
+import api.m2.movements.services.workspaces.WorkspaceAddService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.groups.MembershipService;
 import api.m2.movements.services.invitations.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,62 +29,62 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/account")
-@Tag(name = "Grupos de cuenta", description = "API para la gestión del grupos")
-public class GroupController {
+@RequestMapping("/v1/workspace")
+@Tag(name = "Workspaces", description = "API para la gestión de workspaces")
+public class WorkspaceController {
 
-    private final GroupAddService groupAddService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceAddService workspaceAddService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final InvitationService invitationService;
     private final MembershipService membershipService;
 
     @Operation(
-            summary = "Crear un nuevo grupo",
-            description = "Crea un grupo asociado al usuario autenticado.",
+            summary = "Crear un nuevo workspace",
+            description = "Crea un workspace asociado al usuario autenticado.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Grupo creado correctamente")
+                    @ApiResponse(responseCode = "201", description = "Workspace creado correctamente")
             }
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createAccount(@RequestBody AddGroupRecord body) {
-        groupAddService.createAccount(body);
+    public void createWorkspace(@RequestBody AddWorkspaceRecord body) {
+        workspaceAddService.createWorkspace(body);
     }
 
     @GetMapping("/membership")
     @ResponseStatus(HttpStatus.OK)
-    public List<MembershipSummaryProjection> getAllAccounts() {
+    public List<MembershipSummaryProjection> getAllMemberships() {
         return membershipService.getAllMemberships();
     }
 
     @Operation(
-            summary = "Listar grupos del usuario",
-            description = "Devuelve todos los grupos a los que pertenece el usuario autenticado.",
+            summary = "Listar workspaces del usuario",
+            description = "Devuelve todos los workspaces a los que pertenece el usuario autenticado.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Grupos obtenidos correctamente")
+                    @ApiResponse(responseCode = "200", description = "Workspaces obtenidos correctamente")
             }
     )
     @GetMapping("/count")
-    public List<GroupDetail> getMyGroupsWithCount() {
-        return accountQueryService.getAllGroupDetails();
+    public List<WorkspaceDetail> getMyWorkspacesWithCount() {
+        return workspaceQueryService.getAllWorkspaceDetails();
     }
 
     @Operation(
-            summary = "Salir de un grupo",
-            description = "El usuario autenticado abandona un grupo.",
+            summary = "Salir de un workspace",
+            description = "El usuario autenticado abandona un workspace.",
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Salida del grupo exitosa")
+                    @ApiResponse(responseCode = "204", description = "Salida del workspace exitosa")
             }
     )
-    @DeleteMapping("/{accountId}")
+    @DeleteMapping("/{workspaceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void exitGroup(@PathVariable Long accountId) {
-        groupAddService.leaveAccount(accountId);
+    public void exitWorkspace(@PathVariable Long workspaceId) {
+        workspaceAddService.leaveWorkspace(workspaceId);
     }
 
     @Operation(
-            summary = "Crear invitación a un grupo",
-            description = "Invita a un usuario a un grupo mediante su email.",
+            summary = "Crear invitación a un workspace",
+            description = "Invita a un usuario a un workspace mediante su email.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Invitación creada correctamente")
             }
@@ -93,7 +93,7 @@ public class GroupController {
     @ResponseStatus(HttpStatus.CREATED)
     public void createInvitation(
             @PathVariable Long id,
-            @RequestBody InviteToGroup request
+            @RequestBody InviteToWorkspace request
     ) {
         invitationService.inviteToAccount(id, request.emails());
     }
@@ -107,7 +107,7 @@ public class GroupController {
     )
     @GetMapping("/invitations")
     @ResponseStatus(HttpStatus.OK)
-    public List<InvitationToGroupRecord> listMyInvitations() {
+    public List<InvitationToWorkspaceRecord> listMyInvitations() {
         return invitationService.getAllInvitations();
     }
 
@@ -129,16 +129,15 @@ public class GroupController {
     }
 
     @Operation(
-            summary = "Actualizar estado de invitación",
-            description = "Permite aceptar o rechazar una invitación.",
+            summary = "Actualizar workspace por defecto",
+            description = "Establece un workspace como el workspace por defecto del usuario.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Invitación actualizada correctamente"),
-                    @ApiResponse(responseCode = "404", description = "Invitación no encontrada")
+                    @ApiResponse(responseCode = "200", description = "Workspace por defecto actualizado correctamente")
             }
     )
     @PatchMapping("/{id}/default")
     @ResponseStatus(HttpStatus.OK)
-    public void updateDefaultGroup(@PathVariable Long id) {
-        groupAddService.updateDefaultGroup(id);
+    public void updateDefaultWorkspace(@PathVariable Long id) {
+        workspaceAddService.updateDefaultWorkspace(id);
     }
 }

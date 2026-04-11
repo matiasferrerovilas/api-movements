@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public record BudgetRecord(
         Long id,
-        Long accountId,
+        Long workspaceId,
         CategoryRecord category,
         CurrencyRecord currency,
         BigDecimal amount,

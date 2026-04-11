@@ -9,7 +9,7 @@ import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.SubscriptionRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import io.micrometer.common.util.StringUtils;
@@ -31,7 +31,7 @@ public class UtilitiesService {
     private final UtilityAddService utilityAddService;
     private final UserService userService;
     private final ServicePublishServiceWebSocket servicePublishService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final MovementRepository movementRepository;
 
     public List<SubscriptionRecord> getServiceBy(List<String> currencySymbol, LocalDate lastPayment) {
@@ -65,7 +65,7 @@ public class UtilitiesService {
 
         this.syncMovementIfPaid(service, updateService);
 
-        this.updateAccountIfPresent(service, updateService.group());
+        this.updateWorkspaceIfPresent(service, updateService.workspace());
 
         serviceMapper.updateMovement(updateService, service);
         service.setLastPayment(updateService.lastPayment());
@@ -84,9 +84,9 @@ public class UtilitiesService {
         }
     }
 
-    private void updateAccountIfPresent(Subscription service, String group) {
-        if (!StringUtils.isEmpty(group)) {
-            service.setAccount(accountQueryService.findAccountByName(group));
+    private void updateWorkspaceIfPresent(Subscription service, String workspace) {
+        if (!StringUtils.isEmpty(workspace)) {
+            service.setWorkspace(workspaceQueryService.findWorkspaceByName(workspace));
         }
     }
 
@@ -94,7 +94,7 @@ public class UtilitiesService {
                                         String oldDescription, LocalDate oldLastPayment) {
         var movement = movementRepository.findByDescriptionAndAccountAndMonth(
                         "Servicio Pagado " + oldDescription,
-                        service.getAccount().getId(),
+                        service.getWorkspace().getId(),
                         oldLastPayment.getYear(),
                         oldLastPayment.getMonthValue())
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el movimiento asociado al servicio"));

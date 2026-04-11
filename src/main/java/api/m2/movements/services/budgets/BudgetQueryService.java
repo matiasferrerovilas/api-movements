@@ -3,7 +3,7 @@ package api.m2.movements.services.budgets;
 import api.m2.movements.mappers.BudgetMapper;
 import api.m2.movements.records.budgets.BudgetRecord;
 import api.m2.movements.repositories.BudgetRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,15 +18,15 @@ public class BudgetQueryService {
 
     private final BudgetRepository budgetRepository;
     private final BudgetMapper budgetMapper;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
 
-    public List<BudgetRecord> getByAccount(Long accountId, String currencySymbol, int year, int month) {
-        accountQueryService.findAccountById(accountId);
+    public List<BudgetRecord> getByAccount(Long workspaceId, String currencySymbol, int year, int month) {
+        workspaceQueryService.findWorkspaceById(workspaceId);
 
-        return budgetRepository.findByAccountAndPeriod(accountId, currencySymbol, year, month)
+        return budgetRepository.findByAccountAndPeriod(workspaceId, currencySymbol, year, month)
                 .stream()
                 .map(budget -> {
-                    BigDecimal spent = this.resolveSpent(budget.getAccount().getId(),
+                    BigDecimal spent = this.resolveSpent(budget.getWorkspace().getId(),
                             budget.getCategory() == null ? null : budget.getCategory().getDescription(),
                             budget.getCurrency().getSymbol(),
                             year,
@@ -36,13 +36,13 @@ public class BudgetQueryService {
                 .toList();
     }
 
-    private BigDecimal resolveSpent(Long accountId, String categoryDescription,
+    private BigDecimal resolveSpent(Long workspaceId, String categoryDescription,
                                     String currencySymbol, int year, int month) {
         if (categoryDescription == null) {
             return BigDecimal.ZERO;
         }
         BigDecimal result = budgetRepository.sumSpentByCategoryAndPeriod(
-                accountId, categoryDescription, currencySymbol, year, month);
+                workspaceId, categoryDescription, currencySymbol, year, month);
         return result != null ? result : BigDecimal.ZERO;
     }
 }

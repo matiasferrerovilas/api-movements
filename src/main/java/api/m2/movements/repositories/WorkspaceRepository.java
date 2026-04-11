@@ -1,7 +1,7 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.Account;
-import api.m2.movements.projections.AccountSummaryProjection;
+import api.m2.movements.entities.Workspace;
+import api.m2.movements.projections.WorkspaceSummaryProjection;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,29 +12,29 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRepository extends JpaRepository<Account, Long> {
+public interface WorkspaceRepository extends JpaRepository<Workspace, Long> {
     @Query("""
     select distinct a
-    from Account a
+    from Workspace a
     join fetch a.members
     left join fetch a.owner
     where exists (
         select 1
-        from AccountMember m
-        where m.account = a
+        from WorkspaceMember m
+        where m.workspace = a
           and m.user.id = :userId
     )
     and a.isActive = true
 """)
-    List<Account> findAllAccountsByMemberIdWithAllMembers(Long userId);
+    List<Workspace> findAllWorkspacesByMemberIdWithAllMembers(Long userId);
 
     @Query("""
-    select a from Account a
+    select a from Workspace a
     where a.name = :name
       and a.owner.id = :ownerId
       and a.isActive = true
 """)
-    Optional<Account> findAccountByNameAndOwnerId(@NotNull @Param("name") String name, @Param("ownerId") Long ownerId);
+    Optional<Workspace> findWorkspaceByNameAndOwnerId(@NotNull @Param("name") String name, @Param("ownerId") Long ownerId);
 
     @Query("""
         select
@@ -43,17 +43,17 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             o.id as ownerId,
             o.email as ownerEmail,
             count(distinct m.id) as membersCount
-        from Account a
+        from Workspace a
         join a.members m
         join a.owner o
         where a.isActive = true
           and exists (
               select 1
-              from AccountMember am
-              where am.account = a
+              from WorkspaceMember am
+              where am.workspace = a
                 and am.user.id = :userId
           )
         group by a.id, a.name, o.id, o.email
 """)
-    List<AccountSummaryProjection> findAccountSummariesByMemberUserId(@Param("userId") Long userId);
+    List<WorkspaceSummaryProjection> findWorkspaceSummariesByMemberUserId(@Param("userId") Long userId);
 }

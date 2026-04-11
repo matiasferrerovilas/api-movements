@@ -67,9 +67,9 @@ public class CalculateBalanceService {
         return movementRepository.getBalanceByYearAndGroup(year, month, user.getEmail());
     }
 
-    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year, List<Long> groupIds) {
+    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year, List<Long> workspaceIds) {
         return balanceEvolutionMapper.toRecordsWithFilledMonths(
-                movementRepository.findMonthlyEvolution(year, groupIds)
+                movementRepository.findMonthlyEvolution(year, workspaceIds)
         );
     }
 }

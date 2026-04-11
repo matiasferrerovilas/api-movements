@@ -1,6 +1,6 @@
 package api.m2.movements.projections;
 
-public interface AccountSummaryProjection {
+public interface WorkspaceSummaryProjection {
     Long getAccountId();
 
     String getAccountName();

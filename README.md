@@ -1,17 +1,19 @@
 # Movement API
 
-A robust and scalable RESTful API for managing personal or business expenses, built with Spring Boot and designed for containerized deployment.
+A robust and scalable RESTful API for managing personal finances, built with Spring Boot and designed for containerized deployment. Supports movements, subscriptions, incomes, and shared workspaces with real-time updates via WebSocket.
 
 ## Features
 
 - **Expense Management**: Track expenses with categories, amounts, and dates
 - **Multi-currency Support**: Handle expenses in different currencies (ARS, USD, EUR, CHF)
 - **Credit/Debit Tracking**: Support for both credit and debit transactions
-- **User Authentication**: Secure API with OAuth2 and JWT
-- **API Documentation**: Interactive documentation with Swagger/OpenAPI
+- **Shared Workspaces**: Invite members to shared workspaces with role-based access
+- **Real-time Updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, and workspace events
+- **User Authentication**: Secure API with Keycloak OAuth2 and JWT (RS256)
+- **API Documentation**: Interactive documentation with Swagger/OpenAPI at `/docs`
 - **Metrics & Monitoring**: Built-in support for Prometheus and Grafana
 - **Container Ready**: Docker support for easy deployment
-- **Database Migrations**: Liquibase for database versioning
+- **Database Migrations**: Liquibase for database versioning (`ddl-auto: none`)
 
 ## Tech Stack
 
@@ -19,10 +21,12 @@ A robust and scalable RESTful API for managing personal or business expenses, bu
 - **MySQL 8.0** Database
 - **Liquibase** for database migrations
 - **MapStruct** for object mapping
-- **Spring Security** with OAuth2
+- **Spring Security** with OAuth2 / Keycloak JWT
 - **Spring Web** for REST endpoints
 - **Spring Data JPA** for data access
-- **Spring AOP** for cross-cutting concerns
+- **Spring AOP** for cross-cutting concerns (membership guard)
+- **RabbitMQ** for async messaging
+- **Caffeine** in-memory cache (currency exchange rates)
 - **Micrometer** for application metrics
 - **TestContainers** for integration testing
 - **Spock** for testing
@@ -32,7 +36,7 @@ A robust and scalable RESTful API for managing personal or business expenses, bu
 - Java 25 JDK
 - Docker and Docker Compose (for containerized deployment)
 - MySQL 8.0+ (or use the provided Docker Compose setup)
-- Gradle 8.0+
+- Gradle 9+
 
 ## Getting Started
 
@@ -88,19 +92,24 @@ Once the application is running, access the API documentation at:
 
 ## Authentication
 
-The API uses OAuth2 with JWT. To authenticate:
+The API uses Keycloak OAuth2 with JWT (RS256). To authenticate:
 
-1. Obtain a token from the `/oauth2/token` endpoint
+1. Obtain a token from your Keycloak realm
 2. Include the token in the `Authorization` header as `Bearer <token>`
 
 ## Database Schema
 
-The database schema is managed using Liquibase. All migrations are located in the `build.migrations/db` directory.
+The database schema is managed using Liquibase (`ddl-auto: none`). All migrations are located in `src/main/resources/db/changelog/`.
 
 Key tables:
-- `gastos`: Main expenses table
+- `movements`: Main expenses/income table
+- `workspaces`: Shared workspaces
+- `workspace_members`: Workspace membership with roles
+- `workspace_invitations`: Pending invitations
 - `category`: Expense categories
 - `currency`: Supported currencies
+- `subscriptions`: Recurring subscriptions
+- `income`: Income records
 
 ## Testing
 
@@ -108,6 +117,12 @@ Run the test suite:
 
 ```bash
 ./gradlew test
+```
+
+Run tests and checkstyle together:
+
+```bash
+./gradlew test checkstyleMain checkstyleTest
 ```
 
 ## Monitoring

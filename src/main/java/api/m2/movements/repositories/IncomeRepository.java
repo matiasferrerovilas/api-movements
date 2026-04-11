@@ -13,7 +13,7 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         select distinct i
         from Income i
         join fetch i.currency
-        join fetch i.account a
+        join fetch i.workspace a
         join fetch i.bank b
         join a.members m
         where m.user.id = :userId

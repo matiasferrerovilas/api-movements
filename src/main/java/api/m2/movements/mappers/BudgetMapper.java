@@ -20,12 +20,12 @@ public interface BudgetMapper {
 
     @Mapping(target = "category", source = "category", qualifiedByName = "mapCategory")
     @Mapping(target = "currency", source = "currency", qualifiedByName = "mapCurrency")
-    @Mapping(target = "account", ignore = true)
+    @Mapping(target = "workspace", ignore = true)
     Budget toEntity(BudgetToAdd budgetToAdd,
                     @Context CategoryRepository categoryRepository,
                     @Context CurrencyRepository currencyRepository);
 
-    @Mapping(target = "accountId", expression = "java(budget.getAccount().getId())")
+    @Mapping(target = "workspaceId", expression = "java(budget.getWorkspace().getId())")
     @Mapping(target = "spent", expression = "java(java.math.BigDecimal.ZERO)")
     @Mapping(target = "percentage", expression = "java(java.math.BigDecimal.ZERO)")
     BudgetRecord toRecord(Budget budget);
@@ -54,7 +54,7 @@ public interface BudgetMapper {
                 : spent.multiply(new BigDecimal("100")).divide(budget.getAmount(), 2, java.math.RoundingMode.HALF_UP);
         return new BudgetRecord(
                 budget.getId(),
-                budget.getAccount().getId(),
+                budget.getWorkspace().getId(),
                 budget.getCategory() == null ? null : new api.m2.movements.records.categories.CategoryRecord(
                         budget.getCategory().getId(),
                         budget.getCategory().getDescription(),

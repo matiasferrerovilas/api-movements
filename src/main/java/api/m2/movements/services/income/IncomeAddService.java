@@ -12,7 +12,7 @@ import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.currencies.CurrencyAddService;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -33,7 +33,7 @@ public class IncomeAddService {
     private final IncomeRepository incomeRepository;
     private final UserService userService;
     private final IncomeMapper incomeMapper;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final CurrencyAddService currencyAddService;
     private final MovementAddService movementAddService;
     private final BankRepository bankRepository;
@@ -44,8 +44,8 @@ public class IncomeAddService {
         var income = incomeMapper.toEntity(incomeToAdd);
         var user = userService.getAuthenticatedUser();
         income.setUser(user);
-        var account = accountQueryService.findAccountByName(incomeToAdd.group());
-        income.setAccount(account);
+        var account = workspaceQueryService.findWorkspaceByName(incomeToAdd.workspace());
+        income.setWorkspace(account);
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
         income.setCurrency(currency);
         var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
@@ -71,7 +71,7 @@ public class IncomeAddService {
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
         CategoryRecord category = categoryAddService.findCategoryByDescription(HOGAR);
-        var account = accountQueryService.findAccountByName(incomeToAdd.group());
+        var account = workspaceQueryService.findWorkspaceByName(incomeToAdd.workspace());
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
 
         movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
@@ -103,7 +103,7 @@ public class IncomeAddService {
                 null,
                 null,
                 incomeToReload.getBank().getDescription(),
-                incomeToReload.getAccount().getId()
+                incomeToReload.getWorkspace().getId()
         );
         movementAddService.saveMovement(movementToAdd);
 

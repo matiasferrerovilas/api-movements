@@ -20,21 +20,21 @@ public class ServicePublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishServicePaid(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.accountId() + "/update", EventType.SERVICE_PAID);
+        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/update", EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishUpdateService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.accountId() + "/update", EventType.SERVICE_UPDATED);
+        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/update", EventType.SERVICE_UPDATED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishNewService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.accountId() + "/new", EventType.SERVICE_PAID);
+        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/new", EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishDeleteService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.accountId() + "/remove", EventType.SERVICE_DELETED);
+        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/remove", EventType.SERVICE_DELETED);
     }
 }

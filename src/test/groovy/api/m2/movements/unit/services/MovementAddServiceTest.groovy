@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Account
 import api.m2.movements.entities.Category
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Movement
 import api.m2.movements.entities.User
+import api.m2.movements.entities.Workspace
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
@@ -17,7 +17,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.MovementRepository
-import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket
@@ -35,7 +35,7 @@ class MovementAddServiceTest extends Specification {
     MovementFactory movementFactory = Mock(MovementFactory)
     MovementPublishServiceWebSocket movementPublishService = Mock(MovementPublishServiceWebSocket)
     UserService userService = Mock(UserService)
-    AccountQueryService accountQueryService = Mock(AccountQueryService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
 
     MovementAddService service
 
@@ -51,19 +51,19 @@ class MovementAddServiceTest extends Specification {
                 movementFactory,
                 movementPublishService,
                 userService,
-                accountQueryService
+                workspaceQueryService
         )
     }
 
-    def buildMovement(Long accountId) {
-        def account = Account.builder().id(accountId).name("Test Account").build()
+    def buildMovement(Long workspaceId) {
+        def workspace = Workspace.builder().id(workspaceId).name("Test Workspace").build()
         def movement = Movement.builder()
                 .id(42L)
                 .amount(new BigDecimal("500.00"))
                 .description("Supermercado")
                 .date(LocalDate.now())
                 .type(MovementType.DEBITO)
-                .account(account)
+                .workspace(workspace)
                 .category(Category.builder().description("HOGAR").build())
                 .currency(Currency.builder().id(1L).symbol("ARS").build())
                 .owner(User.builder().id(10L).email("test@test.com").build())
@@ -89,11 +89,11 @@ class MovementAddServiceTest extends Specification {
         service.saveMovement(dto)
 
         then:
-        1 * accountQueryService.verifyUserIsMemberOfAccount(1L, 10L)
+        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 10L)
         1 * movementRepository.save(_ as Movement) >> movement
     }
 
-    def "saveMovement - should throw PermissionDeniedException when user is not a member of the account"() {
+    def "saveMovement - should throw PermissionDeniedException when user is not a member of the workspace"() {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
@@ -102,7 +102,7 @@ class MovementAddServiceTest extends Specification {
         def user = Stub(User) { getId() >> 10L }
 
         userService.getAuthenticatedUser() >> user
-        accountQueryService.verifyUserIsMemberOfAccount(99L, 10L) >> {
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(99L, 10L) >> {
             throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso")
         }
 

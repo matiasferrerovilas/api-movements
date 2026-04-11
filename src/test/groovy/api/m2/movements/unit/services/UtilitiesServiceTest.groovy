@@ -1,15 +1,15 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Account
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Movement
 import api.m2.movements.entities.Subscription
+import api.m2.movements.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.records.services.UpdateSubscriptionRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.SubscriptionRepository
-import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import api.m2.movements.services.subscriptions.UtilitiesService
 import api.m2.movements.services.subscriptions.UtilityAddService
@@ -27,7 +27,7 @@ class UtilitiesServiceTest extends Specification {
     UtilityAddService utilityAddService = Mock(UtilityAddService)
     UserService userService = Mock(UserService)
     ServicePublishServiceWebSocket servicePublishService = Mock(ServicePublishServiceWebSocket)
-    AccountQueryService accountQueryService = Mock(AccountQueryService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     MovementRepository movementRepository = Mock(MovementRepository)
 
     UtilitiesService service
@@ -39,16 +39,16 @@ class UtilitiesServiceTest extends Specification {
                 utilityAddService,
                 userService,
                 servicePublishService,
-                accountQueryService,
+                workspaceQueryService,
                 movementRepository
         )
     }
 
-    def buildSubscription(Long accountId, LocalDate lastPayment = null) {
-        def account = Stub(Account) { getId() >> accountId; getName() >> "Mi cuenta" }
+    def buildSubscription(Long workspaceId, LocalDate lastPayment = null) {
+        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         return new Subscription(id: 1L, description: "Netflix", amount: new BigDecimal("10.00"),
-                lastPayment: lastPayment, account: account, currency: currency)
+                lastPayment: lastPayment, workspace: workspace, currency: currency)
     }
 
     // --- payServiceById ---

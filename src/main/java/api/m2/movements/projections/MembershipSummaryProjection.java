@@ -1,12 +1,12 @@
 package api.m2.movements.projections;
 
-import api.m2.movements.enums.AccountRole;
+import api.m2.movements.enums.WorkspaceRole;
 
 public interface MembershipSummaryProjection {
-    Long getAccountId();
+    Long getWorkspaceId();
 
-    String getGroupDescription();
+    String getWorkspaceName();
     Long getMembershipId();
 
-    AccountRole getRole();
+    WorkspaceRole getRole();
 }

@@ -56,7 +56,7 @@ public abstract class ExpenseFileStrategy {
                 cuotaActual,
                 cuotaTotales,
                 getBank(),
-                movementFileToAdd.accountId()
+                movementFileToAdd.workspaceId()
         );
 
     }

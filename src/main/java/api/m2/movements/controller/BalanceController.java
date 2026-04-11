@@ -80,7 +80,7 @@ public class BalanceController {
     @GetMapping("/monthly-evolution")
     public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(
             @RequestParam @Min(2000) @Max(2100) Integer year,
-            @RequestParam(required = false) List<Long> groupIds) {
-        return calculateBalanceService.getMonthlyEvolution(year, groupIds);
+            @RequestParam(required = false) List<Long> workspaceIds) {
+        return calculateBalanceService.getMonthlyEvolution(year, workspaceIds);
     }
 }

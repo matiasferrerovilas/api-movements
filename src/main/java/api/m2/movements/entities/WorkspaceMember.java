@@ -1,17 +1,18 @@
 package api.m2.movements.entities;
 
-import jakarta.persistence.CascadeType;
+import api.m2.movements.enums.WorkspaceRole;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -22,14 +23,12 @@ import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(
-        name = "accounts",
+        name = "workspace_members",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"owner_id", "name"})
+                @UniqueConstraint(columnNames = {"workspace_id", "user_id"})
         }
 )
 @Getter
@@ -38,30 +37,24 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"members", "owner"})
-public class Account {
+@ToString(exclude = {"workspace", "user"})
+public class WorkspaceMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    private String name;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @OneToMany(
-            mappedBy = "account",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @Builder.Default
-    private Set<AccountMember> members = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private WorkspaceRole role;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime joinedAt;
 
-    @Builder.Default
-    private boolean isActive = true;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
 }

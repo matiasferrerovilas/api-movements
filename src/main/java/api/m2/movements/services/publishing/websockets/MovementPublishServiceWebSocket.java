@@ -27,6 +27,6 @@ public class MovementPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishDeleteOfMovement(MovementDeletedEvent event) {
-        this.publish(event.movementId(), "/topic/movimientos/" + event.accountId() + "/delete", EventType.MOVEMENT_DELETED);
+        this.publish(event.movementId(), "/topic/movimientos/" + event.workspaceId() + "/delete", EventType.MOVEMENT_DELETED);
     }
 }

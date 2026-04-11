@@ -6,7 +6,7 @@ import api.m2.movements.repositories.BudgetRepository;
 import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.SubscriptionRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class MembershipCheckAspect {
 
     private final UserService userService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final MovementRepository movementRepository;
     private final IncomeRepository incomeRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -33,29 +33,29 @@ public class MembershipCheckAspect {
         Object[] args = joinPoint.getArgs();
         Long entityId = (Long) args[requiresMembership.idParamIndex()];
 
-        Long accountId = resolveAccountId(requiresMembership.domain(), entityId);
+        Long workspaceId = resolveWorkspaceId(requiresMembership.domain(), entityId);
         Long userId = userService.getAuthenticatedUser().getId();
 
-        log.debug("Verificando membresía: domain={}, entityId={}, accountId={}, userId={}",
-                requiresMembership.domain(), entityId, accountId, userId);
+        log.debug("Verificando membresía: domain={}, entityId={}, workspaceId={}, userId={}",
+                requiresMembership.domain(), entityId, workspaceId, userId);
 
-        accountQueryService.verifyUserIsMemberOfAccount(accountId, userId);
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);
     }
 
-    private Long resolveAccountId(api.m2.movements.enums.MembershipDomain domain, Long entityId) {
+    private Long resolveWorkspaceId(api.m2.movements.enums.MembershipDomain domain, Long entityId) {
         return switch (domain) {
             case MOVEMENT -> movementRepository.findById(entityId)
                     .orElseThrow(() -> new EntityNotFoundException("Movimiento no encontrado: " + entityId))
-                    .getAccount().getId();
+                    .getWorkspace().getId();
             case INCOME -> incomeRepository.findById(entityId)
                     .orElseThrow(() -> new EntityNotFoundException("Ingreso no encontrado: " + entityId))
-                    .getAccount().getId();
+                    .getWorkspace().getId();
             case SUBSCRIPTION -> subscriptionRepository.findById(entityId)
                     .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado: " + entityId))
-                    .getAccount().getId();
+                    .getWorkspace().getId();
             case BUDGET -> budgetRepository.findById(entityId)
                     .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + entityId))
-                    .getAccount().getId();
+                    .getWorkspace().getId();
         };
     }
 }

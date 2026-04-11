@@ -29,7 +29,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                   AND (m.date  <= :endDate)
                   AND m.type IN (:type)
                   AND m.currency_id IN (:currencies)
-                  AND m.account_id IN (:groups)
+                   AND m.workspace_id IN (:groups)
             """, nativeQuery = true)
     BigDecimal getBalanceByFilters(LocalDate startDate, LocalDate endDate,
                                    String email,
@@ -41,7 +41,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     SELECT g
     FROM Movement g
     WHERE
-    (:#{#accountsId} IS NULL OR g.account.id IN :#{#accountsId})
+    (:#{#accountsId} IS NULL OR g.workspace.id IN :#{#accountsId})
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
       AND (:#{#filter.bank} IS NULL OR g.bank.description IN :#{#filter.bank})
       AND (:#{#filter.type} IS NULL OR g.type IN :#{#filter.type})
@@ -80,9 +80,9 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                         INNER JOIN users u ON u.email = :email AND g.user_id = u.id
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
                                   AND g.type !="INGRESO"
-                                  AND g.account_id IN (:groups)
+                                   AND g.workspace_id IN (:groups)
                               AND c.symbol IN (:currencies)
-                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.account_id
+                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.workspace_id
     """, nativeQuery = true)
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
@@ -110,7 +110,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     Optional<Movement> getLastIngreso(UserBaseRecord user);
 
     @Query(value = """
-            SELECT   ac.name AS groupDescription,
+            SELECT   ac.name AS workspaceDescription,
                     c.symbol AS currencySymbol,
                     YEAR(g.`date`) AS year,
                     MONTH(g.`date`) AS month,
@@ -118,7 +118,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             from movements g
             INNER JOIN currency c ON g.currency_id = c.id
             INNER JOIN users u ON g.user_id = u.id
-            INNER JOIN accounts ac on ac.id = g.account_id
+            INNER JOIN workspaces ac on ac.id = g.workspace_id
             WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month AND u.email = :email
             GROUP BY ac.name, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
             ORDER BY ac.name, YEAR(g.`date`)
@@ -128,13 +128,13 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query("""
     SELECT m FROM Movement m
     WHERE m.description = :description
-      AND m.account.id = :accountId
+      AND m.workspace.id = :workspaceId
       AND YEAR(m.date) = :year
       AND MONTH(m.date) = :month
     """)
     Optional<Movement> findByDescriptionAndAccountAndMonth(
             @Param("description") String description,
-            @Param("accountId") Long accountId,
+            @Param("workspaceId") Long workspaceId,
             @Param("year") int year,
             @Param("month") int month
     );
@@ -150,14 +150,14 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             api.m2.movements.enums.MovementType.DEBITO,
             api.m2.movements.enums.MovementType.CREDITO
           )
-      AND (:#{#accountIds == null || #accountIds.isEmpty()} = true
-           OR m.account.id IN :accountIds)
+      AND (:#{#workspaceIds == null || #workspaceIds.isEmpty()} = true
+           OR m.workspace.id IN :workspaceIds)
     GROUP BY MONTH(m.date), c.symbol
     ORDER BY MONTH(m.date)
     """)
     List<MonthlyEvolutionProjection> findMonthlyEvolution(
             @Param("year") Integer year,
-            @Param("accountIds") List<Long> accountIds
+            @Param("workspaceIds") List<Long> workspaceIds
     );
 
     @Query(value = """

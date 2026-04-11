@@ -2,12 +2,12 @@ package api.m2.movements.services.movements;
 
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.LastIngresoRecord;
-import api.m2.movements.records.accounts.GroupRecord;
+import api.m2.movements.records.workspaces.WorkspaceRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.currencies.ExchangeRateService;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,16 +25,16 @@ public class MovementGetService {
     private final UserService userService;
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final ExchangeRateService exchangeRateService;
 
     @Transactional
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
-        var accounts = accountQueryService.findAllAccountsOfLogInUser()
+        var workspaces = workspaceQueryService.findAllWorkspacesOfLogInUser()
                 .stream()
-                .map(GroupRecord::id)
+                .map(WorkspaceRecord::id)
                 .toList();
-        return movementRepository.getExpenseBy(accounts, filter, page)
+        return movementRepository.getExpenseBy(workspaces, filter, page)
                 .map(movementMapper::toRecord);
     }
 

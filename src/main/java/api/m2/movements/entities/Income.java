@@ -47,8 +47,8 @@ public class Income {
     private Bank bank;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

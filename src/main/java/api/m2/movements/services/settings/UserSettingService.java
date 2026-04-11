@@ -69,7 +69,12 @@ public class UserSettingService {
     }
 
     public Optional<Long> getDefaultAccountId(User user) {
-        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_ACCOUNT)
+        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE)
+                .map(UserSetting::getSettingValue);
+    }
+
+    public Optional<Long> getDefaultWorkspaceId(User user) {
+        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE)
                 .map(UserSetting::getSettingValue);
     }
 }

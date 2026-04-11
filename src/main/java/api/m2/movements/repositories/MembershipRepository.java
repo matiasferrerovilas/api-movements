@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.AccountMember;
+import api.m2.movements.entities.WorkspaceMember;
 import api.m2.movements.projections.MembershipSummaryProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,32 +11,32 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MembershipRepository extends JpaRepository<AccountMember, Long> {
+public interface MembershipRepository extends JpaRepository<WorkspaceMember, Long> {
 
     @Query("""
         SELECT m
-        FROM Account a
+        FROM Workspace a
         JOIN a.members m
-        WHERE a.id = :groupId
+        WHERE a.id = :workspaceId
           AND m.user.id = :userId
     """)
-    Optional<AccountMember> findMember(
-            @Param("groupId") Long groupId,
+    Optional<WorkspaceMember> findMember(
+            @Param("workspaceId") Long workspaceId,
             @Param("userId") Long userId
     );
 
     @Query("""
     SELECT
-        m.account.id as accountId,
+        m.workspace.id as workspaceId,
         m.id as membershipId,
-        m.account.name as groupDescription,
+        m.workspace.name as workspaceName,
         m.role as role
-    FROM AccountMember m
+    FROM WorkspaceMember m
     WHERE m.user.id = :userId
-      AND m.account.isActive = true
+      AND m.workspace.isActive = true
 """)
     List<MembershipSummaryProjection> findAllByUserId(Long userId);
 
-    @Query("SELECT COUNT(m) FROM AccountMember m WHERE m.account.id = :accountId")
-    long countByAccountId(@Param("accountId") Long accountId);
+    @Query("SELECT COUNT(m) FROM WorkspaceMember m WHERE m.workspace.id = :workspaceId")
+    long countByWorkspaceId(@Param("workspaceId") Long workspaceId);
 }

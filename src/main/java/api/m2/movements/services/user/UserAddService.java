@@ -4,10 +4,10 @@ import api.m2.movements.entities.User;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.PermissionDeniedException;
-import api.m2.movements.records.groups.AddGroupRecord;
-import api.m2.movements.repositories.AccountRepository;
+import api.m2.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.repositories.UserRepository;
-import api.m2.movements.services.groups.GroupAddService;
+import api.m2.movements.repositories.WorkspaceRepository;
+import api.m2.movements.services.workspaces.WorkspaceAddService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.services.settings.UserSettingService;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +23,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserAddService {
 
-    private final GroupAddService groupAddService;
+    private final WorkspaceAddService workspaceAddService;
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
+    private final WorkspaceRepository workspaceRepository;
     private final UserSettingService userSettingService;
 
     public User createLogInUser() {
@@ -40,7 +40,7 @@ public class UserAddService {
                 .build();
 
         user = userRepository.save(user);
-        groupAddService.createAccount(new AddGroupRecord("DEFAULT"));
+        workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"));
 
         this.createDefaultSettings(user);
 
@@ -56,8 +56,8 @@ public class UserAddService {
     }
 
     private void createDefaultSettings(User user) {
-        accountRepository.findAccountByNameAndOwnerId("DEFAULT", user.getId())
-                .ifPresent(account ->
-                        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_ACCOUNT, account.getId()));
+        workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", user.getId())
+                .ifPresent(workspace ->
+                        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, workspace.getId()));
     }
 }

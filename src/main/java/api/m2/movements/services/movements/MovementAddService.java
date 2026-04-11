@@ -8,7 +8,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.repositories.MovementRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -30,12 +30,12 @@ public class MovementAddService {
     private final MovementFactory movementFactory;
     private final MovementPublishServiceWebSocket movementPublishService;
     private final UserService userService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
         var user = userService.getAuthenticatedUser();
-        accountQueryService.verifyUserIsMemberOfAccount(dto.groupId(), user.getId());
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(dto.workspaceId(), user.getId());
 
         var movement = movementFactory.create(dto);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
@@ -86,9 +86,9 @@ public class MovementAddService {
         var movement = movementRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Movimiento con Id" + id + " no existe"));
 
-        Long accountId = movement.getAccount().getId();
+        Long workspaceId = movement.getWorkspace().getId();
         movementRepository.deleteById(id);
-        movementPublishService.publishDeleteOfMovement(new MovementDeletedEvent(id, accountId));
+        movementPublishService.publishDeleteOfMovement(new MovementDeletedEvent(id, workspaceId));
 
         log.info("Movimiento eliminado correctamente: id={}", id);
     }

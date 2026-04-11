@@ -5,7 +5,7 @@ import api.m2.movements.entities.Currency
 import api.m2.movements.entities.User
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.enums.UserType
-import api.m2.movements.records.groups.AddGroupRecord
+import api.m2.movements.records.workspaces.AddWorkspaceRecord
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.onboarding.BankToAdd
 import api.m2.movements.records.onboarding.OnBoardingAmount
@@ -13,7 +13,7 @@ import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.services.banks.BankService
 import api.m2.movements.services.category.UserCategoryService
 import api.m2.movements.services.currencies.CurrencyAddService
-import api.m2.movements.services.groups.GroupAddService
+import api.m2.movements.services.workspaces.WorkspaceAddService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.onboarding.OnboardingService
 import api.m2.movements.services.settings.UserSettingService
@@ -24,7 +24,7 @@ class OnboardingServiceTest extends Specification {
 
     UserAddService userAddService = Mock(UserAddService)
     IncomeAddService incomeAddService = Mock(IncomeAddService)
-    GroupAddService groupAddService = Mock(GroupAddService)
+    WorkspaceAddService workspaceAddService = Mock(WorkspaceAddService)
     BankService bankService = Mock(BankService)
     UserCategoryService userCategoryService = Mock(UserCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
@@ -33,7 +33,7 @@ class OnboardingServiceTest extends Specification {
     OnboardingService service
 
     def setup() {
-        service = new OnboardingService(userAddService, incomeAddService, groupAddService,
+        service = new OnboardingService(userAddService, incomeAddService, workspaceAddService,
                 bankService, userCategoryService, userSettingService, currencyAddService)
     }
 
@@ -57,8 +57,8 @@ class OnboardingServiceTest extends Specification {
         service.finish(form)
 
         then:
-        1 * groupAddService.createAccount(new AddGroupRecord("Viajes"))
-        1 * groupAddService.createAccount(new AddGroupRecord("Casa"))
+        1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Viajes"))
+        1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Casa"))
         1 * bankService.addBankToUser("GALICIA", user) >> galiciaBank
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
         1 * bankService.addBankToUser("SANTANDER", user) >> santanderBank
@@ -71,7 +71,7 @@ class OnboardingServiceTest extends Specification {
             assert income.bank() == "GALICIA"
             assert income.currency().symbol() == "ARS"
             assert income.amount() == new BigDecimal("1500.00")
-            assert income.group() == "DEFAULT"
+            assert income.workspace() == "DEFAULT"
         }
         1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 42L)
     }
@@ -263,9 +263,9 @@ class OnboardingServiceTest extends Specification {
         service.finish(form)
 
         then:
-        1 * groupAddService.createAccount(new AddGroupRecord("Alpha"))
-        1 * groupAddService.createAccount(new AddGroupRecord("Beta"))
-        1 * groupAddService.createAccount(new AddGroupRecord("Gamma"))
+        1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Alpha"))
+        1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Beta"))
+        1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Gamma"))
     }
 
     def "finish - should not call addBankToUser or set DEFAULT_BANK when banksToAdd is empty"() {

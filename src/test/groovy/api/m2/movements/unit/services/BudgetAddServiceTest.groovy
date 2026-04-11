@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Account
 import api.m2.movements.entities.Budget
 import api.m2.movements.entities.Category
 import api.m2.movements.entities.Currency
+import api.m2.movements.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.BudgetMapper
 import api.m2.movements.records.BudgetToAdd
@@ -12,7 +12,7 @@ import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.budgets.BudgetAddService
-import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class BudgetAddServiceTest extends Specification {
@@ -21,7 +21,7 @@ class BudgetAddServiceTest extends Specification {
     BudgetMapper budgetMapper = Mock()
     CategoryRepository categoryRepository = Mock()
     CurrencyRepository currencyRepository = Mock()
-    AccountQueryService accountQueryService = Mock()
+    WorkspaceQueryService workspaceQueryService = Mock()
 
     BudgetAddService service
 
@@ -31,33 +31,33 @@ class BudgetAddServiceTest extends Specification {
                 budgetMapper,
                 categoryRepository,
                 currencyRepository,
-                accountQueryService
+                workspaceQueryService
         )
     }
 
     // --- save ---
 
-    def "save - should create budget for the resolved account"() {
+    def "save - should create budget for the resolved workspace"() {
         given:
         def dto = new BudgetToAdd(1L, "Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
-        def account = Stub(Account) { getId() >> 1L }
+        def workspace = Stub(Workspace) { getId() >> 1L }
         def budget = Mock(Budget)
 
-        accountQueryService.findAccountById(1L) >> account
+        workspaceQueryService.findWorkspaceById(1L) >> workspace
         budgetMapper.toEntity(dto, categoryRepository, currencyRepository) >> budget
 
         when:
         service.save(dto)
 
         then:
-        1 * budget.setAccount(account)
+        1 * budget.setWorkspace(workspace)
         1 * budgetRepository.save(budget)
     }
 
-    def "save - should delegate account resolution to AccountQueryService"() {
+    def "save - should delegate workspace resolution to WorkspaceQueryService"() {
         given:
         def dto = new BudgetToAdd(99L, "Hogar", "USD", new BigDecimal("200.00"), 2026, 4)
-        def account = Stub(Account) { getId() >> 99L }
+        def workspace = Stub(Workspace) { getId() >> 99L }
         def budget = Stub(Budget)
 
         budgetMapper.toEntity(dto, categoryRepository, currencyRepository) >> budget
@@ -66,7 +66,7 @@ class BudgetAddServiceTest extends Specification {
         service.save(dto)
 
         then:
-        1 * accountQueryService.findAccountById(99L) >> account
+        1 * workspaceQueryService.findWorkspaceById(99L) >> workspace
     }
 
     // --- update ---
@@ -74,9 +74,9 @@ class BudgetAddServiceTest extends Specification {
     def "update - should update amount when budget exists"() {
         given:
         def currency = Stub(Currency) { getId() >> 1L; getSymbol() >> "ARS" }
-        def account = Stub(Account) { getId() >> 1L }
+        def workspace = Stub(Workspace) { getId() >> 1L }
         def category = Stub(Category) { getId() >> 1L; getDescription() >> "Hogar" }
-        def budget = new Budget(id: 10L, account: account, currency: currency,
+        def budget = new Budget(id: 10L, workspace: workspace, currency: currency,
                 category: category, amount: new BigDecimal("1000.00"))
         def dto = new BudgetToUpdate(new BigDecimal("1500.00"))
 

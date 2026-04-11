@@ -17,5 +17,5 @@ public record MovementToAdd(
         Integer cuotaActual,
         Integer cuotasTotales,
         String bank,
-        Long groupId
+        Long workspaceId
 ) { }

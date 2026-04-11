@@ -1,19 +1,19 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Account
-import api.m2.movements.entities.AccountMember
 import api.m2.movements.entities.Category
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Movement
 import api.m2.movements.entities.User
-import api.m2.movements.enums.AccountRole
+import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.WorkspaceMember
 import api.m2.movements.enums.MovementType
-import api.m2.movements.repositories.AccountRepository
+import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.MembershipRepository
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.UserRepository
+import api.m2.movements.repositories.WorkspaceRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
@@ -59,7 +59,7 @@ class MovementRepositoryIntegrationTest extends Specification {
     UserRepository userRepository
 
     @Autowired
-    AccountRepository accountRepository
+    WorkspaceRepository workspaceRepository
 
     @Autowired
     MembershipRepository membershipRepository
@@ -71,7 +71,7 @@ class MovementRepositoryIntegrationTest extends Specification {
     CurrencyRepository currencyRepository
 
     User user
-    Account account
+    Workspace workspace
     Currency ars
     Category category
 
@@ -81,15 +81,15 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .isFirstLogin(false)
                 .build())
 
-        account = accountRepository.save(Account.builder()
-                .name("Test Account")
+        workspace = workspaceRepository.save(Workspace.builder()
+                .name("Test Workspace")
                 .owner(user)
                 .build())
 
-        membershipRepository.save(AccountMember.builder()
+        membershipRepository.save(WorkspaceMember.builder()
                 .user(user)
-                .account(account)
-                .role(AccountRole.OWNER)
+                .workspace(workspace)
+                .role(WorkspaceRole.OWNER)
                 .build())
 
         ars = currencyRepository.findBySymbol("ARS")
@@ -101,7 +101,7 @@ class MovementRepositoryIntegrationTest extends Specification {
     def "getBalanceByFilters - should return sum of movements only for the given user"() {
         given:
         def otherUser = userRepository.save(User.builder().email("other@test.com").isFirstLogin(false).build())
-        def otherAccount = accountRepository.save(Account.builder().name("Other Account").owner(otherUser).build())
+        def otherWorkspace = workspaceRepository.save(Workspace.builder().name("Other Workspace").owner(otherUser).build())
 
         def startDate = LocalDate.now().minusDays(30)
         def endDate = LocalDate.now().plusDays(1)
@@ -112,7 +112,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .type(MovementType.DEBITO)
                 .date(LocalDate.now())
                 .owner(user)
-                .account(account)
+                .workspace(workspace)
                 .currency(ars)
                 .category(category)
                 .cuotaActual(0)
@@ -125,7 +125,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .type(MovementType.DEBITO)
                 .date(LocalDate.now())
                 .owner(otherUser)
-                .account(otherAccount)
+                .workspace(otherWorkspace)
                 .currency(ars)
                 .category(category)
                 .cuotaActual(0)
@@ -138,7 +138,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 endDate,
                 "test@test.com",
                 [MovementType.DEBITO.name()],
-                [account.id as Integer],
+                [workspace.id as Integer],
                 [ars.id as Integer]
         )
 
@@ -157,7 +157,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 endDate,
                 "test@test.com",
                 [MovementType.DEBITO.name()],
-                [account.id as Integer],
+                [workspace.id as Integer],
                 [ars.id as Integer]
         )
 
@@ -168,7 +168,7 @@ class MovementRepositoryIntegrationTest extends Specification {
     def "getBalanceWithCategoryByYear - should return category totals for user only, excluding other users"() {
         given:
         def otherUser = userRepository.save(User.builder().email("other2@test.com").isFirstLogin(false).build())
-        def otherAccount = accountRepository.save(Account.builder().name("Other2 Account").owner(otherUser).build())
+        def otherWorkspace = workspaceRepository.save(Workspace.builder().name("Other2 Workspace").owner(otherUser).build())
 
         def now = LocalDate.now()
 
@@ -178,7 +178,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .type(MovementType.DEBITO)
                 .date(now)
                 .owner(user)
-                .account(account)
+                .workspace(workspace)
                 .currency(ars)
                 .category(category)
                 .cuotaActual(0)
@@ -191,7 +191,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .type(MovementType.DEBITO)
                 .date(now)
                 .owner(otherUser)
-                .account(otherAccount)
+                .workspace(otherWorkspace)
                 .currency(ars)
                 .category(category)
                 .cuotaActual(0)
@@ -202,7 +202,7 @@ class MovementRepositoryIntegrationTest extends Specification {
         def result = movementRepository.getBalanceWithCategoryByYear(
                 now.year,
                 now.monthValue,
-                [account.id as Integer],
+                [workspace.id as Integer],
                 ["ARS"],
                 "test@test.com"
         )
@@ -214,7 +214,7 @@ class MovementRepositoryIntegrationTest extends Specification {
         row.currencySymbol == "ARS"
     }
 
-    def "getBalanceByYearAndGroup - should return totals grouped by account for user"() {
+    def "getBalanceByYearAndGroup - should return totals grouped by workspace for user"() {
         given:
         def now = LocalDate.now()
 
@@ -224,7 +224,7 @@ class MovementRepositoryIntegrationTest extends Specification {
                 .type(MovementType.DEBITO)
                 .date(now)
                 .owner(user)
-                .account(account)
+                .workspace(workspace)
                 .currency(ars)
                 .category(category)
                 .cuotaActual(0)
@@ -241,7 +241,7 @@ class MovementRepositoryIntegrationTest extends Specification {
         then:
         result.size() == 1
         def row = result.first()
-        row.groupDescription == "Test Account"
+        row.workspaceDescription == "Test Workspace"
         row.total == new BigDecimal("400.00")
         row.currencySymbol == "ARS"
     }

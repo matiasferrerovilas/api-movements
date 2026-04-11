@@ -8,7 +8,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.SubscriptionRepository;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket;
@@ -34,17 +34,17 @@ public class UtilityAddService {
     private final MovementAddService movementAddService;
     private final CategoryAddService categoryAddService;
     private final UserService userService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final ServicePublishServiceWebSocket servicePublishService;
     private final UserSettingService userSettingService;
 
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
         var user = userService.getAuthenticatedUser();
-        var account = accountQueryService.findAccountById(subscriptionToAdd.groupId());
+        var account = workspaceQueryService.findWorkspaceById(subscriptionToAdd.workspaceId());
         var service = serviceMapper.toEntity(subscriptionToAdd, currencyRepository);
         service.setOwner(user);
-        service.setAccount(account);
+        service.setWorkspace(account);
 
         if (service.getIsPaid()) {
             this.addMovementService(service);
@@ -72,7 +72,7 @@ public class UtilityAddService {
                 0,
                 0,
                 defaultBank,
-                serviceToAdd.getAccount().getId()));
+                serviceToAdd.getWorkspace().getId()));
     }
 
     private static final String SERVICIOS = "SERVICIOS";

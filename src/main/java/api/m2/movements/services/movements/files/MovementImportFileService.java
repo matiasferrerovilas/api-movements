@@ -3,7 +3,7 @@ package api.m2.movements.services.movements.files;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.helpers.PdfReaderService;
 import api.m2.movements.records.movements.MovementFileToAdd;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.Set;
 public class MovementImportFileService {
     private final Set<ExpenseFileStrategy> expenseFileStrategies;
     private final PdfReaderService pdfReaderService;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
 
     /*
     todo: Terminar es tarea 21, ver ventajas desventajas de implementar rabbit con IA
@@ -48,7 +48,7 @@ public class MovementImportFileService {
         creditCardStatements.forEach(movement -> {
         });
     }*/
-    public void importMovementsByFile(MultipartFile file, String bank, Long accountId) {
+    public void importMovementsByFile(MultipartFile file, String bank, Long workspaceId) {
         Path pdfFile = null;
         try {
             pdfFile = Files.createTempFile("expense-", ".pdf");
@@ -59,8 +59,8 @@ public class MovementImportFileService {
                     .filter(strategy -> strategy.match(bank))
                     .toList();
 
-            var account = accountQueryService.findAccountById(accountId);
-            var movementFile = new MovementFileToAdd(text, account.getId());
+            var workspace = workspaceQueryService.findWorkspaceById(workspaceId);
+            var movementFile = new MovementFileToAdd(text, workspace.getId());
             switch (list.size()) {
                 case 0 -> throw new IllegalArgumentException("Invalid bank method");
                 case 1 -> list.getFirst().process(movementFile);

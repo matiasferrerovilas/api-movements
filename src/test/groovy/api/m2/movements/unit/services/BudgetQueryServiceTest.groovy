@@ -1,32 +1,32 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Account
 import api.m2.movements.entities.Budget
 import api.m2.movements.entities.Category
 import api.m2.movements.entities.Currency
+import api.m2.movements.entities.Workspace
 import api.m2.movements.mappers.BudgetMapper
 import api.m2.movements.records.budgets.BudgetRecord
 import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.services.budgets.BudgetQueryService
-import api.m2.movements.services.groups.AccountQueryService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class BudgetQueryServiceTest extends Specification {
 
     BudgetRepository budgetRepository = Mock()
     BudgetMapper budgetMapper = Mock()
-    AccountQueryService accountQueryService = Mock()
+    WorkspaceQueryService workspaceQueryService = Mock()
 
     BudgetQueryService service
 
     def setup() {
-        service = new BudgetQueryService(budgetRepository, budgetMapper, accountQueryService)
+        service = new BudgetQueryService(budgetRepository, budgetMapper, workspaceQueryService)
     }
 
     def buildBudget(String categoryName, String currencySymbol, BigDecimal amount) {
-        def account = Stub(Account) { getId() >> 1L }
+        def workspace = Stub(Workspace) { getId() >> 1L }
         def category = categoryName == null ? null : Stub(Category) {
             getId() >> 1L
             getDescription() >> categoryName
@@ -35,7 +35,7 @@ class BudgetQueryServiceTest extends Specification {
         def currency = Stub(Currency) { getId() >> 1L; getSymbol() >> currencySymbol }
         return Stub(Budget) {
             getId() >> 1L
-            getAccount() >> account
+            getWorkspace() >> workspace
             getCategory() >> category
             getCurrency() >> currency
             getAmount() >> amount
@@ -55,7 +55,7 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("5000.00"), null, null,
                 new BigDecimal("2000.00"), new BigDecimal("40.00"))
 
-        accountQueryService.findAccountById(1L) >> Stub(Account)
+        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 4) >> new BigDecimal("2000.00")
         budgetMapper.toRecordWithSpent(budget, new BigDecimal("2000.00")) >> expectedRecord
@@ -71,7 +71,7 @@ class BudgetQueryServiceTest extends Specification {
 
     def "getByAccount - should return empty list when no budgets found"() {
         given:
-        accountQueryService.findAccountById(1L) >> Stub(Account)
+        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> []
 
         when:
@@ -90,7 +90,7 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("3000.00"), null, null,
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
-        accountQueryService.findAccountById(1L) >> Stub(Account)
+        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
 
@@ -111,7 +111,7 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("500.00"), null, null,
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
-        accountQueryService.findAccountById(1L) >> Stub(Account)
+        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
         budgetRepository.findByAccountAndPeriod(1L, "USD", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Hogar", "USD", 2026, 4) >> null
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord

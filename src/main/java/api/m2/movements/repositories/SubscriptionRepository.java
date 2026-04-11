@@ -16,7 +16,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
       select distinct s
          from Subscription s
         join fetch s.currency c
-        join fetch s.account a
+        join fetch s.workspace a
         left join fetch s.owner
         join a.members m
         where m.user.id = :userId

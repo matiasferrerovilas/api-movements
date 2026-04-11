@@ -7,7 +7,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.services.currencies.ExchangeRateResolver;
-import api.m2.movements.services.groups.AccountQueryService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.category.CategoryResolver;
 import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.user.UserService;
@@ -23,7 +23,7 @@ public class MovementFactory {
     private final CurrencyResolver currencyResolver;
     private final UserService userService;
     private final MovementMapper movementMapper;
-    private final AccountQueryService accountQueryService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final BankRepository bankRepository;
     private final ExchangeRateResolver exchangeRateResolver;
 
@@ -36,8 +36,8 @@ public class MovementFactory {
         movement.setCurrency(currency);
 
         movement.setOwner(userService.getAuthenticatedUser());
-        var account = accountQueryService.findAccountById(dto.groupId());
-        movement.setAccount(account);
+        var account = workspaceQueryService.findWorkspaceById(dto.workspaceId());
+        movement.setWorkspace(account);
 
         if (dto.bank() != null) {
             var bank = bankRepository.findByDescription(dto.bank())

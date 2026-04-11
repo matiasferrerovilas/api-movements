@@ -28,9 +28,9 @@ public record IncomeToAdd(
         )
         BigDecimal amount,
         @Schema(
-                description = "Grupo al que pertenece el ingreso",
+                description = "Workspace al que pertenece el ingreso",
                 example = "DEFAULT",
                 allowableValues = {"DEFAULT", "FAMILY"},
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        String group) { }
+        String workspace) { }

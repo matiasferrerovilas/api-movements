@@ -22,12 +22,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table
+@Table(name = "workspace_invitation")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccountInvitation {
+public class WorkspaceInvitation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,8 +37,8 @@ public class AccountInvitation {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "invited_by", nullable = false)

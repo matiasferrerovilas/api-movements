@@ -8,6 +8,6 @@ import java.time.LocalDate;
 public record SubscriptionToAdd(String description, BigDecimal amount,
                            CurrencyRecord currency, LocalDate lastPayment,
                            Boolean isPaid,
-                           Long groupId) {
+                           Long workspaceId) {
 }
 

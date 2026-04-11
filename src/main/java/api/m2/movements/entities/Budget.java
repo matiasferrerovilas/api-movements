@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"account_id", "category_id", "currency_id"})
+        @UniqueConstraint(columnNames = {"workspace_id", "category_id", "currency_id"})
 })
 @Data
 @Builder
@@ -31,8 +31,8 @@ public class Budget {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
