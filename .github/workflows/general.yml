@@ -98,8 +98,11 @@ jobs:
         run: |
           mkdir -p extracted
           java -Djarmode=layertools -jar build/libs/api-movements-*.jar extract --destination extracted
-          # snapshot-dependencies only exists when SNAPSHOT deps are present; ensure the dir always exists
+          # snapshot-dependencies only exists when SNAPSHOT deps are present; ensure the dir always exists.
+          # upload-artifact silently skips empty dirs, so we add a placeholder to guarantee it is
+          # included in the artifact and present in the deploy job when Docker runs the COPY step.
           mkdir -p extracted/snapshot-dependencies
+          touch extracted/snapshot-dependencies/.gitkeep
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
