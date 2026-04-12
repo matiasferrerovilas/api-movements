@@ -8,6 +8,7 @@ import api.m2.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
+import api.m2.movements.repositories.WorkspaceRepository;
 import api.m2.movements.services.banks.BankService;
 import api.m2.movements.services.category.UserCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
@@ -24,6 +25,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OnboardingService {
+    private static final String DEFAULT_WORKSPACE_NAME = "DEFAULT";
+    private static final String DEFAULT_CURRENCY = "USD";
+
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
     private final WorkspaceAddService workspaceAddService;
@@ -31,16 +35,33 @@ public class OnboardingService {
     private final UserCategoryService userCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
+    private final WorkspaceRepository workspaceRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser();
-        onBoardingForm.accountsToAdd().forEach(account -> workspaceAddService.createWorkspace(new AddWorkspaceRecord(account)));
+        this.createWorkspaces(onBoardingForm, user);
         this.addBanks(onBoardingForm, user);
         this.addDefaultCurrency(user);
         this.addCategories(onBoardingForm, user);
         this.addInitialIncome(onBoardingForm);
         userAddService.changeUserFirstLoginStatus(UserType.valueOf(onBoardingForm.userType()), user.getId());
+    }
+
+    private void createWorkspaces(OnBoardingForm onBoardingForm, User user) {
+        // 1. Siempre crear DEFAULT primero
+        workspaceAddService.createWorkspace(new AddWorkspaceRecord(DEFAULT_WORKSPACE_NAME));
+
+        // 2. Crear los workspaces adicionales (excluyendo DEFAULT si vino en la lista)
+        onBoardingForm.accountsToAdd().stream()
+                .filter(account -> !DEFAULT_WORKSPACE_NAME.equals(account))
+                .forEach(account ->
+                        workspaceAddService.createWorkspace(new AddWorkspaceRecord(account)));
+
+        // 3. Setear DEFAULT como workspace por defecto
+        workspaceRepository.findWorkspaceByNameAndOwnerId(DEFAULT_WORKSPACE_NAME, user.getId())
+                .ifPresent(workspace ->
+                        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, workspace.getId()));
     }
 
     private void addBanks(OnBoardingForm onBoardingForm, User user) {
@@ -76,6 +97,4 @@ public class OnboardingService {
                     onBoardingForm.onBoardingAmount().accountToAdd()));
         }
     }
-
-    private static final String DEFAULT_CURRENCY = "USD";
 }

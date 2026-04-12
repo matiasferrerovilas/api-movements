@@ -60,6 +60,7 @@ public class IncomeAddService {
         return incomeMapper.toRecord(incomeRepository.findAllByUserOrGroupsIn(user.getId()));
     }
 
+    @Transactional
     @RequiresMembership(domain = MembershipDomain.INCOME)
     public void deleteIncome(Long id) {
         log.debug("Eliminando Income {}", id);

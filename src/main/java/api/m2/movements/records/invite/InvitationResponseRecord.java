@@ -1,4 +1,9 @@
 package api.m2.movements.records.invite;
 
-public record InvitationResponseRecord(Long id, boolean status) {
+import jakarta.validation.constraints.NotNull;
+
+public record InvitationResponseRecord(
+        @NotNull(message = "El id de la invitación es requerido")
+        Long id,
+        boolean status) {
 }

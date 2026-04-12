@@ -12,7 +12,7 @@ import java.util.List;
 public interface WorkspaceInvitationMapper {
 
     @Mapping(target = "workspaceName", source = "workspace.name")
-    @Mapping(target = "invitedBy", source = "workspace.owner.email")
+    @Mapping(target = "invitedBy", source = "invitedBy.email")
     @Mapping(target = "invitedUserId", source = "user.id")
     InvitationToWorkspaceRecord toRecord(WorkspaceInvitation invitation);
 

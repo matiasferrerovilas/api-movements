@@ -3,6 +3,7 @@ package api.m2.movements.mappers;
 import api.m2.movements.entities.Budget;
 import api.m2.movements.entities.Category;
 import api.m2.movements.entities.Currency;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.BudgetToAdd;
 import api.m2.movements.records.budgets.BudgetRecord;
 import api.m2.movements.repositories.CategoryRepository;
@@ -36,7 +37,7 @@ public interface BudgetMapper {
             return null;
         }
         return categoryRepository.findByDescription(categoryName)
-                .orElseThrow(() -> new RuntimeException("Category not found: " + categoryName));
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada: " + categoryName));
     }
 
     @Named("mapCurrency")
@@ -45,7 +46,7 @@ public interface BudgetMapper {
             return null;
         }
         return currencyRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new RuntimeException("Currency not found: " + symbol));
+                .orElseThrow(() -> new EntityNotFoundException("Moneda no encontrada: " + symbol));
     }
 
     default BudgetRecord toRecordWithSpent(Budget budget, BigDecimal spent) {

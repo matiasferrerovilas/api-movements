@@ -6,6 +6,7 @@ import api.m2.movements.exceptions.BusinessException;
 import jakarta.persistence.EntityExistsException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -182,6 +183,21 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+
+        var errorResponseDTO = ErrorResponseDTO.builder()
+                .title("Conflict")
+                .statusCode(String.valueOf(HttpStatus.CONFLICT.value()))
+                .detail("La operación viola restricciones de integridad de datos")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(errorResponseDTO);
     }

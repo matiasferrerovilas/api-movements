@@ -4,6 +4,7 @@ import api.m2.movements.entities.Workspace;
 import api.m2.movements.entities.WorkspaceMember;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.WorkspaceRole;
+import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.WorkspaceMapper;
 import api.m2.movements.records.workspaces.AddWorkspaceRecord;
@@ -34,8 +35,7 @@ public class WorkspaceAddService {
     @Transactional
     public void createWorkspace(AddWorkspaceRecord addWorkspaceRecord) {
         if (StringUtils.isAllBlank(addWorkspaceRecord.description())) {
-            log.error("Description for workspace is blank");
-            return;
+            throw new BusinessException("La descripción del workspace no puede estar vacía");
         }
         var owner = userService.getAuthenticatedUser();
 
@@ -46,7 +46,7 @@ public class WorkspaceAddService {
 
         var existingWorkspace = workspaceQueryService.verifyWorkspaceExist(workspace.getName(), workspace.getOwner().getId());
         if (existingWorkspace) {
-            return;
+            throw new BusinessException("Ya existe un workspace con ese nombre");
         }
         var membership = WorkspaceMember.builder()
                 .user(owner)

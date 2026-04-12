@@ -13,6 +13,7 @@ import api.m2.movements.services.invitations.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,7 +48,7 @@ public class WorkspaceController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createWorkspace(@RequestBody AddWorkspaceRecord body) {
+    public void createWorkspace(@Valid @RequestBody AddWorkspaceRecord body) {
         workspaceAddService.createWorkspace(body);
     }
 
@@ -93,7 +94,7 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.CREATED)
     public void createInvitation(
             @PathVariable Long id,
-            @RequestBody InviteToWorkspace request
+            @Valid @RequestBody InviteToWorkspace request
     ) {
         invitationService.inviteToAccount(id, request.emails());
     }
@@ -123,7 +124,7 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.OK)
     public void updateInvitationStatus(
             @PathVariable Long invitationId,
-            @RequestBody InvitationResponseRecord body
+            @Valid @RequestBody InvitationResponseRecord body
     ) {
         invitationService.acceptRejectInvitation(invitationId, body);
     }

@@ -8,6 +8,7 @@ import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord;
 import api.m2.movements.entities.User;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +23,15 @@ public class MonthlySummaryService {
     private final MovementRepository movementRepository;
     private final UserService userService;
     private final MonthlySummarySnapshotService snapshotService;
+    private final WorkspaceQueryService workspaceQueryService;
 
-    public MonthlySummaryResponse getSummary(Integer year, Integer month) {
+    /**
+     * Obtiene el resumen mensual de un workspace específico.
+     * Verifica que el usuario autenticado sea miembro del workspace.
+     */
+    public MonthlySummaryResponse getSummary(Long workspaceId, Integer year, Integer month) {
         User user = userService.getAuthenticatedUser();
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, user.getId());
         return snapshotService.find(user, year, month)
                 .orElseGet(() -> this.computeSummary(user.getEmail(), year, month));
     }

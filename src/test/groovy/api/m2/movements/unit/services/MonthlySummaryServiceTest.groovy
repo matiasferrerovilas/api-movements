@@ -7,6 +7,7 @@ import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
 import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -15,15 +16,19 @@ class MonthlySummaryServiceTest extends Specification {
     MovementRepository movementRepository = Mock()
     UserService userService = Mock()
     MonthlySummarySnapshotService snapshotService = Mock()
+    WorkspaceQueryService workspaceQueryService = Mock()
 
     MonthlySummaryService service
 
     def user = Stub(User) {
+        getId() >> 1L
         getEmail() >> "user@test.com"
     }
 
+    def workspaceId = 10L
+
     def setup() {
-        service = new MonthlySummaryService(movementRepository, userService, snapshotService)
+        service = new MonthlySummaryService(movementRepository, userService, snapshotService, workspaceQueryService)
         userService.getAuthenticatedUser() >> user
     }
 
@@ -45,7 +50,7 @@ class MonthlySummaryServiceTest extends Specification {
         snapshotService.find(user, 2025, 4) >> Optional.of(cached)
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.getSummary(workspaceId, 2025, 4)
 
         then:
         result == cached
@@ -58,10 +63,22 @@ class MonthlySummaryServiceTest extends Specification {
         snapshotService.find(user, 2025, 4) >> Optional.of(cached)
 
         when:
-        service.getSummary(2025, 4)
+        service.getSummary(workspaceId, 2025, 4)
 
         then:
         1 * userService.getAuthenticatedUser() >> user
+    }
+
+    def "getSummary - should verify user membership before returning data"() {
+        given:
+        def cached = new MonthlySummaryResponse(2025, 4, null, [])
+        snapshotService.find(user, 2025, 4) >> Optional.of(cached)
+
+        when:
+        service.getSummary(workspaceId, 2025, 4)
+
+        then:
+        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, 1L)
     }
 
     // ── cache-first: snapshot miss → calcula on-demand ────────────────────────
@@ -73,7 +90,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        def result = service.getSummary(2025, 4)
+        def result = service.getSummary(workspaceId, 2025, 4)
 
         then:
         result != null
@@ -272,7 +289,7 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
-        service.getSummary(2025, 4)
+        service.getSummary(workspaceId, 2025, 4)
 
         then:
         1 * userService.getAuthenticatedUser() >> user

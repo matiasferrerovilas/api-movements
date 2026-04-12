@@ -4,6 +4,7 @@ import api.m2.movements.entities.User
 import api.m2.movements.entities.Workspace
 import api.m2.movements.entities.WorkspaceMember
 import api.m2.movements.enums.WorkspaceRole
+import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.mappers.WorkspaceMapper
 import api.m2.movements.records.workspaces.AddWorkspaceRecord
@@ -65,7 +66,7 @@ class WorkspaceAddServiceTest extends Specification {
         )
     }
 
-    def "createWorkspace - should skip when description is blank"() {
+    def "createWorkspace - should throw BusinessException when description is blank"() {
         given:
         def record = new AddWorkspaceRecord("   ")
 
@@ -73,11 +74,12 @@ class WorkspaceAddServiceTest extends Specification {
         service.createWorkspace(record)
 
         then:
+        thrown(BusinessException)
         0 * workspaceRepository.save(_ as Workspace)
         0 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(_ as WorkspaceDetail, _ as String)
     }
 
-    def "createWorkspace - should skip when workspace already exists"() {
+    def "createWorkspace - should throw BusinessException when workspace already exists"() {
         given:
         def record = new AddWorkspaceRecord("Hogar")
         def owner = User.builder().id(2L).email("user@test.com").build()
@@ -89,6 +91,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.createWorkspace(record)
 
         then:
+        thrown(BusinessException)
         0 * workspaceRepository.save(_ as Workspace)
         0 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(_ as WorkspaceDetail, _ as String)
     }

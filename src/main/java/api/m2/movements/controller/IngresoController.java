@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,7 +58,7 @@ public class IngresoController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void loadIncome(@RequestBody IncomeToAdd incomeToAdds) {
+    public void loadIncome(@Valid @RequestBody IncomeToAdd incomeToAdds) {
         incomeAddService.loadIncome(incomeToAdds);
     }
 

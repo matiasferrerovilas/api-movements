@@ -9,13 +9,17 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -24,14 +28,22 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "movements")
-@Data
+@Table(name = "movements", indexes = {
+        @Index(name = "idx_movement_date", columnList = "date"),
+        @Index(name = "idx_movement_workspace_date", columnList = "workspace_id, date"),
+        @Index(name = "idx_movement_user_date", columnList = "user_id, date")
+})
+@Getter
+@Setter
+@ToString(exclude = {"category", "currency", "owner", "workspace", "bank"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Movement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false, precision = 15, scale = 2)
@@ -62,9 +74,9 @@ public class Movement {
     @JoinColumn(name = "bank_id")
     private Bank bank;
 
-    @Column(length = 30)
+    @Column
     private Integer cuotaActual;
-    @Column(length = 30)
+    @Column
     private Integer cuotasTotales;
 
     @Enumerated(EnumType.STRING)
