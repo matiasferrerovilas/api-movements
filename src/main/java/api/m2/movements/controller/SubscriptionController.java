@@ -3,8 +3,8 @@ package api.m2.movements.controller;
 import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
-import api.m2.movements.services.subscriptions.UtilitiesService;
-import api.m2.movements.services.subscriptions.UtilityAddService;
+import api.m2.movements.services.subscriptions.SubscriptionAddService;
+import api.m2.movements.services.subscriptions.SubscriptionQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -34,8 +34,8 @@ import java.util.List;
 @RequestMapping("/v1/subscriptions")
 @Tag(name = "Subscriptions", description = "API para la gestión de suscripciones personales")
 public class SubscriptionController {
-    private final UtilitiesService utilitiesService;
-    private final UtilityAddService utilityAddService;
+    private final SubscriptionQueryService subscriptionQueryService;
+    private final SubscriptionAddService subscriptionAddService;
 
     @Operation(
             summary = "Obtener servicios",
@@ -57,7 +57,7 @@ public class SubscriptionController {
             @RequestParam(required = false) List<String> currencySymbol,
             @Parameter(description = "Fecha de ultimo pago del servicio")
             @RequestParam(required = false) LocalDate lastPayment) {
-        return utilitiesService.getServiceBy(currencySymbol, lastPayment);
+        return subscriptionQueryService.getSubscriptionsBy(currencySymbol, lastPayment);
     }
 
     @Operation(
@@ -77,7 +77,7 @@ public class SubscriptionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void saveService(@Valid @RequestBody SubscriptionToAdd subscriptionToAdd) {
-        utilityAddService.save(subscriptionToAdd);
+        subscriptionAddService.save(subscriptionToAdd);
     }
 
     @Operation(
@@ -94,7 +94,7 @@ public class SubscriptionController {
     @PatchMapping("/{id}/payment")
     @ResponseStatus(HttpStatus.OK)
     public void payService(@PathVariable Long id) {
-        utilitiesService.payServiceById(id);
+        subscriptionAddService.paySubscriptionById(id);
     }
 
     @Operation(
@@ -111,7 +111,7 @@ public class SubscriptionController {
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void updateService(@PathVariable Long id, @RequestBody UpdateSubscriptionRecord updateService) {
-        utilitiesService.updateService(id, updateService);
+        subscriptionAddService.updateSubscription(id, updateService);
     }
 
     @Operation(
@@ -127,6 +127,6 @@ public class SubscriptionController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteService(@PathVariable Long id) {
-        utilitiesService.deleteService(id);
+        subscriptionAddService.deleteSubscription(id);
     }
 }

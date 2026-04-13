@@ -2,7 +2,8 @@ package api.m2.movements.controller;
 
 import api.m2.movements.records.banks.AddBankRequest;
 import api.m2.movements.records.banks.BankRecord;
-import api.m2.movements.services.banks.BankService;
+import api.m2.movements.services.banks.BankAddService;
+import api.m2.movements.services.banks.BankQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,7 +30,8 @@ import java.util.List;
 @Tag(name = "Bancos", description = "API para la gestión de bancos del usuario")
 public class BankController {
 
-    private final BankService bankService;
+    private final BankQueryService bankQueryService;
+    private final BankAddService bankAddService;
 
     @Operation(
         summary = "Obtener bancos del usuario",
@@ -47,7 +49,7 @@ public class BankController {
     )
     @GetMapping
     public List<BankRecord> getAllBanks() {
-        return bankService.getAllBanks();
+        return bankQueryService.getAllBanks();
     }
 
     @Operation(
@@ -68,7 +70,7 @@ public class BankController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BankRecord addBank(@Valid @RequestBody AddBankRequest request) {
-        return bankService.addBankToUser(request.description());
+        return bankAddService.addBankToUser(request.description());
     }
 
     @Operation(
@@ -82,6 +84,6 @@ public class BankController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeBank(@PathVariable Long id) {
-        bankService.removeBankFromUser(id);
+        bankAddService.removeBankFromUser(id);
     }
 }

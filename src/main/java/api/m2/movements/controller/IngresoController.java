@@ -3,6 +3,7 @@ package api.m2.movements.controller;
 import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.services.income.IncomeAddService;
+import api.m2.movements.services.income.IncomeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,6 +34,7 @@ import java.util.List;
 public class IngresoController {
 
     private final IncomeAddService incomeAddService;
+    private final IncomeQueryService incomeQueryService;
 
     @Operation(
             summary = "Cargar ingresos",
@@ -85,7 +87,7 @@ public class IngresoController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<IncomeRecord> getAllIncomes() {
-        return incomeAddService.getAllIncomes();
+        return incomeQueryService.getAllIncomes();
     }
 
     @DeleteMapping("/{id}")

@@ -9,7 +9,7 @@ import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
 import api.m2.movements.repositories.WorkspaceRepository;
-import api.m2.movements.services.banks.BankService;
+import api.m2.movements.services.banks.BankAddService;
 import api.m2.movements.services.category.UserCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.workspaces.WorkspaceAddService;
@@ -31,7 +31,7 @@ public class OnboardingService {
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
     private final WorkspaceAddService workspaceAddService;
-    private final BankService bankService;
+    private final BankAddService bankAddService;
     private final UserCategoryService userCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
@@ -69,7 +69,7 @@ public class OnboardingService {
         boolean hasExplicitDefault = banks.stream().anyMatch(BankToAdd::isDefault);
         for (int i = 0; i < banks.size(); i++) {
             var bankToAdd = banks.get(i);
-            var bank = bankService.addBankToUser(bankToAdd.description(), user);
+            var bank = bankAddService.addBankToUser(bankToAdd.description(), user);
             boolean isDefault = hasExplicitDefault ? bankToAdd.isDefault() : i == 0;
             if (isDefault) {
                 userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, bank.getId());

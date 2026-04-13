@@ -12,7 +12,7 @@ import api.m2.movements.records.onboarding.BankToAdd
 import api.m2.movements.records.onboarding.OnBoardingAmount
 import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.repositories.WorkspaceRepository
-import api.m2.movements.services.banks.BankService
+import api.m2.movements.services.banks.BankAddService
 import api.m2.movements.services.category.UserCategoryService
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.workspaces.WorkspaceAddService
@@ -27,7 +27,7 @@ class OnboardingServiceTest extends Specification {
     UserAddService userAddService = Mock(UserAddService)
     IncomeAddService incomeAddService = Mock(IncomeAddService)
     WorkspaceAddService workspaceAddService = Mock(WorkspaceAddService)
-    BankService bankService = Mock(BankService)
+    BankAddService bankAddService = Mock(BankAddService)
     UserCategoryService userCategoryService = Mock(UserCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
@@ -37,7 +37,7 @@ class OnboardingServiceTest extends Specification {
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, workspaceAddService,
-                bankService, userCategoryService, userSettingService, currencyAddService, workspaceRepository)
+                bankAddService, userCategoryService, userSettingService, currencyAddService, workspaceRepository)
     }
 
     def "finish - should create user, accounts, banks, categories and income when all fields are present"() {
@@ -53,8 +53,8 @@ class OnboardingServiceTest extends Specification {
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
         userAddService.createLogInUser() >> user
-        bankService.addBankToUser("GALICIA", user) >> galiciaBank
-        bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 42L) >> Optional.of(defaultWorkspace)
 
@@ -66,9 +66,9 @@ class OnboardingServiceTest extends Specification {
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Viajes"))
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Casa"))
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, 100L)
-        1 * bankService.addBankToUser("GALICIA", user) >> galiciaBank
+        1 * bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
-        1 * bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        1 * bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         0 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 11L)
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, 1L)
         1 * userCategoryService.addCategories(user, categories)
@@ -95,8 +95,8 @@ class OnboardingServiceTest extends Specification {
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
         userAddService.createLogInUser() >> user
-        bankService.addBankToUser("GALICIA", user) >> galiciaBank
-        bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -120,7 +120,7 @@ class OnboardingServiceTest extends Specification {
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
         userAddService.createLogInUser() >> user
-        bankService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -144,8 +144,8 @@ class OnboardingServiceTest extends Specification {
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
         userAddService.createLogInUser() >> user
-        bankService.addBankToUser("GALICIA", user) >> galiciaBank
-        bankService.addBankToUser("SANTANDER", user) >> santanderBank
+        bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
+        bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -327,7 +327,7 @@ class OnboardingServiceTest extends Specification {
 
         then:
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
-        0 * bankService.addBankToUser(_ as String, _ as User)
+        0 * bankAddService.addBankToUser(_ as String, _ as User)
         0 * userSettingService.upsertForUser(_ as User, UserSettingKey.DEFAULT_BANK, _ as Long)
     }
 

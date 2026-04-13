@@ -9,7 +9,8 @@ import api.m2.movements.records.invite.InviteToWorkspace;
 import api.m2.movements.services.workspaces.WorkspaceAddService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.groups.MembershipService;
-import api.m2.movements.services.invitations.InvitationService;
+import api.m2.movements.services.invitations.InvitationAddService;
+import api.m2.movements.services.invitations.InvitationQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +37,8 @@ public class WorkspaceController {
 
     private final WorkspaceAddService workspaceAddService;
     private final WorkspaceQueryService workspaceQueryService;
-    private final InvitationService invitationService;
+    private final InvitationAddService invitationAddService;
+    private final InvitationQueryService invitationQueryService;
     private final MembershipService membershipService;
 
     @Operation(
@@ -96,7 +98,7 @@ public class WorkspaceController {
             @PathVariable Long id,
             @Valid @RequestBody InviteToWorkspace request
     ) {
-        invitationService.inviteToAccount(id, request.emails());
+        invitationAddService.inviteToWorkspace(id, request.emails());
     }
 
     @Operation(
@@ -109,7 +111,7 @@ public class WorkspaceController {
     @GetMapping("/invitations")
     @ResponseStatus(HttpStatus.OK)
     public List<InvitationToWorkspaceRecord> listMyInvitations() {
-        return invitationService.getAllInvitations();
+        return invitationQueryService.getAllInvitations();
     }
 
     @Operation(
@@ -126,7 +128,7 @@ public class WorkspaceController {
             @PathVariable Long invitationId,
             @Valid @RequestBody InvitationResponseRecord body
     ) {
-        invitationService.acceptRejectInvitation(invitationId, body);
+        invitationAddService.acceptRejectInvitation(invitationId, body);
     }
 
     @Operation(

@@ -6,7 +6,6 @@ import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.IncomeMapper;
 import api.m2.movements.records.categories.CategoryRecord;
-import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,11 +52,6 @@ public class IncomeAddService {
         income.setBank(bank);
 
         incomeRepository.save(income);
-    }
-
-    public List<IncomeRecord> getAllIncomes() {
-        var user = userService.getAuthenticatedUser();
-        return incomeMapper.toRecord(incomeRepository.findAllByUserOrGroupsIn(user.getId()));
     }
 
     @Transactional
