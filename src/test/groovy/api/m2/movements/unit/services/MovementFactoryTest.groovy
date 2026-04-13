@@ -9,6 +9,7 @@ import api.m2.movements.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
@@ -187,12 +188,12 @@ class MovementFactoryTest extends Specification {
     def "applyUpdates - should update category when provided"() {
         given:
         def newCategory = Stub(Category) { getDescription() >> "TRANSPORTE" }
-        def categoryRecord = new CategoryRecord(5L, "TRANSPORTE", true, true)
+        def categoryUpdateRecord = new CategoryUpdateRecord(5L, "TRANSPORTE")
         def dto = new ExpenseToUpdate(
                 null,
                 null,
                 null,
-                categoryRecord,
+                categoryUpdateRecord,
                 null,
                 null,
                 null,
@@ -200,7 +201,7 @@ class MovementFactoryTest extends Specification {
         )
         def movement = new Movement()
 
-        categoryResolver.resolve("TRANSPORTE") >> newCategory
+        categoryResolver.resolve(_ as CategoryUpdateRecord) >> newCategory
 
         when:
         factory.applyUpdates(dto, movement)

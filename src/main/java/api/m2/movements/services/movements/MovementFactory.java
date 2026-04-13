@@ -54,7 +54,7 @@ public class MovementFactory {
 
     public void applyUpdates(ExpenseToUpdate dto, Movement movement) {
         if (dto.currency() != null) movement.setCurrency(currencyResolver.resolve(dto.currency()));
-        if (dto.category() != null) movement.setCategory(categoryResolver.resolve(dto.category().description()));
+        if (dto.category() != null) movement.setCategory(categoryResolver.resolve(dto.category()));
     }
 
 }
