@@ -5,7 +5,7 @@ import api.m2.movements.projections.MonthlyEvolutionProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
-import api.m2.movements.records.users.UserBaseRecord;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -90,24 +90,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                                                               List<String> currencies,
                                                               String email);
 
-    @Query(value = """
-            SELECT g
-            FROM Movement g
-            JOIN fetch g.currency c
-            where g.id = :id
-        """)
-    Optional<Movement> findByIdWithCurrency(Long id);
 
-    //TODO REVISAR ESTO
-    @Query(value = """
-            SELECT g
-            FROM Movement g
-            JOIN fetch g.currency c
-            WHERE (g.owner.email = :#{#user.email})
-            ORDER BY g.date DESC
-            LIMIT 1
-        """)
-    Optional<Movement> getLastIngreso(UserBaseRecord user);
 
     @Query(value = """
             SELECT   ac.name AS workspaceDescription,

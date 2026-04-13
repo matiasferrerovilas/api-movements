@@ -1,7 +1,7 @@
 package api.m2.movements.mappers;
 
 import api.m2.movements.entities.Movement;
-import api.m2.movements.records.LastIngresoRecord;
+
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -28,8 +28,7 @@ public interface MovementMapper {
     @Mapping(target = "bank", source = "movement.bank.description")
     @Mapping(target = "account", source = "movement.workspace")
     MovementRecord toRecord(Movement movement);
-    @Mapping(target = "bank", source = "bank.description")
-    LastIngresoRecord toLastIngreso(Movement ingreso);
+
     @Mapping(target = "currency", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "workspace", ignore = true)

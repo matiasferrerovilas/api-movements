@@ -2,35 +2,23 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.annotations.RequiresMembership
 import api.m2.movements.aspect.MembershipCheckAspect
-import api.m2.movements.entities.Budget
-import api.m2.movements.entities.Income
-import api.m2.movements.entities.Movement
-import api.m2.movements.entities.Subscription
+import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
 import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.repositories.BudgetRepository
-import api.m2.movements.repositories.IncomeRepository
-import api.m2.movements.repositories.MovementRepository
-import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.user.UserService
 import org.aspectj.lang.JoinPoint
 import spock.lang.Specification
 
-import java.lang.annotation.Annotation
 import java.lang.reflect.Proxy
 
 class MembershipCheckAspectTest extends Specification {
 
     UserService userService = Mock(UserService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
-    MovementRepository movementRepository = Mock(MovementRepository)
-    IncomeRepository incomeRepository = Mock(IncomeRepository)
-    SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
-    BudgetRepository budgetRepository = Mock(BudgetRepository)
+    WorkspaceIdResolverRegistry resolverRegistry = Mock(WorkspaceIdResolverRegistry)
 
     MembershipCheckAspect aspect
 
@@ -38,10 +26,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect = new MembershipCheckAspect(
                 userService,
                 workspaceQueryService,
-                movementRepository,
-                incomeRepository,
-                subscriptionRepository,
-                budgetRepository
+                resolverRegistry
         )
     }
 
@@ -67,21 +52,15 @@ class MembershipCheckAspectTest extends Specification {
         return Stub(JoinPoint) { getArgs() >> args }
     }
 
-    def buildWorkspace(Long workspaceId) {
-        return Stub(Workspace) { getId() >> workspaceId }
-    }
-
     // --- MOVEMENT domain ---
 
     def "checkMembership - should verify membership for MOVEMENT domain"() {
         given:
-        def workspace = buildWorkspace(1L)
-        def movement = Stub(Movement) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 42L }
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
-        movementRepository.findById(10L) >> Optional.of(movement)
+        resolverRegistry.resolve(MembershipDomain.MOVEMENT, 10L) >> 1L
         userService.getAuthenticatedUser() >> user
 
         when:
@@ -93,13 +72,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should use idParamIndex=1 to extract entity id"() {
         given:
-        def workspace = buildWorkspace(5L)
-        def movement = Stub(Movement) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 7L }
         def ann = annotation(MembershipDomain.MOVEMENT, 1)
         def joinPoint = buildJoinPoint(new Object(), 99L)
 
-        movementRepository.findById(99L) >> Optional.of(movement)
+        resolverRegistry.resolve(MembershipDomain.MOVEMENT, 99L) >> 5L
         userService.getAuthenticatedUser() >> user
 
         when:
@@ -114,7 +91,9 @@ class MembershipCheckAspectTest extends Specification {
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(999L)
 
-        movementRepository.findById(999L) >> Optional.empty()
+        resolverRegistry.resolve(MembershipDomain.MOVEMENT, 999L) >> {
+            throw new EntityNotFoundException("Movimiento no encontrado: 999")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -126,15 +105,15 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (MOVEMENT)"() {
         given:
-        def workspace = buildWorkspace(1L)
-        def movement = Stub(Movement) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 99L }
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
-        movementRepository.findById(10L) >> Optional.of(movement)
+        resolverRegistry.resolve(MembershipDomain.MOVEMENT, 10L) >> 1L
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 99L) >> { throw new PermissionDeniedException("No tienes permiso") }
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 99L) >> {
+            throw new PermissionDeniedException("No tienes permiso")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -147,13 +126,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for INCOME domain"() {
         given:
-        def workspace = buildWorkspace(2L)
-        def income = Stub(Income) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 42L }
         def ann = annotation(MembershipDomain.INCOME)
         def joinPoint = buildJoinPoint(20L)
 
-        incomeRepository.findById(20L) >> Optional.of(income)
+        resolverRegistry.resolve(MembershipDomain.INCOME, 20L) >> 2L
         userService.getAuthenticatedUser() >> user
 
         when:
@@ -168,7 +145,9 @@ class MembershipCheckAspectTest extends Specification {
         def ann = annotation(MembershipDomain.INCOME)
         def joinPoint = buildJoinPoint(999L)
 
-        incomeRepository.findById(999L) >> Optional.empty()
+        resolverRegistry.resolve(MembershipDomain.INCOME, 999L) >> {
+            throw new EntityNotFoundException("Ingreso no encontrado: 999")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -182,13 +161,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for SUBSCRIPTION domain"() {
         given:
-        def workspace = buildWorkspace(3L)
-        def subscription = Stub(Subscription) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 42L }
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
-        subscriptionRepository.findById(30L) >> Optional.of(subscription)
+        resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 30L) >> 3L
         userService.getAuthenticatedUser() >> user
 
         when:
@@ -203,7 +180,9 @@ class MembershipCheckAspectTest extends Specification {
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(999L)
 
-        subscriptionRepository.findById(999L) >> Optional.empty()
+        resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 999L) >> {
+            throw new EntityNotFoundException("Servicio no encontrado: 999")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -215,15 +194,15 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (SUBSCRIPTION)"() {
         given:
-        def workspace = buildWorkspace(3L)
-        def subscription = Stub(Subscription) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 99L }
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
-        subscriptionRepository.findById(30L) >> Optional.of(subscription)
+        resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 30L) >> 3L
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(3L, 99L) >> { throw new PermissionDeniedException("No tienes permiso") }
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(3L, 99L) >> {
+            throw new PermissionDeniedException("No tienes permiso")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -236,13 +215,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for BUDGET domain"() {
         given:
-        def workspace = buildWorkspace(4L)
-        def budget = Stub(Budget) { getWorkspace() >> workspace }
         def user = Stub(User) { getId() >> 42L }
         def ann = annotation(MembershipDomain.BUDGET)
         def joinPoint = buildJoinPoint(40L)
 
-        budgetRepository.findById(40L) >> Optional.of(budget)
+        resolverRegistry.resolve(MembershipDomain.BUDGET, 40L) >> 4L
         userService.getAuthenticatedUser() >> user
 
         when:
@@ -257,7 +234,9 @@ class MembershipCheckAspectTest extends Specification {
         def ann = annotation(MembershipDomain.BUDGET)
         def joinPoint = buildJoinPoint(999L)
 
-        budgetRepository.findById(999L) >> Optional.empty()
+        resolverRegistry.resolve(MembershipDomain.BUDGET, 999L) >> {
+            throw new EntityNotFoundException("Presupuesto no encontrado: 999")
+        }
 
         when:
         aspect.checkMembership(joinPoint, ann)

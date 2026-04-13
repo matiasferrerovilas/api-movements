@@ -145,7 +145,6 @@ api.m2.movements
 | `PATCH/DELETE` | `/v1/subscriptions/{id}` | Actualizar / eliminar suscripción |
 | `GET` | `/v1/settings/defaults` | Configuración por defecto del usuario |
 | `GET/PUT` | `/v1/settings/{key}` | Leer / actualizar setting específico |
-| `GET` | `/v1/settings/last-ingreso` | Último ingreso registrado |
 | `GET` | `/v1/banks` | Bancos asociados al usuario |
 | `POST` | `/v1/banks` | Agregar banco al usuario (idempotente) |
 | `DELETE` | `/v1/banks/{id}` | Quitar banco de la lista del usuario |

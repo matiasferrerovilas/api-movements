@@ -49,7 +49,10 @@ class MovementRepositoryIntegrationTest extends Specification {
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.MySQLDialect")
         registry.add("spring.autoconfigure.exclude",
                 () -> "org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration," +
-                      "org.springframework.boot.autoconfigure.amqp.RabbitStreamTemplateAutoConfiguration")
+                      "org.springframework.boot.autoconfigure.amqp.RabbitStreamTemplateAutoConfiguration," +
+                      "org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration")
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> "https://test-issuer.local/realms/test")
+        registry.add("keycloak.auth-server-url", () -> "https://test-issuer.local")
     }
 
     @Autowired

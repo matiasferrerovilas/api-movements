@@ -2,11 +2,9 @@ package api.m2.movements.controller;
 
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.records.income.IncomeToAdd;
-import api.m2.movements.records.LastIngresoRecord;
 import api.m2.movements.records.settings.UserSettingRequest;
 import api.m2.movements.records.settings.UserSettingResponse;
 import api.m2.movements.services.income.IncomeAddService;
-import api.m2.movements.services.movements.MovementGetService;
 import api.m2.movements.services.settings.UserSettingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,7 +29,6 @@ import java.util.List;
 @Tag(name = "Settings", description = "API para la configuración")
 public class SettingsController {
     private final IncomeAddService incomeAddService;
-    private final MovementGetService movementGetService;
     private final UserSettingService userSettingService;
 
     @Operation(
@@ -43,16 +40,6 @@ public class SettingsController {
     @ResponseStatus(HttpStatus.CREATED)
     public void addIngreso(@RequestBody @Valid IncomeToAdd incomeToAdd) {
         incomeAddService.addIngreso(incomeToAdd);
-    }
-
-    @Operation(
-            summary = "Último ingreso registrado",
-            description = "Retorna el ingreso más reciente"
-    )
-    @ApiResponse(responseCode = "200", description = "Ingreso encontrado")
-    @GetMapping("/last-ingreso")
-    public LastIngresoRecord getLastIngreso() {
-        return movementGetService.getLastIngreso();
     }
 
     @Operation(
