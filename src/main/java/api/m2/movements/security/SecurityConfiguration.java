@@ -11,12 +11,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -88,15 +84,9 @@ public class SecurityConfiguration {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder
+        return NimbusJwtDecoder
                 .withJwkSetUri(jwtProperties.issuerUri() + "/protocol/openid-connect/certs")
                 .jwsAlgorithm(SignatureAlgorithm.RS256)
                 .build();
-
-        // Validar issuer del token
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(jwtProperties.issuerUri());
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer));
-
-        return decoder;
     }
 }
