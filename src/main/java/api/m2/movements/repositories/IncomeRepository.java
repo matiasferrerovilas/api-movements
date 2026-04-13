@@ -19,4 +19,14 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         where m.user.id = :userId
 """)
     List<Income> findAllByUserOrGroupsIn(Long userId);
+
+    @Query("""
+        select i
+        from Income i
+        join fetch i.currency
+        join fetch i.workspace
+        join fetch i.bank
+        where i.user.id = :userId
+    """)
+    List<Income> findAllByUserId(Long userId);
 }

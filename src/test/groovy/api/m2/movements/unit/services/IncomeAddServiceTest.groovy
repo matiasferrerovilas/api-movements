@@ -252,4 +252,89 @@ class IncomeAddServiceTest extends Specification {
         then:
         1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now(ZoneOffset.UTC) })
     }
+
+    // --- generateRecurringIncomeForUser ---
+
+    def "generateRecurringIncomeForUser - should generate movement for each income"() {
+        given:
+        def user = Stub(User) { getId() >> 1L }
+        def workspace = Stub(Workspace) { getId() >> 10L }
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
+
+        def income1 = new Income(id: 1L, amount: new BigDecimal("100000.00"), workspace: workspace, currency: currency, bank: bank, user: user)
+        def income2 = new Income(id: 2L, amount: new BigDecimal("50000.00"), workspace: workspace, currency: currency, bank: bank, user: user)
+
+        incomeRepository.findAllByUserId(1L) >> [income1, income2]
+
+        when:
+        def count = service.generateRecurringIncomeForUser(user)
+
+        then:
+        count == 2
+        2 * movementAddService.saveMovement(_ as MovementToAdd)
+    }
+
+    def "generateRecurringIncomeForUser - should return zero when user has no incomes"() {
+        given:
+        def user = Stub(User) { getId() >> 1L }
+        incomeRepository.findAllByUserId(1L) >> []
+
+        when:
+        def count = service.generateRecurringIncomeForUser(user)
+
+        then:
+        count == 0
+        0 * movementAddService.saveMovement(_ as MovementToAdd)
+    }
+
+    def "generateRecurringIncomeForUser - should create movement with correct data"() {
+        given:
+        def user = Stub(User) { getId() >> 1L }
+        def workspace = Stub(Workspace) { getId() >> 5L }
+        def currency = Stub(Currency) { getSymbol() >> "USD" }
+        def bank = Stub(Bank) { getDescription() >> "BBVA" }
+
+        def income = new Income(id: 1L, amount: new BigDecimal("2500.00"), workspace: workspace, currency: currency, bank: bank, user: user)
+        incomeRepository.findAllByUserId(1L) >> [income]
+
+        when:
+        service.generateRecurringIncomeForUser(user)
+
+        then:
+        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
+            def m = args[0] as MovementToAdd
+            assert m.amount() == new BigDecimal("2500.00")
+            assert m.date() == LocalDate.now(ZoneOffset.UTC)
+            assert m.description() == "Ingreso recurrente"
+            assert m.category() == "HOGAR"
+            assert m.type() == MovementType.INGRESO.name()
+            assert m.currency() == "USD"
+            assert m.bank() == "BBVA"
+            assert m.workspaceId() == 5L
+        }
+    }
+
+    def "generateRecurringIncomeForUser - should handle multiple incomes with different workspaces"() {
+        given:
+        def user = Stub(User) { getId() >> 1L }
+
+        def workspace1 = Stub(Workspace) { getId() >> 10L }
+        def workspace2 = Stub(Workspace) { getId() >> 20L }
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
+
+        def income1 = new Income(id: 1L, amount: new BigDecimal("80000.00"), workspace: workspace1, currency: currency, bank: bank, user: user)
+        def income2 = new Income(id: 2L, amount: new BigDecimal("20000.00"), workspace: workspace2, currency: currency, bank: bank, user: user)
+
+        incomeRepository.findAllByUserId(1L) >> [income1, income2]
+
+        when:
+        def count = service.generateRecurringIncomeForUser(user)
+
+        then:
+        count == 2
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.workspaceId() == 10L && m.amount() == new BigDecimal("80000.00") })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.workspaceId() == 20L && m.amount() == new BigDecimal("20000.00") })
+    }
 }

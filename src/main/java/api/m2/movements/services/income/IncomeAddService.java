@@ -1,6 +1,7 @@
 package api.m2.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
+import api.m2.movements.entities.User;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.IncomeMapper;
@@ -109,6 +110,37 @@ public class IncomeAddService {
         movementAddService.saveMovement(movementToAdd);
 
         log.debug("Income {} recargado", id);
+    }
+
+    /**
+     * Genera movimientos de ingreso para todos los Income configurados de un usuario.
+     * Este método es llamado por el cron de ingresos recurrentes.
+     *
+     * @param user el usuario para el cual generar los movimientos
+     * @return cantidad de movimientos generados
+     */
+    @Transactional
+    public int generateRecurringIncomeForUser(User user) {
+        var incomes = incomeRepository.findAllByUserId(user.getId());
+        log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), user.getEmail());
+
+        for (var income : incomes) {
+            var movementToAdd = new MovementToAdd(
+                    income.getAmount(),
+                    LocalDate.now(ZoneOffset.UTC),
+                    "Ingreso recurrente",
+                    HOGAR,
+                    MovementType.INGRESO.name(),
+                    income.getCurrency().getSymbol(),
+                    null,
+                    null,
+                    income.getBank().getDescription(),
+                    income.getWorkspace().getId()
+            );
+            movementAddService.saveMovement(movementToAdd);
+        }
+
+        return incomes.size();
     }
 
     private static final String HOGAR = "HOGAR";

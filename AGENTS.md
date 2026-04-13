@@ -227,8 +227,37 @@ public void deleteIncome(Long id) { ... }
 public void updateMovement(@Valid ExpenseToUpdate dto, Long id) { ... }
 ```
 
-**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`.  
-Para agregar un nuevo dominio: extender `MembershipDomain` y el switch en `MembershipCheckAspect.resolveWorkspaceId()`.
+**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`, `BUDGET`.  
+Para agregar un nuevo dominio: extender `MembershipDomain` y crear un resolver que implemente `WorkspaceIdResolver`.
+
+---
+
+## Jobs Programados (Cron)
+
+| Job | Cron | Descripción |
+|-----|------|-------------|
+| `MonthlySummaryJob` | `0 0 23 L * *` (último día del mes, 23:00) | Genera snapshots mensuales de resumen financiero para usuarios con `MONTHLY_SUMMARY_ENABLED` |
+| `RecurringIncomeJob` | `0 0 6 1 * *` (día 1 de cada mes, 06:00) | Genera movimientos de ingreso automáticos para usuarios con `AUTO_INCOME_ENABLED` |
+
+### UserSettingKey para Jobs
+
+| Setting | Valor | Efecto |
+|---------|-------|--------|
+| `MONTHLY_SUMMARY_ENABLED` | `1` | Usuario recibe snapshot mensual automático |
+| `AUTO_INCOME_ENABLED` | `1` | Los `Income` del usuario generan movimientos automáticamente el día 1 |
+
+### Flujo de RecurringIncomeJob
+
+1. Obtiene usuarios con `AUTO_INCOME_ENABLED = 1`
+2. Para cada usuario, obtiene todos sus `Income` configurados
+3. Por cada `Income`, genera un `Movement` de tipo `INGRESO` con:
+   - Monto del `Income`
+   - Fecha actual (UTC)
+   - Descripción: "Ingreso recurrente"
+   - Categoría: HOGAR
+   - Workspace del `Income`
+
+> **IMPORTANTE:** `Income` representa ingresos **recurrentes fijos** (salario, pensión). Los ingresos variables/puntuales deben cargarse directamente como `Movement` de tipo `INGRESO`.
 
 ---
 

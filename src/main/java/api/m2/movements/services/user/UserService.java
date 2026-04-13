@@ -82,4 +82,8 @@ public class UserService {
     public List<User> getUsersWithMonthlySnapshotEnabled() {
         return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
     }
+
+    public List<User> getUsersWithAutoIncomeEnabled() {
+        return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED);
+    }
 }
