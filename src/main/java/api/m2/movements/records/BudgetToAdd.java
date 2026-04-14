@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 public record BudgetToAdd(
-        @NotNull Long workspaceId,
         String category,
         @NotBlank String currency,
         @NotNull @Positive BigDecimal amount,

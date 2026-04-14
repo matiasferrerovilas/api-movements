@@ -1,6 +1,7 @@
 package api.m2.movements.services.onboarding;
 
 import api.m2.movements.entities.User;
+import api.m2.movements.entities.Workspace;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.records.currencies.CurrencyRecord;
@@ -10,7 +11,7 @@ import api.m2.movements.records.onboarding.OnBoardingForm;
 import api.m2.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.repositories.WorkspaceRepository;
 import api.m2.movements.services.banks.BankAddService;
-import api.m2.movements.services.category.UserCategoryService;
+import api.m2.movements.services.category.WorkspaceCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.settings.UserSettingService;
@@ -34,7 +35,7 @@ public class OnboardingService {
     private final IncomeAddService incomeAddService;
     private final WorkspaceAddService workspaceAddService;
     private final BankAddService bankAddService;
-    private final UserCategoryService userCategoryService;
+    private final WorkspaceCategoryService workspaceCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
     private final WorkspaceRepository workspaceRepository;
@@ -42,15 +43,15 @@ public class OnboardingService {
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser();
-        this.createWorkspaces(onBoardingForm, user);
+        var defaultWorkspace = this.createWorkspaces(onBoardingForm, user);
         this.addBanks(onBoardingForm, user);
         this.addDefaultCurrency(user);
-        this.addCategories(onBoardingForm, user);
-        this.addInitialIncome(onBoardingForm);
+        this.addCategories(onBoardingForm, defaultWorkspace);
+        this.addInitialIncome(onBoardingForm, defaultWorkspace);
         userAddService.changeUserFirstLoginStatus(UserType.valueOf(onBoardingForm.userType()), user.getId());
     }
 
-    private void createWorkspaces(OnBoardingForm onBoardingForm, User user) {
+    private Workspace createWorkspaces(OnBoardingForm onBoardingForm, User user) {
         // 1. Siempre crear DEFAULT primero
         workspaceAddService.createWorkspace(new AddWorkspaceRecord(DEFAULT_WORKSPACE_NAME));
 
@@ -60,10 +61,11 @@ public class OnboardingService {
                 .forEach(account ->
                         workspaceAddService.createWorkspace(new AddWorkspaceRecord(account)));
 
-        // 3. Setear DEFAULT como workspace por defecto
-        workspaceRepository.findWorkspaceByNameAndOwnerId(DEFAULT_WORKSPACE_NAME, user.getId())
-                .ifPresent(workspace ->
-                        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, workspace.getId()));
+        // 3. Setear DEFAULT como workspace por defecto y retornarlo
+        var defaultWorkspace = workspaceRepository.findWorkspaceByNameAndOwnerId(
+                DEFAULT_WORKSPACE_NAME, user.getId()).orElseThrow();
+        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, defaultWorkspace.getId());
+        return defaultWorkspace;
     }
 
     private void addBanks(OnBoardingForm onBoardingForm, User user) {
@@ -84,19 +86,19 @@ public class OnboardingService {
         userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, usd.getId());
     }
 
-    private void addCategories(OnBoardingForm onBoardingForm, User user) {
-        userCategoryService.addCategories(user, onBoardingForm.categoriesToAdd());
-        userCategoryService.addDefaultCategories(user);
+    private void addCategories(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {
+        workspaceCategoryService.addCategories(defaultWorkspace, onBoardingForm.categoriesToAdd());
+        workspaceCategoryService.addDefaultCategories(defaultWorkspace);
     }
 
-    private void addInitialIncome(OnBoardingForm onBoardingForm) {
+    private void addInitialIncome(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {
         if (onBoardingForm.onBoardingAmount().bank() != null
                 && onBoardingForm.onBoardingAmount().currency() != null
                 && onBoardingForm.onBoardingAmount().amount() != null) {
             incomeAddService.loadIncome(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
                     new CurrencyRecord(onBoardingForm.onBoardingAmount().currency(), null),
-                    onBoardingForm.onBoardingAmount().amount(),
-                    onBoardingForm.onBoardingAmount().accountToAdd()));
+                    onBoardingForm.onBoardingAmount().amount()),
+                    defaultWorkspace);
         }
     }
 }

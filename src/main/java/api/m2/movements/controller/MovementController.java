@@ -100,11 +100,8 @@ public class MovementController {
             @RequestParam("file") MultipartFile file,
 
             @Parameter(description = "Banco del cual proviene el archivo", required = true)
-            @RequestParam("bank") String bank,
-
-            @Parameter(description = "Workspace destino", required = true)
-            @RequestParam(value = "workspaceId") Long workspaceId) {
-        movementImportFileService.importMovementsByFile(file, bank, workspaceId);
+            @RequestParam("bank") String bank) {
+        movementImportFileService.importMovementsByFile(file, bank);
     }
 
     @Operation(

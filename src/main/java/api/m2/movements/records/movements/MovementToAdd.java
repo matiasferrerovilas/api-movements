@@ -24,7 +24,5 @@ public record MovementToAdd(
         String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
-        String bank,
-        @NotNull(message = "El workspace es requerido")
-        Long workspaceId
+        String bank
 ) { }

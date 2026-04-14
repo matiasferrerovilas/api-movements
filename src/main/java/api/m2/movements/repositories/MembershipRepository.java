@@ -39,4 +39,7 @@ public interface MembershipRepository extends JpaRepository<WorkspaceMember, Lon
 
     @Query("SELECT COUNT(m) FROM WorkspaceMember m WHERE m.workspace.id = :workspaceId")
     long countByWorkspaceId(@Param("workspaceId") Long workspaceId);
+
+    @Query("SELECT m.user.email FROM WorkspaceMember m WHERE m.workspace.id = :workspaceId")
+    List<String> findMemberEmailsByWorkspaceId(@Param("workspaceId") Long workspaceId);
 }

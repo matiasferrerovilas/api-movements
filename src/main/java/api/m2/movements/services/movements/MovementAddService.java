@@ -8,9 +8,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.repositories.MovementRepository;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket;
-import api.m2.movements.services.user.UserService;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
@@ -29,14 +27,9 @@ public class MovementAddService {
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
     private final MovementPublishServiceWebSocket movementPublishService;
-    private final UserService userService;
-    private final WorkspaceQueryService workspaceQueryService;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
-        var user = userService.getAuthenticatedUser();
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(dto.workspaceId(), user.getId());
-
         var movement = movementFactory.create(dto);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 

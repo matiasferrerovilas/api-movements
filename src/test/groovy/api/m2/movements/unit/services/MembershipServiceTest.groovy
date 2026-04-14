@@ -6,19 +6,22 @@ import api.m2.movements.records.users.UserBaseRecord
 import api.m2.movements.repositories.MembershipRepository
 import api.m2.movements.services.groups.MembershipService
 import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class MembershipServiceTest extends Specification {
 
     MembershipRepository membershipRepository = Mock(MembershipRepository)
     UserService userService = Mock(UserService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
 
     MembershipService service
 
     def setup() {
         service = new MembershipService(
                 membershipRepository,
-                userService
+                userService,
+                workspaceContextService
         )
     }
 

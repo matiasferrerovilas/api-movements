@@ -2,6 +2,7 @@ package api.m2.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.User;
+import api.m2.movements.entities.Workspace;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
@@ -16,7 +17,7 @@ import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class IncomeAddService {
     private final IncomeRepository incomeRepository;
     private final UserService userService;
     private final IncomeMapper incomeMapper;
-    private final WorkspaceQueryService workspaceQueryService;
+    private final WorkspaceContextService workspaceContextService;
     private final CurrencyAddService currencyAddService;
     private final MovementAddService movementAddService;
     private final BankRepository bankRepository;
@@ -41,11 +42,20 @@ public class IncomeAddService {
 
     @Transactional
     public void loadIncome(IncomeToAdd incomeToAdd) {
+        var workspace = workspaceContextService.getActiveWorkspace();
+        this.loadIncome(incomeToAdd, workspace);
+    }
+
+    /**
+     * Carga un ingreso asociándolo a un workspace específico.
+     * Usado por el onboarding donde el usuario aún no tiene DEFAULT_WORKSPACE configurado.
+     */
+    @Transactional
+    public void loadIncome(IncomeToAdd incomeToAdd, Workspace workspace) {
         var income = incomeMapper.toEntity(incomeToAdd);
         var user = userService.getAuthenticatedUser();
         income.setUser(user);
-        var account = workspaceQueryService.findWorkspaceByName(incomeToAdd.workspace());
-        income.setWorkspace(account);
+        income.setWorkspace(workspace);
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
         income.setCurrency(currency);
         var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
@@ -68,7 +78,6 @@ public class IncomeAddService {
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
         CategoryRecord category = categoryAddService
                 .findCategoryByDescription(DefaultCategory.HOGAR.getDescription());
-        var account = workspaceQueryService.findWorkspaceByName(incomeToAdd.workspace());
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
 
         movementAddService.saveMovement(new MovementToAdd(incomeToAdd.amount(),
@@ -79,8 +88,7 @@ public class IncomeAddService {
                 currency.getSymbol(),
                 0,
                 0,
-                incomeToAdd.bank(),
-                account.getId()));
+                incomeToAdd.bank()));
     }
 
     @Transactional
@@ -99,8 +107,7 @@ public class IncomeAddService {
                 incomeToReload.getCurrency().getSymbol(),
                 null,
                 null,
-                incomeToReload.getBank().getDescription(),
-                incomeToReload.getWorkspace().getId()
+                incomeToReload.getBank().getDescription()
         );
         movementAddService.saveMovement(movementToAdd);
 
@@ -129,8 +136,7 @@ public class IncomeAddService {
                     income.getCurrency().getSymbol(),
                     null,
                     null,
-                    income.getBank().getDescription(),
-                    income.getWorkspace().getId()
+                    income.getBank().getDescription()
             );
             movementAddService.saveMovement(movementToAdd);
         }

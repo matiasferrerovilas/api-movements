@@ -7,17 +7,11 @@ import java.util.List;
 
 @Schema(
         name = "BalanceFilter",
-        description = "Filtros para obtener el balance por fecha, grupos y monedas"
+        description = "Filtros para obtener el balance por fecha y monedas"
 )
 public record BalanceFilterRecord(
       LocalDate startDate,
       LocalDate endDate,
-      @Schema(
-              description = "Lista de grupos de gastos o ingresos a incluir",
-              example = "[\"Comida\", \"Servicios\"]"
-      )
-      List<Integer> groups,
-
       @Schema(
               description = "Lista de monedas a incluir en el balance",
               example = "[\"USD\", \"ARS\"]"

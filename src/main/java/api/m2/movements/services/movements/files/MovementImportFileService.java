@@ -3,7 +3,7 @@ package api.m2.movements.services.movements.files;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.helpers.PdfReaderService;
 import api.m2.movements.records.movements.MovementFileToAdd;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,35 +20,9 @@ import java.util.Set;
 public class MovementImportFileService {
     private final Set<ExpenseFileStrategy> expenseFileStrategies;
     private final PdfReaderService pdfReaderService;
-    private final WorkspaceQueryService workspaceQueryService;
+    private final WorkspaceContextService workspaceContextService;
 
-    /*
-    todo: Terminar es tarea 21, ver ventajas desventajas de implementar rabbit con IA
-    public void sendToRabbit(MultipartFile file, String bank, String group) {
-        try {
-            Path pdfFile = Files.createTempFile("expense-", ".pdf");
-            file.transferTo(pdfFile);
-            String text = pdfReaderService.extractTextFromPdf(pdfFile);
-            Files.deleteIfExists(pdfFile);
-
-            BanksEnum banksEnum = BanksEnum.valueOf(bank.toUpperCase());
-
-            var user = userService.getAuthenticatedUserRecord();
-            movementPublishServiceRabbit.publishMovementFile(new MovementFileRequest(text,
-                    banksEnum,
-                    group,
-                    user.id(),
-                    LocalDateTime.now()));
-
-        } catch (IOException e) {
-            throw new BusinessException("No se pudo procesar");
-        }
-    }
-    public void processList(List<CreditCardStatement> creditCardStatements) {
-        creditCardStatements.forEach(movement -> {
-        });
-    }*/
-    public void importMovementsByFile(MultipartFile file, String bank, Long workspaceId) {
+    public void importMovementsByFile(MultipartFile file, String bank) {
         Path pdfFile = null;
         try {
             pdfFile = Files.createTempFile("expense-", ".pdf");
@@ -59,8 +33,8 @@ public class MovementImportFileService {
                     .filter(strategy -> strategy.match(bank))
                     .toList();
 
-            var workspace = workspaceQueryService.findWorkspaceById(workspaceId);
-            var movementFile = new MovementFileToAdd(text, workspace.getId());
+            var workspaceId = workspaceContextService.getActiveWorkspaceId();
+            var movementFile = new MovementFileToAdd(text, workspaceId);
             switch (list.size()) {
                 case 0 -> throw new IllegalArgumentException("Invalid bank method");
                 case 1 -> list.getFirst().process(movementFile);

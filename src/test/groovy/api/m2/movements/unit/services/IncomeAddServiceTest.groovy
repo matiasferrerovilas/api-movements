@@ -16,7 +16,7 @@ import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.currencies.CurrencyAddService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.user.UserService
@@ -31,7 +31,7 @@ class IncomeAddServiceTest extends Specification {
     IncomeRepository incomeRepository = Mock(IncomeRepository)
     UserService userService = Mock(UserService)
     IncomeMapper incomeMapper
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     MovementAddService movementAddService = Mock(MovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
@@ -46,7 +46,7 @@ class IncomeAddServiceTest extends Specification {
                 incomeRepository,
                 userService,
                 incomeMapper,
-                workspaceQueryService,
+                workspaceContextService,
                 currencyAddService,
                 movementAddService,
                 bankRepository,
@@ -56,14 +56,14 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should set bank on income before saving"() {
         given:
-        def incomeToAdd = new IncomeToAdd("galicia", new CurrencyRecord("ARS", null), new BigDecimal("150000.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("galicia", new CurrencyRecord("ARS", null), new BigDecimal("150000.00"))
         def user = Stub(User)
         def workspace = Stub(Workspace)
         def currency = Stub(Currency)
         def bank = Bank.builder().id(1L).description("GALICIA").build()
 
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.findWorkspaceByName("DEFAULT") >> workspace
+        workspaceContextService.getActiveWorkspace() >> workspace
         currencyAddService.findBySymbol("ARS") >> currency
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
 
@@ -78,11 +78,11 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should sanitize bank name (trim + uppercase) before lookup"() {
         given:
-        def incomeToAdd = new IncomeToAdd("  bbva  ", new CurrencyRecord("USD", null), new BigDecimal("500.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("  bbva  ", new CurrencyRecord("USD", null), new BigDecimal("500.00"))
         def bank = Bank.builder().id(2L).description("BBVA").build()
 
         userService.getAuthenticatedUser() >> Stub(User)
-        workspaceQueryService.findWorkspaceByName("DEFAULT") >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
         currencyAddService.findBySymbol("USD") >> Stub(Currency)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
 
@@ -95,10 +95,10 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should throw EntityNotFoundException when bank does not exist"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", new CurrencyRecord("ARS", null), new BigDecimal("100.00"), "DEFAULT")
+        def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", new CurrencyRecord("ARS", null), new BigDecimal("100.00"))
 
         userService.getAuthenticatedUser() >> Stub(User)
-        workspaceQueryService.findWorkspaceByName("DEFAULT") >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
         currencyAddService.findBySymbol("ARS") >> Stub(Currency)
         bankRepository.findByDescription("BANCO_INEXISTENTE") >> Optional.empty()
 
@@ -112,14 +112,14 @@ class IncomeAddServiceTest extends Specification {
 
     def "loadIncome - should set user, workspace and currency on income"() {
         given:
-        def incomeToAdd = new IncomeToAdd("SANTANDER", new CurrencyRecord("ARS", null), new BigDecimal("200000.00"), "FAMILY")
+        def incomeToAdd = new IncomeToAdd("SANTANDER", new CurrencyRecord("ARS", null), new BigDecimal("200000.00"))
         def user = Stub(User)
         def workspace = Stub(Workspace)
         def currency = Stub(Currency)
         def bank = Bank.builder().id(3L).description("SANTANDER").build()
 
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.findWorkspaceByName("FAMILY") >> workspace
+        workspaceContextService.getActiveWorkspace() >> workspace
         currencyAddService.findBySymbol("ARS") >> currency
         bankRepository.findByDescription("SANTANDER") >> Optional.of(bank)
 
@@ -197,13 +197,11 @@ class IncomeAddServiceTest extends Specification {
 
     def "addIngreso - should save movement with correct parameters"() {
         given:
-        def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"), "Mi grupo")
+        def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"))
         def category = Stub(CategoryRecord) { description() >> "HOGAR" }
-        def workspace  = Stub(Workspace)        { getId()       >> 1L }
         def currency = Stub(Currency)       { getSymbol()   >> "EUR" }
 
         categoryAddService.findCategoryByDescription("HOGAR") >> category
-        workspaceQueryService.findWorkspaceByName("Mi grupo") >> workspace
         currencyAddService.findBySymbol("EUR") >> currency
 
         when:
@@ -221,15 +219,13 @@ class IncomeAddServiceTest extends Specification {
             assert m.cuotaActual()   == 0
             assert m.cuotasTotales() == 0
             assert m.bank()          == "GALICIA"
-            assert m.workspaceId()   == 1L
         }
     }
 
     def "addIngreso - should always use HOGAR category"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"), "Otro grupo")
+        def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"))
         categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> "HOGAR" }
-        workspaceQueryService.findWorkspaceByName("Otro grupo") >> Stub(Workspace) { getId() >> 2L }
         currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
 
         when:
@@ -241,9 +237,8 @@ class IncomeAddServiceTest extends Specification {
 
     def "addIngreso - should use today date in UTC"() {
         given:
-        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"), "Grupo ARS")
+        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"))
         categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> "HOGAR" }
-        workspaceQueryService.findWorkspaceByName(_)        >> Stub(Workspace)        { getId() >> 3L }
         currencyAddService.findBySymbol(_)              >> Stub(Currency)       { getSymbol() >> "ARS" }
 
         when:
@@ -311,7 +306,6 @@ class IncomeAddServiceTest extends Specification {
             assert m.type() == MovementType.INGRESO.name()
             assert m.currency() == "USD"
             assert m.bank() == "BBVA"
-            assert m.workspaceId() == 5L
         }
     }
 
@@ -334,7 +328,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.workspaceId() == 10L && m.amount() == new BigDecimal("80000.00") })
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.workspaceId() == 20L && m.amount() == new BigDecimal("20000.00") })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") })
     }
 }

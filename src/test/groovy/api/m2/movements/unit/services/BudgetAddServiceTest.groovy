@@ -12,7 +12,7 @@ import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.budgets.BudgetAddService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class BudgetAddServiceTest extends Specification {
@@ -21,7 +21,7 @@ class BudgetAddServiceTest extends Specification {
     BudgetMapper budgetMapper = Mock()
     CategoryRepository categoryRepository = Mock()
     CurrencyRepository currencyRepository = Mock()
-    WorkspaceQueryService workspaceQueryService = Mock()
+    WorkspaceContextService workspaceContextService = Mock()
 
     BudgetAddService service
 
@@ -31,7 +31,7 @@ class BudgetAddServiceTest extends Specification {
                 budgetMapper,
                 categoryRepository,
                 currencyRepository,
-                workspaceQueryService
+                workspaceContextService
         )
     }
 
@@ -39,11 +39,11 @@ class BudgetAddServiceTest extends Specification {
 
     def "save - should create budget for the resolved workspace"() {
         given:
-        def dto = new BudgetToAdd(1L, "Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
+        def dto = new BudgetToAdd("Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
         def workspace = Stub(Workspace) { getId() >> 1L }
         def budget = Mock(Budget)
 
-        workspaceQueryService.findWorkspaceById(1L) >> workspace
+        workspaceContextService.getActiveWorkspace() >> workspace
         budgetMapper.toEntity(dto, categoryRepository, currencyRepository) >> budget
 
         when:
@@ -54,9 +54,9 @@ class BudgetAddServiceTest extends Specification {
         1 * budgetRepository.save(budget)
     }
 
-    def "save - should delegate workspace resolution to WorkspaceQueryService"() {
+    def "save - should delegate workspace resolution to WorkspaceContextService"() {
         given:
-        def dto = new BudgetToAdd(99L, "Hogar", "USD", new BigDecimal("200.00"), 2026, 4)
+        def dto = new BudgetToAdd("Hogar", "USD", new BigDecimal("200.00"), 2026, 4)
         def workspace = Stub(Workspace) { getId() >> 99L }
         def budget = Stub(Budget)
 
@@ -66,7 +66,7 @@ class BudgetAddServiceTest extends Specification {
         service.save(dto)
 
         then:
-        1 * workspaceQueryService.findWorkspaceById(99L) >> workspace
+        1 * workspaceContextService.getActiveWorkspace() >> workspace
     }
 
     // --- update ---

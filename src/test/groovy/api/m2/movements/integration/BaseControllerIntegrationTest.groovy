@@ -3,13 +3,16 @@ package api.m2.movements.integration
 import api.m2.movements.entities.Category
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.User
+import api.m2.movements.entities.UserSetting
 import api.m2.movements.entities.Workspace
 import api.m2.movements.entities.WorkspaceMember
+import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.MembershipRepository
 import api.m2.movements.repositories.UserRepository
+import api.m2.movements.repositories.UserSettingRepository
 import api.m2.movements.repositories.WorkspaceRepository
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -113,6 +116,9 @@ abstract class BaseControllerIntegrationTest extends Specification {
     @Autowired
     protected CurrencyRepository currencyRepository
 
+    @Autowired
+    protected UserSettingRepository userSettingRepository
+
     // ObjectMapper for JSON serialization in tests
     @Shared
     protected ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -140,6 +146,13 @@ abstract class BaseControllerIntegrationTest extends Specification {
                 .user(testUser)
                 .workspace(testWorkspace)
                 .role(WorkspaceRole.OWNER)
+                .build())
+
+        // Set default workspace for user
+        userSettingRepository.save(UserSetting.builder()
+                .user(testUser)
+                .settingKey(UserSettingKey.DEFAULT_WORKSPACE)
+                .settingValue(testWorkspace.id)
                 .build())
 
         // Get or create test currency

@@ -4,10 +4,9 @@ import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Subscription
 import api.m2.movements.entities.Workspace
 import api.m2.movements.mappers.SubscriptionMapper
-import api.m2.movements.records.users.UserBaseRecord
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.subscriptions.SubscriptionQueryService
-import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
@@ -17,7 +16,7 @@ class SubscriptionQueryServiceTest extends Specification {
 
     SubscriptionMapper subscriptionMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
-    UserService userService = Mock(UserService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
 
     SubscriptionQueryService service
 
@@ -25,17 +24,17 @@ class SubscriptionQueryServiceTest extends Specification {
         service = new SubscriptionQueryService(
                 subscriptionMapper,
                 subscriptionRepository,
-                userService
+                workspaceContextService
         )
     }
 
     def "getSubscriptionsBy - should return subscriptions filtered by currency and lastPayment"() {
         given:
-        def userId = 1L
+        def workspaceId = 10L
         def currencySymbols = ["ARS", "USD"]
         def lastPayment = LocalDate.of(2026, 3, 1)
 
-        def workspace = Stub(Workspace) { getId() >> 10L; getName() >> "Mi cuenta" }
+        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def subscription = new Subscription(
                 id: 1L,
@@ -46,8 +45,8 @@ class SubscriptionQueryServiceTest extends Specification {
                 currency: currency
         )
 
-        userService.getAuthenticatedUserRecord() >> new UserBaseRecord("test@test.com", userId)
-        subscriptionRepository.findByCurrencyAndLastPayment(userId, currencySymbols, lastPayment) >> [subscription]
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> [subscription]
 
         when:
         def result = service.getSubscriptionsBy(currencySymbols, lastPayment)
@@ -59,12 +58,12 @@ class SubscriptionQueryServiceTest extends Specification {
 
     def "getSubscriptionsBy - should return empty list when no subscriptions match"() {
         given:
-        def userId = 1L
+        def workspaceId = 10L
         def currencySymbols = ["EUR"]
         def lastPayment = LocalDate.of(2026, 3, 1)
 
-        userService.getAuthenticatedUserRecord() >> new UserBaseRecord("test@test.com", userId)
-        subscriptionRepository.findByCurrencyAndLastPayment(userId, currencySymbols, lastPayment) >> []
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> []
 
         when:
         def result = service.getSubscriptionsBy(currencySymbols, lastPayment)

@@ -1,22 +1,30 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.projections.MembershipSummaryProjection;
-import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
-import api.m2.movements.records.workspaces.WorkspaceDetail;
-import api.m2.movements.records.workspaces.AddWorkspaceRecord;
+import api.m2.movements.records.categories.CategoryMigrateRequest;
+import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
+import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
 import api.m2.movements.records.invite.InviteToWorkspace;
-import api.m2.movements.services.workspaces.WorkspaceAddService;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
+import api.m2.movements.records.workspaces.AddWorkspaceRecord;
+import api.m2.movements.records.workspaces.WorkspaceDetail;
+import api.m2.movements.services.category.CategoryMigrateService;
+import api.m2.movements.services.category.WorkspaceCategoryService;
 import api.m2.movements.services.groups.MembershipService;
 import api.m2.movements.services.invitations.InvitationAddService;
 import api.m2.movements.services.invitations.InvitationQueryService;
+import api.m2.movements.services.workspaces.WorkspaceAddService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,6 +49,8 @@ public class WorkspaceController {
     private final InvitationAddService invitationAddService;
     private final InvitationQueryService invitationQueryService;
     private final MembershipService membershipService;
+    private final WorkspaceCategoryService workspaceCategoryService;
+    private final CategoryMigrateService categoryMigrateService;
 
     @Operation(
             summary = "Crear un nuevo workspace",
@@ -83,6 +94,25 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void exitWorkspace(@PathVariable Long workspaceId) {
         workspaceAddService.leaveWorkspace(workspaceId);
+    }
+
+    @Operation(
+            summary = "Listar miembros del workspace activo",
+            description = "Devuelve los emails de todos los miembros del workspace activo.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Lista de emails de miembros",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(schema = @Schema(implementation = String.class))
+                            )
+                    )
+            }
+    )
+    @GetMapping("/members")
+    public List<String> getWorkspaceMembers() {
+        return membershipService.getMemberEmails();
     }
 
     @Operation(
@@ -142,5 +172,73 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.OK)
     public void updateDefaultWorkspace(@PathVariable Long id) {
         workspaceAddService.updateDefaultWorkspace(id);
+    }
+
+    // ==================== CATEGORIES ====================
+
+    @Operation(
+            summary = "Obtener categorias activas del workspace activo",
+            description = "Recupera la lista de categorias activas asociadas al workspace activo del usuario",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Lista de categorias del workspace",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = CategoryRecord.class)
+                                    )
+                            )
+                    )
+            }
+    )
+    @GetMapping("/categories")
+    public List<CategoryRecord> getCategories() {
+        return workspaceCategoryService.getActiveCategories();
+    }
+
+    @Operation(
+            summary = "Agregar categoria al workspace activo",
+            description = "Crea la categoria si no existe y la asocia al workspace activo. Es idempotente.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Categoria creada o reactivada")
+            }
+    )
+    @PostMapping("/categories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryRecord addCategory(@RequestParam String description) {
+        return workspaceCategoryService.addCategory(description);
+    }
+
+    @Operation(
+            summary = "Eliminar categoria del workspace activo",
+            description = "Elimina la asociacion entre el workspace activo y la categoria. "
+                    + "No elimina la categoria global.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Categoria eliminada"),
+                    @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
+            }
+    )
+    @DeleteMapping("/categories/{categoryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCategory(@PathVariable Long categoryId) {
+        workspaceCategoryService.deleteCategory(categoryId);
+    }
+
+    @Operation(
+            summary = "Migrar movimientos de una categoria a otra",
+            description = "Reasigna los movimientos del workspace activo de fromCategoryId a toCategoryId. "
+                    + "Solo ADMIN.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Migracion completada"),
+                    @ApiResponse(responseCode = "400",
+                            description = "fromCategoryId igual a toCategoryId"),
+                    @ApiResponse(responseCode = "404", description = "Categoria destino no encontrada")
+            }
+    )
+    @PatchMapping("/categories/migrate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void migrateCategory(@Valid @RequestBody CategoryMigrateRequest request) {
+        categoryMigrateService.migrateCategory(request);
     }
 }

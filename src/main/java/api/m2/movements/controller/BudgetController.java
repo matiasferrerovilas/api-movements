@@ -39,7 +39,8 @@ public class BudgetController {
 
     @Operation(
             summary = "Listar presupuestos",
-            description = "Recupera los presupuestos de una cuenta para un período dado, con el monto consumido calculado",
+            description = "Recupera los presupuestos del workspace activo para un período dado, "
+                    + "con el monto consumido calculado",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -53,11 +54,10 @@ public class BudgetController {
     )
     @GetMapping
     public List<BudgetRecord> getBudgets(
-            @Parameter(description = "ID del workspace") @RequestParam Long workspaceId,
             @Parameter(description = "Símbolo de moneda (ej: ARS, USD)") @RequestParam String currency,
             @Parameter(description = "Año del período") @RequestParam int year,
             @Parameter(description = "Mes del período (1-12)") @RequestParam int month) {
-        return budgetQueryService.getByAccount(workspaceId, currency, year, month);
+        return budgetQueryService.getByAccount(currency, year, month);
     }
 
     @Operation(

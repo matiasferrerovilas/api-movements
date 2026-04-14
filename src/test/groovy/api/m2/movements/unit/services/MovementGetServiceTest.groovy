@@ -4,11 +4,9 @@ import api.m2.movements.entities.Movement
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementSearchFilterRecord
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.records.workspaces.WorkspaceRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.movements.MovementGetService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
@@ -17,7 +15,7 @@ class MovementGetServiceTest extends Specification {
 
     MovementRepository movementRepository = Mock(MovementRepository)
     MovementMapper movementMapper = Mock(MovementMapper)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
 
     MovementGetService service
 
@@ -25,15 +23,12 @@ class MovementGetServiceTest extends Specification {
         service = new MovementGetService(
                 movementRepository,
                 movementMapper,
-                workspaceQueryService
+                workspaceContextService
         )
     }
 
     def "getExpensesBy - should return paged movements for user workspaces"() {
         given:
-        def owner = new UserBaseRecord("owner@test.com", 1L)
-        def workspace1 = new WorkspaceRecord(1L, "Workspace 1", owner, [])
-        def workspace2 = new WorkspaceRecord(2L, "Workspace 2", owner, [])
         def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
         def pageable = PageRequest.of(0, 10)
 
@@ -42,8 +37,8 @@ class MovementGetServiceTest extends Specification {
         def movementRecord1 = Stub(MovementRecord)
         def movementRecord2 = Stub(MovementRecord)
 
-        workspaceQueryService.findAllWorkspacesOfLogInUser() >> [workspace1, workspace2]
-        movementRepository.getExpenseBy([1L, 2L], filter, pageable) >> new PageImpl([movement1, movement2])
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement1, movement2])
         movementMapper.toRecord(movement1) >> movementRecord1
         movementMapper.toRecord(movement2) >> movementRecord2
 
@@ -61,8 +56,8 @@ class MovementGetServiceTest extends Specification {
         def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
         def pageable = PageRequest.of(0, 10)
 
-        workspaceQueryService.findAllWorkspacesOfLogInUser() >> []
-        movementRepository.getExpenseBy([], filter, pageable) >> new PageImpl([])
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([])
 
         when:
         def result = service.getExpensesBy(filter, pageable)

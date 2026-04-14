@@ -10,6 +10,7 @@ import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.CalculateBalanceService
 import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -22,6 +23,7 @@ class CalculateBalanceServiceTest extends Specification {
     UserService userService = Mock()
     CurrencyRepository currencyRepository = Mock()
     BalanceEvolutionMapper balanceEvolutionMapper = Mappers.getMapper(BalanceEvolutionMapper)
+    WorkspaceContextService workspaceContextService = Mock()
 
     CalculateBalanceService service
 
@@ -34,10 +36,12 @@ class CalculateBalanceServiceTest extends Specification {
                 movementRepository,
                 userService,
                 currencyRepository,
-                balanceEvolutionMapper
+                balanceEvolutionMapper,
+                workspaceContextService
         )
         // stub de usuario en todos los tests
         userService.getAuthenticatedUser() >> user
+        workspaceContextService.getActiveWorkspaceId() >> 1L
     }
 
     // ── getBalance ─────────────────────────────────────────────────────────────
@@ -47,7 +51,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 12, 31),
-                [1, 2],
                 ["EUR"]
         )
         currencyRepository.findAllBySymbol(["EUR"]) >> []
@@ -78,7 +81,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 12, 31),
-                [1],
                 ["USD"]
         )
         currencyRepository.findAllBySymbol(["USD"]) >> []
@@ -97,7 +99,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 6, 30),
-                [1],
                 ["ARS"]
         )
         currencyRepository.findAllBySymbol(_) >> []
@@ -121,7 +122,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 12, 31),
-                [1],
                 currencies
         )
         currencyRepository.findAllBySymbol(currencies) >> []
@@ -149,7 +149,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 3, 1),
                 LocalDate.of(2026, 3, 31),
-                [1, 2],
                 ["EUR"]
         )
         def expectedResult = [
@@ -157,7 +156,7 @@ class CalculateBalanceServiceTest extends Specification {
         ] as Set
 
         movementRepository.getBalanceWithCategoryByYear(
-                2026, 3, [1, 2], ["EUR"], "user@test.com"
+                2026, 3, [1], ["EUR"], "user@test.com"
         ) >> expectedResult
 
         when:
@@ -172,7 +171,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 3, 1),
                 LocalDate.of(2026, 9, 30),
-                [1],
                 ["EUR"]
         )
         movementRepository.getBalanceWithCategoryByYear(*_) >> ([] as Set)
@@ -189,7 +187,6 @@ class CalculateBalanceServiceTest extends Specification {
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 12, 31),
-                [],
                 []
         )
         movementRepository.getBalanceWithCategoryByYear(*_) >> ([] as Set)
@@ -235,10 +232,10 @@ class CalculateBalanceServiceTest extends Specification {
             getCurrencySymbol() >> "EUR"
             getTotal()          >> new BigDecimal("200")
         }
-        movementRepository.findMonthlyEvolution(2026 as Integer, [1L, 2L]) >> [proj1, proj2]
+        movementRepository.findMonthlyEvolution(2026 as Integer, [1L]) >> [proj1, proj2]
 
         when:
-        def result = service.getMonthlyEvolution(2026, [1L, 2L])
+        def result = service.getMonthlyEvolution(2026)
 
         then: "mapper fills all 12 months for EUR, missing months get BigDecimal.ZERO"
         result.size() == 12
@@ -253,7 +250,7 @@ class CalculateBalanceServiceTest extends Specification {
         movementRepository.findMonthlyEvolution(2026 as Integer, [1L]) >> []
 
         when:
-        def result = service.getMonthlyEvolution(2026, [1L])
+        def result = service.getMonthlyEvolution(2026)
 
         then: "mapper returns empty — no currencies to fill"
         result.isEmpty()
@@ -274,7 +271,7 @@ class CalculateBalanceServiceTest extends Specification {
         movementRepository.findMonthlyEvolution(2026 as Integer, [1L]) >> [eurProj, usdProj]
 
         when:
-        def result = service.getMonthlyEvolution(2026, [1L])
+        def result = service.getMonthlyEvolution(2026)
 
         then: "12 months per currency = 24 total"
         result.size() == 24
@@ -287,7 +284,7 @@ class CalculateBalanceServiceTest extends Specification {
         movementRepository.findMonthlyEvolution(_ as Integer, _ as List) >> []
 
         when:
-        service.getMonthlyEvolution(2026, [1L])
+        service.getMonthlyEvolution(2026)
 
         then:
         0 * userService.getAuthenticatedUser()

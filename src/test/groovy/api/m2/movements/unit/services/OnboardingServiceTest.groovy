@@ -13,7 +13,7 @@ import api.m2.movements.records.onboarding.OnBoardingAmount
 import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.repositories.WorkspaceRepository
 import api.m2.movements.services.banks.BankAddService
-import api.m2.movements.services.category.UserCategoryService
+import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.workspaces.WorkspaceAddService
 import api.m2.movements.services.income.IncomeAddService
@@ -28,7 +28,7 @@ class OnboardingServiceTest extends Specification {
     IncomeAddService incomeAddService = Mock(IncomeAddService)
     WorkspaceAddService workspaceAddService = Mock(WorkspaceAddService)
     BankAddService bankAddService = Mock(BankAddService)
-    UserCategoryService userCategoryService = Mock(UserCategoryService)
+    WorkspaceCategoryService workspaceCategoryService = Mock(WorkspaceCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     WorkspaceRepository workspaceRepository = Mock(WorkspaceRepository)
@@ -37,7 +37,7 @@ class OnboardingServiceTest extends Specification {
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, workspaceAddService,
-                bankAddService, userCategoryService, userSettingService, currencyAddService, workspaceRepository)
+                bankAddService, workspaceCategoryService, userSettingService, currencyAddService, workspaceRepository)
     }
 
     def "finish - should create user, accounts, banks, categories and income when all fields are present"() {
@@ -71,14 +71,13 @@ class OnboardingServiceTest extends Specification {
         1 * bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         0 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 11L)
         1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, 1L)
-        1 * userCategoryService.addCategories(user, categories)
-        1 * userCategoryService.addDefaultCategories(user)
-        1 * incomeAddService.loadIncome(_ as IncomeToAdd) >> { List args ->
+        1 * workspaceCategoryService.addCategories(defaultWorkspace, categories)
+        1 * workspaceCategoryService.addDefaultCategories(defaultWorkspace)
+        1 * incomeAddService.loadIncome(_ as IncomeToAdd, defaultWorkspace) >> { List args ->
             def income = args[0] as IncomeToAdd
             assert income.bank() == "GALICIA"
             assert income.currency().symbol() == "ARS"
             assert income.amount() == new BigDecimal("1500.00")
-            assert income.workspace() == "DEFAULT"
         }
         1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 42L)
     }
@@ -196,8 +195,8 @@ class OnboardingServiceTest extends Specification {
 
         then:
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
-        1 * userCategoryService.addCategories(user, ["HOGAR"])
-        1 * userCategoryService.addDefaultCategories(user)
+        1 * workspaceCategoryService.addCategories(defaultWorkspace, ["HOGAR"])
+        1 * workspaceCategoryService.addDefaultCategories(defaultWorkspace)
     }
 
     def "finish - should call addDefaultCategories even when categoriesToAdd is empty"() {
@@ -217,8 +216,8 @@ class OnboardingServiceTest extends Specification {
 
         then:
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
-        1 * userCategoryService.addCategories(user, [])
-        1 * userCategoryService.addDefaultCategories(user)
+        1 * workspaceCategoryService.addCategories(defaultWorkspace, [])
+        1 * workspaceCategoryService.addDefaultCategories(defaultWorkspace)
     }
 
     def "finish - should skip income when bank is null"() {

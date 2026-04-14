@@ -10,23 +10,22 @@ import java.util.List;
 @Repository
 public interface IncomeRepository extends JpaRepository<Income, Long> {
     @Query(value = """
-        select distinct i
-        from Income i
-        join fetch i.currency
-        join fetch i.workspace a
-        join fetch i.bank b
-        join a.members m
-        where m.user.id = :userId
+        SELECT DISTINCT i
+        FROM Income i
+        JOIN FETCH i.currency
+        JOIN FETCH i.workspace w
+        JOIN FETCH i.bank b
+        WHERE w.id = :workspaceId
 """)
-    List<Income> findAllByUserOrGroupsIn(Long userId);
+    List<Income> findAllByWorkspaceId(Long workspaceId);
 
     @Query("""
-        select i
-        from Income i
-        join fetch i.currency
-        join fetch i.workspace
-        join fetch i.bank
-        where i.user.id = :userId
+        SELECT i
+        FROM Income i
+        JOIN FETCH i.currency
+        JOIN FETCH i.workspace
+        JOIN FETCH i.bank
+        WHERE i.user.id = :userId
     """)
     List<Income> findAllByUserId(Long userId);
 }

@@ -79,8 +79,7 @@ public class BalanceController {
     @ApiResponse(responseCode = "200", description = "Evolución calculada correctamente")
     @GetMapping("/monthly-evolution")
     public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(
-            @RequestParam @Min(2000) @Max(2100) Integer year,
-            @RequestParam(required = false) List<Long> workspaceIds) {
-        return calculateBalanceService.getMonthlyEvolution(year, workspaceIds);
+            @RequestParam @Min(2000) @Max(2100) Integer year) {
+        return calculateBalanceService.getMonthlyEvolution(year);
     }
 }

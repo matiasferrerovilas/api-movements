@@ -8,7 +8,7 @@ import api.m2.movements.entities.Workspace
 import api.m2.movements.mappers.IncomeMapper
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.income.IncomeQueryService
-import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
@@ -16,26 +16,26 @@ class IncomeQueryServiceTest extends Specification {
 
     IncomeMapper incomeMapper = Mappers.getMapper(IncomeMapper)
     IncomeRepository incomeRepository = Mock(IncomeRepository)
-    UserService userService = Mock(UserService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
 
     IncomeQueryService service
 
     def setup() {
         service = new IncomeQueryService(
                 incomeRepository,
-                userService,
+                workspaceContextService,
                 incomeMapper
         )
     }
 
     def "getAllIncomes - should return mapped income records for authenticated user"() {
         given:
-        def userId = 1L
-        def user = Stub(User) { getId() >> userId }
+        def workspaceId = 10L
 
-        def workspace = Stub(Workspace) { getId() >> 10L; getName() >> "Mi cuenta" }
+        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def bank = Stub(Bank) { getId() >> 1L; getDescription() >> "GALICIA" }
+        def user = Stub(User) { getId() >> 1L }
 
         def income = new Income(
                 id: 1L,
@@ -46,8 +46,8 @@ class IncomeQueryServiceTest extends Specification {
                 bank: bank
         )
 
-        userService.getAuthenticatedUser() >> user
-        incomeRepository.findAllByUserOrGroupsIn(userId) >> [income]
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        incomeRepository.findAllByWorkspaceId(workspaceId) >> [income]
 
         when:
         def result = service.getAllIncomes()
@@ -61,11 +61,10 @@ class IncomeQueryServiceTest extends Specification {
 
     def "getAllIncomes - should return empty list when user has no incomes"() {
         given:
-        def userId = 1L
-        def user = Stub(User) { getId() >> userId }
+        def workspaceId = 10L
 
-        userService.getAuthenticatedUser() >> user
-        incomeRepository.findAllByUserOrGroupsIn(userId) >> []
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        incomeRepository.findAllByWorkspaceId(workspaceId) >> []
 
         when:
         def result = service.getAllIncomes()
@@ -76,13 +75,13 @@ class IncomeQueryServiceTest extends Specification {
 
     def "getAllIncomes - should return multiple incomes for user"() {
         given:
-        def userId = 1L
-        def user = Stub(User) { getId() >> userId }
+        def workspaceId = 10L
 
-        def workspace = Stub(Workspace) { getId() >> 10L; getName() >> "Mi cuenta" }
+        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currencyArs = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def currencyUsd = Stub(Currency) { getSymbol() >> "USD"; getId() >> 2L }
         def bank = Stub(Bank) { getId() >> 1L; getDescription() >> "BBVA" }
+        def user = Stub(User) { getId() >> 1L }
 
         def income1 = new Income(
                 id: 1L,
@@ -101,8 +100,8 @@ class IncomeQueryServiceTest extends Specification {
                 bank: bank
         )
 
-        userService.getAuthenticatedUser() >> user
-        incomeRepository.findAllByUserOrGroupsIn(userId) >> [income1, income2]
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        incomeRepository.findAllByWorkspaceId(workspaceId) >> [income1, income2]
 
         when:
         def result = service.getAllIncomes()

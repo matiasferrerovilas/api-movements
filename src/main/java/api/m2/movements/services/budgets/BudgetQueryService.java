@@ -3,7 +3,7 @@ package api.m2.movements.services.budgets;
 import api.m2.movements.mappers.BudgetMapper;
 import api.m2.movements.records.budgets.BudgetRecord;
 import api.m2.movements.repositories.BudgetRepository;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,11 +19,11 @@ public class BudgetQueryService {
 
     private final BudgetRepository budgetRepository;
     private final BudgetMapper budgetMapper;
-    private final WorkspaceQueryService workspaceQueryService;
+    private final WorkspaceContextService workspaceContextService;
 
     @Transactional(readOnly = true)
-    public List<BudgetRecord> getByAccount(Long workspaceId, String currencySymbol, int year, int month) {
-        workspaceQueryService.findWorkspaceById(workspaceId);
+    public List<BudgetRecord> getByAccount(String currencySymbol, int year, int month) {
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
 
         return budgetRepository.findByAccountAndPeriod(workspaceId, currencySymbol, year, month)
                 .stream()

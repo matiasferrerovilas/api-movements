@@ -87,7 +87,6 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 description: "HBO Max",
                 amount     : 12.99,
                 currency   : [symbol: "ARS", id: testCurrency.id],
-                workspaceId: testWorkspace.id,
                 isPaid     : false
         ]
 
@@ -110,8 +109,7 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
         def request = [
                 description: "", // Empty description
                 amount     : null,
-                currency   : [symbol: "ARS"],
-                workspaceId: testWorkspace.id
+                currency   : [symbol: "ARS"]
         ]
 
         when:

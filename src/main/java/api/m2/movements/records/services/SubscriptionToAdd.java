@@ -19,7 +19,5 @@ public record SubscriptionToAdd(
         @Valid
         CurrencyRecord currency,
         LocalDate lastPayment,
-        Boolean isPaid,
-        @NotNull(message = "El workspace es requerido")
-        Long workspaceId) {
+        Boolean isPaid) {
 }

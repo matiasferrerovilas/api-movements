@@ -10,6 +10,7 @@ import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,23 +30,28 @@ public class CalculateBalanceService {
     private final UserService userService;
     private final CurrencyRepository currencyRepository;
     private final BalanceEvolutionMapper balanceEvolutionMapper;
+    private final WorkspaceContextService workspaceContextService;
 
     @Transactional(readOnly = true)
     public Map<BalanceEnum, BigDecimal> getBalance(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var currencies = currencyRepository.findAllBySymbol(balanceFilterRecord.currencies());
+
         var ingresos = movementRepository.getBalanceByFilters(
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 user.getEmail(),
                 List.of(MovementType.INGRESO.toString()),
-                balanceFilterRecord.groups(),
+                List.of(workspaceId.intValue()),
                 currencies);
 
-        var movements = movementRepository.getBalanceByFilters(balanceFilterRecord.startDate(),
-                balanceFilterRecord.endDate(), user.getEmail(),
+        var movements = movementRepository.getBalanceByFilters(
+                balanceFilterRecord.startDate(),
+                balanceFilterRecord.endDate(),
+                user.getEmail(),
                 List.of(MovementType.DEBITO.toString()),
-                balanceFilterRecord.groups(),
+                List.of(workspaceId.intValue()),
                 currencies);
 
         Map<BalanceEnum, BigDecimal> result = new EnumMap<>(BalanceEnum.class);
@@ -58,9 +64,11 @@ public class CalculateBalanceService {
     @Transactional(readOnly = true)
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
-        return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.startDate().getYear(),
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        return movementRepository.getBalanceWithCategoryByYear(
+                balanceFilterRecord.startDate().getYear(),
                 balanceFilterRecord.startDate().getMonthValue(),
-                balanceFilterRecord.groups(),
+                List.of(workspaceId.intValue()),
                 balanceFilterRecord.currencies(),
                 user.getEmail());
     }
@@ -72,9 +80,10 @@ public class CalculateBalanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year, List<Long> workspaceIds) {
+    public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year) {
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         return balanceEvolutionMapper.toRecordsWithFilledMonths(
-                movementRepository.findMonthlyEvolution(year, workspaceIds)
+                movementRepository.findMonthlyEvolution(year, List.of(workspaceId))
         );
     }
 }

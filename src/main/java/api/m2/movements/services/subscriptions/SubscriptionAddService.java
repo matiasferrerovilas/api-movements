@@ -19,6 +19,7 @@ import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class SubscriptionAddService {
     private final MovementAddService movementAddService;
     private final CategoryAddService categoryAddService;
     private final UserService userService;
+    private final WorkspaceContextService workspaceContextService;
     private final WorkspaceQueryService workspaceQueryService;
     private final ServicePublishServiceWebSocket servicePublishService;
     private final UserSettingService userSettingService;
@@ -49,7 +51,7 @@ public class SubscriptionAddService {
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
         var user = userService.getAuthenticatedUser();
-        var workspace = workspaceQueryService.findWorkspaceById(subscriptionToAdd.workspaceId());
+        var workspace = workspaceContextService.getActiveWorkspace();
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyRepository);
         subscription.setOwner(user);
         subscription.setWorkspace(workspace);
@@ -121,8 +123,7 @@ public class SubscriptionAddService {
                 subscription.getCurrency().getSymbol(),
                 0,
                 0,
-                defaultBank,
-                subscription.getWorkspace().getId()));
+                defaultBank));
     }
 
     private void syncMovementIfPaid(Subscription subscription, UpdateSubscriptionRecord update) {

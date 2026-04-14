@@ -18,7 +18,7 @@ import api.m2.movements.services.currencies.CurrencyResolver
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.user.UserService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -29,7 +29,7 @@ class MovementFactoryTest extends Specification {
     CurrencyResolver currencyResolver = Mock(CurrencyResolver)
     UserService userService = Mock(UserService)
     MovementMapper movementMapper = Mock(MovementMapper)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     BankRepository bankRepository = Mock(BankRepository)
     ExchangeRateResolver exchangeRateResolver = Mock(ExchangeRateResolver)
 
@@ -41,7 +41,7 @@ class MovementFactoryTest extends Specification {
                 currencyResolver,
                 userService,
                 movementMapper,
-                workspaceQueryService,
+                workspaceContextService,
                 bankRepository,
                 exchangeRateResolver
         )
@@ -58,8 +58,7 @@ class MovementFactoryTest extends Specification {
                 "USD",
                 null,
                 null,
-                "BBVA",
-                1L
+                "BBVA"
         )
 
         def movement = new Movement()
@@ -70,10 +69,10 @@ class MovementFactoryTest extends Specification {
         def bank = Stub(Bank) { getId() >> 5L }
 
         movementMapper.toEntity(dto) >> movement
-        categoryResolver.resolve(_ as String) >> category
+        workspaceContextService.getActiveWorkspace() >> workspace
+        categoryResolver.resolve(_ as String, workspace) >> category
         currencyResolver.resolve("USD") >> currency
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.findWorkspaceById(1L) >> workspace
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         exchangeRateResolver.resolveRate("USD", dto.date()) >> new BigDecimal("1.0")
 
@@ -100,8 +99,7 @@ class MovementFactoryTest extends Specification {
                 "EUR",
                 null,
                 null,
-                null,
-                2L
+                null
         )
 
         def movement = new Movement()
@@ -111,10 +109,10 @@ class MovementFactoryTest extends Specification {
         def workspace = Stub(Workspace)
 
         movementMapper.toEntity(dto) >> movement
-        categoryResolver.resolve(_ as String) >> category
+        workspaceContextService.getActiveWorkspace() >> workspace
+        categoryResolver.resolve(_ as String, workspace) >> category
         currencyResolver.resolve("EUR") >> currency
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.findWorkspaceById(2L) >> workspace
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> new BigDecimal("1.08")
 
         when:
@@ -136,8 +134,7 @@ class MovementFactoryTest extends Specification {
                 "USD",
                 null,
                 null,
-                "UNKNOWN_BANK",
-                1L
+                "UNKNOWN_BANK"
         )
 
         def movement = new Movement()
@@ -147,10 +144,10 @@ class MovementFactoryTest extends Specification {
         def workspace = Stub(Workspace)
 
         movementMapper.toEntity(dto) >> movement
-        categoryResolver.resolve(_ as String) >> category
+        workspaceContextService.getActiveWorkspace() >> workspace
+        categoryResolver.resolve(_ as String, workspace) >> category
         currencyResolver.resolve("USD") >> currency
         userService.getAuthenticatedUser() >> user
-        workspaceQueryService.findWorkspaceById(1L) >> workspace
         bankRepository.findByDescription("UNKNOWN_BANK") >> Optional.empty()
 
         when:

@@ -55,8 +55,7 @@ public abstract class ExpenseFileStrategy {
                 e.currency().getSymbol(),
                 cuotaActual,
                 cuotaTotales,
-                getBank(),
-                movementFileToAdd.workspaceId()
+                getBank()
         );
 
     }

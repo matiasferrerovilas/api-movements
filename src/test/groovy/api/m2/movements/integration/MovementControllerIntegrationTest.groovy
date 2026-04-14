@@ -76,8 +76,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 currency   : "ARS",
                 cuotaActual: 0,
                 cuotaTotal : 0,
-                bank       : "GALICIA",
-                workspaceId: testWorkspace.id
+                bank       : "GALICIA"
         ]
 
         when:
@@ -101,8 +100,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 description: "", // Empty description
                 category   : "COMIDA",
                 type       : "DEBITO",
-                currency   : "ARS",
-                workspaceId: testWorkspace.id
+                currency   : "ARS"
         ]
 
         when:

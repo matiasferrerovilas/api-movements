@@ -17,11 +17,9 @@ import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.MovementRepository
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket
-import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
@@ -34,8 +32,6 @@ class MovementAddServiceTest extends Specification {
     MovementMapper movementMapper
     MovementFactory movementFactory = Mock(MovementFactory)
     MovementPublishServiceWebSocket movementPublishService = Mock(MovementPublishServiceWebSocket)
-    UserService userService = Mock(UserService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
 
     MovementAddService service
 
@@ -49,9 +45,7 @@ class MovementAddServiceTest extends Specification {
                 movementRepository,
                 movementMapper,
                 movementFactory,
-                movementPublishService,
-                userService,
-                workspaceQueryService
+                movementPublishService
         )
     }
 
@@ -77,19 +71,16 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                "HOGAR", "GASTO", "ARS", null, null, null, 1L
+                "HOGAR", "GASTO", "ARS", null, null, null
         )
-        def user = Stub(User) { getId() >> 10L }
         def movement = buildMovement(1L)
 
-        userService.getAuthenticatedUser() >> user
         movementFactory.create(_ as MovementToAdd) >> movement
 
         when:
         service.saveMovement(dto)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 10L)
         1 * movementRepository.save(_ as Movement) >> movement
     }
 
@@ -97,12 +88,10 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                "HOGAR", "GASTO", "ARS", null, null, null, 99L
+                "HOGAR", "GASTO", "ARS", null, null, null
         )
-        def user = Stub(User) { getId() >> 10L }
 
-        userService.getAuthenticatedUser() >> user
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(99L, 10L) >> {
+        movementFactory.create(_ as MovementToAdd) >> {
             throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso")
         }
 

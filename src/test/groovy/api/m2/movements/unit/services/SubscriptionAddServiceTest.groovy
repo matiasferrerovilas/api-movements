@@ -21,6 +21,7 @@ import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebS
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.subscriptions.SubscriptionAddService
 import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
@@ -37,6 +38,7 @@ class SubscriptionAddServiceTest extends Specification {
     MovementAddService movementAddService = Mock(MovementAddService)
     CategoryAddService categoryAddService = Mock(CategoryAddService)
     UserService userService = Mock(UserService)
+    WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     ServicePublishServiceWebSocket servicePublishService = Mock(ServicePublishServiceWebSocket)
     UserSettingService userSettingService = Mock(UserSettingService)
@@ -52,6 +54,7 @@ class SubscriptionAddServiceTest extends Specification {
                 movementAddService,
                 categoryAddService,
                 userService,
+                workspaceContextService,
                 workspaceQueryService,
                 servicePublishService,
                 userSettingService
@@ -87,7 +90,6 @@ class SubscriptionAddServiceTest extends Specification {
             assert m.amount() == new BigDecimal("10.00")
             assert m.type() == MovementType.DEBITO.name()
             assert m.currency() == "ARS"
-            assert m.workspaceId() == 10L
         }
     }
 

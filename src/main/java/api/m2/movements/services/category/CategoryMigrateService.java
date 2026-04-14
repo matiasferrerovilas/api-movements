@@ -5,7 +5,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.categories.CategoryMigrateRequest;
 import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.MovementRepository;
-import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +16,7 @@ public class CategoryMigrateService {
 
     private final MovementRepository movementRepository;
     private final CategoryRepository categoryRepository;
-    private final UserService userService;
+    private final WorkspaceContextService workspaceContextService;
 
     @Transactional
     public void migrateCategory(CategoryMigrateRequest request) {
@@ -24,12 +24,14 @@ public class CategoryMigrateService {
             throw new BusinessException("fromCategoryId y toCategoryId no pueden ser iguales");
         }
 
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+
         var toCategory = categoryRepository.findById(request.toCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Categoría destino no encontrada con id: " + request.toCategoryId()));
 
-        var user = userService.getAuthenticatedUser();
-        var movements = movementRepository.findByOwnerIdAndCategoryId(user.getId(), request.fromCategoryId());
+        var movements = movementRepository.findByWorkspaceIdAndCategoryId(
+                workspaceId, request.fromCategoryId());
 
         movements.forEach(movement -> movement.setCategory(toCategory));
         movementRepository.saveAll(movements);

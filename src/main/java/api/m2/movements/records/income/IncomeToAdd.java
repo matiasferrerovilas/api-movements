@@ -35,12 +35,4 @@ public record IncomeToAdd(
         )
         @NotNull(message = "El monto es requerido")
         @Positive(message = "El monto debe ser mayor a cero")
-        BigDecimal amount,
-        @Schema(
-                description = "Workspace al que pertenece el ingreso",
-                example = "DEFAULT",
-                allowableValues = {"DEFAULT", "FAMILY"},
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        @NotBlank(message = "El workspace es requerido")
-        String workspace) { }
+        BigDecimal amount) { }

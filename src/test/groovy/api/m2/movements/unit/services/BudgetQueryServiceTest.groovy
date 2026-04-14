@@ -10,19 +10,19 @@ import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.services.budgets.BudgetQueryService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class BudgetQueryServiceTest extends Specification {
 
     BudgetRepository budgetRepository = Mock()
     BudgetMapper budgetMapper = Mock()
-    WorkspaceQueryService workspaceQueryService = Mock()
+    WorkspaceContextService workspaceContextService = Mock()
 
     BudgetQueryService service
 
     def setup() {
-        service = new BudgetQueryService(budgetRepository, budgetMapper, workspaceQueryService)
+        service = new BudgetQueryService(budgetRepository, budgetMapper, workspaceContextService)
     }
 
     def buildBudget(String categoryName, String currencySymbol, BigDecimal amount) {
@@ -55,13 +55,13 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("5000.00"), null, null,
                 new BigDecimal("2000.00"), new BigDecimal("40.00"))
 
-        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 4) >> new BigDecimal("2000.00")
         budgetMapper.toRecordWithSpent(budget, new BigDecimal("2000.00")) >> expectedRecord
 
         when:
-        def result = service.getByAccount(1L, "ARS", 2026, 4)
+        def result = service.getByAccount("ARS", 2026, 4)
 
         then:
         result.size() == 1
@@ -71,11 +71,11 @@ class BudgetQueryServiceTest extends Specification {
 
     def "getByAccount - should return empty list when no budgets found"() {
         given:
-        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> []
 
         when:
-        def result = service.getByAccount(1L, "ARS", 2026, 4)
+        def result = service.getByAccount("ARS", 2026, 4)
 
         then:
         result.isEmpty()
@@ -90,12 +90,12 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("3000.00"), null, null,
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
-        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
         budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
 
         when:
-        def result = service.getByAccount(1L, "ARS", 2026, 4)
+        def result = service.getByAccount("ARS", 2026, 4)
 
         then:
         result.size() == 1
@@ -111,13 +111,13 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("500.00"), null, null,
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
-        workspaceQueryService.findWorkspaceById(1L) >> Stub(Workspace)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
         budgetRepository.findByAccountAndPeriod(1L, "USD", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Hogar", "USD", 2026, 4) >> null
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
 
         when:
-        def result = service.getByAccount(1L, "USD", 2026, 4)
+        def result = service.getByAccount("USD", 2026, 4)
 
         then:
         result.size() == 1
