@@ -6,6 +6,7 @@ import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class MembershipService {
     private final MembershipRepository membershipRepository;
     private final UserService userService;
 
+    @Transactional(readOnly = true)
     public List<MembershipSummaryProjection> getAllMemberships() {
         var user = userService.getAuthenticatedUserRecord();
         return membershipRepository.findAllByUserId(user.id());

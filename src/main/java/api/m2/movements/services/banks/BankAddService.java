@@ -10,11 +10,13 @@ import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.UserBankRepository;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BankAddService {
 
     private final BankRepository bankRepository;

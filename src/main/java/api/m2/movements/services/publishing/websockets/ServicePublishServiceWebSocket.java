@@ -1,5 +1,6 @@
 package api.m2.movements.services.publishing.websockets;
 
+import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
 import api.m2.movements.records.services.SubscriptionRecord;
 import lombok.extern.slf4j.Slf4j;
@@ -20,21 +21,21 @@ public class ServicePublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishServicePaid(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/update", EventType.SERVICE_PAID);
+        this.publish(dto, WebSocketTopics.servicesUpdate(dto.workspaceId()), EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishUpdateService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/update", EventType.SERVICE_UPDATED);
+        this.publish(dto, WebSocketTopics.servicesUpdate(dto.workspaceId()), EventType.SERVICE_UPDATED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishNewService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/new", EventType.SERVICE_PAID);
+        this.publish(dto, WebSocketTopics.servicesNew(dto.workspaceId()), EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishDeleteService(SubscriptionRecord dto) {
-        this.publish(dto, "/topic/servicios/" + dto.workspaceId() + "/remove", EventType.SERVICE_DELETED);
+        this.publish(dto, WebSocketTopics.servicesRemove(dto.workspaceId()), EventType.SERVICE_DELETED);
     }
 }

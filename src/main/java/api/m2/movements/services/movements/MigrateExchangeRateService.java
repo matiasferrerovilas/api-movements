@@ -1,5 +1,6 @@
 package api.m2.movements.services.movements;
 
+import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.currencies.ExchangeRateResolver;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +19,27 @@ public class MigrateExchangeRateService {
     @Transactional
     public int migrateAll() {
         var movements = movementRepository.findAllByExchangeRateIsNull();
+        int successCount = 0;
+        int failCount = 0;
 
-        movements.forEach(movement -> {
-            var rate = exchangeRateResolver.resolveRate(
-                    movement.getCurrency().getSymbol(),
-                    movement.getDate()
-            );
-            movement.setExchangeRate(rate);
-        });
+        for (var movement : movements) {
+            try {
+                var rate = exchangeRateResolver.resolveRate(
+                        movement.getCurrency().getSymbol(),
+                        movement.getDate()
+                );
+                movement.setExchangeRate(rate);
+                movementRepository.save(movement);
+                successCount++;
+            } catch (ExchangeRateNotFoundException e) {
+                log.warn("No se pudo obtener exchange rate para movimiento {}: {}",
+                        movement.getId(), e.getMessage());
+                failCount++;
+            }
+        }
 
-        movementRepository.saveAll(movements);
-
-        log.info("Migración de exchange_rate completada: {} movimientos procesados", movements.size());
-        return movements.size();
+        log.info("Migración de exchange_rate completada: {} exitosos, {} fallidos de {} totales",
+                successCount, failCount, movements.size());
+        return successCount;
     }
 }

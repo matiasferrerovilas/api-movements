@@ -8,6 +8,7 @@ import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class InvitationQueryService {
     private final WorkspaceInvitationRepository workspaceInvitationRepository;
     private final WorkspaceInvitationMapper workspaceInvitationMapper;
 
+    @Transactional(readOnly = true)
     public List<InvitationToWorkspaceRecord> getAllInvitations() {
         var user = userService.getAuthenticatedUserRecord();
         return workspaceInvitationMapper.toRecord(

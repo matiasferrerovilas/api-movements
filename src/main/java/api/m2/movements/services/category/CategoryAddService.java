@@ -1,11 +1,13 @@
 package api.m2.movements.services.category;
 
 import api.m2.movements.entities.Category;
+import api.m2.movements.enums.DefaultCategory;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.repositories.CategoryRepository;
-import api.m2.movements.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +15,8 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CategoryAddService {
-
-    private static final String SIN_CATEGORIA = "SIN_CATEGORIA";
-    private static final String STREAMING     = "STREAMING";
-    private static final String SERVICIOS     = "SERVICIOS";
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -40,22 +39,22 @@ public class CategoryAddService {
     }
 
     public String getDefaultCategory() {
-        return SIN_CATEGORIA;
+        return DefaultCategory.SIN_CATEGORIA.getDescription();
     }
 
     public CategoryRecord resolveDefaultCategory(String description) {
         if (StringUtils.isBlank(description)) {
-            return this.findCategoryByDescription(SIN_CATEGORIA);
+            return this.findCategoryByDescription(DefaultCategory.SIN_CATEGORIA.getDescription());
         }
 
         String desc = description.toLowerCase();
 
         if (Stream.of("netflix", "hbo", "disney+").anyMatch(desc::contains)) {
-            return this.findCategoryByDescription(STREAMING);
+            return this.findCategoryByDescription(DefaultCategory.STREAMING.getDescription());
         } else if (desc.contains("spotify")) {
-            return this.findCategoryByDescription(SERVICIOS);
+            return this.findCategoryByDescription(DefaultCategory.SERVICIOS.getDescription());
         } else {
-            return this.findCategoryByDescription(SIN_CATEGORIA);
+            return this.findCategoryByDescription(DefaultCategory.SIN_CATEGORIA.getDescription());
         }
     }
 

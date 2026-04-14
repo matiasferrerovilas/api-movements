@@ -2,6 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Movement
+import api.m2.movements.exceptions.ExchangeRateNotFoundException
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.movements.MigrateExchangeRateService
@@ -37,7 +38,7 @@ class MigrateExchangeRateServiceTest extends Specification {
         result == 2
         1 * m1.setExchangeRate(new BigDecimal("900.000000"))
         1 * m2.setExchangeRate(new BigDecimal("900.000000"))
-        1 * movementRepository.saveAll([m1, m2])
+        2 * movementRepository.save(_ as Movement)
     }
 
     def "migrateAll - should return 0 when no movements have null exchange rate"() {
@@ -50,22 +51,48 @@ class MigrateExchangeRateServiceTest extends Specification {
         then:
         result == 0
         0 * exchangeRateResolver._
-        1 * movementRepository.saveAll([])
+        0 * movementRepository.save(_ as Movement)
     }
 
-    def "migrateAll - should set null when Frankfurter cannot resolve rate"() {
+    def "migrateAll - should skip movement when ExchangeRateNotFoundException is thrown"() {
         given:
         def currency = Stub(Currency) { getSymbol() >> "XYZ" }
         def date = LocalDate.of(2024, 3, 10)
-        def movement = Mock(Movement) { getCurrency() >> currency; getDate() >> date }
+        def movement = Mock(Movement) { getCurrency() >> currency; getDate() >> date; getId() >> 1L }
 
         movementRepository.findAllByExchangeRateIsNull() >> [movement]
-        exchangeRateResolver.resolveRate("XYZ", date) >> null
+        exchangeRateResolver.resolveRate("XYZ", date) >> { throw new ExchangeRateNotFoundException("No rate for XYZ") }
 
         when:
-        service.migrateAll()
+        def result = service.migrateAll()
 
         then:
-        1 * movement.setExchangeRate(null)
+        result == 0
+        0 * movement.setExchangeRate(_)
+        0 * movementRepository.save(_ as Movement)
+    }
+
+    def "migrateAll - should continue processing when some movements fail"() {
+        given:
+        def currencyArs = Stub(Currency) { getSymbol() >> "ARS" }
+        def currencyXyz = Stub(Currency) { getSymbol() >> "XYZ" }
+        def date = LocalDate.of(2024, 3, 10)
+        def m1 = Mock(Movement) { getCurrency() >> currencyArs; getDate() >> date }
+        def m2 = Mock(Movement) { getCurrency() >> currencyXyz; getDate() >> date; getId() >> 2L }
+        def m3 = Mock(Movement) { getCurrency() >> currencyArs; getDate() >> date }
+
+        movementRepository.findAllByExchangeRateIsNull() >> [m1, m2, m3]
+        exchangeRateResolver.resolveRate("ARS", date) >> new BigDecimal("900.000000")
+        exchangeRateResolver.resolveRate("XYZ", date) >> { throw new ExchangeRateNotFoundException("No rate for XYZ") }
+
+        when:
+        def result = service.migrateAll()
+
+        then:
+        result == 2
+        1 * m1.setExchangeRate(new BigDecimal("900.000000"))
+        0 * m2.setExchangeRate(_)
+        1 * m3.setExchangeRate(new BigDecimal("900.000000"))
+        2 * movementRepository.save(_ as Movement)
     }
 }

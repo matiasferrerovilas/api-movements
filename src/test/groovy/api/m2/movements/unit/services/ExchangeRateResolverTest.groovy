@@ -1,5 +1,6 @@
 package api.m2.movements.unit.services
 
+import api.m2.movements.exceptions.ExchangeRateNotFoundException
 import api.m2.movements.records.currencies.ExchangeRateRecord
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.currencies.ExchangeRateService
@@ -52,27 +53,27 @@ class ExchangeRateResolverTest extends Specification {
         result == new BigDecimal("0.920000")
     }
 
-    def "resolveRate - should return null when Frankfurter returns empty list"() {
+    def "resolveRate - should throw ExchangeRateNotFoundException when Frankfurter returns empty list"() {
         given:
         def date = LocalDate.of(2024, 6, 15)
         exchangeRateService.getRatesOnDate("USD", "XYZ", date) >> []
 
         when:
-        def result = service.resolveRate("XYZ", date)
+        service.resolveRate("XYZ", date)
 
         then:
-        result == null
+        thrown(ExchangeRateNotFoundException)
     }
 
-    def "resolveRate - should return null when Frankfurter throws exception"() {
+    def "resolveRate - should throw ExchangeRateNotFoundException when Frankfurter throws exception"() {
         given:
         def date = LocalDate.of(2024, 6, 15)
         exchangeRateService.getRatesOnDate("USD", "ARS", date) >> { throw new RuntimeException("timeout") }
 
         when:
-        def result = service.resolveRate("ARS", date)
+        service.resolveRate("ARS", date)
 
         then:
-        result == null
+        thrown(ExchangeRateNotFoundException)
     }
 }

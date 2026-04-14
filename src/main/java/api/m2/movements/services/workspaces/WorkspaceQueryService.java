@@ -1,6 +1,7 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.entities.Workspace;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.WorkspaceMapper;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
@@ -9,7 +10,6 @@ import api.m2.movements.repositories.MembershipRepository;
 import api.m2.movements.repositories.WorkspaceRepository;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
-import api.m2.movements.exceptions.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +29,7 @@ public class WorkspaceQueryService {
     private final MembershipRepository membershipRepository;
     private final UserSettingService userSettingService;
 
+    @Transactional(readOnly = true)
     public List<WorkspaceRecord> findAllWorkspacesOfLogInUser() {
         var owner = userService.getAuthenticatedUser();
         return workspaceRepository.findAllWorkspacesByMemberIdWithAllMembers(owner.getId())
@@ -36,7 +37,7 @@ public class WorkspaceQueryService {
                 .toList();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<WorkspaceDetail> getAllWorkspaceDetails() {
         var owner = userService.getAuthenticatedUser();
         var defaultWorkspaceId = userSettingService.getDefaultWorkspaceId(owner).orElse(null);
@@ -50,11 +51,13 @@ public class WorkspaceQueryService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public boolean verifyWorkspaceExist(@NotNull String name, Long id) {
         return workspaceRepository.findWorkspaceByNameAndOwnerId(name, id)
                 .isPresent();
     }
 
+    @Transactional(readOnly = true)
     public Workspace findWorkspaceByName(String name) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("El nombre del workspace no puede estar vacío");
@@ -65,11 +68,13 @@ public class WorkspaceQueryService {
                 .orElseThrow(() -> new EntityNotFoundException("No existe workspace con ese nombre para el usuario"));
     }
 
+    @Transactional(readOnly = true)
     public Workspace findWorkspaceById(Long workspaceId) {
         return workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new EntityNotFoundException("No existe workspace con ese id"));
     }
 
+    @Transactional(readOnly = true)
     public void verifyUserIsMemberOfWorkspace(Long workspaceId, Long userId) {
         membershipRepository.findMember(workspaceId, userId)
                 .orElseThrow(() -> new PermissionDeniedException("No tienes permiso para operar sobre este recurso"));

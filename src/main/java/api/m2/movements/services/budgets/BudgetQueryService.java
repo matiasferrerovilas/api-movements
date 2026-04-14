@@ -7,6 +7,7 @@ import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +21,7 @@ public class BudgetQueryService {
     private final BudgetMapper budgetMapper;
     private final WorkspaceQueryService workspaceQueryService;
 
+    @Transactional(readOnly = true)
     public List<BudgetRecord> getByAccount(Long workspaceId, String currencySymbol, int year, int month) {
         workspaceQueryService.findWorkspaceById(workspaceId);
 

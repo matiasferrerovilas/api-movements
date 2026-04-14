@@ -3,6 +3,7 @@ package api.m2.movements.services.category;
 import api.m2.movements.entities.Category;
 import api.m2.movements.entities.User;
 import api.m2.movements.entities.UserCategory;
+import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
@@ -11,6 +12,7 @@ import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.repositories.UserCategoryRepository;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserCategoryService {
 
     private final UserCategoryRepository userCategoryRepository;
@@ -40,7 +43,7 @@ public class UserCategoryService {
 
     @Transactional
     public void addDefaultCategories(User user) {
-        var category = categoryAddService.addCategory(SERVICIOS);
+        var category = categoryAddService.addCategory(DefaultCategory.SERVICIOS.getDescription());
         this.resolveUserCategory(user, category);
     }
 
@@ -83,6 +86,4 @@ public class UserCategoryService {
                                 .category(category)
                                 .build()));
     }
-
-    private static final String SERVICIOS = "SERVICIOS";
 }

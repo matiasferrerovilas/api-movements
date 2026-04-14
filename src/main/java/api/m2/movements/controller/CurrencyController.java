@@ -37,7 +37,7 @@ public class CurrencyController {
       }
   )
   @GetMapping
-  public List<CurrencyRecord> getAllCategories() {
+  public List<CurrencyRecord> getAllCurrencies() {
     return currencyAddService.getAllCurrencies();
   }
 }

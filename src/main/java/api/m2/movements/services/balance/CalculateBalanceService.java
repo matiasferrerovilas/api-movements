@@ -13,6 +13,7 @@ import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.EnumMap;
@@ -29,6 +30,7 @@ public class CalculateBalanceService {
     private final CurrencyRepository currencyRepository;
     private final BalanceEvolutionMapper balanceEvolutionMapper;
 
+    @Transactional(readOnly = true)
     public Map<BalanceEnum, BigDecimal> getBalance(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
         var currencies = currencyRepository.findAllBySymbol(balanceFilterRecord.currencies());
@@ -53,6 +55,7 @@ public class CalculateBalanceService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
         var user = userService.getAuthenticatedUser();
         return movementRepository.getBalanceWithCategoryByYear(balanceFilterRecord.startDate().getYear(),
@@ -62,11 +65,13 @@ public class CalculateBalanceService {
                 user.getEmail());
     }
 
+    @Transactional(readOnly = true)
     public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
         var user = userService.getAuthenticatedUser();
         return movementRepository.getBalanceByYearAndGroup(year, month, user.getEmail());
     }
 
+    @Transactional(readOnly = true)
     public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year, List<Long> workspaceIds) {
         return balanceEvolutionMapper.toRecordsWithFilledMonths(
                 movementRepository.findMonthlyEvolution(year, workspaceIds)

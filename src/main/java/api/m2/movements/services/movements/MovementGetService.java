@@ -1,18 +1,18 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.mappers.MovementMapper;
-import api.m2.movements.records.workspaces.WorkspaceRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
+import api.m2.movements.records.workspaces.WorkspaceRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class MovementGetService {
     private final MovementMapper movementMapper;
     private final WorkspaceQueryService workspaceQueryService;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
         var workspaces = workspaceQueryService.findAllWorkspacesOfLogInUser()
                 .stream()

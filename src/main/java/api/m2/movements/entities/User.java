@@ -1,6 +1,7 @@
 package api.m2.movements.entities;
 
 import api.m2.movements.enums.UserType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -46,4 +47,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    @Column(name = "has_seen_tour", nullable = false)
+    @Builder.Default
+    private boolean hasSeenTour = false;
 }

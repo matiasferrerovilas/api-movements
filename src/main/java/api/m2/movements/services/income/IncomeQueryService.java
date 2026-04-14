@@ -7,6 +7,7 @@ import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class IncomeQueryService {
     private final UserService userService;
     private final IncomeMapper incomeMapper;
 
+    @Transactional(readOnly = true)
     public List<IncomeRecord> getAllIncomes() {
         var user = userService.getAuthenticatedUser();
         return incomeMapper.toRecord(incomeRepository.findAllByUserOrGroupsIn(user.getId()));

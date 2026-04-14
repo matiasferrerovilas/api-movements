@@ -4,5 +4,6 @@ public record UserMeRecord(
         Long id,
         String email,
         boolean isFirstLogin,
-        String userType
+        String userType,
+        boolean hasSeenTour
 ) { }

@@ -3,6 +3,7 @@ package api.m2.movements.services.subscriptions;
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.Bank;
 import api.m2.movements.entities.Subscription;
+import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -33,7 +34,6 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class SubscriptionAddService {
-    private static final String SERVICIOS = "SERVICIOS";
 
     private final SubscriptionMapper subscriptionMapper;
     private final SubscriptionRepository subscriptionRepository;
@@ -104,7 +104,8 @@ public class SubscriptionAddService {
     }
 
     public void addMovementForSubscription(Subscription subscription) {
-        var category = categoryAddService.findCategoryByDescription(SERVICIOS);
+        var category = categoryAddService
+                .findCategoryByDescription(DefaultCategory.SERVICIOS.getDescription());
         String description = "Servicio Pagado " + subscription.getDescription();
 
         String defaultBank = userSettingService.getDefaultBank(subscription.getOwner())

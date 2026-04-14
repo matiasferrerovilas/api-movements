@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,5 +40,22 @@ public class UserController {
     @GetMapping("/me")
     public UserMeRecord getMe() {
         return userService.getMe();
+    }
+
+    @Operation(
+            summary = "Marcar tour como visto",
+            description = "Marca que el usuario autenticado ya vio el tour de la aplicación. "
+                    + "Esto evita que se muestre el tour en futuros ingresos.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Tour marcado como visto"
+                    )
+            }
+    )
+    @PutMapping("/me/tour")
+    public ResponseEntity<Void> markTourAsSeen() {
+        userService.markTourAsSeen();
+        return ResponseEntity.noContent().build();
     }
 }

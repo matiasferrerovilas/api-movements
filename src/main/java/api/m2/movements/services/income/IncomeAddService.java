@@ -2,8 +2,10 @@ package api.m2.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.User;
+import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.IncomeMapper;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.income.IncomeToAdd;
@@ -12,15 +14,14 @@ import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.services.currencies.CurrencyAddService;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
-import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import jakarta.validation.Valid;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -65,7 +66,8 @@ public class IncomeAddService {
     }
 
     public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
-        CategoryRecord category = categoryAddService.findCategoryByDescription(HOGAR);
+        CategoryRecord category = categoryAddService
+                .findCategoryByDescription(DefaultCategory.HOGAR.getDescription());
         var account = workspaceQueryService.findWorkspaceByName(incomeToAdd.workspace());
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
 
@@ -92,7 +94,7 @@ public class IncomeAddService {
                 incomeToReload.getAmount(),
                 LocalDate.now(ZoneOffset.UTC),
                 "Ingreso",
-                HOGAR,
+                DefaultCategory.HOGAR.getDescription(),
                 MovementType.INGRESO.name(),
                 incomeToReload.getCurrency().getSymbol(),
                 null,
@@ -122,7 +124,7 @@ public class IncomeAddService {
                     income.getAmount(),
                     LocalDate.now(ZoneOffset.UTC),
                     "Ingreso recurrente",
-                    HOGAR,
+                    DefaultCategory.HOGAR.getDescription(),
                     MovementType.INGRESO.name(),
                     income.getCurrency().getSymbol(),
                     null,
@@ -135,6 +137,4 @@ public class IncomeAddService {
 
         return incomes.size();
     }
-
-    private static final String HOGAR = "HOGAR";
 }
