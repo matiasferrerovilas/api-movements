@@ -26,7 +26,7 @@ public interface SubscriptionMapper {
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
     @Mapping(target = "workspaceName", expression = "java(subscription.getWorkspace().getName())")
     @Mapping(target = "workspaceId", expression = "java(subscription.getWorkspace().getId())")
-    @Mapping(target = "user", source = "owner.email")
+    @Mapping(target = "user", source = "owner.givenName")
     SubscriptionRecord toRecord(Subscription subscription);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

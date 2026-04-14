@@ -2,6 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Currency
 import api.m2.movements.entities.Subscription
+import api.m2.movements.entities.User
 import api.m2.movements.entities.Workspace
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.repositories.SubscriptionRepository
@@ -34,6 +35,11 @@ class SubscriptionQueryServiceTest extends Specification {
         def currencySymbols = ["ARS", "USD"]
         def lastPayment = LocalDate.of(2026, 3, 1)
 
+        def user = Stub(User) {
+            getId() >> 1L
+            getGivenName() >> "Juan"
+            getEmail() >> "juan@example.com"
+        }
         def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def subscription = new Subscription(
@@ -42,7 +48,8 @@ class SubscriptionQueryServiceTest extends Specification {
                 amount: new BigDecimal("10.00"),
                 lastPayment: lastPayment,
                 workspace: workspace,
-                currency: currency
+                currency: currency,
+                owner: user
         )
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
@@ -54,6 +61,7 @@ class SubscriptionQueryServiceTest extends Specification {
         then:
         result.size() == 1
         result[0].description() == "Netflix"
+        result[0].user() == "Juan"
     }
 
     def "getSubscriptionsBy - should return empty list when no subscriptions match"() {
