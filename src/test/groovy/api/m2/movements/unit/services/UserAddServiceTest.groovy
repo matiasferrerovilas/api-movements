@@ -9,6 +9,8 @@ import api.m2.movements.services.user.UserAddService
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import spock.lang.Specification
 
 class UserAddServiceTest extends Specification {
@@ -25,12 +27,14 @@ class UserAddServiceTest extends Specification {
         SecurityContextHolder.clearContext()
     }
 
-    def "createLogInUser - should create user with email from security context"() {
+    def "createLogInUser - should create user with email, givenName and familyName from JWT"() {
         given:
         def email = "newuser@test.com"
-        setupSecurityContext(email)
+        def givenName = "John"
+        def familyName = "Doe"
+        setupJwtSecurityContext(email, givenName, familyName)
 
-        def savedUser = new User(id: 1L, email: email, isFirstLogin: true)
+        def savedUser = new User(id: 1L, email: email, givenName: givenName, familyName: familyName, isFirstLogin: true)
         userRepository.save(_ as User) >> savedUser
 
         when:
@@ -38,11 +42,38 @@ class UserAddServiceTest extends Specification {
 
         then:
         1 * userRepository.save({ User u ->
-            u.email == email && u.isFirstLogin == true
+            u.email == email &&
+            u.givenName == givenName &&
+            u.familyName == familyName &&
+            u.isFirstLogin == true
         }) >> savedUser
         result.id == 1L
         result.email == email
+        result.givenName == givenName
+        result.familyName == familyName
         result.isFirstLogin == true
+    }
+
+    def "createLogInUser - should create user with null givenName and familyName when not in JWT"() {
+        given:
+        def email = "newuser@test.com"
+        setupJwtSecurityContext(email, null, null)
+
+        def savedUser = new User(id: 1L, email: email, givenName: null, familyName: null, isFirstLogin: true)
+        userRepository.save(_ as User) >> savedUser
+
+        when:
+        def result = service.createLogInUser()
+
+        then:
+        1 * userRepository.save({ User u ->
+            u.email == email &&
+            u.givenName == null &&
+            u.familyName == null &&
+            u.isFirstLogin == true
+        }) >> savedUser
+        result.givenName == null
+        result.familyName == null
     }
 
     def "createLogInUser - should throw PermissionDeniedException when not authenticated"() {
@@ -58,10 +89,10 @@ class UserAddServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "createLogInUser - should throw PermissionDeniedException when authentication is not authenticated"() {
+    def "createLogInUser - should throw PermissionDeniedException when authentication is not JwtAuthenticationToken"() {
         given:
         def auth = Mock(Authentication)
-        auth.isAuthenticated() >> false
+        auth.isAuthenticated() >> true
 
         def securityContext = Mock(SecurityContext)
         securityContext.getAuthentication() >> auth
@@ -121,13 +152,16 @@ class UserAddServiceTest extends Specification {
         })
     }
 
-    private void setupSecurityContext(String email) {
-        def auth = Mock(Authentication)
-        auth.isAuthenticated() >> true
-        auth.getName() >> email
+    private void setupJwtSecurityContext(String email, String givenName, String familyName) {
+        def jwt = Stub(Jwt) {
+            getClaimAsString("email") >> email
+            getClaimAsString("given_name") >> givenName
+            getClaimAsString("family_name") >> familyName
+        }
+        def jwtAuth = new JwtAuthenticationToken(jwt)
 
         def securityContext = Mock(SecurityContext)
-        securityContext.getAuthentication() >> auth
+        securityContext.getAuthentication() >> jwtAuth
         SecurityContextHolder.setContext(securityContext)
     }
 }

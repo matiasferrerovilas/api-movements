@@ -5,7 +5,7 @@ server:
 jwt:
   auth:
     converter:
-      principle-attribute: preferred_username
+      principle-attribute: email
       resource-id: admin-m2
 
 spring:

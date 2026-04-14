@@ -82,7 +82,8 @@ class UserServiceTest extends Specification {
     def "getAuthenticatedUserRecord - should return mapped record"() {
         given:
         def email = "test@test.com"
-        def user = new User(id: 1L, email: email, isFirstLogin: false)
+        def givenName = "John"
+        def user = new User(id: 1L, email: email, givenName: givenName, isFirstLogin: false)
 
         setupSecurityContext(email)
         userRepository.findByEmail(email) >> Optional.of(user)
@@ -92,7 +93,7 @@ class UserServiceTest extends Specification {
 
         then:
         result.id() == 1L
-        result.email() == email
+        result.givenName() == givenName
     }
 
     def "getUserByEmail - should return users by email list"() {
@@ -175,7 +176,15 @@ class UserServiceTest extends Specification {
     def "getMe - should return UserMeRecord for existing user"() {
         given:
         def email = "test@test.com"
-        def user = new User(id: 1L, email: email, isFirstLogin: false, userType: UserType.CONSUMER, hasSeenTour: true)
+        def user = new User(
+            id: 1L,
+            email: email,
+            givenName: "John",
+            familyName: "Doe",
+            isFirstLogin: false,
+            userType: UserType.CONSUMER,
+            hasSeenTour: true
+        )
 
         setupSecurityContext(email)
         userRepository.findByEmail(email) >> Optional.of(user)
@@ -186,6 +195,8 @@ class UserServiceTest extends Specification {
         then:
         result.id() == 1L
         result.email() == email
+        result.givenName() == "John"
+        result.familyName() == "Doe"
         result.isFirstLogin() == false
         result.userType() == "CONSUMER"
         result.hasSeenTour() == true
@@ -203,6 +214,8 @@ class UserServiceTest extends Specification {
         then:
         result.id() == null
         result.email() == null
+        result.givenName() == null
+        result.familyName() == null
         result.isFirstLogin() == true
         result.userType() == null
         result.hasSeenTour() == false

@@ -31,7 +31,7 @@ class InvitationQueryServiceTest extends Specification {
     def "getAllInvitations - should return pending invitations for authenticated user"() {
         given:
         def userId = 1L
-        def userRecord = new UserBaseRecord("test@test.com", userId)
+        def userRecord = new UserBaseRecord("John", userId)
 
         def inviter = Stub(User) { getId() >> 2L; getEmail() >> "inviter@test.com" }
         def invitedUser = Stub(User) { getId() >> userId; getEmail() >> "test@test.com" }
@@ -60,7 +60,7 @@ class InvitationQueryServiceTest extends Specification {
     def "getAllInvitations - should return empty list when no pending invitations"() {
         given:
         def userId = 1L
-        def userRecord = new UserBaseRecord("test@test.com", userId)
+        def userRecord = new UserBaseRecord("John", userId)
 
         userService.getAuthenticatedUserRecord() >> userRecord
         workspaceInvitationRepository.findAllByUserIdAndStatus(userId, InvitationStatus.PENDING) >> []
@@ -75,7 +75,7 @@ class InvitationQueryServiceTest extends Specification {
     def "getAllInvitations - should return multiple pending invitations"() {
         given:
         def userId = 1L
-        def userRecord = new UserBaseRecord("test@test.com", userId)
+        def userRecord = new UserBaseRecord("John", userId)
 
         def inviter1 = Stub(User) { getId() >> 2L; getEmail() >> "user1@test.com" }
         def inviter2 = Stub(User) { getId() >> 3L; getEmail() >> "user2@test.com" }

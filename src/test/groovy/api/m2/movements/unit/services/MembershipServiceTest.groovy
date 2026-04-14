@@ -28,7 +28,7 @@ class MembershipServiceTest extends Specification {
     def "getAllMemberships - should return membership projections for authenticated user"() {
         given:
         def userId = 1L
-        def userRecord = new UserBaseRecord("test@test.com", userId)
+        def userRecord = new UserBaseRecord("John", userId)
 
         def projection1 = Stub(MembershipSummaryProjection) {
             getWorkspaceId() >> 10L
@@ -58,7 +58,7 @@ class MembershipServiceTest extends Specification {
     def "getAllMemberships - should return empty list when user has no memberships"() {
         given:
         def userId = 1L
-        def userRecord = new UserBaseRecord("test@test.com", userId)
+        def userRecord = new UserBaseRecord("John", userId)
 
         userService.getAuthenticatedUserRecord() >> userRecord
         membershipRepository.findAllByUserId(userId) >> []
@@ -73,7 +73,7 @@ class MembershipServiceTest extends Specification {
     def "getAllMemberships - should delegate to repository with correct user id"() {
         given:
         def userId = 42L
-        def userRecord = new UserBaseRecord("specific@test.com", userId)
+        def userRecord = new UserBaseRecord("Jane", userId)
 
         userService.getAuthenticatedUserRecord() >> userRecord
         membershipRepository.findAllByUserId(userId) >> []

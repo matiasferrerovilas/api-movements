@@ -98,7 +98,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should throw PermissionDeniedException when user is not a member"() {
         given:
-        def user = new UserBaseRecord("user@test.com", 5L)
+        def user = new UserBaseRecord("John", 5L)
 
         userService.getAuthenticatedUserRecord() >> user
         membershipRepository.findMember(99L, 5L) >> Optional.empty()
@@ -112,7 +112,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should throw PermissionDeniedException when owner tries to leave with other members"() {
         given:
-        def user = new UserBaseRecord("owner@test.com", 1L)
+        def user = new UserBaseRecord("Owner", 1L)
         def workspace = Workspace.builder().id(10L).name("Grupo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.OWNER
@@ -132,13 +132,13 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should deactivate workspace and publish event when owner leaves as sole member"() {
         given:
-        def user = new UserBaseRecord("owner@test.com", 1L)
+        def user = new UserBaseRecord("Owner", 1L)
         def workspace = Workspace.builder().id(10L).name("Solo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.OWNER
             getWorkspace() >> workspace
         }
-        def workspaceRecord = new WorkspaceRecord(10L, "Solo", new UserBaseRecord("owner@test.com", 1L), [])
+        def workspaceRecord = new WorkspaceRecord(10L, "Solo", new UserBaseRecord("Owner", 1L), [])
 
         userService.getAuthenticatedUserRecord() >> user
         membershipRepository.findMember(10L, 1L) >> Optional.of(membership)
@@ -157,13 +157,13 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should delete membership and publish event for collaborator"() {
         given:
-        def user = new UserBaseRecord("collab@test.com", 2L)
+        def user = new UserBaseRecord("Collab", 2L)
         def workspace = Workspace.builder().id(10L).name("Grupo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.COLLABORATOR
             getWorkspace() >> workspace
         }
-        def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("owner@test.com", 1L), [])
+        def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("Owner", 1L), [])
 
         userService.getAuthenticatedUserRecord() >> user
         membershipRepository.findMember(10L, 2L) >> Optional.of(membership)
@@ -200,7 +200,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "updateDefaultWorkspace - should upsert setting and publish WorkspaceDetail with isDefault true"() {
         given:
-        def user = new UserBaseRecord("user@test.com", 1L)
+        def user = new UserBaseRecord("User", 1L)
         def workspace = Workspace.builder().id(30L).name("Principal").build()
         def membership = Stub(WorkspaceMember) {
             getWorkspace() >> workspace
@@ -224,7 +224,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "updateDefaultWorkspace - should throw PermissionDeniedException when user is not a member"() {
         given:
-        def user = new UserBaseRecord("user@test.com", 1L)
+        def user = new UserBaseRecord("User", 1L)
 
         userService.getAuthenticatedUserRecord() >> user
         membershipRepository.findMember(99L, 1L) >> Optional.empty()

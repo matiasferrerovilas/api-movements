@@ -74,12 +74,14 @@ public class UserService {
     public UserMeRecord getMe() {
         var optional = findUserByEmail();
         if (optional.isEmpty()) {
-            return new UserMeRecord(null, null, true, null, false);
+            return new UserMeRecord(null, null, null, null, true, null, false);
         }
         var user = optional.get();
         return new UserMeRecord(
                 user.getId(),
                 user.getEmail(),
+                user.getGivenName(),
+                user.getFamilyName(),
                 user.isFirstLogin(),
                 user.getUserType() != null ? user.getUserType().name() : null,
                 user.isHasSeenTour()

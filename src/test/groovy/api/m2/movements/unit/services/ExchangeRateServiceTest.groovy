@@ -96,7 +96,7 @@ class ExchangeRateServiceTest extends Specification {
             String currencySymbol, BigDecimal amount, BigDecimal exchangeRate) {
         def currency = new CurrencyRecord(currencySymbol, 1L)
         def category = new CategoryRecord(1L, "HOGAR", true, true)
-        def owner = new UserBaseRecord("test@test.com", 1L)
+        def owner = new UserBaseRecord("John", 1L)
         def account = new AccountBaseRecord(1L, "Mi cuenta")
         return new MovementRecord(
                 1L,

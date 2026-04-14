@@ -38,6 +38,12 @@ public class User {
 
     private String email;
 
+    @Column(name = "given_name")
+    private String givenName;
+
+    @Column(name = "family_name")
+    private String familyName;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
