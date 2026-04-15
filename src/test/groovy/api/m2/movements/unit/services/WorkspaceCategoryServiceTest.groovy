@@ -8,11 +8,15 @@ import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.mappers.WorkspaceCategoryMapper
+import api.m2.movements.records.categories.CategoryPatchRequest
 import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.records.categories.CategoryUpdatedEvent
+import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
 class WorkspaceCategoryServiceTest extends Specification {
@@ -21,6 +25,8 @@ class WorkspaceCategoryServiceTest extends Specification {
     CategoryAddService categoryAddService = Mock(CategoryAddService)
     WorkspaceCategoryMapper workspaceCategoryMapper = Mock(WorkspaceCategoryMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    CategoryRepository categoryRepository = Mock(CategoryRepository)
+    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
     WorkspaceCategoryService service
 
@@ -29,7 +35,9 @@ class WorkspaceCategoryServiceTest extends Specification {
                 workspaceCategoryRepository,
                 categoryAddService,
                 workspaceCategoryMapper,
-                workspaceContextService
+                workspaceContextService,
+                categoryRepository,
+                eventPublisher
         )
     }
 
@@ -37,7 +45,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         given:
         def workspaceId = 1L
         def workspaceCategory = Stub(WorkspaceCategory)
-        def categoryRecord = new CategoryRecord(1L, "COMIDA", true, true)
+        def categoryRecord = new CategoryRecord(1L, "COMIDA", true, true, null, null)
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
         workspaceCategoryMapper.toRecordList(_ as List) >> [categoryRecord]
@@ -58,7 +66,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         def workspace = Stub(Workspace) { getId() >> workspaceId }
         def category = Stub(Category) { getId() >> 5L }
         def workspaceCategory = Stub(WorkspaceCategory)
-        def categoryRecord = new CategoryRecord(1L, description, true, true)
+        def categoryRecord = new CategoryRecord(1L, description, true, true, null, null)
 
         workspaceContextService.getActiveWorkspace() >> workspace
         categoryAddService.addCategory(description) >> category
@@ -82,7 +90,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         def existingWsCategory = Mock(WorkspaceCategory) {
             isActive() >> false
         }
-        def categoryRecord = new CategoryRecord(1L, description, true, true)
+        def categoryRecord = new CategoryRecord(1L, description, true, true, null, null)
 
         workspaceContextService.getActiveWorkspace() >> workspace
         categoryAddService.addCategory(description) >> category
@@ -235,5 +243,138 @@ class WorkspaceCategoryServiceTest extends Specification {
 
         then:
         0 * workspaceCategoryRepository.save(_ as WorkspaceCategory)
+    }
+
+    def "updateCategory - should update all fields successfully"() {
+        given:
+        def categoryId = 1L
+        def workspaceId = 10L
+        def request = new CategoryPatchRequest("Hogar Actualizado", "HomeOutlined", "#faad14")
+
+        def workspace = Mock(Workspace) {
+            getId() >> workspaceId
+        }
+        def category = Mock(Category)
+        def workspaceCategory = Mock(WorkspaceCategory) {
+            getWorkspace() >> workspace
+            getCategory() >> category
+        }
+        def categoryRecord = new CategoryRecord(categoryId, "Hogar Actualizado", true, true, "HomeOutlined", "#faad14")
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
+        workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
+        workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
+
+        when:
+        def result = service.updateCategory(categoryId, request)
+
+        then:
+        1 * category.setDescription("Hogar Actualizado")
+        1 * categoryRepository.save(category)
+        1 * workspaceCategory.setIconName("HomeOutlined")
+        1 * workspaceCategory.setIconColor("#faad14")
+        1 * eventPublisher.publishEvent(_ as CategoryUpdatedEvent)
+        result.description() == "Hogar Actualizado"
+        result.iconName() == "HomeOutlined"
+        result.iconColor() == "#faad14"
+    }
+
+    def "updateCategory - should update only iconName when provided"() {
+        given:
+        def categoryId = 1L
+        def workspaceId = 10L
+        def request = new CategoryPatchRequest(null, "CarOutlined", null)
+
+        def workspace = Mock(Workspace) {
+            getId() >> workspaceId
+        }
+        def workspaceCategory = Mock(WorkspaceCategory) {
+            getWorkspace() >> workspace
+        }
+        def categoryRecord = new CategoryRecord(categoryId, "Transporte", true, true, "CarOutlined", "#1890ff")
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
+        workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
+        workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
+
+        when:
+        def result = service.updateCategory(categoryId, request)
+
+        then:
+        0 * categoryRepository.save(_)
+        1 * workspaceCategory.setIconName("CarOutlined")
+        0 * workspaceCategory.setIconColor(_)
+        1 * eventPublisher.publishEvent(_ as CategoryUpdatedEvent)
+        result.iconName() == "CarOutlined"
+    }
+
+    def "updateCategory - should update only iconColor when provided"() {
+        given:
+        def categoryId = 1L
+        def workspaceId = 10L
+        def request = new CategoryPatchRequest(null, null, "#52c41a")
+
+        def workspace = Mock(Workspace) {
+            getId() >> workspaceId
+        }
+        def workspaceCategory = Mock(WorkspaceCategory) {
+            getWorkspace() >> workspace
+        }
+        def categoryRecord = new CategoryRecord(categoryId, "Salud", true, true, "MedicineBoxOutlined", "#52c41a")
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
+        workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
+        workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
+
+        when:
+        def result = service.updateCategory(categoryId, request)
+
+        then:
+        0 * workspaceCategory.setIconName(_)
+        1 * workspaceCategory.setIconColor("#52c41a")
+        1 * eventPublisher.publishEvent(_ as CategoryUpdatedEvent)
+        result.iconColor() == "#52c41a"
+    }
+
+    def "updateCategory - should throw EntityNotFoundException when category not found"() {
+        given:
+        def categoryId = 999L
+        def request = new CategoryPatchRequest("Nueva Desc", null, null)
+
+        workspaceCategoryRepository.findById(categoryId) >> Optional.empty()
+
+        when:
+        service.updateCategory(categoryId, request)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * eventPublisher.publishEvent(_)
+    }
+
+    def "updateCategory - should throw PermissionDeniedException when category not in active workspace"() {
+        given:
+        def categoryId = 1L
+        def workspaceId = 10L
+        def request = new CategoryPatchRequest("Nueva Desc", null, null)
+
+        def differentWorkspace = Mock(Workspace) {
+            getId() >> 999L
+        }
+        def workspaceCategory = Mock(WorkspaceCategory) {
+            getWorkspace() >> differentWorkspace
+        }
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
+
+        when:
+        service.updateCategory(categoryId, request)
+
+        then:
+        thrown(PermissionDeniedException)
+        0 * eventPublisher.publishEvent(_)
     }
 }

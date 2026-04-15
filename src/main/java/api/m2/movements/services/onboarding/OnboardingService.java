@@ -42,7 +42,7 @@ public class OnboardingService {
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
-        var user = userAddService.createLogInUser();
+        var user = userAddService.createLogInUser(onBoardingForm.userType());
         var defaultWorkspace = this.createWorkspaces(onBoardingForm, user);
         this.addBanks(onBoardingForm, user);
         this.addDefaultCurrency(user);

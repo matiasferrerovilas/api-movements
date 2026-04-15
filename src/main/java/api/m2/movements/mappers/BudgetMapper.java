@@ -60,7 +60,9 @@ public interface BudgetMapper {
                         budget.getCategory().getId(),
                         budget.getCategory().getDescription(),
                         true,
-                        budget.getCategory().isDeletable()),
+                        budget.getCategory().isDeletable(),
+                        null,
+                        null),
                 new api.m2.movements.records.currencies.CurrencyRecord(
                         budget.getCurrency().getSymbol(),
                         budget.getCurrency().getId()),

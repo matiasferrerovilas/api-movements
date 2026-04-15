@@ -66,7 +66,7 @@ class CategoryAddServiceTest extends Specification {
     def "findCategoryByDescription - should return category record when found"() {
         given:
         def category = Stub(Category) { getDescription() >> "HOGAR" }
-        def categoryRecord = new CategoryRecord(1L, "HOGAR", true, true)
+        def categoryRecord = new CategoryRecord(1L, "HOGAR", true, true, null, null)
 
         categoryRepository.findByDescription("HOGAR") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -101,7 +101,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return SIN_CATEGORIA when description is blank"() {
         given:
         def category = Stub(Category) { getDescription() >> "SIN_CATEGORIA" }
-        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false)
+        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false, null, null)
 
         categoryRepository.findByDescription("SIN_CATEGORIA") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -116,7 +116,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return STREAMING for Netflix"() {
         given:
         def category = Stub(Category) { getDescription() >> "STREAMING" }
-        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true)
+        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true, null, null)
 
         categoryRepository.findByDescription("STREAMING") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -131,7 +131,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return STREAMING for HBO"() {
         given:
         def category = Stub(Category) { getDescription() >> "STREAMING" }
-        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true)
+        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true, null, null)
 
         categoryRepository.findByDescription("STREAMING") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -146,7 +146,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return STREAMING for Disney+"() {
         given:
         def category = Stub(Category) { getDescription() >> "STREAMING" }
-        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true)
+        def categoryRecord = new CategoryRecord(2L, "STREAMING", true, true, null, null)
 
         categoryRepository.findByDescription("STREAMING") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -161,7 +161,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return SERVICIOS for Spotify"() {
         given:
         def category = Stub(Category) { getDescription() >> "SERVICIOS" }
-        def categoryRecord = new CategoryRecord(3L, "SERVICIOS", true, true)
+        def categoryRecord = new CategoryRecord(3L, "SERVICIOS", true, true, null, null)
 
         categoryRepository.findByDescription("SERVICIOS") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
@@ -176,7 +176,7 @@ class CategoryAddServiceTest extends Specification {
     def "resolveDefaultCategory - should return SIN_CATEGORIA for unrecognized description"() {
         given:
         def category = Stub(Category) { getDescription() >> "SIN_CATEGORIA" }
-        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false)
+        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false, null, null)
 
         categoryRepository.findByDescription("SIN_CATEGORIA") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord

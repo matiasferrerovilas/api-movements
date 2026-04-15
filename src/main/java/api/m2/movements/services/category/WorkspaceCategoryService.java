@@ -8,11 +8,15 @@ import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.WorkspaceCategoryMapper;
+import api.m2.movements.records.categories.CategoryPatchRequest;
 import api.m2.movements.records.categories.CategoryRecord;
+import api.m2.movements.records.categories.CategoryUpdatedEvent;
+import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +31,8 @@ public class WorkspaceCategoryService {
     private final CategoryAddService categoryAddService;
     private final WorkspaceCategoryMapper workspaceCategoryMapper;
     private final WorkspaceContextService workspaceContextService;
+    private final CategoryRepository categoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<CategoryRecord> getActiveCategories() {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
@@ -69,6 +75,43 @@ public class WorkspaceCategoryService {
         }
 
         workspaceCategoryRepository.delete(workspaceCategory);
+    }
+
+    @Transactional
+    public CategoryRecord updateCategory(Long workspaceCategoryId, CategoryPatchRequest request) {
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+
+        // Buscar la WorkspaceCategory por su ID directo
+        var workspaceCategory = workspaceCategoryRepository
+                .findById(workspaceCategoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
+
+        // Verificar que pertenece al workspace activo
+        if (!workspaceCategory.getWorkspace().getId().equals(workspaceId)) {
+            throw new PermissionDeniedException("No tenés acceso a esta categoría");
+        }
+
+        // Actualizar solo los campos proporcionados (null-safe)
+        if (request.description() != null && !request.description().isBlank()) {
+            // La descripción modifica la Category global
+            var category = workspaceCategory.getCategory();
+            category.setDescription(request.description());
+            categoryRepository.save(category);
+        }
+        if (request.iconName() != null) {
+            workspaceCategory.setIconName(request.iconName());
+        }
+        if (request.iconColor() != null) {
+            workspaceCategory.setIconColor(request.iconColor());
+        }
+
+        var savedWorkspaceCategory = workspaceCategoryRepository.save(workspaceCategory);
+        var categoryRecord = workspaceCategoryMapper.toRecord(savedWorkspaceCategory);
+
+        // Publicar evento para WebSocket (solo si el commit es exitoso)
+        eventPublisher.publishEvent(new CategoryUpdatedEvent(categoryRecord, workspaceId));
+
+        return categoryRecord;
     }
 
     /**

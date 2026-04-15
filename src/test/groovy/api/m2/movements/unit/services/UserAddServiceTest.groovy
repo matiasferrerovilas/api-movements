@@ -32,48 +32,54 @@ class UserAddServiceTest extends Specification {
         def email = "newuser@test.com"
         def givenName = "John"
         def familyName = "Doe"
+        def userType = "PERSONAL"
         setupJwtSecurityContext(email, givenName, familyName)
 
-        def savedUser = new User(id: 1L, email: email, givenName: givenName, familyName: familyName, isFirstLogin: true)
+        def savedUser = new User(id: 1L, email: email, givenName: givenName, familyName: familyName, isFirstLogin: true, userType: UserType.PERSONAL)
         userRepository.save(_ as User) >> savedUser
 
         when:
-        def result = service.createLogInUser()
+        def result = service.createLogInUser(userType)
 
         then:
         1 * userRepository.save({ User u ->
             u.email == email &&
             u.givenName == givenName &&
             u.familyName == familyName &&
-            u.isFirstLogin == true
+            u.isFirstLogin == true &&
+            u.userType == UserType.PERSONAL
         }) >> savedUser
         result.id == 1L
         result.email == email
         result.givenName == givenName
         result.familyName == familyName
         result.isFirstLogin == true
+        result.userType == UserType.PERSONAL
     }
 
     def "createLogInUser - should create user with null givenName and familyName when not in JWT"() {
         given:
         def email = "newuser@test.com"
+        def userType = "ENTERPRISE"
         setupJwtSecurityContext(email, null, null)
 
-        def savedUser = new User(id: 1L, email: email, givenName: null, familyName: null, isFirstLogin: true)
+        def savedUser = new User(id: 1L, email: email, givenName: null, familyName: null, isFirstLogin: true, userType: UserType.ENTERPRISE)
         userRepository.save(_ as User) >> savedUser
 
         when:
-        def result = service.createLogInUser()
+        def result = service.createLogInUser(userType)
 
         then:
         1 * userRepository.save({ User u ->
             u.email == email &&
             u.givenName == null &&
             u.familyName == null &&
-            u.isFirstLogin == true
+            u.isFirstLogin == true &&
+            u.userType == UserType.ENTERPRISE
         }) >> savedUser
         result.givenName == null
         result.familyName == null
+        result.userType == UserType.ENTERPRISE
     }
 
     def "createLogInUser - should throw PermissionDeniedException when not authenticated"() {
@@ -83,7 +89,7 @@ class UserAddServiceTest extends Specification {
         SecurityContextHolder.setContext(securityContext)
 
         when:
-        service.createLogInUser()
+        service.createLogInUser("PERSONAL")
 
         then:
         thrown(PermissionDeniedException)
@@ -99,7 +105,7 @@ class UserAddServiceTest extends Specification {
         SecurityContextHolder.setContext(securityContext)
 
         when:
-        service.createLogInUser()
+        service.createLogInUser("PERSONAL")
 
         then:
         thrown(PermissionDeniedException)

@@ -2,6 +2,7 @@ package api.m2.movements.controller;
 
 import api.m2.movements.projections.MembershipSummaryProjection;
 import api.m2.movements.records.categories.CategoryMigrateRequest;
+import api.m2.movements.records.categories.CategoryPatchRequest;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.invite.InvitationResponseRecord;
 import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
@@ -208,6 +209,24 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryRecord addCategory(@RequestParam String description) {
         return workspaceCategoryService.addCategory(description);
+    }
+
+    @Operation(
+            summary = "Actualizar categoría",
+            description = "Actualiza la descripción, ícono y/o color de una categoría. "
+                    + "Todos los campos son opcionales.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Categoría actualizada"),
+                    @ApiResponse(responseCode = "404", description = "Categoría no encontrada")
+            }
+    )
+    @PatchMapping("/categories/{categoryId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CategoryRecord updateCategory(
+            @PathVariable Long categoryId,
+            @Valid @RequestBody CategoryPatchRequest request
+    ) {
+        return workspaceCategoryService.updateCategory(categoryId, request);
     }
 
     @Operation(

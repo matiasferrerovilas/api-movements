@@ -11,6 +11,7 @@ public final class WebSocketTopics {
     public static final String SERVICES = "/topic/servicios";
     public static final String INVITATIONS = "/topic/invitation";
     public static final String WORKSPACES = "/topic/workspace";
+    public static final String CATEGORIES = "/topic/categories";
 
     // Suffixes
     public static final String NEW = "/new";
@@ -101,5 +102,12 @@ public final class WebSocketTopics {
      */
     public static String workspacesDefault(String keycloakSubject) {
         return WORKSPACES + DEFAULT + "/" + keycloakSubject;
+    }
+
+    /**
+     * Construye el topic para categorías actualizadas de un workspace.
+     */
+    public static String categoriesUpdate(Long workspaceId) {
+        return CATEGORIES + "/" + workspaceId + UPDATE;
     }
 }

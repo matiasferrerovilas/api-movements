@@ -122,3 +122,6 @@ databaseChangeLog:
   - include:
       file: 041_alter_table_users_make_user_type_not_null.sql
       relativeToChangelogFile: true
+  - include:
+      file: 042_alter_table_category_add_icon_fields.sql
+      relativeToChangelogFile: true

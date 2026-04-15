@@ -52,7 +52,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
@@ -93,7 +93,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
@@ -118,7 +118,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
@@ -142,7 +142,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         bankAddService.addBankToUser("GALICIA", user) >> galiciaBank
         bankAddService.addBankToUser("SANTANDER", user) >> santanderBank
         currencyAddService.findBySymbol("USD") >> usd
@@ -165,7 +165,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 5L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -186,7 +186,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -207,7 +207,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -228,7 +228,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(defaultWorkspace)
 
@@ -250,7 +250,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("ENTERPRISE") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 2L) >> Optional.of(defaultWorkspace)
 
@@ -272,7 +272,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 3L) >> Optional.of(defaultWorkspace)
 
@@ -294,7 +294,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 10L) >> Optional.of(defaultWorkspace)
 
@@ -317,7 +317,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 5L) >> Optional.of(defaultWorkspace)
 
@@ -338,7 +338,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def workspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(workspace)
 
@@ -360,7 +360,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
         def workspace = Stub(Workspace) { getId() >> 100L }
 
-        userAddService.createLogInUser() >> user
+        userAddService.createLogInUser("PERSONAL") >> user
         currencyAddService.findBySymbol("USD") >> usd
         workspaceRepository.findWorkspaceByNameAndOwnerId("DEFAULT", 1L) >> Optional.of(workspace)
 

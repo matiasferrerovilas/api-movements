@@ -42,7 +42,7 @@ class CategoryResolverTest extends Specification {
         given:
         def description = "Test Category"
         def workspace = Stub(Workspace) { getId() >> 1L }
-        def record = new CategoryRecord(1L, description, true, true)
+        def record = new CategoryRecord(1L, description, true, true, null, null)
         def category = Stub(Category) { getId() >> 1L }
 
         categoryAddService.addCategory(description) >> category

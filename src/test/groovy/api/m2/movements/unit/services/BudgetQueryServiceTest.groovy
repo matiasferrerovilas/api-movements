@@ -50,7 +50,7 @@ class BudgetQueryServiceTest extends Specification {
         given:
         def budget = buildBudget("Supermercado", "ARS", new BigDecimal("5000.00"))
         def expectedRecord = new BudgetRecord(1L, 1L,
-                new CategoryRecord(1L, "Supermercado", true, false),
+                new CategoryRecord(1L, "Supermercado", true, false, null, null),
                 new CurrencyRecord("ARS", 1L),
                 new BigDecimal("5000.00"), null, null,
                 new BigDecimal("2000.00"), new BigDecimal("40.00"))
@@ -106,7 +106,7 @@ class BudgetQueryServiceTest extends Specification {
         given:
         def budget = buildBudget("Hogar", "USD", new BigDecimal("500.00"))
         def expectedRecord = new BudgetRecord(1L, 1L,
-                new CategoryRecord(1L, "Hogar", true, false),
+                new CategoryRecord(1L, "Hogar", true, false, null, null),
                 new CurrencyRecord("USD", 1L),
                 new BigDecimal("500.00"), null, null,
                 BigDecimal.ZERO, BigDecimal.ZERO)

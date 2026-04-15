@@ -15,6 +15,8 @@ public interface WorkspaceCategoryMapper {
     @Mapping(target = "description", source = "category.description")
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "isDeletable", source = "category.deletable")
+    @Mapping(target = "iconName", source = "iconName")
+    @Mapping(target = "iconColor", source = "iconColor")
     CategoryRecord toRecord(WorkspaceCategory workspaceCategory);
 
     List<CategoryRecord> toRecordList(List<WorkspaceCategory> workspaceCategories);

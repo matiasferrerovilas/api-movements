@@ -24,7 +24,7 @@ public class UserAddService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User createLogInUser() {
+    public User createLogInUser(String userType) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
@@ -41,6 +41,7 @@ public class UserAddService {
                 .givenName(givenName)
                 .familyName(familyName)
                 .isFirstLogin(true)
+                .userType(UserType.valueOf(userType))
                 .build();
 
         return userRepository.save(user);

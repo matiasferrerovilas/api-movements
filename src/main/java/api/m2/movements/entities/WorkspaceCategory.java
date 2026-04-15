@@ -1,5 +1,6 @@
 package api.m2.movements.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -41,4 +42,12 @@ public class WorkspaceCategory {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Column(name = "icon_name", nullable = false)
+    @Builder.Default
+    private String iconName = "QuestionOutlined";
+
+    @Column(name = "icon_color", nullable = false)
+    @Builder.Default
+    private String iconColor = "#d9d9d9";
 }
