@@ -2,6 +2,7 @@ package api.m2.movements.mappers;
 
 import api.m2.movements.entities.Currency;
 import api.m2.movements.entities.Subscription;
+import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
@@ -40,7 +41,7 @@ public interface SubscriptionMapper {
             return null;
         }
         return currencyRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new RuntimeException("Currency not found: " + symbol));
+                .orElseThrow(() -> new EntityNotFoundException("Currency not found: " + symbol));
     }
 }
 

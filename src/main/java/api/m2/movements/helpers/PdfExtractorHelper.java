@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class PdfExtractprHelper {
+public abstract class PdfExtractorHelper {
 
     protected final CurrencyRepository currencyRepository;
     protected static final Pattern FOREIGN_CURRENCY_PATTERN = Pattern.compile("(CHF|USD|EUR)\\s+[\\d.,]+");

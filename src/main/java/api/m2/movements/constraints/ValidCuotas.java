@@ -1,4 +1,4 @@
-package api.m2.movements.constrains;
+package api.m2.movements.constraints;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

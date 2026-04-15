@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
-public class BBVAPdfExtractorHelper extends PdfExtractprHelper {
+public class BBVAPdfExtractorHelper extends PdfExtractorHelper {
 
     private static final Pattern EXPENSE_PATTERN = Pattern.compile(
             "(\\d{2}-[A-Za-z]{3}-\\d{2})\\s+"

@@ -12,12 +12,12 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class ParserRegistry {
-    private final List<PdfExtractprHelper> parsers;
-    private final Map<String, PdfExtractprHelper> registry = new HashMap<>();
+    private final List<PdfExtractorHelper> parsers;
+    private final Map<String, PdfExtractorHelper> registry = new HashMap<>();
 
     @PostConstruct
     void init() {
-        for (PdfExtractprHelper parser : parsers) {
+        for (PdfExtractorHelper parser : parsers) {
             var existing = registry.put(parser.getBank(), parser);
             if (existing != null) {
                 throw new IllegalStateException("Duplicate parser found for bank: " + parser.getBank());
@@ -25,7 +25,7 @@ public class ParserRegistry {
         }
     }
 
-    public PdfExtractprHelper getParser(String bank) {
+    public PdfExtractorHelper getParser(String bank) {
        return Optional.ofNullable(registry.get(bank))
                 .orElseThrow(() -> new IllegalArgumentException("No parser registered for bank: " + bank));
     }

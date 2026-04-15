@@ -1,6 +1,6 @@
 package api.m2.movements.services.publishing.rabbit;
 
-import api.m2.movements.aspect.EventWrapper;
+import api.m2.movements.records.events.EventWrapper;
 import api.m2.movements.configuration.RabbitConfig;
 import api.m2.movements.enums.EventType;
 import api.m2.movements.services.publishing.MessageInterface;
@@ -16,10 +16,7 @@ public abstract class RabbitSocketMessageService implements MessageInterface {
 
     public void publish(Object result, String routingKey, EventType eventType) {
         log.info("Publicando objeto en Rabbit en {}", routingKey);
-        var event = EventWrapper.builder()
-                .eventType(eventType)
-                .message(result)
-                .build();
+        var event = new EventWrapper<>(eventType, result);
         rabbitTemplate.convertAndSend(RabbitConfig.AMQ_TOPIC_EXCHANGE, routingKey, event);
 
     }

@@ -1,4 +1,4 @@
-package api.m2.movements.constrains;
+package api.m2.movements.constraints;
 
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.movements.MovementToAdd;

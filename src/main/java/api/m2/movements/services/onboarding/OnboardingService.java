@@ -92,12 +92,14 @@ public class OnboardingService {
     }
 
     private void addInitialIncome(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {
-        if (onBoardingForm.onBoardingAmount().bank() != null
-                && onBoardingForm.onBoardingAmount().currency() != null
-                && onBoardingForm.onBoardingAmount().amount() != null) {
-            incomeAddService.loadIncome(new IncomeToAdd(onBoardingForm.onBoardingAmount().bank(),
-                    new CurrencyRecord(onBoardingForm.onBoardingAmount().currency(), null),
-                    onBoardingForm.onBoardingAmount().amount()),
+        var amount = onBoardingForm.onBoardingAmount();
+        if (amount != null
+                && amount.bank() != null
+                && amount.currency() != null
+                && amount.amount() != null) {
+            incomeAddService.loadIncome(new IncomeToAdd(amount.bank(),
+                    new CurrencyRecord(amount.currency(), null),
+                    amount.amount()),
                     defaultWorkspace);
         }
     }

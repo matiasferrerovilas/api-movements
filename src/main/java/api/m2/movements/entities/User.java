@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -36,6 +37,8 @@ public class User {
     @EqualsAndHashCode.Include
     private Long id;
 
+    @Email(message = "Formato de email inválido")
+    @Column(unique = true)
     private String email;
 
     @Column(name = "given_name")

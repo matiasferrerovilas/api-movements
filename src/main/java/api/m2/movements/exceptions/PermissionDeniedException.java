@@ -1,7 +1,7 @@
 package api.m2.movements.exceptions;
 
-public class PermissionDeniedException extends RuntimeException {
-  public PermissionDeniedException(String message) {
-    super(message);
-  }
+public final class PermissionDeniedException extends DomainException {
+    public PermissionDeniedException(String message) {
+        super(message);
+    }
 }

@@ -3,7 +3,7 @@ package api.m2.movements.exceptions;
 /**
  * Excepción lanzada cuando no se puede obtener la tasa de cambio para una moneda y fecha específica.
  */
-public class ExchangeRateNotFoundException extends RuntimeException {
+public final class ExchangeRateNotFoundException extends DomainException {
 
     public ExchangeRateNotFoundException(String message) {
         super(message);

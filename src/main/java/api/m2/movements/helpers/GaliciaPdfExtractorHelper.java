@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
-public class GaliciaPdfExtractorHelper extends PdfExtractprHelper {
+public class GaliciaPdfExtractorHelper extends PdfExtractorHelper {
 
     private static final Pattern GALICIA_EXPENSE_PATTERN = Pattern.compile(
             "(\\d{2}-\\d{2}-\\d{2})\\s+"

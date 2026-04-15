@@ -9,6 +9,9 @@ jwt:
       resource-id: admin-m2
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   application:
     name: api-movements
   datasource:

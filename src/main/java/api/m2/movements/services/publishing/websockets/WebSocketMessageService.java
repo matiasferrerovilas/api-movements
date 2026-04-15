@@ -1,6 +1,6 @@
 package api.m2.movements.services.publishing.websockets;
 
-import api.m2.movements.aspect.EventWrapper;
+import api.m2.movements.records.events.EventWrapper;
 import api.m2.movements.enums.EventType;
 import api.m2.movements.services.publishing.MessageInterface;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +14,7 @@ public abstract class WebSocketMessageService implements MessageInterface {
 
     public void publish(Object result, String topic, EventType eventType) {
         log.info("Publicando objeto STOMP en {}", topic);
-        var event = EventWrapper.builder()
-                .eventType(eventType)
-                .message(result)
-                .build();
+        var event = new EventWrapper<>(eventType, result);
         messagingTemplate.convertAndSend(topic, event);
     }
 }

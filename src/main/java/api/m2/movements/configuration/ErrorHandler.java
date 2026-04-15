@@ -1,10 +1,10 @@
 package api.m2.movements.configuration;
 
+import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.exceptions.ErrorResponseDTO;
+import api.m2.movements.exceptions.ErrorResponse;
 import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
-import api.m2.movements.exceptions.BusinessException;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,193 +28,208 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ErrorHandler extends ResponseEntityExceptionHandler {
 
-  @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                HttpHeaders headers,
-                                                                HttpStatusCode status,
-                                                                WebRequest request) {
-      var details = ex.getBindingResult()
-              .getFieldErrors()
-              .stream()
-              .map(error -> error.getField() + ": " + error.getDefaultMessage())
-              .collect(Collectors.joining("; "));
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                  HttpHeaders headers,
+                                                                  HttpStatusCode status,
+                                                                  WebRequest request) {
+        var details = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
 
-      var errorHTTP = ErrorResponseDTO.builder()
-              .title("One or more fields are invalid")
-              .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-              .detail(details)
-              .build();
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                "One or more fields are invalid",
+                details
+        );
 
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-              .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-              .body(errorHTTP);
-  }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
 
-  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-  public ResponseEntity<ErrorResponseDTO> handleApiException(MethodArgumentTypeMismatchException ex) {
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(MethodArgumentTypeMismatchException ex) {
+        log.error("MethodArgumentTypeMismatchException", ex);
 
-    log.error("MethodArgumentTypeMismatchException", ex);
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                "Parameter type mismatch",
+                String.format("The value '%s' mismatch the type '%s' of parameter '%s'",
+                        ex.getValue(),
+                        ex.getParameter().getParameterType(),
+                        ex.getParameter().getParameterName())
+        );
 
-    var errorResponseDTO = ErrorResponseDTO.builder()
-        .title("Parameter type mismatch")
-        .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-        .detail(String.format("The value '%s' mismatch the type '%s' of parameter '%s'", ex.getValue(),
-                ex.getParameter().getParameterType(),
-                ex.getParameter().getParameterName()))
-        .build();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
 
-  @ExceptionHandler(NoSuchElementException.class)
-  public ResponseEntity<ErrorResponseDTO> handleNoSuchElementException(NoSuchElementException ex) {
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> handleNoSuchElementException(NoSuchElementException ex) {
+        log.info("The requested resource was not found", ex);
 
-    log.info("The requested resource was not found", ex);
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-        .title("Resource not found")
-        .statusCode(String.valueOf(HttpStatus.NOT_FOUND.value()))
-        .detail("The requested resource was not found")
-        .build();
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-  @ExceptionHandler(PermissionDeniedException.class)
-  public ResponseEntity<ErrorResponseDTO> handleNoSuchElementException(PermissionDeniedException ex) {
-
-    log.info("No tiene permisos para realizar la tarea", ex);
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-            .title("Permisos Insuficiente")
-            .statusCode(String.valueOf(HttpStatus.FORBIDDEN.value()))
-            .detail(ex.getMessage())
-            .build();
-    return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-  @ExceptionHandler(BusinessException.class)
-  public ResponseEntity<ErrorResponseDTO> handleBusinessException(BusinessException ex) {
-
-    log.warn("Business rule violation: {}", ex.getMessage());
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-            .title("Bad Request")
-            .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-            .detail(ex.getMessage())
-            .build();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-  @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
-
-    log.warn("Illegal argument: {}", ex.getMessage());
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-            .title("Bad Request")
-            .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-            .detail(ex.getMessage())
-            .build();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-  @Override
-  protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
-                                                           HttpHeaders headers,
-                                                           HttpStatusCode statusCode, WebRequest request) {
-    var errorResponseDTO = ErrorResponseDTO.builder()
-        .title("Generic exception handling")
-        .statusCode(String.valueOf(statusCode.value()))
-        .detail(ex.getLocalizedMessage())
-        .build();
-
-    return ResponseEntity.status(statusCode).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponseDTO> handleAllExceptions(Exception ex) {
-
-    log.error(ex.getMessage(), ex);
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-        .title("Unexpected Error")
-        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.name())
-        .detail("Check logs for more details")
-        .build();
-
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-
-  @ExceptionHandler(EntityExistsException.class)
-  public ResponseEntity<ErrorResponseDTO> handleEntityExistsException(EntityExistsException ex) {
-
-    log.error("Entidad already in data base", ex);
-
-    var errorResponseDTO = ErrorResponseDTO.builder()
-        .title("BAD_REQUEST")
-        .statusCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
-        .detail(ex.getMessage())
-        .build();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(errorResponseDTO);
-  }
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleEntityNotFoundException(EntityNotFoundException ex) {
-
-        log.error("Entidad no encontrada", ex);
-
-        var errorResponseDTO = ErrorResponseDTO.builder()
-                .title("NOT_FOUND")
-                .statusCode(String.valueOf(HttpStatus.NOT_FOUND.value()))
-                .detail(ex.getMessage())
-                .build();
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.NOT_FOUND.value()),
+                "Resource not found",
+                "The requested resource was not found"
+        );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(errorResponseDTO);
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ErrorResponse> handlePermissionDeniedException(PermissionDeniedException ex) {
+        log.info("No tiene permisos para realizar la tarea", ex);
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.FORBIDDEN.value()),
+                "Permisos Insuficiente",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
+        log.warn("Business rule violation: {}", ex.getMessage());
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                "Bad Request",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                "Bad Request",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
+                                                             HttpHeaders headers,
+                                                             HttpStatusCode statusCode, WebRequest request) {
+        var errorResponse = new ErrorResponse(
+                String.valueOf(statusCode.value()),
+                "Generic exception handling",
+                ex.getLocalizedMessage()
+        );
+
+        return ResponseEntity.status(statusCode)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
+        log.error(ex.getMessage(), ex);
+
+        var errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.name(),
+                "Unexpected Error",
+                "Check logs for more details"
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEntityExistsException(EntityExistsException ex) {
+        log.error("Entidad already in data base", ex);
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.BAD_REQUEST.value()),
+                "BAD_REQUEST",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        log.warn("Entidad no encontrada: {}", ex.getMessage());
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.NOT_FOUND.value()),
+                "NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(AuthenticationException ex) {
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.info("Unauthorized access attempt", ex);
 
-        var errorResponseDTO = ErrorResponseDTO.builder()
-                .title("Unauthorized")
-                .statusCode(String.valueOf(HttpStatus.UNAUTHORIZED.value()))
-                .detail(ex.getMessage() != null ? ex.getMessage() : "Authentication required")
-                .build();
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.UNAUTHORIZED.value()),
+                "Unauthorized",
+                ex.getMessage() != null ? ex.getMessage() : "Authentication required"
+        );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(errorResponseDTO);
+                .body(errorResponse);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
 
-        var errorResponseDTO = ErrorResponseDTO.builder()
-                .title("Conflict")
-                .statusCode(String.valueOf(HttpStatus.CONFLICT.value()))
-                .detail("La operación viola restricciones de integridad de datos")
-                .build();
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.CONFLICT.value()),
+                "Conflict",
+                "La operación viola restricciones de integridad de datos"
+        );
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(errorResponseDTO);
+                .body(errorResponse);
     }
 
     @ExceptionHandler(ExchangeRateNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleExchangeRateNotFoundException(ExchangeRateNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleExchangeRateNotFoundException(ExchangeRateNotFoundException ex) {
         log.warn("Exchange rate not found: {}", ex.getMessage());
 
-        var errorResponseDTO = ErrorResponseDTO.builder()
-                .title("Exchange Rate Not Available")
-                .statusCode(String.valueOf(HttpStatus.SERVICE_UNAVAILABLE.value()))
-                .detail(ex.getMessage())
-                .build();
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.SERVICE_UNAVAILABLE.value()),
+                "Exchange Rate Not Available",
+                ex.getMessage()
+        );
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(errorResponseDTO);
+                .body(errorResponse);
     }
 }

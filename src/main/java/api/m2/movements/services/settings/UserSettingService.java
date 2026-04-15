@@ -12,6 +12,7 @@ import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class UserSettingService {
 
     private final UserSettingRepository userSettingRepository;
@@ -41,6 +43,7 @@ public class UserSettingService {
                         "No se encontró un default configurado para: " + key.name()));
     }
 
+    @Transactional
     public UserSettingResponse upsert(UserSettingKey key, Long value) {
         User user = userService.getAuthenticatedUser();
         UserSetting setting = userSettingRepository.findByUserAndSettingKey(user, key)
@@ -53,6 +56,7 @@ public class UserSettingService {
         return new UserSettingResponse(saved.getSettingKey(), saved.getSettingValue());
     }
 
+    @Transactional
     public void upsertForUser(User user, UserSettingKey key, Long value) {
         UserSetting setting = userSettingRepository.findByUserAndSettingKey(user, key)
                 .orElseGet(() -> UserSetting.builder()
@@ -63,6 +67,7 @@ public class UserSettingService {
         userSettingRepository.saveAndFlush(setting);
     }
 
+    @Transactional
     public void deleteByKey(UserSettingKey key) {
         User user = userService.getAuthenticatedUser();
         userSettingRepository.deleteByUserAndSettingKey(user, key);
