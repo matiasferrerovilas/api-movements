@@ -7,6 +7,7 @@ import api.m2.movements.entities.User
 import api.m2.movements.entities.Workspace
 import api.m2.movements.entities.WorkspaceMember
 import api.m2.movements.enums.MovementType
+import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
@@ -82,6 +83,7 @@ class MovementRepositoryIntegrationTest extends Specification {
         user = userRepository.save(User.builder()
                 .email("test@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         workspace = workspaceRepository.save(Workspace.builder()
@@ -103,7 +105,7 @@ class MovementRepositoryIntegrationTest extends Specification {
 
     def "getBalanceByFilters - should return sum of movements only for the given user"() {
         given:
-        def otherUser = userRepository.save(User.builder().email("other@test.com").isFirstLogin(false).build())
+        def otherUser = userRepository.save(User.builder().email("other@test.com").isFirstLogin(false).userType(UserType.PERSONAL).build())
         def otherWorkspace = workspaceRepository.save(Workspace.builder().name("Other Workspace").owner(otherUser).build())
 
         def startDate = LocalDate.now().minusDays(30)
@@ -170,7 +172,7 @@ class MovementRepositoryIntegrationTest extends Specification {
 
     def "getBalanceWithCategoryByYear - should return category totals for user only, excluding other users"() {
         given:
-        def otherUser = userRepository.save(User.builder().email("other2@test.com").isFirstLogin(false).build())
+        def otherUser = userRepository.save(User.builder().email("other2@test.com").isFirstLogin(false).userType(UserType.PERSONAL).build())
         def otherWorkspace = workspaceRepository.save(Workspace.builder().name("Other2 Workspace").owner(otherUser).build())
 
         def now = LocalDate.now()

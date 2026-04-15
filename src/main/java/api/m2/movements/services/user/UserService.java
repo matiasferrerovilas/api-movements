@@ -2,6 +2,7 @@ package api.m2.movements.services.user;
 
 import api.m2.movements.entities.User;
 import api.m2.movements.enums.UserSettingKey;
+import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.UserMapper;
@@ -102,6 +103,19 @@ public class UserService {
     public void markTourAsSeen() {
         var user = getAuthenticatedUser();
         user.setHasSeenTour(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changeUserType(UserType newUserType) {
+        var user = this.getAuthenticatedUser();
+
+        // Validación silenciosa: si ya tiene ese tipo, no hace nada
+        if (user.getUserType() == newUserType) {
+            return;
+        }
+
+        user.setUserType(newUserType);
         userRepository.save(user);
     }
 }

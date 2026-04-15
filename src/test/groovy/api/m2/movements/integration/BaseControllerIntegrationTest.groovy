@@ -7,6 +7,7 @@ import api.m2.movements.entities.UserSetting
 import api.m2.movements.entities.Workspace
 import api.m2.movements.entities.WorkspaceMember
 import api.m2.movements.enums.UserSettingKey
+import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
@@ -133,6 +134,7 @@ abstract class BaseControllerIntegrationTest extends Specification {
         testUser = userRepository.save(User.builder()
                 .email("integration-test@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         // Create test workspace

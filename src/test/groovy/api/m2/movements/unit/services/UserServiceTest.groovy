@@ -182,7 +182,7 @@ class UserServiceTest extends Specification {
             givenName: "John",
             familyName: "Doe",
             isFirstLogin: false,
-            userType: UserType.CONSUMER,
+            userType: UserType.PERSONAL,
             hasSeenTour: true
         )
 
@@ -198,7 +198,7 @@ class UserServiceTest extends Specification {
         result.givenName() == "John"
         result.familyName() == "Doe"
         result.isFirstLogin() == false
-        result.userType() == "CONSUMER"
+        result.userType() == "PERSONAL"
         result.hasSeenTour() == true
     }
 
@@ -276,6 +276,71 @@ class UserServiceTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
+    }
+
+    def "changeUserType - should update user type from PERSONAL to ENTERPRISE"() {
+        given:
+        def email = "admin@example.com"
+        def user = User.builder()
+                .id(1L)
+                .email(email)
+                .userType(UserType.PERSONAL)
+                .build()
+
+        setupSecurityContext(email)
+        userRepository.findByEmail(email) >> Optional.of(user)
+
+        when:
+        service.changeUserType(UserType.ENTERPRISE)
+
+        then:
+        1 * userRepository.save(_ as User) >> { List args ->
+            def savedUser = args[0] as User
+            assert savedUser.userType == UserType.ENTERPRISE
+            savedUser
+        }
+    }
+
+    def "changeUserType - should update user type from ENTERPRISE to PERSONAL"() {
+        given:
+        def email = "admin@example.com"
+        def user = User.builder()
+                .id(1L)
+                .email(email)
+                .userType(UserType.ENTERPRISE)
+                .build()
+
+        setupSecurityContext(email)
+        userRepository.findByEmail(email) >> Optional.of(user)
+
+        when:
+        service.changeUserType(UserType.PERSONAL)
+
+        then:
+        1 * userRepository.save(_ as User) >> { List args ->
+            def savedUser = args[0] as User
+            assert savedUser.userType == UserType.PERSONAL
+            savedUser
+        }
+    }
+
+    def "changeUserType - should not save when user type is already the same"() {
+        given:
+        def email = "admin@example.com"
+        def user = User.builder()
+                .id(1L)
+                .email(email)
+                .userType(UserType.PERSONAL)
+                .build()
+
+        setupSecurityContext(email)
+        userRepository.findByEmail(email) >> Optional.of(user)
+
+        when:
+        service.changeUserType(UserType.PERSONAL)
+
+        then:
+        0 * userRepository.save(_ as User)
     }
 
     private void setupSecurityContext(String email) {

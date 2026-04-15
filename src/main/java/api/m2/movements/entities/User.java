@@ -52,6 +52,7 @@ public class User {
     private boolean isFirstLogin;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserType userType;
 
     @Column(name = "has_seen_tour", nullable = false)

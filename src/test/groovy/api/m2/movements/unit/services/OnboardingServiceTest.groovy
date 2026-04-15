@@ -45,7 +45,7 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(new BigDecimal("1500.00"), "DEFAULT", "GALICIA", "ARS")
         def banks = [new BankToAdd("GALICIA", true), new BankToAdd("SANTANDER", false)]
         def categories = ["COMIDA", "TRANSPORTE"]
-        def form = new OnBoardingForm(amount, "CONSUMER", ["Viajes", "Casa"], categories, banks)
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Viajes", "Casa"], categories, banks)
         def user = Stub(User) { getId() >> 42L }
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -79,14 +79,14 @@ class OnboardingServiceTest extends Specification {
             assert income.currency().symbol() == "ARS"
             assert income.amount() == new BigDecimal("1500.00")
         }
-        1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 42L)
+        1 * userAddService.changeUserFirstLoginStatus(UserType.PERSONAL, 42L)
     }
 
     def "finish - should set first bank as default when no bank has isDefault true"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
         def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", false)]
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], banks)
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks)
         def user = Stub(User) { getId() >> 1L }
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -112,7 +112,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should set only bank as default when there is exactly one bank"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [new BankToAdd("GALICIA", false)])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [new BankToAdd("GALICIA", false)])
         def user = Stub(User) { getId() >> 1L }
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def usd = Stub(Currency) { getId() >> 1L }
@@ -135,7 +135,7 @@ class OnboardingServiceTest extends Specification {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
         def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", true)]
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], banks)
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks)
         def user = Stub(User) { getId() >> 1L }
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -160,7 +160,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should set DEFAULT_CURRENCY to USD"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 5L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -181,7 +181,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should always call addDefaultCategories regardless of categoriesToAdd"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], ["HOGAR"], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], ["HOGAR"], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -202,7 +202,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should call addDefaultCategories even when categoriesToAdd is empty"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -223,7 +223,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when bank is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", null, "ARS")
-        def form = new OnBoardingForm(amount, "CONSUMER", ["Hogar"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Hogar"], [], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -239,13 +239,13 @@ class OnboardingServiceTest extends Specification {
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Hogar"))
         0 * incomeAddService.loadIncome(_ as IncomeToAdd)
-        1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 1L)
+        1 * userAddService.changeUserFirstLoginStatus(UserType.PERSONAL, 1L)
     }
 
     def "finish - should skip income when currency is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", "GALICIA", null)
-        def form = new OnBoardingForm(amount, "COMPANY", ["Gastos"], [], [])
+        def form = new OnBoardingForm(amount, "ENTERPRISE", ["Gastos"], [], [])
         def user = Stub(User) { getId() >> 2L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -261,13 +261,13 @@ class OnboardingServiceTest extends Specification {
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Gastos"))
         0 * incomeAddService.loadIncome(_ as IncomeToAdd)
-        1 * userAddService.changeUserFirstLoginStatus(UserType.COMPANY, 2L)
+        1 * userAddService.changeUserFirstLoginStatus(UserType.ENTERPRISE, 2L)
     }
 
     def "finish - should skip income when amount is null"() {
         given:
         def amount = new OnBoardingAmount(null, "DEFAULT", "GALICIA", "ARS")
-        def form = new OnBoardingForm(amount, "CONSUMER", ["Personal"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Personal"], [], [])
         def user = Stub(User) { getId() >> 3L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -283,13 +283,13 @@ class OnboardingServiceTest extends Specification {
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("DEFAULT"))
         1 * workspaceAddService.createWorkspace(new AddWorkspaceRecord("Personal"))
         0 * incomeAddService.loadIncome(_ as IncomeToAdd)
-        1 * userAddService.changeUserFirstLoginStatus(UserType.CONSUMER, 3L)
+        1 * userAddService.changeUserFirstLoginStatus(UserType.PERSONAL, 3L)
     }
 
     def "finish - should create DEFAULT and additional accounts from accountsToAdd"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", ["Alpha", "Beta", "Gamma"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Alpha", "Beta", "Gamma"], [], [])
         def user = Stub(User) { getId() >> 10L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -312,7 +312,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should not call addBankToUser or set DEFAULT_BANK when banksToAdd is empty"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
         def user = Stub(User) { getId() >> 5L }
         def usd = Stub(Currency) { getId() >> 1L }
         def defaultWorkspace = Stub(Workspace) { getId() >> 100L }
@@ -333,7 +333,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should not duplicate DEFAULT when it is in accountsToAdd"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", ["DEFAULT", "Other"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["DEFAULT", "Other"], [], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 1L }
         def workspace = Stub(Workspace) { getId() >> 100L }
@@ -355,7 +355,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should always create DEFAULT even when accountsToAdd is empty"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "CONSUMER", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
         def user = Stub(User) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 1L }
         def workspace = Stub(Workspace) { getId() >> 100L }

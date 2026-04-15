@@ -108,7 +108,7 @@ class UserAddServiceTest extends Specification {
     def "changeUserFirstLoginStatus - should update user status and type"() {
         given:
         def userId = 1L
-        def userType = UserType.CONSUMER
+        def userType = UserType.PERSONAL
         def existingUser = new User(id: userId, email: "test@test.com", isFirstLogin: true)
 
         userRepository.findById(userId) >> Optional.of(existingUser)
@@ -119,7 +119,7 @@ class UserAddServiceTest extends Specification {
 
         then:
         1 * userRepository.save({ User u ->
-            u.isFirstLogin == false && u.userType == UserType.CONSUMER
+            u.isFirstLogin == false && u.userType == UserType.PERSONAL
         })
     }
 
@@ -129,13 +129,13 @@ class UserAddServiceTest extends Specification {
         userRepository.findById(userId) >> Optional.empty()
 
         when:
-        service.changeUserFirstLoginStatus(UserType.CONSUMER, userId)
+        service.changeUserFirstLoginStatus(UserType.PERSONAL, userId)
 
         then:
         thrown(EntityNotFoundException)
     }
 
-    def "changeUserFirstLoginStatus - should set COMPANY user type"() {
+    def "changeUserFirstLoginStatus - should set ENTERPRISE user type"() {
         given:
         def userId = 1L
         def existingUser = new User(id: userId, email: "company@test.com", isFirstLogin: true)
@@ -144,11 +144,11 @@ class UserAddServiceTest extends Specification {
         userRepository.save(_ as User) >> { User u -> u }
 
         when:
-        service.changeUserFirstLoginStatus(UserType.COMPANY, userId)
+        service.changeUserFirstLoginStatus(UserType.ENTERPRISE, userId)
 
         then:
         1 * userRepository.save({ User u ->
-            u.userType == UserType.COMPANY
+            u.userType == UserType.ENTERPRISE
         })
     }
 

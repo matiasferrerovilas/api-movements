@@ -5,6 +5,7 @@ import api.m2.movements.entities.Workspace
 import api.m2.movements.entities.WorkspaceInvitation
 import api.m2.movements.entities.WorkspaceMember
 import api.m2.movements.enums.InvitationStatus
+import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.repositories.WorkspaceInvitationRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,6 +77,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         def anotherUser = userRepository.save(User.builder()
                 .email("owner@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         def workspace = workspaceRepository.save(Workspace.builder()
@@ -111,6 +113,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         userRepository.save(User.builder()
                 .email(inviteeEmail)
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         when:
@@ -128,6 +131,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         def inviter = userRepository.save(User.builder()
                 .email("inviter@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         def otherWorkspace = workspaceRepository.save(Workspace.builder()
@@ -157,6 +161,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         def inviter = userRepository.save(User.builder()
                 .email("inviter2@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         def otherWorkspace = workspaceRepository.save(Workspace.builder()
@@ -198,6 +203,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         def inviter = userRepository.save(User.builder()
                 .email("inviter3@test.com")
                 .isFirstLogin(false)
+                .userType(UserType.PERSONAL)
                 .build())
 
         def otherWorkspace = workspaceRepository.save(Workspace.builder()
