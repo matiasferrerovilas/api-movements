@@ -18,6 +18,8 @@ public interface UserSettingRepository extends JpaRepository<UserSetting, Long> 
 
     List<UserSetting> findAllByUser(User user);
 
+    void deleteByUserAndSettingKey(User user, UserSettingKey settingKey);
+
     @Query("""
             SELECT u FROM User u
             JOIN UserSetting s ON s.user = u

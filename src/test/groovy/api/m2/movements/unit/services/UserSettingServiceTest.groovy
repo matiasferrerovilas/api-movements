@@ -223,4 +223,17 @@ class UserSettingServiceTest extends Specification {
         then:
         result.isEmpty()
     }
+
+    def "deleteByKey - should delete setting for authenticated user"() {
+        given:
+        def user = Stub(User) { getId() >> 1L }
+
+        userService.getAuthenticatedUser() >> user
+
+        when:
+        service.deleteByKey(UserSettingKey.DEFAULT_BANK)
+
+        then:
+        1 * userSettingRepository.deleteByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
+    }
 }

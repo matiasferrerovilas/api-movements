@@ -63,6 +63,11 @@ public class UserSettingService {
         userSettingRepository.saveAndFlush(setting);
     }
 
+    public void deleteByKey(UserSettingKey key) {
+        User user = userService.getAuthenticatedUser();
+        userSettingRepository.deleteByUserAndSettingKey(user, key);
+    }
+
     public Optional<Bank> getDefaultBank(User user) {
         return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
                 .flatMap(s -> bankRepository.findById(s.getSettingValue()));
