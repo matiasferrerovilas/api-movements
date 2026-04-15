@@ -1,7 +1,6 @@
 package api.m2.movements.mappers;
 
 import api.m2.movements.entities.Movement;
-
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -39,3 +38,4 @@ public interface MovementMapper {
     List<MovementRecord> toRecord(List<Movement> movement);
 
 }
+
