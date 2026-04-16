@@ -1,5 +1,6 @@
 package api.m2.movements.services.budgets;
 
+import api.m2.movements.entities.Budget;
 import api.m2.movements.mappers.BudgetMapper;
 import api.m2.movements.records.budgets.BudgetRecord;
 import api.m2.movements.repositories.BudgetRepository;
@@ -25,8 +26,11 @@ public class BudgetQueryService {
     public List<BudgetRecord> getByAccount(String currencySymbol, int year, int month) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
 
-        return budgetRepository.findByAccountAndPeriod(workspaceId, currencySymbol, year, month)
-                .stream()
+        List<Budget> budgets = (currencySymbol == null)
+                ? budgetRepository.findByWorkspaceAndPeriod(workspaceId, year, month)
+                : budgetRepository.findByAccountAndPeriod(workspaceId, currencySymbol, year, month);
+
+        return budgets.stream()
                 .map(budget -> {
                     BigDecimal spent = this.resolveSpent(budget.getWorkspace().getId(),
                             budget.getCategory() == null ? null : budget.getCategory().getDescription(),

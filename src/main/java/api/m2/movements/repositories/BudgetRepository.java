@@ -28,6 +28,19 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             @Param("month") int month
     );
 
+    @Query("""
+            SELECT b FROM Budget b
+            JOIN FETCH b.category
+            JOIN FETCH b.currency
+            WHERE b.workspace.id = :workspaceId
+              AND (b.year IS NULL OR (b.year = :year AND b.month = :month))
+            """)
+    List<Budget> findByWorkspaceAndPeriod(
+            @Param("workspaceId") Long workspaceId,
+            @Param("year") int year,
+            @Param("month") int month
+    );
+
     Optional<Budget> findByWorkspaceIdAndCategoryIdAndCurrencyId(
             Long workspaceId, Long categoryId, Long currencyId
     );

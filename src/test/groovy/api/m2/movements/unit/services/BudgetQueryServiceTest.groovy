@@ -123,4 +123,47 @@ class BudgetQueryServiceTest extends Specification {
         result.size() == 1
         1 * budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
     }
+
+    def "getByAccount - should return all budgets when currency is null"() {
+        given:
+        def budgetArs = buildBudget("Supermercado", "ARS", new BigDecimal("5000.00"))
+        def budgetUsd = buildBudget("Hogar", "USD", new BigDecimal("500.00"))
+        def expectedRecordArs = new BudgetRecord(1L, 1L,
+                new CategoryRecord(1L, "Supermercado", true, false, null, null),
+                new CurrencyRecord("ARS", 1L),
+                new BigDecimal("5000.00"), null, null,
+                new BigDecimal("2000.00"), new BigDecimal("40.00"))
+        def expectedRecordUsd = new BudgetRecord(1L, 1L,
+                new CategoryRecord(1L, "Hogar", true, false, null, null),
+                new CurrencyRecord("USD", 1L),
+                new BigDecimal("500.00"), null, null,
+                new BigDecimal("100.00"), new BigDecimal("20.00"))
+
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        budgetRepository.findByWorkspaceAndPeriod(1L, 2026, 4) >> [budgetArs, budgetUsd]
+        budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 4) >> new BigDecimal("2000.00")
+        budgetRepository.sumSpentByCategoryAndPeriod(1L, "Hogar", "USD", 2026, 4) >> new BigDecimal("100.00")
+        budgetMapper.toRecordWithSpent(budgetArs, new BigDecimal("2000.00")) >> expectedRecordArs
+        budgetMapper.toRecordWithSpent(budgetUsd, new BigDecimal("100.00")) >> expectedRecordUsd
+
+        when:
+        def result = service.getByAccount(null, 2026, 4)
+
+        then:
+        result.size() == 2
+        0 * budgetRepository.findByAccountAndPeriod(_, _, _, _)
+    }
+
+    def "getByAccount - should call findByWorkspaceAndPeriod when currency is null"() {
+        given:
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+
+        when:
+        def result = service.getByAccount(null, 2026, 4)
+
+        then:
+        1 * budgetRepository.findByWorkspaceAndPeriod(1L, 2026, 4) >> []
+        0 * budgetRepository.findByAccountAndPeriod(_, _, _, _)
+        result.isEmpty()
+    }
 }
