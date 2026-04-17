@@ -87,19 +87,19 @@ public class MovementController {
 
     @Operation(
             summary = "Importar movimientos desde archivo",
-            description = "Importa múltiples movimientos desde un archivo bancario.",
+            description = "Importa múltiples movimientos desde un archivo bancario (PDF, XLS, XLSX o CSV).",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Archivo procesado correctamente"),
-                    @ApiResponse(responseCode = "400", description = "Formato de archivo inválido")
+                    @ApiResponse(responseCode = "201", description = "Archivo procesado correctamente"),
+                    @ApiResponse(responseCode = "400", description = "Formato de archivo o banco no soportado")
             }
     )
     @PostMapping(value = "/import-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public void saveExpenseByFile(
-            @Parameter(description = "Archivo bancario", required = true)
+            @Parameter(description = "Archivo bancario (PDF, XLS, XLSX o CSV)", required = true)
             @RequestParam("file") MultipartFile file,
 
-            @Parameter(description = "Banco del cual proviene el archivo", required = true)
+            @Parameter(description = "Banco: BBVA, GALICIA (PDF) o SANTANDER (Excel/CSV)", required = true)
             @RequestParam("bank") String bank) {
         movementImportFileService.importMovementsByFile(file, bank);
     }

@@ -3,6 +3,7 @@ package api.m2.movements.unit.services
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.helpers.PdfReaderService
 import api.m2.movements.records.movements.MovementFileToAdd
+import api.m2.movements.services.movements.files.ExpenseExcelStrategy
 import api.m2.movements.services.movements.files.ExpenseFileStrategy
 import api.m2.movements.services.movements.files.MovementImportFileService
 import api.m2.movements.services.workspaces.WorkspaceContextService
@@ -15,13 +16,21 @@ class MovementImportFileServiceTest extends Specification {
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     ExpenseFileStrategy bbvaStrategy = Mock(ExpenseFileStrategy)
     ExpenseFileStrategy galiciaStrategy = Mock(ExpenseFileStrategy)
-    Set<ExpenseFileStrategy> strategies
+    ExpenseExcelStrategy santanderStrategy = Mock(ExpenseExcelStrategy)
+    Set<ExpenseFileStrategy> pdfStrategies
+    Set<ExpenseExcelStrategy> excelStrategies
 
     MovementImportFileService service
 
     def setup() {
-        strategies = [bbvaStrategy, galiciaStrategy] as Set
-        service = new MovementImportFileService(strategies, pdfReaderService, workspaceContextService)
+        pdfStrategies = [bbvaStrategy, galiciaStrategy] as Set
+        excelStrategies = [santanderStrategy] as Set
+        service = new MovementImportFileService(
+                pdfStrategies,
+                excelStrategies,
+                pdfReaderService,
+                workspaceContextService
+        )
     }
 
     def "importMovementsByFile - should process file with matching strategy"() {
@@ -31,6 +40,7 @@ class MovementImportFileServiceTest extends Specification {
         def pdfText = "PDF content"
         def workspaceId = 1L
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> {}
         pdfReaderService.extractTextFromPdf(_ as java.nio.file.Path) >> pdfText
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
@@ -54,6 +64,7 @@ class MovementImportFileServiceTest extends Specification {
         def bank = "UNKNOWN_BANK"
         def pdfText = "PDF content"
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> {}
         pdfReaderService.extractTextFromPdf(_ as java.nio.file.Path) >> pdfText
         workspaceContextService.getActiveWorkspaceId() >> 1L
@@ -65,7 +76,7 @@ class MovementImportFileServiceTest extends Specification {
 
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Invalid bank method"
+        ex.message == "Banco no soportado para PDF: UNKNOWN_BANK"
     }
 
     def "importMovementsByFile - should throw IllegalArgumentException when multiple strategies match"() {
@@ -74,6 +85,7 @@ class MovementImportFileServiceTest extends Specification {
         def bank = "AMBIGUOUS_BANK"
         def pdfText = "PDF content"
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> {}
         pdfReaderService.extractTextFromPdf(_ as java.nio.file.Path) >> pdfText
         workspaceContextService.getActiveWorkspaceId() >> 1L
@@ -85,7 +97,7 @@ class MovementImportFileServiceTest extends Specification {
 
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Multiple strategies found for bank method"
+        ex.message == "Múltiples estrategias encontradas para: AMBIGUOUS_BANK"
     }
 
     def "importMovementsByFile - should throw BusinessException when IOException occurs during file transfer"() {
@@ -93,6 +105,7 @@ class MovementImportFileServiceTest extends Specification {
         def file = Mock(MultipartFile)
         def bank = "BBVA"
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> { throw new IOException("Transfer failed") }
 
         when:
@@ -100,7 +113,7 @@ class MovementImportFileServiceTest extends Specification {
 
         then:
         def ex = thrown(BusinessException)
-        ex.message == "No se pudo procesar"
+        ex.message == "Error al procesar el archivo: Transfer failed"
     }
 
     def "importMovementsByFile - should throw BusinessException when IOException occurs during PDF reading"() {
@@ -108,6 +121,7 @@ class MovementImportFileServiceTest extends Specification {
         def file = Mock(MultipartFile)
         def bank = "BBVA"
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> {}
         pdfReaderService.extractTextFromPdf(_ as java.nio.file.Path) >> { throw new IOException("Read failed") }
 
@@ -116,7 +130,7 @@ class MovementImportFileServiceTest extends Specification {
 
         then:
         def ex = thrown(BusinessException)
-        ex.message == "No se pudo procesar"
+        ex.message == "Error al procesar el archivo: Read failed"
     }
 
     def "importMovementsByFile - should use GALICIA strategy when bank is GALICIA"() {
@@ -126,6 +140,7 @@ class MovementImportFileServiceTest extends Specification {
         def pdfText = "Galicia PDF content"
         def workspaceId = 2L
 
+        file.getOriginalFilename() >> "movements.pdf"
         file.transferTo(_ as java.nio.file.Path) >> {}
         pdfReaderService.extractTextFromPdf(_ as java.nio.file.Path) >> pdfText
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
@@ -141,5 +156,39 @@ class MovementImportFileServiceTest extends Specification {
             assert movementFile.file() == pdfText
             assert movementFile.workspaceId() == workspaceId
         }
+    }
+
+    def "importMovementsByFile - should process Excel file with SANTANDER"() {
+        given:
+        def file = Mock(MultipartFile)
+        def bank = "SANTANDER"
+        def workspaceId = 3L
+        byte[] fileContent = [0x00, 0x01, 0x02] as byte[]
+
+        file.getOriginalFilename() >> "movements.xlsx"
+        file.getBytes() >> fileContent
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        santanderStrategy.match(bank) >> true
+
+        when:
+        service.importMovementsByFile(file, bank)
+
+        then:
+        1 * santanderStrategy.process(fileContent, workspaceId)
+    }
+
+    def "importMovementsByFile - should throw BusinessException for unsupported file extension"() {
+        given:
+        def file = Mock(MultipartFile)
+        def bank = "BBVA"
+
+        file.getOriginalFilename() >> "movements.txt"
+
+        when:
+        service.importMovementsByFile(file, bank)
+
+        then:
+        def ex = thrown(BusinessException)
+        ex.message.contains("Formato de archivo no soportado")
     }
 }
