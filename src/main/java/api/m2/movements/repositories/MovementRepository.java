@@ -77,7 +77,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
                         INNER JOIN category ca ON g.category_id = ca.id
-                        INNER JOIN users u ON u.email = :email AND g.user_id = u.id
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
                                   AND g.type !="INGRESO"
                                    AND g.workspace_id IN (:groups)
