@@ -1,6 +1,6 @@
 package api.m2.movements.unit.unit
 
-import api.m2.movements.entities.Currency
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.CurrencyResolver
 import spock.lang.Specification

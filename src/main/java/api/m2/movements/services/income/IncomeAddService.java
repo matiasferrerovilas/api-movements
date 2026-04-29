@@ -1,8 +1,8 @@
 package api.m2.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.entities.User;
-import api.m2.movements.entities.Workspace;
+import api.m2.movements.entities.integrity.User;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;

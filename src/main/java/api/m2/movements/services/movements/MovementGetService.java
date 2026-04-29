@@ -1,7 +1,7 @@
 package api.m2.movements.services.movements;
 
-import api.m2.movements.entities.Movement;
-import api.m2.movements.entities.WorkspaceCategory;
+import api.m2.movements.entities.movements.Movement;
+import api.m2.movements.entities.integrity.WorkspaceCategory;
 import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.categories.CategoryRecord;

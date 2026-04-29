@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Bank
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Income
-import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Income
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.mappers.IncomeMapper
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.income.IncomeQueryService

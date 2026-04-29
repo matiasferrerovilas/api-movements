@@ -1,7 +1,7 @@
 package api.m2.movements.services.currencies;
 
 import api.m2.movements.configuration.CacheConfiguration;
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.mappers.CurrencyMapper;
 import api.m2.movements.records.currencies.CurrencyRecord;

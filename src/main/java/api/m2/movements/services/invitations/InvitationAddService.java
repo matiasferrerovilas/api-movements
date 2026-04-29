@@ -1,6 +1,6 @@
 package api.m2.movements.services.invitations;
 
-import api.m2.movements.entities.WorkspaceInvitation;
+import api.m2.movements.entities.integrity.WorkspaceInvitation;
 import api.m2.movements.enums.InvitationStatus;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;

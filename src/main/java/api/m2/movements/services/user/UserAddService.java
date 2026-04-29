@@ -1,6 +1,6 @@
 package api.m2.movements.services.user;
 
-import api.m2.movements.entities.User;
+import api.m2.movements.entities.integrity.User;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;

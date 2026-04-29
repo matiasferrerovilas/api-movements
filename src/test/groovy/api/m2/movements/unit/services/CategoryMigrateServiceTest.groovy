@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Movement
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.records.categories.CategoryMigrateRequest

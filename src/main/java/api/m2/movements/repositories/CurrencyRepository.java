@@ -1,7 +1,7 @@
 package api.m2.movements.repositories;
 
 import api.m2.movements.configuration.CacheConfiguration;
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Currency;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

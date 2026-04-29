@@ -1,11 +1,11 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Movement
-import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
-import api.m2.movements.entities.WorkspaceMember
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.entities.integrity.WorkspaceMember
 import api.m2.movements.enums.MovementType
 import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole
@@ -18,7 +18,6 @@ import api.m2.movements.repositories.WorkspaceRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.annotation.Transactional

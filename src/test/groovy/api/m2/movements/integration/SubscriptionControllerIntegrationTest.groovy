@@ -1,6 +1,6 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Subscription
+import api.m2.movements.entities.movements.Subscription
 import api.m2.movements.repositories.SubscriptionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType

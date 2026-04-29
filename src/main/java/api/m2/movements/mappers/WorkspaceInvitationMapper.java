@@ -1,6 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.entities.WorkspaceInvitation;
+import api.m2.movements.entities.integrity.WorkspaceInvitation;
 import api.m2.movements.records.invite.InvitationToWorkspaceRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

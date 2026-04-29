@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.Movement;
+import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.projections.MonthlyEvolutionProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceByGroup;

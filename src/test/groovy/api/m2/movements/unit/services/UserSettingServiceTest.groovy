@@ -1,8 +1,8 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Bank
-import api.m2.movements.entities.User
-import api.m2.movements.entities.UserSetting
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.UserSetting
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.repositories.BankRepository

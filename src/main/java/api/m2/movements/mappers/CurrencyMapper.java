@@ -1,6 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

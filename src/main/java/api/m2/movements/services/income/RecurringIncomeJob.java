@@ -1,6 +1,6 @@
 package api.m2.movements.services.income;
 
-import api.m2.movements.entities.User;
+import api.m2.movements.entities.integrity.User;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

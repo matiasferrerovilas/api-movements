@@ -1,6 +1,6 @@
 package api.m2.movements.services.currencies;
 
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Currency;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

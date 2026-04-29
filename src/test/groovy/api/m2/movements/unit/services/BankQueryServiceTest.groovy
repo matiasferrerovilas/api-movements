@@ -1,8 +1,8 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Bank
-import api.m2.movements.entities.User
-import api.m2.movements.entities.UserBank
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.UserBank
 import api.m2.movements.mappers.BankMapper
 import api.m2.movements.repositories.UserBankRepository
 import api.m2.movements.services.banks.BankQueryService

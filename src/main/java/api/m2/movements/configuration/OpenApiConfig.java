@@ -2,6 +2,7 @@ package api.m2.movements.configuration;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -14,6 +15,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
+
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement()
                         .addList(securitySchemeName))
@@ -25,8 +27,22 @@ public class OpenApiConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("Expenses API")
-                        .description("API para la gestión de gastos")
-                        .version("1.0"));
+                        .title("Movement API")
+                        .description("""
+                                API para la gestión de finanzas personales.
+
+                                **Funcionalidades:**
+                                • Movimientos (ingresos/gastos) con importación desde PDF bancario
+                                • Control de suscripciones y servicios recurrentes
+                                • Workspaces compartidos con invitaciones
+                                • Balance por período, categoría y cuenta
+                                • Tasas de cambio automáticas
+
+                                **Autenticación:** JWT Bearer Token (OAuth2)
+                                """)
+                        .version("2.0.1")
+                        .contact(new Contact()
+                                .name("API Support")
+                                .email("api-support@movement.eva-core.com")));
     }
 }

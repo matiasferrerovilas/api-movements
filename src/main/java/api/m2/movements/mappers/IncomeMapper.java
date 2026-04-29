@@ -1,6 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.entities.Income;
+import api.m2.movements.entities.movements.Income;
 import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import org.mapstruct.Mapper;

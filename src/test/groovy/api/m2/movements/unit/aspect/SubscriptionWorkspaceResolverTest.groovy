@@ -1,8 +1,8 @@
 package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.SubscriptionWorkspaceResolver
-import api.m2.movements.entities.Subscription
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.movements.Subscription
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.repositories.SubscriptionRepository

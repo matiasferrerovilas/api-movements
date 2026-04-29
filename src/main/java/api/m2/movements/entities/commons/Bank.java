@@ -1,4 +1,4 @@
-package api.m2.movements.entities;
+package api.m2.movements.entities.commons;
 
 
 import jakarta.persistence.Entity;

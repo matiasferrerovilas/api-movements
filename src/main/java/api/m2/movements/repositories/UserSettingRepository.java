@@ -1,7 +1,7 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.User;
-import api.m2.movements.entities.UserSetting;
+import api.m2.movements.entities.integrity.User;
+import api.m2.movements.entities.integrity.UserSetting;
 import api.m2.movements.enums.UserSettingKey;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

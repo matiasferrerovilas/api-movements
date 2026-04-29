@@ -1,8 +1,8 @@
 package api.m2.movements.services.category;
 
-import api.m2.movements.entities.Category;
-import api.m2.movements.entities.Workspace;
-import api.m2.movements.entities.WorkspaceCategory;
+import api.m2.movements.entities.commons.Category;
+import api.m2.movements.entities.integrity.Workspace;
+import api.m2.movements.entities.integrity.WorkspaceCategory;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;

@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.Category;
+import api.m2.movements.entities.commons.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

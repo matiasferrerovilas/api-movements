@@ -1,7 +1,7 @@
 package api.m2.movements.services.onboarding;
 
-import api.m2.movements.entities.User;
-import api.m2.movements.entities.Workspace;
+import api.m2.movements.entities.integrity.User;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.records.currencies.CurrencyRecord;

@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.WorkspaceCategory;
+import api.m2.movements.entities.integrity.WorkspaceCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

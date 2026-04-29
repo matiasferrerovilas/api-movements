@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Movement
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.exceptions.ExchangeRateNotFoundException
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.currencies.ExchangeRateResolver

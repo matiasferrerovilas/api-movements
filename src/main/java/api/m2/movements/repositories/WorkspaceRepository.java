@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.Workspace;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.projections.WorkspaceSummaryProjection;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;

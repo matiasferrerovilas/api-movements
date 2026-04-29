@@ -1,5 +1,8 @@
 package api.m2.movements.entities;
 
+import api.m2.movements.entities.commons.Category;
+import api.m2.movements.entities.commons.Currency;
+import api.m2.movements.entities.integrity.Workspace;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -1,4 +1,4 @@
-package api.m2.movements.entities;
+package api.m2.movements.entities.integrity;
 
 import api.m2.movements.enums.UserSettingKey;
 import jakarta.persistence.Column;

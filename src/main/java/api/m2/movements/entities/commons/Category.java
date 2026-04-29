@@ -1,4 +1,4 @@
-package api.m2.movements.entities;
+package api.m2.movements.entities.commons;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,17 +23,16 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Currency {
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 50, unique = true)
     private String description;
 
-    @Column(nullable = false, length = 5)
-    private String symbol;
-
-    private boolean enabled;
+    @Builder.Default
+    @Column(name = "is_deletable")
+    private boolean deletable = true;
 }

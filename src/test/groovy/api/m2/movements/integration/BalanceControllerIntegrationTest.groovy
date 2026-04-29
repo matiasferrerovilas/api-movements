@@ -1,6 +1,6 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Movement
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.enums.MovementType
 import api.m2.movements.repositories.MovementRepository
 import org.springframework.beans.factory.annotation.Autowired

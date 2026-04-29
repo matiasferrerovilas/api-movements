@@ -43,7 +43,7 @@ public class SecurityConfiguration {
                                 "/webjars/**",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus", "/actuator/metrics").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/v1/onboarding/**").hasAnyRole("ADMIN", "FAMILY", "GUEST")
                         .anyRequest().authenticated())

@@ -1,8 +1,8 @@
 package api.m2.movements.mappers;
 
 import api.m2.movements.entities.Budget;
-import api.m2.movements.entities.Category;
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Category;
+import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.BudgetToAdd;
 import api.m2.movements.records.budgets.BudgetRecord;

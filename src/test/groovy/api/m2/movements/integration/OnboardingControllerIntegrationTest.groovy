@@ -1,6 +1,6 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.User
+
 import api.m2.movements.enums.UserType
 import org.springframework.http.MediaType
 

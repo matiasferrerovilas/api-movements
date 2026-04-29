@@ -1,4 +1,4 @@
-package api.m2.movements.entities;
+package api.m2.movements.entities.integrity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;

@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.WorkspaceInvitation;
+import api.m2.movements.entities.integrity.WorkspaceInvitation;
 import api.m2.movements.enums.InvitationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

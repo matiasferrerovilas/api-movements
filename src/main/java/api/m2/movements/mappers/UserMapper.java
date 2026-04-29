@@ -1,6 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.entities.User;
+import api.m2.movements.entities.integrity.User;
 import api.m2.movements.records.users.UserBaseRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

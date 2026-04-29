@@ -1,6 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.entities.WorkspaceMember;
+import api.m2.movements.entities.integrity.WorkspaceMember;
 import api.m2.movements.projections.MembershipSummaryProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Movement
-import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException

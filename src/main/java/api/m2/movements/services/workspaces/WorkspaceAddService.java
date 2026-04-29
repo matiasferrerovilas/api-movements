@@ -1,7 +1,7 @@
 package api.m2.movements.services.workspaces;
 
-import api.m2.movements.entities.Workspace;
-import api.m2.movements.entities.WorkspaceMember;
+import api.m2.movements.entities.integrity.Workspace;
+import api.m2.movements.entities.integrity.WorkspaceMember;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.WorkspaceRole;
 import api.m2.movements.exceptions.BusinessException;

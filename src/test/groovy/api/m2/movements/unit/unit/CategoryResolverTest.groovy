@@ -1,7 +1,7 @@
 package api.m2.movements.unit.unit
 
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.category.CategoryResolver

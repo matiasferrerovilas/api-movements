@@ -1,8 +1,8 @@
 package api.m2.movements.services.subscriptions;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.entities.Bank;
-import api.m2.movements.entities.Subscription;
+import api.m2.movements.entities.commons.Bank;
+import api.m2.movements.entities.movements.Subscription;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;

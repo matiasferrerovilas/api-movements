@@ -1,9 +1,9 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
-import api.m2.movements.entities.WorkspaceInvitation
-import api.m2.movements.entities.WorkspaceMember
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.entities.integrity.WorkspaceInvitation
+import api.m2.movements.entities.integrity.WorkspaceMember
 import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole

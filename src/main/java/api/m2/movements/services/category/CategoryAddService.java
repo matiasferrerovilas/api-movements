@@ -1,6 +1,6 @@
 package api.m2.movements.services.category;
 
-import api.m2.movements.entities.Category;
+import api.m2.movements.entities.commons.Category;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.CategoryMapper;

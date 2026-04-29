@@ -1,5 +1,10 @@
-package api.m2.movements.entities;
+package api.m2.movements.entities.movements;
 
+import api.m2.movements.entities.commons.Bank;
+import api.m2.movements.entities.commons.Category;
+import api.m2.movements.entities.commons.Currency;
+import api.m2.movements.entities.integrity.User;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

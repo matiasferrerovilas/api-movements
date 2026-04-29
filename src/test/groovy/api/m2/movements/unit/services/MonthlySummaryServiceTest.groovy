@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.User
+import api.m2.movements.entities.integrity.User
 import api.m2.movements.enums.MovementType
 import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.repositories.MovementRepository

@@ -5,7 +5,7 @@ import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord;
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord;
-import api.m2.movements.entities.User;
+import api.m2.movements.entities.integrity.User;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;

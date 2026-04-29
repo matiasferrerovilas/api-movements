@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.services.currencies.CurrencyAddService
-import api.m2.movements.entities.Currency
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.repositories.CurrencyRepository

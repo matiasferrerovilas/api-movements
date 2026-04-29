@@ -1,6 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.entities.WorkspaceMember;
+import api.m2.movements.entities.integrity.WorkspaceMember;
 import api.m2.movements.records.workspaces.WorkspaceMemberRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

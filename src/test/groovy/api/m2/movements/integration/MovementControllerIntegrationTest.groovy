@@ -1,7 +1,7 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Bank
-import api.m2.movements.entities.Movement
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.enums.MovementType
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.MovementRepository

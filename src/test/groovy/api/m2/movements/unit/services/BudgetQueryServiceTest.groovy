@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.entities.Budget
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.mappers.BudgetMapper
 import api.m2.movements.records.budgets.BudgetRecord
 import api.m2.movements.records.categories.CategoryRecord

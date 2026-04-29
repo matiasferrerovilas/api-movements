@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.User
+import api.m2.movements.entities.integrity.User
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.income.RecurringIncomeJob
 import api.m2.movements.services.user.UserService

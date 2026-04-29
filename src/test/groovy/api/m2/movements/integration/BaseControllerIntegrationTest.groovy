@@ -1,11 +1,11 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.User
-import api.m2.movements.entities.UserSetting
-import api.m2.movements.entities.Workspace
-import api.m2.movements.entities.WorkspaceMember
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.UserSetting
+import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.entities.integrity.WorkspaceMember
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.enums.UserType
 import api.m2.movements.enums.WorkspaceRole

@@ -1,14 +1,13 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.Bank
-import api.m2.movements.entities.Category
-import api.m2.movements.entities.Currency
-import api.m2.movements.entities.Movement
-import api.m2.movements.entities.User
-import api.m2.movements.entities.Workspace
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
+import api.m2.movements.entities.integrity.User
+import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.MovementMapper
-import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementToAdd

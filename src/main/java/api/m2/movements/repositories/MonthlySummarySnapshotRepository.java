@@ -1,7 +1,7 @@
 package api.m2.movements.repositories;
 
 import api.m2.movements.entities.MonthlySummarySnapshot;
-import api.m2.movements.entities.User;
+import api.m2.movements.entities.integrity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

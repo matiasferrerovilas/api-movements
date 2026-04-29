@@ -1,6 +1,6 @@
 package api.m2.movements.services.workspaces;
 
-import api.m2.movements.entities.Workspace;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.repositories.WorkspaceRepository;
 import api.m2.movements.services.settings.UserSettingService;

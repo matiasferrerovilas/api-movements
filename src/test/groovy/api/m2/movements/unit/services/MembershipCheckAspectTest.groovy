@@ -3,7 +3,7 @@ package api.m2.movements.unit.services
 import api.m2.movements.annotations.RequiresMembership
 import api.m2.movements.aspect.MembershipCheckAspect
 import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
-import api.m2.movements.entities.User
+import api.m2.movements.entities.integrity.User
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException

@@ -1,6 +1,6 @@
 package api.m2.movements.records.pdf;
 
-import api.m2.movements.entities.Currency;
+import api.m2.movements.entities.commons.Currency;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
