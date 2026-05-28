@@ -12,6 +12,7 @@ public final class WebSocketTopics {
     public static final String INVITATIONS = "/topic/invitation";
     public static final String WORKSPACES = "/topic/workspace";
     public static final String CATEGORIES = "/topic/categories";
+    public static final String INVESTMENTS = "/topic/inversiones";
 
     // Suffixes
     public static final String NEW = "/new";
@@ -109,5 +110,17 @@ public final class WebSocketTopics {
      */
     public static String categoriesUpdate(Long workspaceId) {
         return CATEGORIES + "/" + workspaceId + UPDATE;
+    }
+
+    public static String investmentsNew(Long workspaceId) {
+        return INVESTMENTS + "/" + workspaceId + NEW;
+    }
+
+    public static String investmentsUpdate(Long workspaceId) {
+        return INVESTMENTS + "/" + workspaceId + UPDATE;
+    }
+
+    public static String investmentsDelete(Long workspaceId) {
+        return INVESTMENTS + "/" + workspaceId + DELETE;
     }
 }

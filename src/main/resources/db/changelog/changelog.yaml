@@ -125,3 +125,12 @@ databaseChangeLog:
   - include:
       file: 042_alter_table_category_add_icon_fields.sql
       relativeToChangelogFile: true
+  - include:
+      file: 043_alter_table_workspace_categories_make_icon_fields_not_null.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 044_create_table_investment_type.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 045_create_table_investment.sql
+      relativeToChangelogFile: true

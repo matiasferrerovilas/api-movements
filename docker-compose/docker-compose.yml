@@ -1,0 +1,43 @@
+name: api-movements
+
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: api-movements-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: helios
+      MYSQL_DATABASE: expenses
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - api-movements
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: api-movements-rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: api-movements
+      RABBITMQ_DEFAULT_PASS: api-movements
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - api-movements
+
+  redis:
+    image: redis:7-alpine
+    container_name: api-movements-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - api-movements
+
+networks:
+  api-movements:
+    driver: bridge
+
+volumes:
+  mysql_data:

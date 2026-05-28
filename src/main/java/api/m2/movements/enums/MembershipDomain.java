@@ -4,5 +4,6 @@ public enum MembershipDomain {
     MOVEMENT,
     INCOME,
     SUBSCRIPTION,
-    BUDGET
+    BUDGET,
+    INVESTMENT
 }
