@@ -36,7 +36,7 @@ class WorkspaceIdResolverRegistryTest extends Specification {
         registry.resolve(MembershipDomain.BUDGET, 1L)
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(api.m2.movements.exceptions.ServiceException)
         ex.message.contains("BUDGET")
     }
 
@@ -48,7 +48,7 @@ class WorkspaceIdResolverRegistryTest extends Specification {
         registry.resolve(MembershipDomain.MOVEMENT, 1L)
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(api.m2.movements.exceptions.ServiceException)
         ex.message.contains("MOVEMENT")
     }
 

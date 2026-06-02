@@ -134,3 +134,9 @@ databaseChangeLog:
   - include:
       file: 045_create_table_investment.sql
       relativeToChangelogFile: true
+  - include:
+      file: 046_alter_table_investment_type_add_category.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 047_alter_table_investment_add_symbol_tna.sql
+      relativeToChangelogFile: true

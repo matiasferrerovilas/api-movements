@@ -8,13 +8,11 @@ import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.IncomeMapper
-import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
-import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.income.IncomeAddService
@@ -35,7 +33,6 @@ class IncomeAddServiceTest extends Specification {
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     MovementAddService movementAddService = Mock(MovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
-    CategoryAddService categoryAddService = Mock(CategoryAddService)
 
     IncomeAddService service
 
@@ -49,8 +46,7 @@ class IncomeAddServiceTest extends Specification {
                 workspaceContextService,
                 currencyAddService,
                 movementAddService,
-                bankRepository,
-                categoryAddService
+                bankRepository
         )
     }
 
@@ -198,10 +194,8 @@ class IncomeAddServiceTest extends Specification {
     def "addIngreso - should save movement with correct parameters"() {
         given:
         def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"))
-        def category = Stub(CategoryRecord) { description() >> "HOGAR" }
-        def currency = Stub(Currency)       { getSymbol()   >> "EUR" }
+        def currency = Stub(Currency) { getSymbol() >> "EUR" }
 
-        categoryAddService.findCategoryByDescription("HOGAR") >> category
         currencyAddService.findBySymbol("EUR") >> currency
 
         when:
@@ -216,8 +210,8 @@ class IncomeAddServiceTest extends Specification {
             assert m.category()      == "HOGAR"
             assert m.type()          == MovementType.INGRESO.name()
             assert m.currency()      == "EUR"
-            assert m.cuotaActual()   == 0
-            assert m.cuotasTotales() == 0
+            assert m.cuotaActual()   == null
+            assert m.cuotasTotales() == null
             assert m.bank()          == "GALICIA"
         }
     }
@@ -225,7 +219,6 @@ class IncomeAddServiceTest extends Specification {
     def "addIngreso - should always use HOGAR category"() {
         given:
         def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"))
-        categoryAddService.findCategoryByDescription(_ as String) >> Stub(CategoryRecord) { description() >> "HOGAR" }
         currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
 
         when:
@@ -238,8 +231,7 @@ class IncomeAddServiceTest extends Specification {
     def "addIngreso - should use today date in UTC"() {
         given:
         def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"))
-        categoryAddService.findCategoryByDescription(_) >> Stub(CategoryRecord) { description() >> "HOGAR" }
-        currencyAddService.findBySymbol(_)              >> Stub(Currency)       { getSymbol() >> "ARS" }
+        currencyAddService.findBySymbol(_) >> Stub(Currency) { getSymbol() >> "ARS" }
 
         when:
         service.addIngreso(incomeToAdd)
@@ -267,7 +259,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        2 * movementAddService.saveMovement(_ as MovementToAdd)
+        2 * movementAddService.saveMovement(_ as MovementToAdd, workspace, user)
     }
 
     def "generateRecurringIncomeForUser - should return zero when user has no incomes"() {
@@ -280,7 +272,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 0
-        0 * movementAddService.saveMovement(_ as MovementToAdd)
+        0 * movementAddService.saveMovement(_ as MovementToAdd, _ as Workspace, _ as User)
     }
 
     def "generateRecurringIncomeForUser - should create movement with correct data"() {
@@ -297,7 +289,7 @@ class IncomeAddServiceTest extends Specification {
         service.generateRecurringIncomeForUser(user)
 
         then:
-        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
+        1 * movementAddService.saveMovement(_ as MovementToAdd, workspace, user) >> { List args ->
             def m = args[0] as MovementToAdd
             assert m.amount() == new BigDecimal("2500.00")
             assert m.date() == LocalDate.now(ZoneOffset.UTC)
@@ -328,7 +320,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") })
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, workspace1, user)
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, workspace2, user)
     }
 }

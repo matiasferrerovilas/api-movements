@@ -1,5 +1,7 @@
 package api.m2.movements.helpers;
 
+import api.m2.movements.exceptions.BusinessException;
+import api.m2.movements.exceptions.ServiceException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,13 +22,13 @@ public class ParserRegistry {
         for (PdfExtractorHelper parser : parsers) {
             var existing = registry.put(parser.getBank(), parser);
             if (existing != null) {
-                throw new IllegalStateException("Duplicate parser found for bank: " + parser.getBank());
+                throw new ServiceException("Duplicate parser found for bank: " + parser.getBank());
             }
         }
     }
 
     public PdfExtractorHelper getParser(String bank) {
        return Optional.ofNullable(registry.get(bank))
-                .orElseThrow(() -> new IllegalArgumentException("No parser registered for bank: " + bank));
+                .orElseThrow(() -> new BusinessException("No parser registered for bank: " + bank));
     }
 }

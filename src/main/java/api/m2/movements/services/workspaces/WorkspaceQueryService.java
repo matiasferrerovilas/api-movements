@@ -1,6 +1,7 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.entities.integrity.Workspace;
+import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.WorkspaceMapper;
@@ -60,7 +61,7 @@ public class WorkspaceQueryService {
     @Transactional(readOnly = true)
     public Workspace findWorkspaceByName(String name) {
         if (StringUtils.isBlank(name)) {
-            throw new IllegalArgumentException("El nombre del workspace no puede estar vacío");
+            throw new BusinessException("El nombre del workspace no puede estar vacío");
         }
 
         var owner = userService.getAuthenticatedUser();

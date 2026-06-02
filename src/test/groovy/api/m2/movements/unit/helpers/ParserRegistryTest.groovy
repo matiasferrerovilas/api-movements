@@ -37,7 +37,7 @@ class ParserRegistryTest extends Specification {
         registry.init()
 
         then:
-        def ex = thrown(IllegalStateException)
+        def ex = thrown(api.m2.movements.exceptions.ServiceException)
         ex.message == "Duplicate parser found for bank: BBVA"
     }
 
@@ -68,7 +68,7 @@ class ParserRegistryTest extends Specification {
         registry.getParser("UNKNOWN")
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(api.m2.movements.exceptions.BusinessException)
         ex.message == "No parser registered for bank: UNKNOWN"
     }
 
@@ -90,7 +90,7 @@ class ParserRegistryTest extends Specification {
         registry.getParser("BBVA")
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(api.m2.movements.exceptions.BusinessException)
         ex.message == "No parser registered for bank: BBVA"
     }
 }

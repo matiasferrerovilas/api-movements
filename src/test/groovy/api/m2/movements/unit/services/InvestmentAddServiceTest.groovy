@@ -1,20 +1,20 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.entities.commons.Currency
-import api.m2.movements.entities.investments.Investment
-import api.m2.movements.entities.investments.InvestmentType
 import api.m2.movements.entities.integrity.User
 import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.mappers.InvestmentMapper
-import api.m2.movements.records.investments.InvestmentRecord
-import api.m2.movements.records.investments.InvestmentToAdd
-import api.m2.movements.records.investments.InvestmentToUpdate
+import api.m2.movements.investment.entities.Investment
+import api.m2.movements.investment.entities.InvestmentType
+import api.m2.movements.investment.mappers.InvestmentMapper
+import api.m2.movements.investment.repositories.InvestmentRepository
+import api.m2.movements.investment.repositories.InvestmentTypeRepository
+import api.m2.movements.investment.services.InvestmentAddService
+import api.m2.movements.investment.services.InvestmentPublishServiceWebSocket
+import api.m2.movements.investment.records.InvestmentRecord
+import api.m2.movements.investment.records.InvestmentToAdd
+import api.m2.movements.investment.records.InvestmentToUpdate
 import api.m2.movements.repositories.CurrencyRepository
-import api.m2.movements.repositories.InvestmentRepository
-import api.m2.movements.repositories.InvestmentTypeRepository
-import api.m2.movements.services.investments.InvestmentAddService
-import api.m2.movements.services.publishing.websockets.InvestmentPublishServiceWebSocket
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
@@ -64,7 +64,7 @@ class InvestmentAddServiceTest extends Specification {
     def "add - should save investment and publish event"() {
         given:
         def dto = new InvestmentToAdd(new BigDecimal("50000.00"), LocalDate.of(2026, 1, 1),
-                null, "Plazo Fijo Galicia", 1L, "ARS")
+                null, "Plazo Fijo Galicia", null, null, 1L, "ARS")
         def workspace = Stub(Workspace) { getId() >> 1L }
         def user = Stub(User)
         def currency = Stub(Currency)
@@ -90,7 +90,7 @@ class InvestmentAddServiceTest extends Specification {
     def "add - should throw EntityNotFoundException when currency not found"() {
         given:
         def dto = new InvestmentToAdd(new BigDecimal("1000.00"), LocalDate.now(),
-                null, null, 1L, "USD_INEXISTENTE")
+                null, null, null, null, 1L, "USD_INEXISTENTE")
 
         workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
         userService.getAuthenticatedUser() >> Stub(User)
@@ -107,7 +107,7 @@ class InvestmentAddServiceTest extends Specification {
     def "add - should throw EntityNotFoundException when investment type not found"() {
         given:
         def dto = new InvestmentToAdd(new BigDecimal("1000.00"), LocalDate.now(),
-                null, null, 999L, "ARS")
+                null, null, null, null, 999L, "ARS")
 
         workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
         userService.getAuthenticatedUser() >> Stub(User)
@@ -127,7 +127,7 @@ class InvestmentAddServiceTest extends Specification {
     def "update - should update investment and publish event"() {
         given:
         def investment = buildInvestment()
-        def dto = new InvestmentToUpdate(new BigDecimal("60000.00"), null, null, null, null, null)
+        def dto = new InvestmentToUpdate(new BigDecimal("60000.00"), null, null, null, null, null, null, null)
         def record = buildRecord()
 
         investmentRepository.findById(10L) >> Optional.of(investment)
@@ -147,7 +147,7 @@ class InvestmentAddServiceTest extends Specification {
         investmentRepository.findById(999L) >> Optional.empty()
 
         when:
-        service.update(new InvestmentToUpdate(null, null, null, null, null, null), 999L)
+        service.update(new InvestmentToUpdate(null, null, null, null, null, null, null, null), 999L)
 
         then:
         thrown(EntityNotFoundException)

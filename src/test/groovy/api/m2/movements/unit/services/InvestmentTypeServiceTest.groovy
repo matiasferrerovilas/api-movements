@@ -1,15 +1,16 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.investments.InvestmentType
 import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.mappers.InvestmentTypeMapper
-import api.m2.movements.records.investments.InvestmentTypeRecord
-import api.m2.movements.records.investments.InvestmentTypeToAdd
-import api.m2.movements.records.investments.InvestmentTypeToUpdate
-import api.m2.movements.repositories.InvestmentTypeRepository
-import api.m2.movements.services.investments.InvestmentTypeService
+import api.m2.movements.investment.entities.InvestmentType
+import api.m2.movements.investment.enums.InvestmentCategory
+import api.m2.movements.investment.mappers.InvestmentTypeMapper
+import api.m2.movements.investment.repositories.InvestmentTypeRepository
+import api.m2.movements.investment.services.InvestmentTypeService
+import api.m2.movements.investment.records.InvestmentTypeRecord
+import api.m2.movements.investment.records.InvestmentTypeToAdd
+import api.m2.movements.investment.records.InvestmentTypeToUpdate
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
@@ -28,7 +29,7 @@ class InvestmentTypeServiceTest extends Specification {
     def buildType(Long workspaceId = 1L) {
         def workspace = Stub(Workspace) { getId() >> workspaceId }
         return new InvestmentType(id: 1L, name: "Plazo Fijo", iconName: "BankOutlined",
-                iconColor: "#1890ff", workspace: workspace)
+                iconColor: "#1890ff", category: InvestmentCategory.PLAZO_FIJO, workspace: workspace)
     }
 
     // --- getByWorkspace ---
@@ -37,7 +38,7 @@ class InvestmentTypeServiceTest extends Specification {
         given:
         def workspaceId = 1L
         def type = buildType(workspaceId)
-        def record = new InvestmentTypeRecord(1L, "Plazo Fijo", "BankOutlined", "#1890ff", workspaceId)
+        def record = new InvestmentTypeRecord(1L, "Plazo Fijo", "BankOutlined", "#1890ff", workspaceId, InvestmentCategory.PLAZO_FIJO)
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
         investmentTypeRepository.findByWorkspaceId(workspaceId) >> [type]
@@ -55,10 +56,10 @@ class InvestmentTypeServiceTest extends Specification {
 
     def "add - should save type and return record"() {
         given:
-        def dto = new InvestmentTypeToAdd("Cripto", "CryptoOutlined", "#faad14")
+        def dto = new InvestmentTypeToAdd("Cripto", InvestmentCategory.STOCK_ETF, "CryptoOutlined", "#faad14")
         def workspace = Stub(Workspace) { getId() >> 1L }
         def type = buildType(1L)
-        def record = new InvestmentTypeRecord(1L, "Cripto", "CryptoOutlined", "#faad14", 1L)
+        def record = new InvestmentTypeRecord(1L, "Cripto", "CryptoOutlined", "#faad14", 1L, InvestmentCategory.STOCK_ETF)
 
         workspaceContextService.getActiveWorkspace() >> workspace
         investmentTypeRepository.save(_ as InvestmentType) >> type
@@ -71,6 +72,7 @@ class InvestmentTypeServiceTest extends Specification {
         1 * investmentTypeRepository.save(_ as InvestmentType) >> { List args ->
             def saved = args[0] as InvestmentType
             assert saved.name == "Cripto"
+            assert saved.category == InvestmentCategory.STOCK_ETF
             assert saved.workspace == workspace
             type
         }
@@ -84,7 +86,7 @@ class InvestmentTypeServiceTest extends Specification {
         def workspaceId = 1L
         def type = buildType(workspaceId)
         def dto = new InvestmentTypeToUpdate("FCI", "FundOutlined", "#52c41a")
-        def record = new InvestmentTypeRecord(1L, "FCI", "FundOutlined", "#52c41a", workspaceId)
+        def record = new InvestmentTypeRecord(1L, "FCI", "FundOutlined", "#52c41a", workspaceId, InvestmentCategory.PLAZO_FIJO)
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
         investmentTypeRepository.findById(1L) >> Optional.of(type)

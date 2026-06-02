@@ -1,6 +1,6 @@
 # api-movements — AGENTS.md
 
-Backend de gestión de finanzas personales. Permite registrar movimientos, suscripciones, ingresos y cuentas compartidas con actualizaciones en tiempo real vía WebSocket.
+Backend de gestión de finanzas personales. Permite registrar movimientos, suscripciones, ingresos, inversiones y cuentas compartidas con actualizaciones en tiempo real vía WebSocket.
 
 > **Producción:** `https://movement.eva-core.com`
 
@@ -18,7 +18,7 @@ Backend de gestión de finanzas personales. Permite registrar movimientos, suscr
 | Messaging | RabbitMQ (AMQP) + WebSocket STOMP/SockJS |
 | Mapping | MapStruct 1.6.3 (`componentModel = "spring"`) |
 | Boilerplate | Lombok (`@Data`, `@Builder`, `@RequiredArgsConstructor`) |
-| Cache | Caffeine (in-memory, 5h TTL para currency) |
+| Cache | Caffeine (in-memory, 5h TTL currency / 1h Yahoo Finance prices) |
 | PDF parsing | Apache PDFBox 3.0.6 |
 | API docs | SpringDoc OpenAPI 3 (`/docs`) |
 | Testing | Spock 2.4 + Testcontainers (MySQL) + Mockito |
@@ -51,31 +51,76 @@ Backend de gestión de finanzas personales. Permite registrar movimientos, suscr
 
 ```
 api.m2.movements
+├── annotations/        @RequiresMembership
+├── aspect/
+│   └── membership/     MembershipCheckAspect, WorkspaceIdResolver (interface), WorkspaceIdResolverRegistry
+├── configuration/      ErrorHandler, CacheConfiguration, RabbitConfig, WebSocketConfig, etc.
+├── constants/          WebSocketTopics
 ├── controller/         REST controllers — uno por dominio, todos bajo /v1/*
-├── entities/           JPA entities (Lombok @Data + @Builder)
-├── enums/              Enums de dominio: WorkspaceRole, CategoryEnum, EventType, etc.
-├── exceptions/         BusinessException, EntityNotFoundException, PermissionDeniedException
-├── helpers/            PDF parsers: PdfExtractprHelper (interface) + BBVA/Galicia impls + ParserRegistry
-├── mappers/            MapStruct interfaces, 13 mappers, se componen entre sí
-├── projections/        JPA interface projections (read-only, para queries livianas)
-├── records/            DTOs como Java records, organizados por dominio
-│   ├── workspaces/
+├── entities/
+│   ├── commons/        Currency, Bank
+│   ├── integrity/      User, Workspace, WorkspaceMember, WorkspaceInvitation
+│   └── movements/      Movement, Income, Subscription, Budget, MonthlySummarySnapshot
+├── enums/              WorkspaceRole, CategoryEnum, EventType, MembershipDomain, MovementType, etc.
+├── exceptions/         DomainException (sealed), BusinessException, EntityNotFoundException,
+│                       PermissionDeniedException, ServiceException, ExchangeRateNotFoundException
+├── helpers/            PdfExtractorHelper (interface), BBVA/Galicia impls, ParserRegistry, PdfReaderService
+├── investment/         → Módulo Spring Modulith separado (ver sección)
+├── mappers/            MapStruct interfaces — organizados por dominio
+├── projections/        JPA interface projections (read-only)
+├── records/            DTOs como Java records
 │   ├── balance/
+│   ├── categories/
+│   ├── currencies/
+│   ├── income/
 │   ├── invite/
-│   ├── movements/
-│   ├── users/          UserBaseRecord, UserMeRecord
-│   └── ...
+│   ├── movements/      MovementToAdd, MovementRecord, SubscriptionPaidEvent, SubscriptionMovementSyncEvent
+│   ├── services/
+│   ├── subscriptions/  SubscriptionPaidEvent, SubscriptionMovementSyncEvent
+│   ├── users/
+│   └── workspaces/
 ├── repositories/       Spring Data JPA — todos extienden JpaRepository
 ├── security/           JwtAuthenticationConverter + SecurityConfiguration
-└── services/           Lógica de negocio, organizada por dominio
+└── services/
     ├── balance/
-    ├── workspaces/     WorkspaceQueryService (reads) + WorkspaceAddService (writes) + MembershipService
-    ├── movements/      MovementAddService + MovementGetService + MovementFactory + file import strategies
+    ├── budgets/        BudgetAddService, BudgetQueryService
+    ├── category/       CategoryAddService, WorkspaceCategoryService, CategoryMigrateService
+    ├── currencies/     CurrencyAddService, CurrencyResolver
+    ├── income/         IncomeAddService, IncomeQueryService
+    ├── movements/      MovementAddService, MovementGetService, MovementFactory, SyncMovementsService
+    │   ├── files/      MovementImportFileService, ExpenseFileStrategy (abstract), BBVA/Galicia impls
+    │   └── resolvers/  CategoryResolver
     ├── publishing/
-    │   ├── rabbit/     RabbitSocketMessageService (base) + MovementPublishServiceRabbit
-    │   └── websockets/ WebSocketMessageService (base) + Movement/Workspace/ServicePublishServiceWebSocket
-    └── user/           UserService + UserAddService
+    │   ├── rabbit/     RabbitSocketMessageService (base), MovementPublishServiceRabbit
+    │   └── websockets/ WebSocketMessageService (base), Movement/Workspace/Service/CategoryPublishServiceWebSocket
+    ├── settings/       UserSettingService
+    ├── subscriptions/  SubscriptionAddService, SubscriptionQueryService, SubscriptionMovementHandler
+    ├── user/           UserService, UserAddService
+    └── workspaces/     WorkspaceAddService, WorkspaceQueryService, WorkspaceContextService, MembershipService
 ```
+
+### Módulo `investment/` (Spring Modulith)
+
+```
+investment/
+├── aspect/             InvestmentWorkspaceResolver
+├── controller/         InvestmentController, InvestmentTypeController
+├── entities/           Investment, InvestmentType
+├── enums/              InvestmentCategory (STOCK_ETF, PLAZO_FIJO, FCI)
+├── mappers/            InvestmentMapper, InvestmentTypeMapper
+├── records/            InvestmentRecord, InvestmentToAdd, InvestmentToUpdate,
+│                       InvestmentTypeRecord, InvestmentTypeToAdd, InvestmentTypeToUpdate,
+│                       InvestmentValuationRecord
+├── repositories/       InvestmentRepository, InvestmentTypeRepository
+└── services/
+    ├── InvestmentAddService
+    ├── InvestmentQueryService
+    ├── InvestmentTypeService
+    ├── InvestmentPublishServiceWebSocket
+    └── valuation/      InvestmentValuationService, YahooFinanceClient, PlazaFijoValueCalculator
+```
+
+El módulo `investment` es el único separado como módulo Modulith. Depende de infraestructura compartida (`CurrencyRepository`, `WorkspaceContextService`, `UserService`) pero **ningún otro módulo depende de él**.
 
 ---
 
@@ -83,17 +128,38 @@ api.m2.movements
 
 | Entity | Campos relevantes | Relaciones |
 |---|---|---|
-| `User` | `id: Long` (PK auto-increment), `email`, `isFirstLogin`, `userType` | base de todo |
+| `User` | `id: Long` (PK auto-increment), `email`, `isFirstLogin`, `userType`, `givenName`, `familyName` | base de todo |
 | `Workspace` | `id`, `name` | `owner → User`, `members → WorkspaceMember[]` |
 | `WorkspaceMember` | `role: WorkspaceRole` | `user → User`, `workspace → Workspace` |
 | `WorkspaceInvitation` | `status: InvitationStatus` | `user → User` (invitado), `invitedBy → User`, `workspace → Workspace` |
 | `Movement` | `amount`, `date`, `type`, `description`, `cuotaActual/Total` | `owner → User`, `workspace → Workspace`, `category`, `currency`, `bank` |
 | `Income` | `amount` | `user → User`, `bank → Bank`, `currency`, `workspace → Workspace` |
 | `Subscription` | `description`, `amount`, `lastPayment`, `@Transient isPaid()` | `owner → User`, `workspace → Workspace`, `currency` |
+| `Budget` | `amount`, `month`, `year` | `workspace → Workspace`, `category` |
+| `Investment` | `amount`, `startDate`, `endDate`, `symbol`, `tna` | `investmentType → InvestmentType`, `currency`, `workspace`, `owner → User` |
+| `InvestmentType` | `name`, `iconName`, `iconColor`, `category: InvestmentCategory` | `workspace → Workspace` |
 | `UserBank` | `createdAt` | `user → User`, `bank → Bank` |
 | `UserSetting` | `settingKey: UserSettingKey`, `settingValue: Long` | `user → User` |
 
 > **IMPORTANTE:** `User.id` es un `Long` auto-incremental de DB. El Keycloak subject (`sub` del JWT) es un UUID `String` separado. **No son intercambiables.**
+
+---
+
+## Jerarquía de Excepciones
+
+```
+DomainException (sealed)
+├── BusinessException       → HTTP 400 — Violación de regla de negocio o input inválido del usuario
+├── EntityNotFoundException → HTTP 404 — Entidad no encontrada
+├── PermissionDeniedException → HTTP 403 — Sin permisos o no autenticado
+├── ExchangeRateNotFoundException → HTTP 503 — Tipo de cambio no disponible
+└── ServiceException        → HTTP 500 — Error interno: misconfiguration o dependencia no registrada
+```
+
+**Regla:** Nunca lanzar `IllegalArgumentException`, `IllegalStateException` ni `RuntimeException` directamente desde código de negocio. Usar siempre una subclase de `DomainException`.
+
+- `ServiceException` se usa para errores de programación (parser duplicado en startup, resolver no registrado).
+- El handler de `IllegalArgumentException` en `ErrorHandler` se mantiene como red de seguridad para excepciones del framework.
 
 ---
 
@@ -149,6 +215,19 @@ api.m2.movements
 | `POST` | `/v1/banks` | Agregar banco al usuario (idempotente) |
 | `DELETE` | `/v1/banks/{id}` | Quitar banco de la lista del usuario |
 
+### Inversiones
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/investments` | Listar inversiones del workspace activo |
+| `GET` | `/v1/investments/valuation` | Valuación actual de inversiones (Yahoo Finance + PF calculator) |
+| `POST` | `/v1/investments` | Crear inversión |
+| `PATCH` | `/v1/investments/{id}` | Actualizar inversión |
+| `DELETE` | `/v1/investments/{id}` | Eliminar inversión |
+| `GET` | `/v1/workspace/investment-types` | Listar tipos de inversión del workspace |
+| `POST` | `/v1/workspace/investment-types` | Crear tipo de inversión |
+| `PATCH` | `/v1/workspace/investment-types/{id}` | Actualizar tipo |
+| `DELETE` | `/v1/workspace/investment-types/{id}` | Eliminar tipo |
+
 ---
 
 ## WebSocket (STOMP)
@@ -157,7 +236,7 @@ api.m2.movements
 Todos los mensajes se envuelven en `EventWrapper<T> { eventType: EventType, message: T }`.
 
 > **CRÍTICO — tipos de ID usados en los topics:**
-> - **Movimientos / servicios / workspaces:** usan `workspaceId` (`Long`, PK de `Workspace`)
+> - **Movimientos / servicios / inversiones / workspaces:** usan `workspaceId` (`Long`, PK de `Workspace`)
 > - **Invitaciones:** usan `userId` (`Long`, PK de `User` en DB — **no** el Keycloak subject)
 > - **Default workspace:** usa el Keycloak `sub` UUID (`String`) — único caso que usa el subject
 
@@ -168,6 +247,9 @@ Todos los mensajes se envuelven en `EventWrapper<T> { eventType: EventType, mess
 | `/topic/servicios/{workspaceId}/new` | `SERVICE_PAID` | `SubscriptionRecord` | Suscripción creada |
 | `/topic/servicios/{workspaceId}/update` | `SERVICE_PAID / SERVICE_UPDATED` | `SubscriptionRecord` | Suscripción pagada o actualizada |
 | `/topic/servicios/{workspaceId}/remove` | `SERVICE_DELETED` | `SubscriptionRecord` | Suscripción eliminada |
+| `/topic/inversiones/{workspaceId}/new` | `INVESTMENT_ADDED` | `InvestmentRecord` | Inversión creada |
+| `/topic/inversiones/{workspaceId}/update` | `INVESTMENT_UPDATED` | `InvestmentRecord` | Inversión actualizada |
+| `/topic/inversiones/{workspaceId}/delete` | `INVESTMENT_DELETED` | `InvestmentRecord` | Inversión eliminada |
 | `/topic/invitation/{userId}/new` | `INVITATION_ADDED` | `InvitationToWorkspaceRecord` | Invitación enviada |
 | `/topic/invitation/{userId}/update` | `INVITATION_CONFIRMED_REJECTED` | `InvitationToWorkspaceRecord` | Invitación aceptada/rechazada |
 | `/topic/workspace/{ownerId}/new` | `WORKSPACE_CREATED` | `WorkspaceRecord` | Workspace creado |
@@ -175,7 +257,7 @@ Todos los mensajes se envuelven en `EventWrapper<T> { eventType: EventType, mess
 | `/topic/workspace/{workspaceId}/members/update` | `MEMBERSHIP_UPDATED` | `WorkspaceDetail` | Miembro agregado al workspace |
 | `/topic/workspace/default/{keycloakSubject}` | `MEMBERSHIP_UPDATED` | `WorkspaceDetail` | Workspace por defecto cambiado |
 
-Todos los publishers usan `@TransactionalEventListener(phase = AFTER_COMMIT)` — el push WS solo ocurre si el commit fue exitoso.
+Todos los publishers de WS usan `@TransactionalEventListener(phase = AFTER_COMMIT)` — el push WS solo ocurre si el commit fue exitoso.
 
 ---
 
@@ -184,14 +266,18 @@ Todos los publishers usan `@TransactionalEventListener(phase = AFTER_COMMIT)` �
 - **Principal:** el claim `preferred_username` del JWT (email) se mapea a `Authentication.getName()`. Con ese email se busca el `User` en DB.
 - **Keycloak subject:** disponible vía `userService.getCurrentKeycloakId()`. Se usa **solo** para el topic `/topic/workspace/default/{id}`.
 - **Roles:** se leen de `realm_access.roles[]` del JWT. Requiere prefijo `ROLE_`.
+- **CSRF:** deshabilitado — correcto para APIs stateless con JWT.
 
 | Rutas | Acceso |
 |---|---|
 | `/swagger-ui/**`, `/v3/api-docs/**`, `/ws/**` | Públicas |
+| `/actuator/health`, `/actuator/prometheus` | Públicas |
 | `/v1/onboarding/**` | Requiere rol `ADMIN`, `FAMILY` o `GUEST` |
 | Resto | Cualquier JWT válido |
 
 **CORS permitido:** `https://movement.eva-core.com`, `http://localhost:5173`, `http://localhost:8081`
+
+> **Nota:** Los origins de CORS y WebSocket están hardcodeados en `SecurityConfiguration.java` y `WebSocketConfig.java`. Pendiente externalizarlos a `application.yaml`.
 
 ---
 
@@ -199,23 +285,32 @@ Todos los publishers usan `@TransactionalEventListener(phase = AFTER_COMMIT)` �
 
 ### Service Splitting
 Cada dominio tiene servicios separados por responsabilidad:
-- `*AddService` — escritura
+- `*AddService` — escritura / mutaciones
 - `*GetService` / `*QueryService` — lectura
-- `*Factory` — construcción de entidades
+- `*Factory` — construcción de entidades complejas
 
 No existe ningún servicio monolítico tipo `MovementService`.
 
 ### Factory + Resolver
-`MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, workspace) a través de `CategoryResolver` y `CurrencyResolver`. `CurrencyResolver` usa cache Caffeine.
+`MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, workspace) a través de `CategoryResolver` y `CurrencyResolver`. `CurrencyResolver` usa cache Caffeine (5h TTL).
 
 ### Strategy (File Import)
 `ExpenseFileStrategy` es clase abstracta. `BBVACreditImportService` y `GaliciaCreditImportService` se registran como beans. `MovementImportFileService` despacha por `match(bank)`.
 
-### Event-Driven WebSocket
-Los servicios de escritura publican Spring Application Events dentro de `@Transactional`. Los publishers WS escuchan con `@TransactionalEventListener(phase = AFTER_COMMIT)`.
+### Event-Driven (ApplicationEvents)
+Los servicios de escritura publican Spring `ApplicationEvent`s para coordinar efectos secundarios dentro de la misma transacción. Los listeners usan `@EventListener` + `@Transactional`.
+
+Los publishers de WebSocket usan `@TransactionalEventListener(phase = AFTER_COMMIT)` — el push WS solo ocurre si el commit fue exitoso.
+
+**Eventos de dominio existentes:**
+| Evento | Publicado por | Escuchado por |
+|---|---|---|
+| `SubscriptionPaidEvent` | `SubscriptionAddService` | `SubscriptionMovementHandler` → crea movimiento DEBITO |
+| `SubscriptionMovementSyncEvent` | `SubscriptionAddService` | `SubscriptionMovementHandler` → delega a `SyncMovementsService` |
+| `MovementDeletedEvent` | `MovementAddService` | `MovementPublishServiceWebSocket` |
 
 ### AOP — Membership Guard (`@RequiresMembership`)
-Todo método de mutación sobre un recurso de cuenta compartida **debe** anotarse con `@RequiresMembership`. El aspecto `MembershipCheckAspect` verifica que el usuario sea miembro antes de ejecutar.
+Todo método de mutación sobre un recurso de workspace compartido **debe** anotarse con `@RequiresMembership`. El aspecto `MembershipCheckAspect` verifica membresía antes de ejecutar.
 
 ```java
 // El id está en el índice 0 por defecto
@@ -227,8 +322,8 @@ public void deleteIncome(Long id) { ... }
 public void updateMovement(@Valid ExpenseToUpdate dto, Long id) { ... }
 ```
 
-**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`, `BUDGET`.  
-Para agregar un nuevo dominio: extender `MembershipDomain` y crear un resolver que implemente `WorkspaceIdResolver`.
+**Dominios disponibles:** `MOVEMENT`, `INCOME`, `SUBSCRIPTION`, `BUDGET`, `INVESTMENT`.  
+Para agregar un nuevo dominio: extender `MembershipDomain` y crear un bean que implemente `WorkspaceIdResolver`.
 
 ---
 
@@ -236,7 +331,7 @@ Para agregar un nuevo dominio: extender `MembershipDomain` y crear un resolver q
 
 | Job | Cron | Descripción |
 |-----|------|-------------|
-| `MonthlySummaryJob` | `0 0 23 L * *` (último día del mes, 23:00) | Genera snapshots mensuales de resumen financiero para usuarios con `MONTHLY_SUMMARY_ENABLED` |
+| `MonthlySummaryJob` | `0 0 23 L * *` (último día del mes, 23:00) | Genera snapshots mensuales para usuarios con `MONTHLY_SUMMARY_ENABLED` |
 | `RecurringIncomeJob` | `0 0 6 1 * *` (día 1 de cada mes, 06:00) | Genera movimientos de ingreso automáticos para usuarios con `AUTO_INCOME_ENABLED` |
 
 ### UserSettingKey para Jobs
@@ -273,6 +368,8 @@ Para agregar un nuevo dominio: extender `MembershipDomain` y crear un resolver q
 | **Métodos privados con `this.`** | Distingue llamadas propias de llamadas a dependencias inyectadas. |
 | **`@EqualsAndHashCode` + `@ToString`** | Obligatorio en entidades bidireccionales para evitar recursión infinita. |
 | **RabbitMQ** | Exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n. |
+| **Sin `IllegalArgumentException` ni `IllegalStateException`** | Usar siempre subclases de `DomainException`. Ver sección de Excepciones. |
+| **Event listeners con `@Transactional`** | Los `@EventListener` sincrónicos deben anotarse con `@Transactional` para garantizar propagación. |
 
 ---
 
@@ -288,7 +385,7 @@ Para agregar un nuevo dominio: extender `MembershipDomain` y crear un resolver q
 // Mapper sin dependencias
 BankMapper bankMapper = Mappers.getMapper(BankMapper)
 
-// Mapper con dependencias
+// Mapper con dependencias (MapStruct genera field injection, no constructor)
 MovementMapper movementMapper
 
 def setup() {
@@ -298,8 +395,6 @@ def setup() {
     ReflectionTestUtils.setField(movementMapper, "userMapper", Mappers.getMapper(UserMapper))
 }
 ```
-
-MapStruct con `componentModel = "spring"` genera field injection (`@Autowired`), no constructor injection. `Mappers.getMapper()` solo funciona para mappers sin dependencias.
 
 ---
 
@@ -331,41 +426,51 @@ Al usar `_` como matcher, siempre especificar el tipo. Nunca dejar `_` sin tipo 
 1 * service.save(_ as MovementToAdd)
 ```
 
+### Testing de ApplicationEventPublisher
+
+Cuando el servicio bajo test publica eventos con `ApplicationEventPublisher`, mockear el publisher y verificar el evento:
+
+```groovy
+ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+
+// En then:
+1 * eventPublisher.publishEvent(_ as SubscriptionPaidEvent) >> { List args ->
+    def event = args[0] as SubscriptionPaidEvent
+    assert event.amount() == new BigDecimal("10.00")
+}
+```
+
 ### Ubicación y naming
 
 | Tipo | Ubicación |
 |---|---|
 | Servicios | `src/test/groovy/api/m2/movements/unit/services/` |
-| Resolvers / utilitarios | `src/test/groovy/api/m2/movements/unit/unit/` |
+| Resolvers / Handlers / utilitarios | `src/test/groovy/api/m2/movements/unit/` (subcarpeta apropiada) |
 | Nombre | `{NombreClase}Test.groovy` |
 
 ### Ejemplo canónico
 
 ```groovy
-class SettingServiceTest extends Specification {
+class InvestmentAddServiceTest extends Specification {
 
-    MovementAddService movementAddService = Mock(MovementAddService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
-    SettingService service
+    InvestmentRepository investmentRepository = Mock(InvestmentRepository)
+    InvestmentPublishServiceWebSocket investmentPublishService = Mock(InvestmentPublishServiceWebSocket)
+    InvestmentAddService service
 
     def setup() {
-        service = new SettingService(movementAddService, workspaceQueryService)
+        service = new InvestmentAddService(investmentRepository, ..., investmentPublishService)
     }
 
-    def "addIngreso - should save movement with correct parameters"() {
+    def "add - should save investment and publish event"() {
         given:
-        def incomeToAdd = new IncomeToAdd("GALICIA", "EUR", new BigDecimal("1000.00"), "Mi workspace")
-        workspaceQueryService.findWorkspaceByName("Mi workspace") >> Stub(Workspace) { getId() >> 1L }
+        def dto = new InvestmentToAdd(...)
+        investmentRepository.save(_ as Investment) >> buildInvestment()
 
         when:
-        service.addIngreso(incomeToAdd)
+        service.add(dto)
 
         then:
-        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
-            def m = args[0] as MovementToAdd
-            assert m.amount() == new BigDecimal("1000.00")
-            assert m.type()   == MovementType.INGRESO.name()
-        }
+        1 * investmentPublishService.publishInvestmentAdded(_ as InvestmentRecord)
     }
 }
 ```

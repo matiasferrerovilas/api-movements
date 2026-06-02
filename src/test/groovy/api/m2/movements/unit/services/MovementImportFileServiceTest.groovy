@@ -64,7 +64,7 @@ class MovementImportFileServiceTest extends Specification {
         service.importMovementsByFile(file, bank)
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(BusinessException)
         ex.message == "Invalid bank method"
     }
 
@@ -84,7 +84,7 @@ class MovementImportFileServiceTest extends Specification {
         service.importMovementsByFile(file, bank)
 
         then:
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(BusinessException)
         ex.message == "Multiple strategies found for bank method"
     }
 

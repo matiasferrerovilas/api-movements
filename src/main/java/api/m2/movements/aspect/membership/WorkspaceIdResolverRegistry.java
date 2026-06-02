@@ -1,6 +1,7 @@
 package api.m2.movements.aspect.membership;
 
 import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.exceptions.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class WorkspaceIdResolverRegistry {
         return resolvers.stream()
                 .filter(r -> r.supports(domain))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ServiceException(
                         "No hay resolver registrado para el dominio: " + domain))
                 .resolveWorkspaceId(entityId);
     }

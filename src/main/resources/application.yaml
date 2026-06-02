@@ -1,6 +1,8 @@
 server:
   port: ${PORT:8081}
   forward-headers-strategy: framework
+  http2:
+    enabled: true
 
 jwt:
   auth:

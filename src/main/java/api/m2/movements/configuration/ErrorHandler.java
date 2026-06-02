@@ -5,6 +5,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.ErrorResponse;
 import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.exceptions.ServiceException;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -109,6 +110,21 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(ServiceException.class)
+    public ResponseEntity<ErrorResponse> handleServiceException(ServiceException ex) {
+        log.error("Internal service error: {}", ex.getMessage(), ex);
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
+                "Internal Server Error",
+                "An internal error occurred"
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(errorResponse);
     }

@@ -1,5 +1,6 @@
 package api.m2.movements.services.movements;
 
+import api.m2.movements.entities.integrity.User;
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -34,15 +35,17 @@ public class MovementFactory {
     }
 
     public Movement create(MovementToAdd dto, Workspace workspace) {
+        return this.create(dto, workspace, userService.getAuthenticatedUser());
+    }
+
+    public Movement create(MovementToAdd dto, Workspace workspace, User owner) {
         var movement = movementMapper.toEntity(dto);
 
         movement.setWorkspace(workspace);
-
         movement.setCategory(categoryResolver.resolve(dto.category(), workspace));
         var currency = currencyResolver.resolve(dto.currency());
         movement.setCurrency(currency);
-
-        movement.setOwner(userService.getAuthenticatedUser());
+        movement.setOwner(owner);
 
         if (dto.bank() != null) {
             var bank = bankRepository.findByDescription(dto.bank())

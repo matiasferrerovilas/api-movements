@@ -5,6 +5,7 @@ import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.exceptions.ServiceException;
 import api.m2.movements.mappers.UserMapper;
 import api.m2.movements.records.users.UserBaseRecord;
 import api.m2.movements.records.users.UserMeRecord;
@@ -68,7 +69,7 @@ public class UserService {
             return jwtAuth.getToken().getSubject();
         }
 
-        throw new IllegalStateException("No hay un JWT autenticado en el contexto de seguridad");
+        throw new ServiceException("No hay un JWT autenticado en el contexto de seguridad");
     }
 
     @Transactional(readOnly = true)

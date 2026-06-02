@@ -1,6 +1,8 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.annotations.RequiresMembership;
+import api.m2.movements.entities.integrity.User;
+import api.m2.movements.entities.integrity.Workspace;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.movements.MovementDeletedEvent;
@@ -31,6 +33,17 @@ public class MovementAddService {
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
         var movement = movementFactory.create(dto);
+        var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
+
+        movementPublishService.publishMovementAdded(movementRecord);
+
+        log.info("Movimiento guardado: id={}, type={}", movementRecord.id(), dto.type());
+        return movementRecord;
+    }
+
+    @Transactional
+    public MovementRecord saveMovement(@Valid MovementToAdd dto, Workspace workspace, User owner) {
+        var movement = movementFactory.create(dto, workspace, owner);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 
         movementPublishService.publishMovementAdded(movementRecord);

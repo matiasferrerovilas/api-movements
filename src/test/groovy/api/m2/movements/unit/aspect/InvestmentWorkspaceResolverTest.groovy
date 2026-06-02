@@ -1,11 +1,11 @@
 package api.m2.movements.unit.aspect
 
-import api.m2.movements.aspect.membership.InvestmentWorkspaceResolver
-import api.m2.movements.entities.investments.Investment
 import api.m2.movements.entities.integrity.Workspace
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.repositories.InvestmentRepository
+import api.m2.movements.investment.aspect.InvestmentWorkspaceResolver
+import api.m2.movements.investment.entities.Investment
+import api.m2.movements.investment.repositories.InvestmentRepository
 import spock.lang.Specification
 
 class InvestmentWorkspaceResolverTest extends Specification {

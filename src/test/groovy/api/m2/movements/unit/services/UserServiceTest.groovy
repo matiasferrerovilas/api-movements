@@ -170,7 +170,7 @@ class UserServiceTest extends Specification {
         service.getCurrentKeycloakId()
 
         then:
-        thrown(IllegalStateException)
+        thrown(api.m2.movements.exceptions.ServiceException)
     }
 
     def "getMe - should return UserMeRecord for existing user"() {

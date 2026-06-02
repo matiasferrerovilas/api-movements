@@ -15,11 +15,15 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfiguration {
 
     public static final String CURRENCY_CACHE = "currency";
+    public static final String YAHOO_PRICE_CACHE = "yahooPrice";
     private static final int DURATION_TIME_DEFAULT = 5;
+    private static final int YAHOO_CACHE_HOURS = 1;
 
     @Bean
     public CacheManager cacheManager() {
-        List<Cache> caches = List.of(createCache(CURRENCY_CACHE, DURATION_TIME_DEFAULT));
+        List<Cache> caches = List.of(
+                createCache(CURRENCY_CACHE, DURATION_TIME_DEFAULT),
+                createCache(YAHOO_PRICE_CACHE, YAHOO_CACHE_HOURS));
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(caches);
         return cacheManager;

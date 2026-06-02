@@ -36,9 +36,9 @@ public class MovementImportFileService {
             var workspaceId = workspaceContextService.getActiveWorkspaceId();
             var movementFile = new MovementFileToAdd(text, workspaceId);
             switch (list.size()) {
-                case 0 -> throw new IllegalArgumentException("Invalid bank method");
+                case 0 -> throw new BusinessException("Invalid bank method");
                 case 1 -> list.getFirst().process(movementFile);
-                default -> throw new IllegalArgumentException("Multiple strategies found for bank method");
+                default -> throw new BusinessException("Multiple strategies found for bank method");
             }
         } catch (IOException _) {
             throw new BusinessException("No se pudo procesar");
