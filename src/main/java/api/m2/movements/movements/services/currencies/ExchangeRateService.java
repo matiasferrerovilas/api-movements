@@ -21,6 +21,8 @@ import static api.m2.movements.configuration.CacheConfiguration.CURRENCY_CACHE;
 @Slf4j
 public class ExchangeRateService {
 
+    private static final int FALLBACK_DAYS_RANGE = 7;
+
     private final FrankfurterClient frankfurterClient;
 
     @Cacheable(cacheNames = CURRENCY_CACHE, key = "'rates_' + #base + '_' + #quotes")
@@ -35,7 +37,7 @@ public class ExchangeRateService {
         if (!result.isEmpty()) {
             return result;
         }
-        return frankfurterClient.getRatesByDateRange(base, quotes, date.minusDays(7), date)
+        return frankfurterClient.getRatesByDateRange(base, quotes, date.minusDays(FALLBACK_DAYS_RANGE), date)
                 .stream()
                 .collect(Collectors.groupingBy(ExchangeRateRecord::date))
                 .entrySet().stream()
