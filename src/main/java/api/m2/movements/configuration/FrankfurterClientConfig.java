@@ -1,6 +1,6 @@
 package api.m2.movements.configuration;
 
-import api.m2.movements.services.currencies.FrankfurterClient;
+import api.m2.movements.movements.services.currencies.FrankfurterClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

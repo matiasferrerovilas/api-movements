@@ -1,7 +1,7 @@
 package api.m2.movements.constraints;
 
-import api.m2.movements.enums.MovementType;
-import api.m2.movements.records.movements.MovementToAdd;
+import api.m2.movements.movements.enums.MovementType;
+import api.m2.movements.movements.records.movements.MovementToAdd;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

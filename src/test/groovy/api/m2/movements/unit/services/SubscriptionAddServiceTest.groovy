@@ -1,21 +1,21 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.commons.Currency
-import api.m2.movements.entities.movements.Subscription
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.commons.Currency
+import api.m2.movements.movements.entities.movements.Subscription
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.mappers.SubscriptionMapper
-import api.m2.movements.records.services.UpdateSubscriptionRecord
-import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent
-import api.m2.movements.records.subscriptions.SubscriptionPaidEvent
-import api.m2.movements.repositories.CurrencyRepository
-import api.m2.movements.repositories.SubscriptionRepository
-import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
-import api.m2.movements.services.subscriptions.SubscriptionAddService
-import api.m2.movements.services.user.UserService
-import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.movements.mappers.SubscriptionMapper
+import api.m2.movements.movements.records.services.UpdateSubscriptionRecord
+import api.m2.movements.movements.records.subscriptions.SubscriptionMovementSyncEvent
+import api.m2.movements.movements.records.subscriptions.SubscriptionPaidEvent
+import api.m2.movements.movements.repositories.CurrencyRepository
+import api.m2.movements.movements.repositories.SubscriptionRepository
+import api.m2.movements.movements.services.publishing.websockets.ServicePublishServiceWebSocket
+import api.m2.movements.movements.services.subscriptions.SubscriptionAddService
+import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
@@ -185,7 +185,7 @@ class SubscriptionAddServiceTest extends Specification {
 
         then:
         1 * subscriptionRepository.delete(subscription)
-        1 * servicePublishService.publishDeleteService(_ as api.m2.movements.records.services.SubscriptionRecord)
+        1 * servicePublishService.publishDeleteService(_ as api.m2.movements.movements.records.services.SubscriptionRecord)
     }
 
     def "deleteSubscription - should throw EntityNotFoundException when subscription does not exist"() {

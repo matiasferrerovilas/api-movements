@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.enums.EventType
-import api.m2.movements.records.accounts.AccountBaseRecord
-import api.m2.movements.records.movements.MovementDeletedEvent
-import api.m2.movements.records.movements.MovementRecord
-import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket
+import api.m2.movements.movements.enums.EventType
+import api.m2.movements.movements.records.accounts.AccountBaseRecord
+import api.m2.movements.movements.records.movements.MovementDeletedEvent
+import api.m2.movements.movements.records.movements.MovementRecord
+import api.m2.movements.movements.services.publishing.websockets.MovementPublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

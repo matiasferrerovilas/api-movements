@@ -1,6 +1,6 @@
 package api.m2.movements.aspect.membership;
 
-import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.movements.enums.MembershipDomain;
 
 /**
  * Resolver que extrae el workspaceId de una entidad dado su ID.

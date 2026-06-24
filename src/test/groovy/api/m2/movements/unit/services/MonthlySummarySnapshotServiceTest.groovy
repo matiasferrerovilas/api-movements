@@ -1,13 +1,13 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.MonthlySummarySnapshot
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord
-import api.m2.movements.records.balance.MonthlySummaryComparisonRecord
-import api.m2.movements.records.balance.MonthlySummaryResponse
-import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord
-import api.m2.movements.repositories.MonthlySummarySnapshotRepository
-import api.m2.movements.services.balance.MonthlySummarySnapshotService
+import api.m2.movements.movements.entities.MonthlySummarySnapshot
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.records.balance.MonthlySummaryByCurrencyRecord
+import api.m2.movements.movements.records.balance.MonthlySummaryComparisonRecord
+import api.m2.movements.movements.records.balance.MonthlySummaryResponse
+import api.m2.movements.movements.records.balance.MonthlySummaryUnifiedRecord
+import api.m2.movements.movements.repositories.MonthlySummarySnapshotRepository
+import api.m2.movements.movements.services.balance.MonthlySummarySnapshotService
 import spock.lang.Specification
 import tools.jackson.databind.json.JsonMapper
 

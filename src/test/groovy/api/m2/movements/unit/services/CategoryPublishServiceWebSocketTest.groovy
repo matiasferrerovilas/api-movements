@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.enums.EventType
-import api.m2.movements.records.categories.CategoryRecord
-import api.m2.movements.records.categories.CategoryUpdatedEvent
-import api.m2.movements.services.publishing.websockets.CategoryPublishServiceWebSocket
+import api.m2.movements.movements.enums.EventType
+import api.m2.movements.movements.records.categories.CategoryRecord
+import api.m2.movements.movements.records.categories.CategoryUpdatedEvent
+import api.m2.movements.movements.services.publishing.websockets.CategoryPublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

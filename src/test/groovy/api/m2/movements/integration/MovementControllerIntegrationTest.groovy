@@ -1,10 +1,10 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.commons.Bank
-import api.m2.movements.entities.movements.Movement
-import api.m2.movements.enums.MovementType
-import api.m2.movements.repositories.BankRepository
-import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.movements.entities.commons.Bank
+import api.m2.movements.movements.entities.movements.Movement
+import api.m2.movements.movements.enums.MovementType
+import api.m2.movements.movements.repositories.BankRepository
+import api.m2.movements.movements.repositories.MovementRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 

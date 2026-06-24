@@ -1,6 +1,6 @@
 package api.m2.movements.investment.entities;
 
-import api.m2.movements.entities.integrity.Workspace;
+import api.m2.movements.movements.entities.integrity.Workspace;
 import api.m2.movements.investment.enums.InvestmentCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,13 +1,13 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.commons.Currency
-import api.m2.movements.entities.movements.Subscription
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.mappers.SubscriptionMapper
-import api.m2.movements.repositories.SubscriptionRepository
-import api.m2.movements.services.subscriptions.SubscriptionQueryService
-import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.movements.entities.commons.Currency
+import api.m2.movements.movements.entities.movements.Subscription
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.mappers.SubscriptionMapper
+import api.m2.movements.movements.repositories.SubscriptionRepository
+import api.m2.movements.movements.services.subscriptions.SubscriptionQueryService
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

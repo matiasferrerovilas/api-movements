@@ -1,7 +1,7 @@
 package api.m2.movements.unit.helpers
 
-import api.m2.movements.helpers.ParserRegistry
-import api.m2.movements.helpers.PdfExtractorHelper
+import api.m2.movements.movements.helpers.ParserRegistry
+import api.m2.movements.movements.helpers.PdfExtractorHelper
 import spock.lang.Specification
 
 class ParserRegistryTest extends Specification {

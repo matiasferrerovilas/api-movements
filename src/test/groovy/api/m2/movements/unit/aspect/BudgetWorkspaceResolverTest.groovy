@@ -1,11 +1,11 @@
 package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.BudgetWorkspaceResolver
-import api.m2.movements.entities.Budget
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.enums.MembershipDomain
+import api.m2.movements.movements.entities.Budget
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.repositories.BudgetRepository
+import api.m2.movements.movements.repositories.BudgetRepository
 import spock.lang.Specification
 
 class BudgetWorkspaceResolverTest extends Specification {

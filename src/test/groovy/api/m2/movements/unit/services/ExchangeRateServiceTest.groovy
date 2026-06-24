@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.records.accounts.AccountBaseRecord
-import api.m2.movements.records.categories.CategoryRecord
-import api.m2.movements.records.currencies.CurrencyRecord
-import api.m2.movements.records.currencies.ExchangeRateRecord
-import api.m2.movements.records.movements.MovementRecord
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.services.currencies.ExchangeRateService
-import api.m2.movements.services.currencies.FrankfurterClient
+import api.m2.movements.movements.records.accounts.AccountBaseRecord
+import api.m2.movements.movements.records.categories.CategoryRecord
+import api.m2.movements.movements.records.currencies.CurrencyRecord
+import api.m2.movements.movements.records.currencies.ExchangeRateRecord
+import api.m2.movements.movements.records.movements.MovementRecord
+import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.movements.services.currencies.ExchangeRateService
+import api.m2.movements.movements.services.currencies.FrankfurterClient
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -51,6 +51,36 @@ class ExchangeRateServiceTest extends Specification {
 
         then:
         result == [rate]
+        0 * frankfurterClient.getRatesByDateRange(_, _, _, _)
+    }
+
+    def "getRatesOnDate - should fall back to last available date when exact date has no data"() {
+        given:
+        def sunday = LocalDate.of(2026, 6, 21)
+        def friday = LocalDate.of(2026, 6, 19)
+        def fridayRate = new ExchangeRateRecord(friday, "USD", "EUR", new BigDecimal("0.920000"))
+        def thursdayRate = new ExchangeRateRecord(friday.minusDays(1), "USD", "EUR", new BigDecimal("0.910000"))
+        frankfurterClient.getRatesOnDate("USD", "EUR", "2026-06-21", "2026-06-21") >> []
+        frankfurterClient.getRatesByDateRange("USD", "EUR", sunday.minusDays(7), sunday) >> [thursdayRate, fridayRate]
+
+        when:
+        def result = service.getRatesOnDate("USD", "EUR", sunday)
+
+        then:
+        result == [fridayRate]
+    }
+
+    def "getRatesOnDate - should return empty list when no rates found in 7-day lookback"() {
+        given:
+        def date = LocalDate.of(2026, 6, 21)
+        frankfurterClient.getRatesOnDate("USD", "XYZ", "2026-06-21", "2026-06-21") >> []
+        frankfurterClient.getRatesByDateRange("USD", "XYZ", date.minusDays(7), date) >> []
+
+        when:
+        def result = service.getRatesOnDate("USD", "XYZ", date)
+
+        then:
+        result == []
     }
 
     // --- convertToUsd ---

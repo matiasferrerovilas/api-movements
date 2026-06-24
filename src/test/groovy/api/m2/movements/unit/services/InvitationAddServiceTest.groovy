@@ -1,19 +1,19 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.entities.integrity.WorkspaceInvitation
-import api.m2.movements.enums.InvitationStatus
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.WorkspaceInvitation
+import api.m2.movements.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.mappers.WorkspaceInvitationMapper
-import api.m2.movements.records.invite.InvitationResponseRecord
-import api.m2.movements.records.invite.InvitationToWorkspaceRecord
-import api.m2.movements.repositories.WorkspaceInvitationRepository
-import api.m2.movements.services.workspaces.WorkspaceAddService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
-import api.m2.movements.services.invitations.InvitationAddService
-import api.m2.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
-import api.m2.movements.services.user.UserService
+import api.m2.movements.movements.mappers.WorkspaceInvitationMapper
+import api.m2.movements.movements.records.invite.InvitationResponseRecord
+import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.movements.repositories.WorkspaceInvitationRepository
+import api.m2.movements.movements.services.workspaces.WorkspaceAddService
+import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.movements.services.invitations.InvitationAddService
+import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
+import api.m2.movements.movements.services.user.UserService
 import spock.lang.Specification
 
 class InvitationAddServiceTest extends Specification {

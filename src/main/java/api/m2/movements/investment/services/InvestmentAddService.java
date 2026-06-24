@@ -1,7 +1,7 @@
 package api.m2.movements.investment.services;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.investment.entities.Investment;
 import api.m2.movements.investment.mappers.InvestmentMapper;
@@ -10,9 +10,9 @@ import api.m2.movements.investment.records.InvestmentToAdd;
 import api.m2.movements.investment.records.InvestmentToUpdate;
 import api.m2.movements.investment.repositories.InvestmentRepository;
 import api.m2.movements.investment.repositories.InvestmentTypeRepository;
-import api.m2.movements.repositories.CurrencyRepository;
-import api.m2.movements.services.user.UserService;
-import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.movements.repositories.CurrencyRepository;
+import api.m2.movements.movements.services.user.UserService;
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,0 +1,11 @@
+package api.m2.movements.movements.records.categories;
+
+public record CategoryRecord(
+        Long id,
+        String description,
+        boolean isActive,
+        boolean isDeletable,
+        String iconName,
+        String iconColor
+) {
+}

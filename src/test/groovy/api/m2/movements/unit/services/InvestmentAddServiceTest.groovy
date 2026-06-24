@@ -1,8 +1,8 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.commons.Currency
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.commons.Currency
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.entities.Investment
 import api.m2.movements.investment.entities.InvestmentType
@@ -14,9 +14,9 @@ import api.m2.movements.investment.services.InvestmentPublishServiceWebSocket
 import api.m2.movements.investment.records.InvestmentRecord
 import api.m2.movements.investment.records.InvestmentToAdd
 import api.m2.movements.investment.records.InvestmentToUpdate
-import api.m2.movements.repositories.CurrencyRepository
-import api.m2.movements.services.user.UserService
-import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.movements.repositories.CurrencyRepository
+import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 import java.time.LocalDate

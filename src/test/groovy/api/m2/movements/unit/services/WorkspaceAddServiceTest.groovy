@@ -1,23 +1,23 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.entities.integrity.WorkspaceMember
-import api.m2.movements.enums.WorkspaceRole
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.WorkspaceMember
+import api.m2.movements.movements.enums.WorkspaceRole
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.mappers.WorkspaceMapper
-import api.m2.movements.records.workspaces.AddWorkspaceRecord
-import api.m2.movements.records.workspaces.WorkspaceDetail
-import api.m2.movements.records.workspaces.WorkspaceRecord
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.repositories.MembershipRepository
-import api.m2.movements.repositories.WorkspaceRepository
-import api.m2.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
-import api.m2.movements.services.settings.UserSettingService
-import api.m2.movements.services.user.UserService
-import api.m2.movements.services.workspaces.WorkspaceAddService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.movements.mappers.WorkspaceMapper
+import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord
+import api.m2.movements.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.movements.records.workspaces.WorkspaceRecord
+import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.movements.repositories.MembershipRepository
+import api.m2.movements.movements.repositories.WorkspaceRepository
+import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
+import api.m2.movements.movements.services.settings.UserSettingService
+import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.movements.services.workspaces.WorkspaceAddService
+import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class WorkspaceAddServiceTest extends Specification {
@@ -215,7 +215,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.updateDefaultWorkspace(30L)
 
         then:
-        1 * userSettingService.upsert(_ as api.m2.movements.enums.UserSettingKey, 30L)
+        1 * userSettingService.upsert(_ as api.m2.movements.movements.enums.UserSettingKey, 30L)
         1 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(
                 new WorkspaceDetail(30L, "Principal", 2, true),
                 "keycloak-uuid-456"

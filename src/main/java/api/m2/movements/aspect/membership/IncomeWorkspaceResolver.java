@@ -1,8 +1,8 @@
 package api.m2.movements.aspect.membership;
 
-import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.repositories.IncomeRepository;
+import api.m2.movements.movements.repositories.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

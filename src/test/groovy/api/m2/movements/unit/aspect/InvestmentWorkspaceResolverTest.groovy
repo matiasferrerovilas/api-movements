@@ -1,7 +1,7 @@
 package api.m2.movements.unit.aspect
 
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.enums.MembershipDomain
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.aspect.InvestmentWorkspaceResolver
 import api.m2.movements.investment.entities.Investment

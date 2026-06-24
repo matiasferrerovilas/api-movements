@@ -2,7 +2,7 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.WorkspaceIdResolver
 import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
-import api.m2.movements.enums.MembershipDomain
+import api.m2.movements.movements.enums.MembershipDomain
 import spock.lang.Specification
 
 class WorkspaceIdResolverRegistryTest extends Specification {

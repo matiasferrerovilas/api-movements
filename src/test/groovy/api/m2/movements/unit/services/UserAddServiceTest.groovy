@@ -1,11 +1,11 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.enums.UserType
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.enums.UserType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.repositories.UserRepository
-import api.m2.movements.services.user.UserAddService
+import api.m2.movements.movements.repositories.UserRepository
+import api.m2.movements.movements.services.user.UserAddService
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder

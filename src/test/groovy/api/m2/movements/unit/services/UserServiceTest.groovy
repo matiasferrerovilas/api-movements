@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.enums.UserSettingKey
-import api.m2.movements.enums.UserType
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.enums.UserSettingKey
+import api.m2.movements.movements.enums.UserType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.mappers.UserMapper
-import api.m2.movements.repositories.UserRepository
-import api.m2.movements.repositories.UserSettingRepository
-import api.m2.movements.services.user.UserService
+import api.m2.movements.movements.mappers.UserMapper
+import api.m2.movements.movements.repositories.UserRepository
+import api.m2.movements.movements.repositories.UserSettingRepository
+import api.m2.movements.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext

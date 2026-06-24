@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.entities.integrity.WorkspaceInvitation
-import api.m2.movements.enums.InvitationStatus
-import api.m2.movements.mappers.WorkspaceInvitationMapper
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.repositories.WorkspaceInvitationRepository
-import api.m2.movements.services.invitations.InvitationQueryService
-import api.m2.movements.services.user.UserService
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.WorkspaceInvitation
+import api.m2.movements.movements.enums.InvitationStatus
+import api.m2.movements.movements.mappers.WorkspaceInvitationMapper
+import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.movements.repositories.WorkspaceInvitationRepository
+import api.m2.movements.movements.services.invitations.InvitationQueryService
+import api.m2.movements.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.enums.EventType
+import api.m2.movements.movements.enums.EventType
 import api.m2.movements.investment.services.InvestmentPublishServiceWebSocket
 import api.m2.movements.investment.records.InvestmentRecord
 import org.springframework.messaging.simp.SimpMessagingTemplate

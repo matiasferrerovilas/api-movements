@@ -1,0 +1,41 @@
+package api.m2.movements.movements.mappers;
+
+import api.m2.movements.movements.entities.movements.Movement;
+import api.m2.movements.movements.records.movements.ExpenseToUpdate;
+import api.m2.movements.movements.records.movements.MovementRecord;
+import api.m2.movements.movements.records.movements.MovementToAdd;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
+import java.util.List;
+
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class,
+        CurrencyMapper.class, UserMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface MovementMapper {
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "currency", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "workspace", ignore = true)
+    @Mapping(target = "bank", ignore = true)
+    void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
+
+    @Mapping(target = "bank", source = "movement.bank.description")
+    @Mapping(target = "account", source = "movement.workspace")
+    MovementRecord toRecord(Movement movement);
+
+    @Mapping(target = "currency", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "workspace", ignore = true)
+    @Mapping(target = "bank", ignore = true)
+    @Mapping(target = "type", source = "type")
+    Movement toEntity(MovementToAdd movementToAdd);
+
+    List<MovementRecord> toRecord(List<Movement> movement);
+
+}
+

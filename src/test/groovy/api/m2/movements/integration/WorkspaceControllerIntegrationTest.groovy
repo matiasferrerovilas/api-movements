@@ -1,13 +1,13 @@
 package api.m2.movements.integration
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
-import api.m2.movements.entities.integrity.WorkspaceInvitation
-import api.m2.movements.entities.integrity.WorkspaceMember
-import api.m2.movements.enums.InvitationStatus
-import api.m2.movements.enums.UserType
-import api.m2.movements.enums.WorkspaceRole
-import api.m2.movements.repositories.WorkspaceInvitationRepository
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.WorkspaceInvitation
+import api.m2.movements.movements.entities.integrity.WorkspaceMember
+import api.m2.movements.movements.enums.InvitationStatus
+import api.m2.movements.movements.enums.UserType
+import api.m2.movements.movements.enums.WorkspaceRole
+import api.m2.movements.movements.repositories.WorkspaceInvitationRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 

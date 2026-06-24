@@ -1,7 +1,7 @@
 package api.m2.movements.integration
 
 
-import api.m2.movements.enums.UserType
+import api.m2.movements.movements.enums.UserType
 import org.springframework.http.MediaType
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*

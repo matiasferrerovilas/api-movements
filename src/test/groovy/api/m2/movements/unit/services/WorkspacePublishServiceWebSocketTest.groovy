@@ -1,11 +1,11 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.enums.EventType
-import api.m2.movements.records.invite.InvitationToWorkspaceRecord
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.records.workspaces.WorkspaceDetail
-import api.m2.movements.records.workspaces.WorkspaceRecord
-import api.m2.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
+import api.m2.movements.movements.enums.EventType
+import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.movements.records.workspaces.WorkspaceRecord
+import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

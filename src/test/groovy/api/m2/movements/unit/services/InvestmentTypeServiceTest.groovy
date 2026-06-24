@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.investment.entities.InvestmentType
@@ -11,7 +11,7 @@ import api.m2.movements.investment.services.InvestmentTypeService
 import api.m2.movements.investment.records.InvestmentTypeRecord
 import api.m2.movements.investment.records.InvestmentTypeToAdd
 import api.m2.movements.investment.records.InvestmentTypeToUpdate
-import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class InvestmentTypeServiceTest extends Specification {

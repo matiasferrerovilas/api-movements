@@ -1,12 +1,12 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.integrity.User
-import api.m2.movements.entities.integrity.Workspace
+import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.repositories.WorkspaceRepository
-import api.m2.movements.services.settings.UserSettingService
-import api.m2.movements.services.user.UserService
-import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.movements.repositories.WorkspaceRepository
+import api.m2.movements.movements.services.settings.UserSettingService
+import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class WorkspaceContextServiceTest extends Specification {

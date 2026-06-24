@@ -1,0 +1,10 @@
+package api.m2.movements.movements.enums;
+
+public enum UserSettingKey {
+    DEFAULT_WORKSPACE,
+    DEFAULT_CURRENCY,
+    DEFAULT_BANK,
+    DEFAULT_INVESTMENT_TYPE,
+    MONTHLY_SUMMARY_ENABLED,
+    AUTO_INCOME_ENABLED
+}
