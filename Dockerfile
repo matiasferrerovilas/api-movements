@@ -9,7 +9,6 @@ WORKDIR /app
 # Orden: dependencias primero (cambian poco) → app al final (cambia siempre)
 # Esto maximiza el cache de Docker layers en builds sucesivos
 COPY --chown=appuser:appgroup extracted/dependencies/ ./
-COPY --chown=appuser:appgroup extracted/spring-boot-loader/ ./
 COPY --chown=appuser:appgroup extracted/snapshot-dependencies/ ./
 COPY --chown=appuser:appgroup extracted/application/ ./
 
