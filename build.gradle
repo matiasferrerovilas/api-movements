@@ -5,7 +5,7 @@ buildscript {
 }
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.2'
+    id 'org.springframework.boot' version '4.1.0'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.liquibase.gradle' version '3.1.0'
     id 'checkstyle'
@@ -42,7 +42,9 @@ checkstyleMain {
 ext {
     mapstructVersion = '1.6.3'
     testcontainersVersion = '1.21.3'
+    springModulithVersion = "2.1.0"
 }
+
 
 dependencies {
     // Spring Boot Starters
@@ -58,16 +60,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
     //Logs
     implementation 'org.apache.commons:commons-text:1.14.0'
 
     // Cache
-    implementation 'com.github.ben-manes.caffeine:caffeine'
-
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
 
@@ -87,9 +89,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // Spring Modulith
-    implementation 'org.springframework.modulith:spring-modulith-starter-core:2.0.0'
-    testImplementation 'org.springframework.modulith:spring-modulith-starter-test:2.0.0'
-
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     // PDF
     implementation 'org.apache.pdfbox:pdfbox:3.0.6'
 
@@ -113,6 +114,12 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.20.0'
 
 
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+    }
 }
 
 tasks.named('test') {

@@ -1,37 +1,50 @@
 package api.m2.movements.configuration;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Configuration
 public class CacheConfiguration {
 
     public static final String CURRENCY_CACHE = "currency";
     public static final String YAHOO_PRICE_CACHE = "yahooPrice";
-    private static final int DURATION_TIME_DEFAULT = 5;
-    private static final int YAHOO_CACHE_HOURS = 1;
+    private static final String KEY_PREFIX = "api-movements:";
+    private static final Duration CURRENCY_TTL = Duration.ofHours(5);
+    private static final Duration YAHOO_PRICE_TTL = Duration.ofHours(1);
 
     @Bean
-    public CacheManager cacheManager() {
-        List<Cache> caches = List.of(
-                createCache(CURRENCY_CACHE, DURATION_TIME_DEFAULT),
-                createCache(YAHOO_PRICE_CACHE, YAHOO_CACHE_HOURS));
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        cacheManager.setCaches(caches);
-        return cacheManager;
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisCacheConfiguration defaultConfig = defaultCacheConfig();
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultConfig)
+                .withCacheConfiguration(CURRENCY_CACHE, defaultConfig.entryTtl(CURRENCY_TTL))
+                .withCacheConfiguration(YAHOO_PRICE_CACHE, defaultConfig.entryTtl(YAHOO_PRICE_TTL))
+                .build();
     }
 
-    private static CaffeineCache createCache(String cacheName, int durationTime) {
-        return new CaffeineCache(cacheName, Caffeine.newBuilder()
-                .expireAfterWrite(durationTime, TimeUnit.HOURS)
-                .build());
+    private static RedisCacheConfiguration defaultCacheConfig() {
+        var typeValidator = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType(Object.class)
+                .build();
+
+        var serializer = GenericJacksonJsonRedisSerializer.create(
+                builder -> builder.enableDefaultTyping(typeValidator));
+
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .computePrefixWith(cacheName -> KEY_PREFIX + cacheName + "::")
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+                .disableCachingNullValues();
     }
 }

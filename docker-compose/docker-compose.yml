@@ -3,7 +3,7 @@ name: api-movements
 services:
 
   mysql:
-    image: mysql:8
+    image: mysql:latest
     container_name: api-movements-mysql
     environment:
       MYSQL_ROOT_PASSWORD: helios
@@ -16,7 +16,7 @@ services:
       - api-movements
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:management
     container_name: api-movements-rabbit
     environment:
       RABBITMQ_DEFAULT_USER: api-movements
@@ -28,7 +28,7 @@ services:
       - api-movements
 
   redis:
-    image: redis:7-alpine
+    image: valkey/valkey:latest
     container_name: api-movements-redis
     ports:
       - "6379:6379"

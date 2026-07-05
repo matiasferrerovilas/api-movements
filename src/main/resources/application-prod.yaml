@@ -9,6 +9,12 @@ spring:
     port: 5672
     username: api-movements
     password: api-movements
+  data:
+    redis:
+      host: ${REDIS_URL}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
 logging:
   level:
     root: INFO
