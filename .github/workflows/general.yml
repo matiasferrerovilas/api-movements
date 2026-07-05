@@ -97,7 +97,8 @@ jobs:
       - name: Extract Spring Boot Layers
         run: |
           mkdir -p extracted
-          java -Djarmode=layertools -jar build/libs/api-movements-*.jar extract --destination extracted
+          cp build/libs/api-movements-*.jar application.jar
+          java -Djarmode=tools -jar application.jar extract --layers --destination extracted
           # snapshot-dependencies only exists when SNAPSHOT deps are present; ensure the dir always exists.
           # upload-artifact silently skips empty dirs, so we add a placeholder to guarantee it is
           # included in the artifact and present in the deploy job when Docker runs the COPY step.
