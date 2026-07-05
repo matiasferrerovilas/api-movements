@@ -35,9 +35,11 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.RequestPostProcessor
 import org.springframework.transaction.annotation.Transactional
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
@@ -50,6 +52,7 @@ import java.time.LocalDate
  * Clase base abstracta para tests de integración E2E con MockMvc.
  * Configura:
  * - MySQL Testcontainers
+ * - Redis Testcontainers (requerido por @Cacheable de CurrencyAddService/CacheConfiguration)
  * - Liquibase migrations
  * - JWT mock authentication
  * - Rollback automático después de cada test
@@ -90,6 +93,21 @@ abstract class BaseControllerIntegrationTest extends Specification {
             .withPassword("test")
             .withReuse(true)
             .withStartupTimeout(Duration.ofMinutes(5))
+            // Datos de test descartables: sin fsync por commit y datadir en tmpfs
+            // evita que InnoDB quede atado a la velocidad del disco del host.
+            .withTmpFs(["/var/lib/mysql": "rw"])
+            .withCommand(
+                    "--innodb-flush-log-at-trx-commit=0",
+                    "--innodb-doublewrite=0",
+                    "--skip-log-bin"
+            )
+
+    @Container
+    @Shared
+    @ServiceConnection(name = "redis")
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+            .withExposedPorts(6379)
+            .withReuse(true)
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

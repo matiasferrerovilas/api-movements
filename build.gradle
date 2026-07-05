@@ -129,7 +129,10 @@ tasks.named('test') {
     systemProperty 'file.encoding', 'UTF-8'
 
     // Performance
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    // Los tests de integración levantan un contenedor MySQL + contexto Spring completo
+    // por fork (el @Shared static container no se comparte entre JVMs distintas).
+    // Con cores/2 en máquinas de muchos cores esto multiplica contenedores y satura RAM/disco.
+    maxParallelForks = Math.min(2, Runtime.runtime.availableProcessors().intdiv(2) ?: 1)
 
     // Logging mejorado
     testLogging {
