@@ -9,6 +9,7 @@ import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.movements.mappers.WorkspaceMapper;
 import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.movements.records.workspaces.WorkspaceDetail;
+import api.m2.movements.movements.records.workspaces.WorkspaceLeftEvent;
 import api.m2.movements.movements.repositories.MembershipRepository;
 import api.m2.movements.movements.repositories.WorkspaceRepository;
 import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket;
@@ -17,6 +18,7 @@ import api.m2.movements.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class WorkspaceAddService {
     private final WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket;
     private final WorkspaceMapper workspaceMapper;
     private final UserSettingService userSettingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void createWorkspace(AddWorkspaceRecord addWorkspaceRecord) {
@@ -63,10 +66,10 @@ public class WorkspaceAddService {
 
     @Transactional
     public void leaveWorkspace(Long workspaceId) {
-        var user = userService.getAuthenticatedUserRecord();
+        var user = userService.getAuthenticatedUser();
 
         var membership = membershipRepository
-                .findMember(workspaceId, user.id())
+                .findMember(workspaceId, user.getId())
                 .orElseThrow(() -> new PermissionDeniedException("User does not belong to this workspace"));
 
         if (membership.getRole() == WorkspaceRole.OWNER) {
@@ -80,7 +83,12 @@ public class WorkspaceAddService {
         }
 
         membershipRepository.delete(membership);
-        workspacePublishServiceWebSocket.publishWorkspaceLeft(workspaceMapper.toRecord(membership.getWorkspace()));
+
+        if (userSettingService.getDefaultWorkspaceId(user).filter(workspaceId::equals).isPresent()) {
+            userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE);
+        }
+
+        eventPublisher.publishEvent(new WorkspaceLeftEvent(workspaceMapper.toRecord(membership.getWorkspace())));
     }
 
     @Transactional

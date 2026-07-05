@@ -5,13 +5,16 @@ import api.m2.movements.movements.entities.movements.Subscription;
 import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.movements.mappers.SubscriptionMapper;
+import api.m2.movements.movements.records.services.ServiceAddedEvent;
+import api.m2.movements.movements.records.services.ServiceDeletedEvent;
+import api.m2.movements.movements.records.services.ServicePaidEvent;
+import api.m2.movements.movements.records.services.ServiceUpdatedEvent;
 import api.m2.movements.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.movements.records.services.UpdateSubscriptionRecord;
 import api.m2.movements.movements.records.subscriptions.SubscriptionMovementSyncEvent;
 import api.m2.movements.movements.records.subscriptions.SubscriptionPaidEvent;
 import api.m2.movements.movements.repositories.CurrencyRepository;
 import api.m2.movements.movements.repositories.SubscriptionRepository;
-import api.m2.movements.movements.services.publishing.websockets.ServicePublishServiceWebSocket;
 import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.movements.services.workspaces.WorkspaceQueryService;
@@ -37,7 +40,6 @@ public class SubscriptionAddService {
     private final UserService userService;
     private final WorkspaceContextService workspaceContextService;
     private final WorkspaceQueryService workspaceQueryService;
-    private final ServicePublishServiceWebSocket servicePublishService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -52,8 +54,8 @@ public class SubscriptionAddService {
             this.publishPaidEvent(subscription);
         }
 
-        servicePublishService.publishNewService(
-                subscriptionMapper.toRecord(subscriptionRepository.save(subscription)));
+        eventPublisher.publishEvent(new ServiceAddedEvent(
+                subscriptionMapper.toRecord(subscriptionRepository.save(subscription))));
     }
 
     @Transactional
@@ -66,7 +68,7 @@ public class SubscriptionAddService {
         this.publishPaidEvent(subscription);
 
         var dto = subscriptionMapper.toRecord(subscriptionRepository.save(subscription));
-        servicePublishService.publishServicePaid(dto);
+        eventPublisher.publishEvent(new ServicePaidEvent(dto));
     }
 
     @Transactional
@@ -82,7 +84,7 @@ public class SubscriptionAddService {
         subscription.setLastPayment(updateSubscription.lastPayment());
 
         var dto = subscriptionMapper.toRecord(subscriptionRepository.save(subscription));
-        servicePublishService.publishUpdateService(dto);
+        eventPublisher.publishEvent(new ServiceUpdatedEvent(dto));
     }
 
     @Transactional
@@ -93,7 +95,7 @@ public class SubscriptionAddService {
 
         subscriptionRepository.delete(subscription);
         var dto = subscriptionMapper.toRecord(subscription);
-        servicePublishService.publishDeleteService(dto);
+        eventPublisher.publishEvent(new ServiceDeletedEvent(dto));
     }
 
     private void publishPaidEvent(Subscription subscription) {

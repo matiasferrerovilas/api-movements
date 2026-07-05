@@ -1,6 +1,10 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.enums.EventType
+import api.m2.movements.movements.records.services.ServiceAddedEvent
+import api.m2.movements.movements.records.services.ServiceDeletedEvent
+import api.m2.movements.movements.records.services.ServicePaidEvent
+import api.m2.movements.movements.records.services.ServiceUpdatedEvent
 import api.m2.movements.movements.records.services.SubscriptionRecord
 import api.m2.movements.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -22,7 +26,7 @@ class ServicePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishServicePaid(subscription)
+        service.publishServicePaid(new ServicePaidEvent(subscription))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/servicios/1/update", { wrapper ->
@@ -37,7 +41,7 @@ class ServicePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishUpdateService(subscription)
+        service.publishUpdateService(new ServiceUpdatedEvent(subscription))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/servicios/2/update", { wrapper ->
@@ -52,7 +56,7 @@ class ServicePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishNewService(subscription)
+        service.publishNewService(new ServiceAddedEvent(subscription))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/servicios/3/new", { wrapper ->
@@ -67,7 +71,7 @@ class ServicePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishDeleteService(subscription)
+        service.publishDeleteService(new ServiceDeletedEvent(subscription))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/servicios/4/remove", { wrapper ->

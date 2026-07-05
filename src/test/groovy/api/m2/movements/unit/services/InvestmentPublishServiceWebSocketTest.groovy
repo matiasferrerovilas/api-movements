@@ -2,7 +2,10 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.movements.enums.EventType
 import api.m2.movements.investment.services.InvestmentPublishServiceWebSocket
+import api.m2.movements.investment.records.InvestmentAddedEvent
+import api.m2.movements.investment.records.InvestmentDeletedEvent
 import api.m2.movements.investment.records.InvestmentRecord
+import api.m2.movements.investment.records.InvestmentUpdatedEvent
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 
@@ -20,7 +23,7 @@ class InvestmentPublishServiceWebSocketTest extends Specification {
         def record = Stub(InvestmentRecord) { workspaceId() >> 1L }
 
         when:
-        service.publishInvestmentAdded(record)
+        service.publishInvestmentAdded(new InvestmentAddedEvent(record))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/inversiones/1/new", { wrapper ->
@@ -33,7 +36,7 @@ class InvestmentPublishServiceWebSocketTest extends Specification {
         def record = Stub(InvestmentRecord) { workspaceId() >> 2L }
 
         when:
-        service.publishInvestmentUpdated(record)
+        service.publishInvestmentUpdated(new InvestmentUpdatedEvent(record))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/inversiones/2/update", { wrapper ->
@@ -46,7 +49,7 @@ class InvestmentPublishServiceWebSocketTest extends Specification {
         def record = Stub(InvestmentRecord) { workspaceId() >> 3L }
 
         when:
-        service.publishInvestmentDeleted(record)
+        service.publishInvestmentDeleted(new InvestmentDeletedEvent(record))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/inversiones/3/delete", { wrapper ->

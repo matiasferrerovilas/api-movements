@@ -5,14 +5,16 @@ import api.m2.movements.movements.enums.InvitationStatus;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.movements.mappers.WorkspaceInvitationMapper;
+import api.m2.movements.movements.records.invite.InvitationAddedEvent;
 import api.m2.movements.movements.records.invite.InvitationResponseRecord;
+import api.m2.movements.movements.records.invite.InvitationUpdatedEvent;
 import api.m2.movements.movements.repositories.WorkspaceInvitationRepository;
-import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket;
 import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.movements.services.workspaces.WorkspaceAddService;
 import api.m2.movements.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +31,7 @@ public class InvitationAddService {
     private final UserService userService;
     private final WorkspaceInvitationRepository workspaceInvitationRepository;
     private final WorkspaceInvitationMapper workspaceInvitationMapper;
-    private final WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void inviteToWorkspace(Long workspaceId, List<String> emails) {
@@ -71,7 +73,8 @@ public class InvitationAddService {
         newInvitations
                 .stream()
                 .map(workspaceInvitationMapper::toRecord)
-                .forEach(workspacePublishServiceWebSocket::publishInvitationAdded);
+                .map(InvitationAddedEvent::new)
+                .forEach(eventPublisher::publishEvent);
     }
 
     @Transactional
@@ -97,6 +100,6 @@ public class InvitationAddService {
             workspaceAddService.addMemberToWorkspace(invitation.getWorkspace());
         }
 
-        workspacePublishServiceWebSocket.publishInvitationUpdated(workspaceInvitationMapper.toRecord(invitation));
+        eventPublisher.publishEvent(new InvitationUpdatedEvent(workspaceInvitationMapper.toRecord(invitation)));
     }
 }

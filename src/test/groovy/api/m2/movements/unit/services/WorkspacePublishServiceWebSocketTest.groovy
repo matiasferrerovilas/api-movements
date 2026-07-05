@@ -1,9 +1,13 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.enums.EventType
+import api.m2.movements.movements.records.invite.InvitationAddedEvent
 import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.movements.records.invite.InvitationUpdatedEvent
 import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.movements.records.workspaces.WorkspaceCreatedEvent
 import api.m2.movements.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.movements.records.workspaces.WorkspaceLeftEvent
 import api.m2.movements.movements.records.workspaces.WorkspaceRecord
 import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -25,7 +29,7 @@ class WorkspacePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishInvitationAdded(invitation)
+        service.publishInvitationAdded(new InvitationAddedEvent(invitation))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/invitation/42/new", { wrapper ->
@@ -40,7 +44,7 @@ class WorkspacePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishInvitationUpdated(invitation)
+        service.publishInvitationUpdated(new InvitationUpdatedEvent(invitation))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/invitation/42/update", { wrapper ->
@@ -55,7 +59,7 @@ class WorkspacePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishWorkspaceCreated(workspaceRecord)
+        service.publishWorkspaceCreated(new WorkspaceCreatedEvent(workspaceRecord))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/workspace/10/new", { wrapper ->
@@ -70,7 +74,7 @@ class WorkspacePublishServiceWebSocketTest extends Specification {
         }
 
         when:
-        service.publishWorkspaceLeft(workspaceRecord)
+        service.publishWorkspaceLeft(new WorkspaceLeftEvent(workspaceRecord))
 
         then:
         1 * messagingTemplate.convertAndSend("/topic/workspace/5/leave", { wrapper ->

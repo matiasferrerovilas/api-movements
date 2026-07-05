@@ -10,8 +10,8 @@ import api.m2.movements.movements.records.movements.MovementToAdd;
 import api.m2.movements.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.movements.records.movements.MovementRecord;
 import api.m2.movements.movements.repositories.MovementRepository;
-import api.m2.movements.movements.services.publishing.websockets.MovementPublishServiceWebSocket;
 import api.m2.movements.exceptions.EntityNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +28,14 @@ public class MovementAddService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
-    private final MovementPublishServiceWebSocket movementPublishService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
         var movement = movementFactory.create(dto);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 
-        movementPublishService.publishMovementAdded(movementRecord);
+        eventPublisher.publishEvent(movementRecord);
 
         log.info("Movimiento guardado: id={}, type={}", movementRecord.id(), dto.type());
         return movementRecord;
@@ -46,7 +46,7 @@ public class MovementAddService {
         var movement = movementFactory.create(dto, workspace, owner);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 
-        movementPublishService.publishMovementAdded(movementRecord);
+        eventPublisher.publishEvent(movementRecord);
 
         log.info("Movimiento guardado: id={}, type={}", movementRecord.id(), dto.type());
         return movementRecord;
@@ -77,11 +77,7 @@ public class MovementAddService {
                 .toList();
 
         var saved = movementRepository.saveAll(entities);
-        saved.forEach(movement ->
-                movementPublishService.publishMovementAdded(
-                        movementMapper.toRecord(movement)
-                )
-        );
+        saved.forEach(movement -> eventPublisher.publishEvent(movementMapper.toRecord(movement)));
 
         log.info("Movimientos guardados en batch: total={}", saved.size());
     }
@@ -94,7 +90,7 @@ public class MovementAddService {
 
         Long workspaceId = movement.getWorkspace().getId();
         movementRepository.deleteById(id);
-        movementPublishService.publishDeleteOfMovement(new MovementDeletedEvent(id, workspaceId));
+        eventPublisher.publishEvent(new MovementDeletedEvent(id, workspaceId));
 
         log.info("Movimiento eliminado correctamente: id={}", id);
     }

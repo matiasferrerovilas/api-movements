@@ -15,12 +15,13 @@ import api.m2.movements.movements.mappers.MovementMapperImpl
 import api.m2.movements.movements.mappers.UserMapper
 import api.m2.movements.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.movements.records.movements.MovementDeletedEvent
+import api.m2.movements.movements.records.movements.MovementRecord
 import api.m2.movements.movements.records.movements.MovementToAdd
 import api.m2.movements.movements.repositories.MovementRepository
 import api.m2.movements.movements.services.movements.MovementAddService
 import api.m2.movements.movements.services.movements.MovementFactory
-import api.m2.movements.movements.services.publishing.websockets.MovementPublishServiceWebSocket
 import org.mapstruct.factory.Mappers
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
 
@@ -31,7 +32,7 @@ class MovementAddServiceTest extends Specification {
     MovementRepository movementRepository = Mock(MovementRepository)
     MovementMapper movementMapper
     MovementFactory movementFactory = Mock(MovementFactory)
-    MovementPublishServiceWebSocket movementPublishService = Mock(MovementPublishServiceWebSocket)
+    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
     MovementAddService service
 
@@ -45,7 +46,7 @@ class MovementAddServiceTest extends Specification {
                 movementRepository,
                 movementMapper,
                 movementFactory,
-                movementPublishService
+                eventPublisher
         )
     }
 
@@ -82,6 +83,7 @@ class MovementAddServiceTest extends Specification {
 
         then:
         1 * movementRepository.save(_ as Movement) >> movement
+        1 * eventPublisher.publishEvent(_ as MovementRecord)
     }
 
     def "saveMovement - should throw PermissionDeniedException when user is not a member of the workspace"() {
@@ -144,7 +146,7 @@ class MovementAddServiceTest extends Specification {
 
         then:
         1 * movementRepository.deleteById(20L)
-        1 * movementPublishService.publishDeleteOfMovement(_ as MovementDeletedEvent)
+        1 * eventPublisher.publishEvent(_ as MovementDeletedEvent)
     }
 
     def "deleteMovement - should throw EntityNotFoundException when movement does not exist"() {

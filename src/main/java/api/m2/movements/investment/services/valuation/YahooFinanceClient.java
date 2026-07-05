@@ -1,61 +1,40 @@
 package api.m2.movements.investment.services.valuation;
 
 import api.m2.movements.configuration.CacheConfiguration;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class YahooFinanceClient {
 
-    private static final String BASE_URL = "https://query1.finance.yahoo.com";
+    private final YahooFinanceHttpClient httpClient;
 
-    private final RestClient restClient;
-
-    public YahooFinanceClient() {
-        this.restClient = RestClient.builder()
-                .baseUrl(BASE_URL)
-                .defaultHeader("User-Agent", "Mozilla/5.0")
-                .build();
-    }
-
-    @Cacheable(value = CacheConfiguration.YAHOO_PRICE_CACHE, key = "#symbol")
-    public BigDecimal getPrice(String symbol) {
+    @Cacheable(value = CacheConfiguration.YAHOO_PRICE_CACHE, key = "#symbol", unless = "#result.isEmpty()")
+    public Optional<BigDecimal> getPrice(String symbol) {
         try {
-            var response = restClient.get()
-                    .uri("/v8/finance/chart/{symbol}?interval=1d&range=1d", symbol)
-                    .retrieve()
-                    .body(YahooChartResponse.class);
+            var response = httpClient.getChart(symbol);
+            var results = Optional.ofNullable(response)
+                    .map(YahooFinanceHttpClient.YahooChartResponse::chart)
+                    .map(YahooFinanceHttpClient.YahooChartResponse.Chart::result)
+                    .orElse(List.of());
 
-            if (response == null || response.chart() == null
-                    || response.chart().result() == null
-                    || response.chart().result().isEmpty()) {
-                log.warn("Respuesta vacía de Yahoo Finance para símbolo: {}", symbol);
-                return null;
+            if (results.isEmpty()) {
+                log.debug("Respuesta vacía de Yahoo Finance para símbolo: {}", symbol);
+                return Optional.empty();
             }
 
-            return response.chart().result().getFirst().meta().regularMarketPrice();
+            return Optional.ofNullable(results.getFirst().meta().regularMarketPrice());
         } catch (Exception e) {
             log.warn("Error consultando Yahoo Finance para {}: {}", symbol, e.getMessage());
-            return null;
+            return Optional.empty();
         }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record YahooChartResponse(Chart chart) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record Chart(List<ChartResult> result) { }
-
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record ChartResult(Meta meta) { }
-
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record Meta(BigDecimal regularMarketPrice, String currency) { }
     }
 }

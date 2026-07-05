@@ -10,13 +10,16 @@ import api.m2.movements.investment.mappers.InvestmentMapper
 import api.m2.movements.investment.repositories.InvestmentRepository
 import api.m2.movements.investment.repositories.InvestmentTypeRepository
 import api.m2.movements.investment.services.InvestmentAddService
-import api.m2.movements.investment.services.InvestmentPublishServiceWebSocket
+import api.m2.movements.investment.records.InvestmentAddedEvent
+import api.m2.movements.investment.records.InvestmentDeletedEvent
 import api.m2.movements.investment.records.InvestmentRecord
 import api.m2.movements.investment.records.InvestmentToAdd
 import api.m2.movements.investment.records.InvestmentToUpdate
+import api.m2.movements.investment.records.InvestmentUpdatedEvent
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -29,7 +32,7 @@ class InvestmentAddServiceTest extends Specification {
     CurrencyRepository currencyRepository = Mock(CurrencyRepository)
     UserService userService = Mock(UserService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
-    InvestmentPublishServiceWebSocket investmentPublishService = Mock(InvestmentPublishServiceWebSocket)
+    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
     InvestmentAddService service
 
@@ -41,7 +44,7 @@ class InvestmentAddServiceTest extends Specification {
                 currencyRepository,
                 userService,
                 workspaceContextService,
-                investmentPublishService
+                eventPublisher
         )
     }
 
@@ -84,7 +87,7 @@ class InvestmentAddServiceTest extends Specification {
 
         then:
         1 * investmentRepository.save(_ as Investment) >> investment
-        1 * investmentPublishService.publishInvestmentAdded(_ as InvestmentRecord)
+        1 * eventPublisher.publishEvent(_ as InvestmentAddedEvent)
     }
 
     def "add - should throw EntityNotFoundException when currency not found"() {
@@ -139,7 +142,7 @@ class InvestmentAddServiceTest extends Specification {
 
         then:
         1 * investmentRepository.save(investment) >> investment
-        1 * investmentPublishService.publishInvestmentUpdated(_ as InvestmentRecord)
+        1 * eventPublisher.publishEvent(_ as InvestmentUpdatedEvent)
     }
 
     def "update - should throw EntityNotFoundException when investment not found"() {
@@ -169,7 +172,7 @@ class InvestmentAddServiceTest extends Specification {
 
         then:
         1 * investmentRepository.delete(investment)
-        1 * investmentPublishService.publishInvestmentDeleted(_ as InvestmentRecord)
+        1 * eventPublisher.publishEvent(_ as InvestmentDeletedEvent)
     }
 
     def "delete - should throw EntityNotFoundException when investment not found"() {

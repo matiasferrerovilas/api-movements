@@ -42,6 +42,7 @@ import java.util.Set;
 public class Workspace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull

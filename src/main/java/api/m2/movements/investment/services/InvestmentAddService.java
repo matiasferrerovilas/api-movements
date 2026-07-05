@@ -5,9 +5,12 @@ import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.investment.entities.Investment;
 import api.m2.movements.investment.mappers.InvestmentMapper;
+import api.m2.movements.investment.records.InvestmentAddedEvent;
+import api.m2.movements.investment.records.InvestmentDeletedEvent;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.records.InvestmentToAdd;
 import api.m2.movements.investment.records.InvestmentToUpdate;
+import api.m2.movements.investment.records.InvestmentUpdatedEvent;
 import api.m2.movements.investment.repositories.InvestmentRepository;
 import api.m2.movements.investment.repositories.InvestmentTypeRepository;
 import api.m2.movements.movements.repositories.CurrencyRepository;
@@ -16,6 +19,7 @@ import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +34,7 @@ public class InvestmentAddService {
     private final CurrencyRepository currencyRepository;
     private final UserService userService;
     private final WorkspaceContextService workspaceContextService;
-    private final InvestmentPublishServiceWebSocket investmentPublishService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public InvestmentRecord add(@Valid InvestmentToAdd dto) {
@@ -55,7 +59,7 @@ public class InvestmentAddService {
                 .build();
 
         var record = investmentMapper.toRecord(investmentRepository.save(investment));
-        investmentPublishService.publishInvestmentAdded(record);
+        eventPublisher.publishEvent(new InvestmentAddedEvent(record));
         log.info("Inversión creada: id={}", record.id());
         return record;
     }
@@ -70,7 +74,7 @@ public class InvestmentAddService {
         this.applyFkUpdates(dto, investment);
 
         var record = investmentMapper.toRecord(investmentRepository.save(investment));
-        investmentPublishService.publishInvestmentUpdated(record);
+        eventPublisher.publishEvent(new InvestmentUpdatedEvent(record));
         log.info("Inversión actualizada: id={}", id);
         return record;
     }
@@ -83,7 +87,7 @@ public class InvestmentAddService {
 
         var record = investmentMapper.toRecord(investment);
         investmentRepository.delete(investment);
-        investmentPublishService.publishInvestmentDeleted(record);
+        eventPublisher.publishEvent(new InvestmentDeletedEvent(record));
         log.info("Inversión eliminada: id={}", id);
     }
 

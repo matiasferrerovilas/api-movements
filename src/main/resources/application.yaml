@@ -76,3 +76,6 @@ management:
 
 frankfurter:
   base-url: https://api.frankfurter.dev
+
+yahoo-finance:
+  base-url: https://query1.finance.yahoo.com

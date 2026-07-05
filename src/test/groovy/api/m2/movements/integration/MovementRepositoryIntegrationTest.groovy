@@ -27,6 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.time.Duration
 import java.time.LocalDate
 
 @SpringBootTest
@@ -41,6 +42,8 @@ class MovementRepositoryIntegrationTest extends Specification {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
+            .withReuse(true)
+            .withStartupTimeout(Duration.ofMinutes(5))
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

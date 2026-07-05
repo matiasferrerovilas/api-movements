@@ -6,12 +6,12 @@ import api.m2.movements.movements.entities.integrity.User
 import api.m2.movements.movements.entities.integrity.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.mappers.SubscriptionMapper
+import api.m2.movements.movements.records.services.ServiceDeletedEvent
 import api.m2.movements.movements.records.services.UpdateSubscriptionRecord
 import api.m2.movements.movements.records.subscriptions.SubscriptionMovementSyncEvent
 import api.m2.movements.movements.records.subscriptions.SubscriptionPaidEvent
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.SubscriptionRepository
-import api.m2.movements.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import api.m2.movements.movements.services.subscriptions.SubscriptionAddService
 import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.movements.services.workspaces.WorkspaceContextService
@@ -31,7 +31,6 @@ class SubscriptionAddServiceTest extends Specification {
     UserService userService = Mock(UserService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
-    ServicePublishServiceWebSocket servicePublishService = Mock(ServicePublishServiceWebSocket)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
     SubscriptionAddService service
@@ -44,7 +43,6 @@ class SubscriptionAddServiceTest extends Specification {
                 userService,
                 workspaceContextService,
                 workspaceQueryService,
-                servicePublishService,
                 eventPublisher
         )
     }
@@ -185,7 +183,7 @@ class SubscriptionAddServiceTest extends Specification {
 
         then:
         1 * subscriptionRepository.delete(subscription)
-        1 * servicePublishService.publishDeleteService(_ as api.m2.movements.movements.records.services.SubscriptionRecord)
+        1 * eventPublisher.publishEvent(_ as ServiceDeletedEvent)
     }
 
     def "deleteSubscription - should throw EntityNotFoundException when subscription does not exist"() {

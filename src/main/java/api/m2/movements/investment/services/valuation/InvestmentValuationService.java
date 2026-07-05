@@ -38,7 +38,7 @@ public class InvestmentValuationService {
     private InvestmentValuationRecord buildStockValuation(InvestmentRecord investment) {
         BigDecimal currentPrice = null;
         if (investment.symbol() != null) {
-            currentPrice = yahooFinanceClient.getPrice(investment.symbol());
+            currentPrice = yahooFinanceClient.getPrice(investment.symbol()).orElse(null);
         }
         return new InvestmentValuationRecord(
                 investment.id(),

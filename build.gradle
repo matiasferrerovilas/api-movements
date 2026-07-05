@@ -154,6 +154,11 @@ springBoot {
     buildInfo()
 }
 
+// El jar plano (no ejecutable) no se usa; solo se despliega el bootJar.
+jar {
+    enabled = false
+}
+
 
 // Configuración de compilación
 tasks.withType(JavaCompile).configureEach {

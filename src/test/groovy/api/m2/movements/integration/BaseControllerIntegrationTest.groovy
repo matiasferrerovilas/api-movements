@@ -42,7 +42,9 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
+import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 
 /**
  * Clase base abstracta para tests de integración E2E con MockMvc.
@@ -56,7 +58,7 @@ import java.time.Instant
 @AutoConfigureMockMvc
 @Testcontainers
 @Transactional
-@Import(BaseControllerIntegrationTest.TestMockConfig)
+@Import(TestMockConfig)
 abstract class BaseControllerIntegrationTest extends Specification {
 
     @TestConfiguration
@@ -72,7 +74,7 @@ abstract class BaseControllerIntegrationTest extends Specification {
         ExchangeRateResolver exchangeRateResolver() {
             return new ExchangeRateResolver(null) {
                 @Override
-                BigDecimal resolveRate(String symbol, java.time.LocalDate date) {
+                BigDecimal resolveRate(String symbol, LocalDate date) {
                     return BigDecimal.ONE
                 }
             }
@@ -86,6 +88,8 @@ abstract class BaseControllerIntegrationTest extends Specification {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
+            .withReuse(true)
+            .withStartupTimeout(Duration.ofMinutes(5))
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

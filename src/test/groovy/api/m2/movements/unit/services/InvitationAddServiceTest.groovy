@@ -6,14 +6,16 @@ import api.m2.movements.movements.entities.integrity.WorkspaceInvitation
 import api.m2.movements.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.movements.mappers.WorkspaceInvitationMapper
+import api.m2.movements.movements.records.invite.InvitationAddedEvent
 import api.m2.movements.movements.records.invite.InvitationResponseRecord
 import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.movements.records.invite.InvitationUpdatedEvent
 import api.m2.movements.movements.repositories.WorkspaceInvitationRepository
 import api.m2.movements.movements.services.workspaces.WorkspaceAddService
 import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.movements.services.invitations.InvitationAddService
-import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
 import api.m2.movements.movements.services.user.UserService
+import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
 class InvitationAddServiceTest extends Specification {
@@ -21,7 +23,7 @@ class InvitationAddServiceTest extends Specification {
     WorkspaceAddService workspaceAddService = Mock()
     UserService userService = Mock()
     WorkspaceInvitationRepository workspaceInvitationRepository = Mock()
-    WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket = Mock()
+    ApplicationEventPublisher eventPublisher = Mock()
     WorkspaceQueryService workspaceQueryService = Mock()
     WorkspaceInvitationMapper workspaceInvitationMapper = Mock()
 
@@ -34,7 +36,7 @@ class InvitationAddServiceTest extends Specification {
                 userService,
                 workspaceInvitationRepository,
                 workspaceInvitationMapper,
-                workspacePublishServiceWebSocket
+                eventPublisher
         )
     }
 
@@ -79,7 +81,7 @@ class InvitationAddServiceTest extends Specification {
 
         then:
         1 * workspaceInvitationRepository.saveAll(_ as List)
-        1 * workspacePublishServiceWebSocket.publishInvitationAdded(_ as InvitationToWorkspaceRecord)
+        1 * eventPublisher.publishEvent(_ as InvitationAddedEvent)
     }
 
     // --- acceptRejectInvitation ---
@@ -127,6 +129,6 @@ class InvitationAddServiceTest extends Specification {
         then:
         1 * workspaceInvitationRepository.save(_ as WorkspaceInvitation)
         1 * workspaceAddService.addMemberToWorkspace(workspace)
-        1 * workspacePublishServiceWebSocket.publishInvitationUpdated(_ as InvitationToWorkspaceRecord)
+        1 * eventPublisher.publishEvent(_ as InvitationUpdatedEvent)
     }
 }

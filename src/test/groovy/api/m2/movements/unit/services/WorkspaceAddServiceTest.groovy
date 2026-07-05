@@ -7,8 +7,10 @@ import api.m2.movements.movements.enums.WorkspaceRole
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.movements.mappers.WorkspaceMapper
+import api.m2.movements.movements.enums.UserSettingKey
 import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord
 import api.m2.movements.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.movements.records.workspaces.WorkspaceLeftEvent
 import api.m2.movements.movements.records.workspaces.WorkspaceRecord
 import api.m2.movements.movements.records.users.UserBaseRecord
 import api.m2.movements.movements.repositories.MembershipRepository
@@ -18,6 +20,7 @@ import api.m2.movements.movements.services.settings.UserSettingService
 import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.movements.services.workspaces.WorkspaceAddService
 import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
+import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
 class WorkspaceAddServiceTest extends Specification {
@@ -29,6 +32,7 @@ class WorkspaceAddServiceTest extends Specification {
     WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket = Mock(WorkspacePublishServiceWebSocket)
     WorkspaceMapper workspaceMapper = Mock(WorkspaceMapper)
     UserSettingService userSettingService = Mock(UserSettingService)
+    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
     WorkspaceAddService service
 
@@ -40,7 +44,8 @@ class WorkspaceAddServiceTest extends Specification {
                 membershipRepository,
                 workspacePublishServiceWebSocket,
                 workspaceMapper,
-                userSettingService
+                userSettingService,
+                eventPublisher
         )
     }
 
@@ -98,9 +103,9 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should throw PermissionDeniedException when user is not a member"() {
         given:
-        def user = new UserBaseRecord("John", 5L)
+        def user = User.builder().id(5L).email("john@test.com").build()
 
-        userService.getAuthenticatedUserRecord() >> user
+        userService.getAuthenticatedUser() >> user
         membershipRepository.findMember(99L, 5L) >> Optional.empty()
 
         when:
@@ -112,14 +117,14 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should throw PermissionDeniedException when owner tries to leave with other members"() {
         given:
-        def user = new UserBaseRecord("Owner", 1L)
+        def user = User.builder().id(1L).email("owner@test.com").build()
         def workspace = Workspace.builder().id(10L).name("Grupo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.OWNER
             getWorkspace() >> workspace
         }
 
-        userService.getAuthenticatedUserRecord() >> user
+        userService.getAuthenticatedUser() >> user
         membershipRepository.findMember(10L, 1L) >> Optional.of(membership)
         membershipRepository.countByWorkspaceId(10L) >> 3L
 
@@ -132,7 +137,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "leaveWorkspace - should deactivate workspace and publish event when owner leaves as sole member"() {
         given:
-        def user = new UserBaseRecord("Owner", 1L)
+        def user = User.builder().id(1L).email("owner@test.com").build()
         def workspace = Workspace.builder().id(10L).name("Solo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.OWNER
@@ -140,10 +145,11 @@ class WorkspaceAddServiceTest extends Specification {
         }
         def workspaceRecord = new WorkspaceRecord(10L, "Solo", new UserBaseRecord("Owner", 1L), [])
 
-        userService.getAuthenticatedUserRecord() >> user
+        userService.getAuthenticatedUser() >> user
         membershipRepository.findMember(10L, 1L) >> Optional.of(membership)
         membershipRepository.countByWorkspaceId(10L) >> 1L
         workspaceMapper.toRecord(workspace) >> workspaceRecord
+        userSettingService.getDefaultWorkspaceId(user) >> Optional.empty()
 
         when:
         service.leaveWorkspace(10L)
@@ -152,12 +158,13 @@ class WorkspaceAddServiceTest extends Specification {
         workspace.isActive() == false
         1 * workspaceRepository.save(workspace)
         1 * membershipRepository.delete(membership)
-        1 * workspacePublishServiceWebSocket.publishWorkspaceLeft(workspaceRecord)
+        0 * userSettingService.deleteByKey(_)
+        1 * eventPublisher.publishEvent(new WorkspaceLeftEvent(workspaceRecord))
     }
 
     def "leaveWorkspace - should delete membership and publish event for collaborator"() {
         given:
-        def user = new UserBaseRecord("Collab", 2L)
+        def user = User.builder().id(2L).email("collab@test.com").build()
         def workspace = Workspace.builder().id(10L).name("Grupo").build()
         def membership = Stub(WorkspaceMember) {
             getRole() >> WorkspaceRole.COLLABORATOR
@@ -165,9 +172,10 @@ class WorkspaceAddServiceTest extends Specification {
         }
         def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("Owner", 1L), [])
 
-        userService.getAuthenticatedUserRecord() >> user
+        userService.getAuthenticatedUser() >> user
         membershipRepository.findMember(10L, 2L) >> Optional.of(membership)
         workspaceMapper.toRecord(workspace) >> workspaceRecord
+        userSettingService.getDefaultWorkspaceId(user) >> Optional.empty()
 
         when:
         service.leaveWorkspace(10L)
@@ -175,7 +183,30 @@ class WorkspaceAddServiceTest extends Specification {
         then:
         0 * workspaceRepository.save(_ as Workspace)
         1 * membershipRepository.delete(membership)
-        1 * workspacePublishServiceWebSocket.publishWorkspaceLeft(workspaceRecord)
+        0 * userSettingService.deleteByKey(_)
+        1 * eventPublisher.publishEvent(new WorkspaceLeftEvent(workspaceRecord))
+    }
+
+    def "leaveWorkspace - should clear DEFAULT_WORKSPACE setting when it points to the workspace being left"() {
+        given:
+        def user = User.builder().id(2L).email("collab@test.com").build()
+        def workspace = Workspace.builder().id(10L).name("Grupo").build()
+        def membership = Stub(WorkspaceMember) {
+            getRole() >> WorkspaceRole.COLLABORATOR
+            getWorkspace() >> workspace
+        }
+        def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("Owner", 1L), [])
+
+        userService.getAuthenticatedUser() >> user
+        membershipRepository.findMember(10L, 2L) >> Optional.of(membership)
+        workspaceMapper.toRecord(workspace) >> workspaceRecord
+        userSettingService.getDefaultWorkspaceId(user) >> Optional.of(10L)
+
+        when:
+        service.leaveWorkspace(10L)
+
+        then:
+        1 * userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE)
     }
 
     def "addMemberToWorkspace - should publish MEMBERSHIP_UPDATED after member is saved"() {

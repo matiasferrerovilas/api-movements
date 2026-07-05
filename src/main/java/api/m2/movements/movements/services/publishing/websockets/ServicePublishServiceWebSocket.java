@@ -2,7 +2,10 @@ package api.m2.movements.movements.services.publishing.websockets;
 
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.movements.enums.EventType;
-import api.m2.movements.movements.records.services.SubscriptionRecord;
+import api.m2.movements.movements.records.services.ServiceAddedEvent;
+import api.m2.movements.movements.records.services.ServiceDeletedEvent;
+import api.m2.movements.movements.records.services.ServicePaidEvent;
+import api.m2.movements.movements.records.services.ServiceUpdatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -20,22 +23,26 @@ public class ServicePublishServiceWebSocket extends WebSocketMessageService {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishServicePaid(SubscriptionRecord dto) {
+    public void publishServicePaid(ServicePaidEvent event) {
+        var dto = event.subscription();
         this.publish(dto, WebSocketTopics.servicesUpdate(dto.workspaceId()), EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishUpdateService(SubscriptionRecord dto) {
+    public void publishUpdateService(ServiceUpdatedEvent event) {
+        var dto = event.subscription();
         this.publish(dto, WebSocketTopics.servicesUpdate(dto.workspaceId()), EventType.SERVICE_UPDATED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishNewService(SubscriptionRecord dto) {
+    public void publishNewService(ServiceAddedEvent event) {
+        var dto = event.subscription();
         this.publish(dto, WebSocketTopics.servicesNew(dto.workspaceId()), EventType.SERVICE_PAID);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishDeleteService(SubscriptionRecord dto) {
+    public void publishDeleteService(ServiceDeletedEvent event) {
+        var dto = event.subscription();
         this.publish(dto, WebSocketTopics.servicesRemove(dto.workspaceId()), EventType.SERVICE_DELETED);
     }
 }
