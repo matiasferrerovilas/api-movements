@@ -137,6 +137,8 @@ jobs:
           context: .
           push: true
           platforms: linux/arm64
+          provenance: false
+          sbom: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
