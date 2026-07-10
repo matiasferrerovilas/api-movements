@@ -8,6 +8,7 @@ import api.m2.movements.identity.records.workspaces.WorkspaceMemberRecord;
 import api.m2.movements.identity.records.workspaces.WorkspaceRecord;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.records.InvestmentTypeRecord;
+import api.m2.movements.investment.services.valuation.YahooFinanceHttpClient;
 import api.m2.movements.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.movements.records.categories.CategoryRecord;
@@ -24,8 +25,9 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
 /**
  * Bajo native-image hace falta reflection registrada explícitamente para:
  * records bindeados como {@code @ParameterObject} (query params), records
- * serializados solo vía WebSocket/AMQP (nunca devueltos por un controller,
- * así que el escaneo AOT de Spring MVC no los detecta solo) y
+ * serializados solo vía WebSocket/AMQP o deserializados solo desde clientes
+ * HTTP salientes ({@code @HttpExchange}) — nunca pasan por un controller,
+ * así que el escaneo AOT de Spring MVC no los detecta solo — y
  * {@code ConstraintValidator} custom.
  */
 public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
@@ -47,6 +49,10 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             WorkspaceMemberRecord.class,
             InvestmentRecord.class,
             InvestmentTypeRecord.class,
+            YahooFinanceHttpClient.YahooChartResponse.class,
+            YahooFinanceHttpClient.YahooChartResponse.Chart.class,
+            YahooFinanceHttpClient.YahooChartResponse.ChartResult.class,
+            YahooFinanceHttpClient.YahooChartResponse.Meta.class,
     };
 
     @Override
