@@ -2,8 +2,7 @@
 # Gradle general
 .gradle/
 build/
-!build/libs/
-!build/libs/*.jar
+extracted/
 
 
 # IDE

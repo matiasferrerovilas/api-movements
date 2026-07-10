@@ -8,6 +8,7 @@ plugins {
     id 'org.springframework.boot' version '4.1.0'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.liquibase.gradle' version '3.1.0'
+    id 'org.graalvm.buildtools.native' version '1.1.1'
     id 'checkstyle'
     id 'jacoco'
     id 'groovy'
@@ -18,6 +19,10 @@ version = '2.0.1'
 
 java {
     sourceCompatibility = '25'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+        vendor = JvmVendorSpec.GRAAL_VM
+    }
 }
 
 configurations {
@@ -154,6 +159,19 @@ tasks.withType(Test).configureEach {
 
 springBoot {
     buildInfo()
+}
+
+tasks.matching { it.name in ['checkstyleAot', 'checkstyleAotTest'] }.configureEach {
+    enabled = false
+}
+graalvmNative {
+    binaries {
+        main {
+            imageName = 'application'
+            buildArgs.add('--static')
+            buildArgs.add('--libc=musl')
+        }
+    }
 }
 
 // El jar plano (no ejecutable) no se usa; solo se despliega el bootJar.

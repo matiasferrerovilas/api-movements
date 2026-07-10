@@ -1,19 +1,27 @@
-FROM eclipse-temurin:25-jre-alpine
+# ---- Build stage: compila el binario nativo (musl, estático) ----
+FROM ghcr.io/graalvm/native-image-community:25-muslib AS build
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+WORKDIR /workspace
+
+COPY gradlew build.gradle settings.gradle ./
+COPY gradle/ gradle/
+RUN ./gradlew --no-daemon --version
+
+COPY checkstyle/ checkstyle/
+COPY src/ src/
+
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew --no-daemon nativeCompile
+
+# ---- Runtime stage: solo el binario nativo, sin JVM ----
+FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 
-# Las layers son extraídas en CI antes del build Docker (job build → Extract Spring Boot Layers)
-# Orden: dependencias primero (cambian poco) → app al final (cambia siempre)
-# Esto maximiza el cache de Docker layers en builds sucesivos
-COPY --chown=appuser:appgroup extracted/dependencies/ ./
-COPY --chown=appuser:appgroup extracted/snapshot-dependencies/ ./
-COPY --chown=appuser:appgroup extracted/application/ ./
+COPY --from=build /workspace/build/native/nativeCompile/application ./application
 
 ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "application.jar"]
+ENTRYPOINT ["/app/application"]

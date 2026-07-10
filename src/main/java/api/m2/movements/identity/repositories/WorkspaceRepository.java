@@ -2,7 +2,6 @@ package api.m2.movements.identity.repositories;
 
 import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.identity.projections.WorkspaceSummaryProjection;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,7 +33,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, Long> {
       and a.owner.id = :ownerId
       and a.isActive = true
 """)
-    Optional<Workspace> findWorkspaceByNameAndOwnerId(@NotNull @Param("name") String name, @Param("ownerId") Long ownerId);
+    Optional<Workspace> findWorkspaceByNameAndOwnerId(@Param("name") String name, @Param("ownerId") Long ownerId);
 
     @Query("""
         select

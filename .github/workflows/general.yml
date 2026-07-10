@@ -17,11 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v5
+      - name: Set up GraalVM 25
+        uses: graalvm/setup-graalvm@v2
         with:
-          distribution: temurin
+          distribution: graalvm-community
           java-version: "25"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Gradle
         uses: actions/cache@v5
@@ -45,7 +46,7 @@ jobs:
           retention-days: 7
 
   build:
-    name: Build JAR
+    name: Compute Version
     runs-on: ubuntu-latest
 
     outputs:
@@ -55,11 +56,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v5
+      - name: Set up GraalVM 25
+        uses: graalvm/setup-graalvm@v2
         with:
-          distribution: temurin
+          distribution: graalvm-community
           java-version: "25"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Gradle
         uses: actions/cache@v5
@@ -91,20 +93,6 @@ jobs:
           echo "${FINAL_VERSION}" > build.version
           echo "${PHASE}" > build.phase
 
-      - name: Build JAR
-        run: ./gradlew bootJar --no-daemon
-
-      - name: Extract Spring Boot Layers
-        run: |
-          mkdir -p extracted
-          cp build/libs/api-movements-*.jar application.jar
-          java -Djarmode=tools -jar application.jar extract --layers --destination extracted
-          # snapshot-dependencies only exists when SNAPSHOT deps are present; ensure the dir always exists.
-          # upload-artifact silently skips empty dirs, so we add a placeholder to guarantee it is
-          # included in the artifact and present in the deploy job when Docker runs the COPY step.
-          mkdir -p extracted/snapshot-dependencies
-          touch extracted/snapshot-dependencies/placeholder
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -112,7 +100,6 @@ jobs:
           path: |
             build.version
             build.phase
-            extracted/
           retention-days: 1
 
   deploy:
