@@ -1,5 +1,5 @@
-# ---- Build stage: compila el binario nativo (musl, estático) ----
-FROM ghcr.io/graalvm/native-image-community:25-muslib AS build
+# ---- Build stage: compila el binario nativo (glibc, dinámico) ----
+FROM ghcr.io/graalvm/native-image-community:25i1-25.0.3 AS build
 
 WORKDIR /workspace
 
@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon nativeCompile
 
 # ---- Runtime stage: solo el binario nativo, sin JVM ----
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/base-debian12:nonroot
 
 WORKDIR /app
 

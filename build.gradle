@@ -168,8 +168,6 @@ graalvmNative {
     binaries {
         main {
             imageName = 'application'
-            buildArgs.add('--static')
-            buildArgs.add('--libc=musl')
             javaLauncher = javaToolchains.launcherFor {
                 languageVersion = JavaLanguageVersion.of(25)
                 vendor = JvmVendorSpec.GRAAL_VM
