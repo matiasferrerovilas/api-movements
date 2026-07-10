@@ -139,8 +139,8 @@ jobs:
           platforms: linux/arm64
           provenance: false
           sbom: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=arm64-native-build
+          cache-to: type=gha,mode=max,scope=arm64-native-build
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
             ${{ github.ref_name == 'main' && format('{0}:latest', env.IMAGE_NAME) || '' }}
