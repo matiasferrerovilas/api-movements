@@ -190,6 +190,14 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
+// El código AOT lo genera Spring Data (raw types en JpaRepositoryFactoryBean /
+// RepositoryFragmentsFactoryBean) y se regenera en cada build: no es nuestro código,
+// así que no tiene sentido aplicarle el lint estricto.
+tasks.matching { it.name in ['compileAotJava', 'compileAotTestJava'] }.configureEach {
+    options.compilerArgs -= ['-Xlint:unchecked', '-Xlint:deprecation']
+    options.compilerArgs += ['-Xlint:-unchecked', '-Xlint:-deprecation']
+}
+
 test {
     finalizedBy jacocoTestReport
 }
