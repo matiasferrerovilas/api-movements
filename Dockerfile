@@ -1,5 +1,5 @@
 # ---- Build stage: compila el binario nativo (glibc, dinámico) ----
-FROM ghcr.io/graalvm/native-image-community:25i1-25.0.3 AS build
+FROM ghcr.io/graalvm/native-image-community:25 AS build
 
 WORKDIR /workspace
 
