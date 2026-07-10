@@ -59,7 +59,7 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         for (Class<?> type : RECORD_TYPES) {
             hints.reflection().registerType(type, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-                    MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS);
+                    MemberCategory.INVOKE_DECLARED_METHODS);
         }
         hints.reflection().registerType(CuotasValidator.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
     }

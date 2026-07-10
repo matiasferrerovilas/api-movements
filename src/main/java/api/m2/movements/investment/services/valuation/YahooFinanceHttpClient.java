@@ -17,12 +17,12 @@ public interface YahooFinanceHttpClient {
     @JsonIgnoreProperties(ignoreUnknown = true)
     record YahooChartResponse(Chart chart) {
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Chart(List<ChartResult> result) { }
+        public record Chart(List<ChartResult> result) { }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record ChartResult(Meta meta) { }
+        public record ChartResult(Meta meta) { }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Meta(BigDecimal regularMarketPrice, String currency) { }
+        public record Meta(BigDecimal regularMarketPrice, String currency) { }
     }
 }
