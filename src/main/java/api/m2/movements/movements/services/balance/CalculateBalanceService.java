@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class CalculateBalanceService {
     public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(Integer year) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
         return balanceEvolutionMapper.toRecordsWithFilledMonths(
-                movementRepository.findMonthlyEvolution(year, List.of(workspaceId))
+                movementRepository.findMonthlyEvolution(year, new ArrayList<>(List.of(workspaceId)))
         );
     }
 }

@@ -9,6 +9,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.liquibase.gradle' version '3.1.0'
     id 'org.graalvm.buildtools.native' version '1.1.1'
+    id 'org.hibernate.orm' version '7.4.1.Final'
     id 'checkstyle'
     id 'jacoco'
     id 'groovy'
@@ -164,6 +165,15 @@ springBoot {
 tasks.matching { it.name in ['checkstyleAot', 'checkstyleAotTest'] }.configureEach {
     enabled = false
 }
+
+// Enhancement en build time: bajo native-image no hay bytecode provider en runtime,
+// así que las relaciones @ManyToOne(LAZY) necesitan quedar enhanced en compilación
+// para no depender de proxies generados dinámicamente (HibernateProxy).
+hibernate {
+    enhancement {
+    }
+}
+
 graalvmNative {
     binaries {
         main {
