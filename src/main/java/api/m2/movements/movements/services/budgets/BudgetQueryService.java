@@ -4,7 +4,7 @@ import api.m2.movements.movements.entities.Budget;
 import api.m2.movements.movements.mappers.BudgetMapper;
 import api.m2.movements.movements.records.budgets.BudgetRecord;
 import api.m2.movements.movements.repositories.BudgetRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

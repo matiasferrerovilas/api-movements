@@ -1,15 +1,15 @@
 package api.m2.movements.movements.services.movements;
 
 import api.m2.movements.movements.entities.movements.Movement;
-import api.m2.movements.movements.entities.integrity.WorkspaceCategory;
+import api.m2.movements.identity.entities.WorkspaceCategory;
 import api.m2.movements.movements.mappers.CategoryMapper;
 import api.m2.movements.movements.mappers.MovementMapper;
 import api.m2.movements.movements.records.categories.CategoryRecord;
 import api.m2.movements.movements.records.movements.MovementRecord;
 import api.m2.movements.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.movements.repositories.MovementRepository;
-import api.m2.movements.movements.repositories.WorkspaceCategoryRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.repositories.WorkspaceCategoryRepository;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;

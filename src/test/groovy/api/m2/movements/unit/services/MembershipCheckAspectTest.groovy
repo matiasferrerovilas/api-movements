@@ -3,12 +3,12 @@ package api.m2.movements.unit.services
 import api.m2.movements.annotations.RequiresMembership
 import api.m2.movements.aspect.MembershipCheckAspect
 import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
-import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.identity.entities.User
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
+import api.m2.movements.identity.services.user.UserService
 import org.aspectj.lang.JoinPoint
 import spock.lang.Specification
 

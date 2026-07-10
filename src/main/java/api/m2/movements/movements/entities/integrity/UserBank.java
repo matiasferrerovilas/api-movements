@@ -1,5 +1,6 @@
 package api.m2.movements.movements.entities.integrity;
 
+import api.m2.movements.identity.entities.User;
 import api.m2.movements.movements.entities.commons.Bank;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -1,20 +1,20 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.integrity.User
-import api.m2.movements.movements.entities.integrity.Workspace
-import api.m2.movements.movements.entities.integrity.WorkspaceInvitation
+import api.m2.movements.identity.entities.User
+import api.m2.movements.identity.entities.Workspace
+import api.m2.movements.identity.entities.WorkspaceInvitation
 import api.m2.movements.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.movements.mappers.WorkspaceInvitationMapper
-import api.m2.movements.movements.records.invite.InvitationAddedEvent
-import api.m2.movements.movements.records.invite.InvitationResponseRecord
-import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
-import api.m2.movements.movements.records.invite.InvitationUpdatedEvent
-import api.m2.movements.movements.repositories.WorkspaceInvitationRepository
-import api.m2.movements.movements.services.workspaces.WorkspaceAddService
-import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
-import api.m2.movements.movements.services.invitations.InvitationAddService
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.identity.mappers.WorkspaceInvitationMapper
+import api.m2.movements.identity.records.invite.InvitationAddedEvent
+import api.m2.movements.identity.records.invite.InvitationResponseRecord
+import api.m2.movements.identity.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.identity.records.invite.InvitationUpdatedEvent
+import api.m2.movements.identity.repositories.WorkspaceInvitationRepository
+import api.m2.movements.identity.services.workspaces.WorkspaceAddService
+import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
+import api.m2.movements.identity.services.invitations.InvitationAddService
+import api.m2.movements.identity.services.user.UserService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 

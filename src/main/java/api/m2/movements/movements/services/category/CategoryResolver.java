@@ -1,7 +1,8 @@
 package api.m2.movements.movements.services.category;
 
 import api.m2.movements.movements.entities.commons.Category;
-import api.m2.movements.movements.entities.integrity.Workspace;
+import api.m2.movements.identity.entities.Workspace;
+import api.m2.movements.identity.services.category.WorkspaceCategoryService;
 import api.m2.movements.movements.records.categories.CategoryRecord;
 import api.m2.movements.movements.records.categories.CategoryUpdateRecord;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package api.m2.movements.movements.services.balance;
 
 import api.m2.movements.movements.entities.MonthlySummarySnapshot;
-import api.m2.movements.movements.entities.integrity.User;
+import api.m2.movements.identity.entities.User;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.movements.repositories.MonthlySummarySnapshotRepository;

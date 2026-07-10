@@ -3,7 +3,7 @@ package api.m2.movements.movements.services.income;
 import api.m2.movements.movements.mappers.IncomeMapper;
 import api.m2.movements.movements.records.income.IncomeRecord;
 import api.m2.movements.movements.repositories.IncomeRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,15 +1,15 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.enums.EventType
-import api.m2.movements.movements.records.invite.InvitationAddedEvent
-import api.m2.movements.movements.records.invite.InvitationToWorkspaceRecord
-import api.m2.movements.movements.records.invite.InvitationUpdatedEvent
-import api.m2.movements.movements.records.users.UserBaseRecord
-import api.m2.movements.movements.records.workspaces.WorkspaceCreatedEvent
-import api.m2.movements.movements.records.workspaces.WorkspaceDetail
-import api.m2.movements.movements.records.workspaces.WorkspaceLeftEvent
-import api.m2.movements.movements.records.workspaces.WorkspaceRecord
-import api.m2.movements.movements.services.publishing.websockets.WorkspacePublishServiceWebSocket
+import api.m2.movements.identity.records.invite.InvitationAddedEvent
+import api.m2.movements.identity.records.invite.InvitationToWorkspaceRecord
+import api.m2.movements.identity.records.invite.InvitationUpdatedEvent
+import api.m2.movements.identity.records.users.UserBaseRecord
+import api.m2.movements.identity.records.workspaces.WorkspaceCreatedEvent
+import api.m2.movements.identity.records.workspaces.WorkspaceDetail
+import api.m2.movements.identity.records.workspaces.WorkspaceLeftEvent
+import api.m2.movements.identity.records.workspaces.WorkspaceRecord
+import api.m2.movements.identity.services.WorkspacePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

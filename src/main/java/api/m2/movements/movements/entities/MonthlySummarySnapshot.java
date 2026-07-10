@@ -1,6 +1,6 @@
 package api.m2.movements.movements.entities;
 
-import api.m2.movements.movements.entities.integrity.User;
+import api.m2.movements.identity.entities.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.identity.entities.User
 import api.m2.movements.movements.enums.BalanceEnum
 import api.m2.movements.movements.enums.MovementType
 import api.m2.movements.movements.mappers.BalanceEvolutionMapper
@@ -9,8 +9,8 @@ import api.m2.movements.movements.records.balance.*
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.MovementRepository
 import api.m2.movements.movements.services.balance.CalculateBalanceService
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 import spock.lang.Unroll

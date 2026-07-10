@@ -1,5 +1,6 @@
 package api.m2.movements.movements.entities.integrity;
 
+import api.m2.movements.identity.entities.User;
 import api.m2.movements.movements.enums.UserSettingKey;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

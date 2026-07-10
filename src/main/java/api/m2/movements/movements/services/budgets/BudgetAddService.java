@@ -9,7 +9,7 @@ import api.m2.movements.movements.records.budgets.BudgetToUpdate;
 import api.m2.movements.movements.repositories.BudgetRepository;
 import api.m2.movements.movements.repositories.CategoryRepository;
 import api.m2.movements.movements.repositories.CurrencyRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

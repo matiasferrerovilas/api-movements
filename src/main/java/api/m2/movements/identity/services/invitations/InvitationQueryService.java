@@ -1,0 +1,30 @@
+package api.m2.movements.identity.services.invitations;
+
+import api.m2.movements.movements.enums.InvitationStatus;
+import api.m2.movements.identity.mappers.WorkspaceInvitationMapper;
+import api.m2.movements.identity.records.invite.InvitationToWorkspaceRecord;
+import api.m2.movements.identity.repositories.WorkspaceInvitationRepository;
+import api.m2.movements.identity.services.user.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class InvitationQueryService {
+
+    private final UserService userService;
+    private final WorkspaceInvitationRepository workspaceInvitationRepository;
+    private final WorkspaceInvitationMapper workspaceInvitationMapper;
+
+    @Transactional(readOnly = true)
+    public List<InvitationToWorkspaceRecord> getAllInvitations() {
+        var user = userService.getAuthenticatedUserRecord();
+        return workspaceInvitationMapper.toRecord(
+                workspaceInvitationRepository.findAllByUserIdAndStatus(user.id(), InvitationStatus.PENDING));
+    }
+}

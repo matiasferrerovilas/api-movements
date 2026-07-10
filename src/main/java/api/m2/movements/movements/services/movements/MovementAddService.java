@@ -1,8 +1,8 @@
 package api.m2.movements.movements.services.movements;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.movements.entities.integrity.User;
-import api.m2.movements.movements.entities.integrity.Workspace;
+import api.m2.movements.identity.entities.User;
+import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.movements.mappers.MovementMapper;
 import api.m2.movements.movements.records.movements.MovementDeletedEvent;

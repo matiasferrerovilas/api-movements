@@ -8,7 +8,7 @@ import api.m2.movements.movements.records.categories.CategoryMigrateRequest
 import api.m2.movements.movements.repositories.CategoryRepository
 import api.m2.movements.movements.repositories.MovementRepository
 import api.m2.movements.movements.services.category.CategoryMigrateService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class CategoryMigrateServiceTest extends Specification {

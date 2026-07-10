@@ -5,7 +5,7 @@ import api.m2.movements.movements.helpers.PdfReaderService
 import api.m2.movements.movements.records.movements.MovementFileToAdd
 import api.m2.movements.movements.services.movements.files.ExpenseFileStrategy
 import api.m2.movements.movements.services.movements.files.MovementImportFileService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
 

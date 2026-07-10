@@ -1,7 +1,7 @@
 package api.m2.movements.movements.services.balance;
 
-import api.m2.movements.movements.entities.integrity.User;
-import api.m2.movements.movements.services.user.UserService;
+import api.m2.movements.identity.entities.User;
+import api.m2.movements.identity.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

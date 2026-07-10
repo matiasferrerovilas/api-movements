@@ -8,7 +8,7 @@ import api.m2.movements.investment.records.InvestmentTypeRecord;
 import api.m2.movements.investment.records.InvestmentTypeToAdd;
 import api.m2.movements.investment.records.InvestmentTypeToUpdate;
 import api.m2.movements.investment.repositories.InvestmentTypeRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

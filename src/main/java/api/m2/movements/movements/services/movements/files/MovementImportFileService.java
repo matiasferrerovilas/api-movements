@@ -3,7 +3,7 @@ package api.m2.movements.movements.services.movements.files;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.movements.helpers.PdfReaderService;
 import api.m2.movements.movements.records.movements.MovementFileToAdd;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

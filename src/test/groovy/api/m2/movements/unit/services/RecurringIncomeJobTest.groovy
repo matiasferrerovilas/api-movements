@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.identity.entities.User
 import api.m2.movements.movements.services.income.IncomeAddService
 import api.m2.movements.movements.services.income.RecurringIncomeJob
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.identity.services.user.UserService
 import spock.lang.Specification
 
 class RecurringIncomeJobTest extends Specification {

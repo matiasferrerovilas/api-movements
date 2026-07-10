@@ -1,12 +1,12 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.enums.WorkspaceRole
-import api.m2.movements.movements.projections.MembershipSummaryProjection
-import api.m2.movements.movements.records.users.UserBaseRecord
-import api.m2.movements.movements.repositories.MembershipRepository
-import api.m2.movements.movements.services.groups.MembershipService
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.projections.MembershipSummaryProjection
+import api.m2.movements.identity.records.users.UserBaseRecord
+import api.m2.movements.identity.repositories.MembershipRepository
+import api.m2.movements.identity.services.membership.MembershipService
+import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class MembershipServiceTest extends Specification {

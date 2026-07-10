@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Bank
-import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.identity.entities.User
 import api.m2.movements.movements.entities.integrity.UserSetting
 import api.m2.movements.movements.enums.UserSettingKey
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.BankRepository
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.movements.services.settings.UserSettingService
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.identity.services.user.UserService
 import spock.lang.Specification
 
 class UserSettingServiceTest extends Specification {

@@ -3,14 +3,14 @@ package api.m2.movements.unit.services
 import api.m2.movements.movements.entities.Budget
 import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.mappers.BudgetMapper
 import api.m2.movements.movements.records.budgets.BudgetRecord
 import api.m2.movements.movements.records.categories.CategoryRecord
 import api.m2.movements.movements.records.currencies.CurrencyRecord
 import api.m2.movements.movements.repositories.BudgetRepository
 import api.m2.movements.movements.services.budgets.BudgetQueryService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class BudgetQueryServiceTest extends Specification {

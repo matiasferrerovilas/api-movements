@@ -1,5 +1,6 @@
 package api.m2.movements.movements.mappers;
 
+import api.m2.movements.identity.mappers.UserMapper;
 import api.m2.movements.movements.entities.movements.Income;
 import api.m2.movements.movements.records.income.IncomeRecord;
 import api.m2.movements.movements.records.income.IncomeToAdd;

@@ -3,7 +3,7 @@ package api.m2.movements.movements.records.movements;
 import api.m2.movements.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.movements.records.categories.CategoryRecord;
 import api.m2.movements.movements.records.currencies.CurrencyRecord;
-import api.m2.movements.movements.records.users.UserBaseRecord;
+import api.m2.movements.identity.records.users.UserBaseRecord;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

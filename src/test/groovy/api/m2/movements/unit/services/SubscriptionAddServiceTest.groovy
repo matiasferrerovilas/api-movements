@@ -2,8 +2,8 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Subscription
-import api.m2.movements.movements.entities.integrity.User
-import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.identity.entities.User
+import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.mappers.SubscriptionMapper
 import api.m2.movements.movements.records.services.ServiceDeletedEvent
@@ -13,9 +13,9 @@ import api.m2.movements.movements.records.subscriptions.SubscriptionPaidEvent
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.SubscriptionRepository
 import api.m2.movements.movements.services.subscriptions.SubscriptionAddService
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification

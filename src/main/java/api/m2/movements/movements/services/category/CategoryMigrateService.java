@@ -5,7 +5,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.movements.records.categories.CategoryMigrateRequest;
 import api.m2.movements.movements.repositories.CategoryRepository;
 import api.m2.movements.movements.repositories.MovementRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

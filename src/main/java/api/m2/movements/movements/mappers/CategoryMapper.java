@@ -1,7 +1,7 @@
 package api.m2.movements.movements.mappers;
 
 import api.m2.movements.movements.entities.commons.Category;
-import api.m2.movements.movements.entities.integrity.WorkspaceCategory;
+import api.m2.movements.identity.entities.WorkspaceCategory;
 import api.m2.movements.movements.records.categories.CategoryRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

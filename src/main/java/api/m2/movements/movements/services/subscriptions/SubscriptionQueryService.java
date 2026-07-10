@@ -3,7 +3,7 @@ package api.m2.movements.movements.services.subscriptions;
 import api.m2.movements.movements.mappers.SubscriptionMapper;
 import api.m2.movements.movements.records.services.SubscriptionRecord;
 import api.m2.movements.movements.repositories.SubscriptionRepository;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

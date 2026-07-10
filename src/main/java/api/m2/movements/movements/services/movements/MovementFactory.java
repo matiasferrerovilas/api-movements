@@ -1,8 +1,8 @@
 package api.m2.movements.movements.services.movements;
 
-import api.m2.movements.movements.entities.integrity.User;
+import api.m2.movements.identity.entities.User;
 import api.m2.movements.movements.entities.movements.Movement;
-import api.m2.movements.movements.entities.integrity.Workspace;
+import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.movements.mappers.MovementMapper;
 import api.m2.movements.movements.records.movements.ExpenseToUpdate;
@@ -11,8 +11,8 @@ import api.m2.movements.movements.repositories.BankRepository;
 import api.m2.movements.movements.services.currencies.ExchangeRateResolver;
 import api.m2.movements.movements.services.category.CategoryResolver;
 import api.m2.movements.movements.services.currencies.CurrencyResolver;
-import api.m2.movements.movements.services.user.UserService;
-import api.m2.movements.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

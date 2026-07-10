@@ -1,12 +1,12 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Bank
-import api.m2.movements.movements.entities.integrity.User
+import api.m2.movements.identity.entities.User
 import api.m2.movements.movements.entities.integrity.UserBank
 import api.m2.movements.movements.mappers.BankMapper
 import api.m2.movements.movements.repositories.UserBankRepository
 import api.m2.movements.movements.services.banks.BankQueryService
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.identity.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

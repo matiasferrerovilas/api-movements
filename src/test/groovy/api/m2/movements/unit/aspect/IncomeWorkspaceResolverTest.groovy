@@ -2,7 +2,7 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.IncomeWorkspaceResolver
 import api.m2.movements.movements.entities.movements.Income
-import api.m2.movements.movements.entities.integrity.Workspace
+import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.IncomeRepository

@@ -6,7 +6,7 @@ import api.m2.movements.movements.records.categories.CategoryRecord
 import api.m2.movements.movements.records.currencies.CurrencyRecord
 import api.m2.movements.movements.records.currencies.ExchangeRateRecord
 import api.m2.movements.movements.records.movements.MovementRecord
-import api.m2.movements.movements.records.users.UserBaseRecord
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.movements.services.currencies.ExchangeRateService
 import api.m2.movements.movements.services.currencies.FrankfurterClient
 import spock.lang.Specification
