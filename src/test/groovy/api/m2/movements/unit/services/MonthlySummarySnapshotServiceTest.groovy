@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.MonthlySummarySnapshot
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.movements.records.balance.MonthlySummaryByCurrencyRecord
 import api.m2.movements.movements.records.balance.MonthlySummaryComparisonRecord
 import api.m2.movements.movements.records.balance.MonthlySummaryResponse

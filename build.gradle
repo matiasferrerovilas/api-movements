@@ -130,16 +130,9 @@ dependencyManagement {
 tasks.named('test') {
     useJUnitPlatform()
 
-    // Configuración de encoding
     systemProperty 'file.encoding', 'UTF-8'
-
-    // Performance
-    // Los tests de integración levantan un contenedor MySQL + contexto Spring completo
-    // por fork (el @Shared static container no se comparte entre JVMs distintas).
-    // Con cores/2 en máquinas de muchos cores esto multiplica contenedores y satura RAM/disco.
     maxParallelForks = Math.min(2, Runtime.runtime.availableProcessors().intdiv(2) ?: 1)
 
-    // Logging mejorado
     testLogging {
         events 'passed', 'skipped', 'failed'
         exceptionFormat 'full'
@@ -166,9 +159,6 @@ tasks.matching { it.name in ['checkstyleAot', 'checkstyleAotTest'] }.configureEa
     enabled = false
 }
 
-// Enhancement en build time: bajo native-image no hay bytecode provider en runtime,
-// así que las relaciones @ManyToOne(LAZY) necesitan quedar enhanced en compilación
-// para no depender de proxies generados dinámicamente (HibernateProxy).
 hibernate {
     enhancement {
     }
@@ -182,21 +172,15 @@ graalvmNative {
                 languageVersion = JavaLanguageVersion.of(25)
                 vendor = JvmVendorSpec.GRAAL_VM
             }
-            // Con jar.enabled = false no hay artefacto "runtimeElements" que resolver,
-            // así que Native Build Tools no puede auto-incluir las clases del proyecto
-            // (solo agrega las del sourceSet "aot"). Se agregan explícitamente.
             classpath.from(sourceSets.main.output)
         }
     }
 }
 
-// El jar plano (no ejecutable) no se usa; solo se despliega el bootJar.
 jar {
     enabled = false
 }
 
-
-// Configuración de compilación
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs += [
@@ -206,9 +190,6 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
-// El código AOT lo genera Spring Data (raw types en JpaRepositoryFactoryBean /
-// RepositoryFragmentsFactoryBean) y se regenera en cada build: no es nuestro código,
-// así que no tiene sentido aplicarle el lint estricto.
 tasks.matching { it.name in ['compileAotJava', 'compileAotTestJava'] }.configureEach {
     options.compilerArgs -= ['-Xlint:unchecked', '-Xlint:deprecation']
     options.compilerArgs += ['-Xlint:-unchecked', '-Xlint:-deprecation']

@@ -3,7 +3,6 @@ package api.m2.movements.movements.entities.movements;
 import api.m2.movements.movements.entities.commons.Bank;
 import api.m2.movements.movements.entities.commons.Category;
 import api.m2.movements.movements.entities.commons.Currency;
-import api.m2.movements.identity.entities.User;
 import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.MovementType;
 import jakarta.persistence.Column;

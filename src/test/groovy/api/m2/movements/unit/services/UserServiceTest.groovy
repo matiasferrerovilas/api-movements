@@ -1,12 +1,12 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.movements.enums.UserSettingKey
 import api.m2.movements.movements.enums.UserType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.identity.mappers.UserMapper
-import api.m2.movements.identity.repositories.UserRepository
+
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.identity.services.user.UserService
 import org.mapstruct.factory.Mappers

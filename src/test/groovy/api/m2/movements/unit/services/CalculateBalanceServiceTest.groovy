@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.movements.enums.BalanceEnum
 import api.m2.movements.movements.enums.MovementType
 import api.m2.movements.movements.mappers.BalanceEvolutionMapper

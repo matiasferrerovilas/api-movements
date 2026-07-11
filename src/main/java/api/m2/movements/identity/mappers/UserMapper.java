@@ -1,6 +1,5 @@
 package api.m2.movements.identity.mappers;
 
-import api.m2.movements.identity.entities.User;
 import api.m2.movements.identity.records.users.UserBaseRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

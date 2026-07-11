@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.movements.services.balance.MonthlySummaryJob
 import api.m2.movements.movements.services.balance.MonthlySummaryService

@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.identity.entities.WorkspaceMember
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.identity.mappers.WorkspaceMapper

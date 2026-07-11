@@ -79,3 +79,6 @@ frankfurter:
 
 yahoo-finance:
   base-url: https://query1.finance.yahoo.com
+
+identity:
+  base-url: ${IDENTITY_API_URL:http://localhost:8082}

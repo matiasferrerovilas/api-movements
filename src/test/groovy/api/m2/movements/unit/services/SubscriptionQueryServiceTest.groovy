@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Subscription
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.mappers.SubscriptionMapper
 import api.m2.movements.movements.repositories.SubscriptionRepository

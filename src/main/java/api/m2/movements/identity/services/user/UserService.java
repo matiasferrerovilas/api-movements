@@ -1,15 +1,11 @@
 package api.m2.movements.identity.services.user;
 
-import api.m2.movements.identity.entities.User;
 import api.m2.movements.movements.enums.UserSettingKey;
-import api.m2.movements.movements.enums.UserType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.exceptions.ServiceException;
 import api.m2.movements.identity.mappers.UserMapper;
 import api.m2.movements.identity.records.users.UserBaseRecord;
-import api.m2.movements.identity.records.users.UserMeRecord;
-import api.m2.movements.identity.repositories.UserRepository;
 import api.m2.movements.movements.repositories.UserSettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +23,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserSettingRepository userSettingRepository;
 
@@ -73,24 +68,6 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserMeRecord getMe() {
-        var optional = findUserByEmail();
-        if (optional.isEmpty()) {
-            return new UserMeRecord(null, null, null, null, true, null, false);
-        }
-        var user = optional.get();
-        return new UserMeRecord(
-                user.getId(),
-                user.getEmail(),
-                user.getGivenName(),
-                user.getFamilyName(),
-                user.isFirstLogin(),
-                user.getUserType() != null ? user.getUserType().name() : null,
-                user.isHasSeenTour()
-        );
-    }
-
-    @Transactional(readOnly = true)
     public List<User> getUsersWithMonthlySnapshotEnabled() {
         return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
     }
@@ -98,25 +75,5 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<User> getUsersWithAutoIncomeEnabled() {
         return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED);
-    }
-
-    @Transactional
-    public void markTourAsSeen() {
-        var user = getAuthenticatedUser();
-        user.setHasSeenTour(true);
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void changeUserType(UserType newUserType) {
-        var user = this.getAuthenticatedUser();
-
-        // Validación silenciosa: si ya tiene ese tipo, no hace nada
-        if (user.getUserType() == newUserType) {
-            return;
-        }
-
-        user.setUserType(newUserType);
-        userRepository.save(user);
     }
 }

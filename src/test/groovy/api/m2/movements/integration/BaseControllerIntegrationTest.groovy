@@ -2,7 +2,7 @@ package api.m2.movements.integration
 
 import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.movements.entities.integrity.UserSetting
 import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.identity.entities.WorkspaceMember
@@ -12,7 +12,7 @@ import api.m2.movements.movements.enums.WorkspaceRole
 import api.m2.movements.movements.repositories.CategoryRepository
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.identity.repositories.MembershipRepository
-import api.m2.movements.identity.repositories.UserRepository
+
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.identity.repositories.WorkspaceRepository
 import api.m2.movements.movements.services.currencies.ExchangeRateResolver

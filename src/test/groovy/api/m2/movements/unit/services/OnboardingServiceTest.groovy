@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Bank
 import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.UserSettingKey
 import api.m2.movements.movements.enums.UserType

@@ -4,7 +4,7 @@ import api.m2.movements.movements.entities.commons.Bank
 import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Movement
-import api.m2.movements.identity.entities.User
+
 import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.mappers.MovementMapper
