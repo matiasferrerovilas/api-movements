@@ -16,7 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +43,7 @@ public class BankAddService {
             List<UserBank> userBanks = userBankRepository.findByUserId(user.getId());
             if (userBanks.size() == 1) {
                 log.debug("Setting bank {} as default for user {} (first bank)", result.bank().getId(), user.getId());
-                userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, result.bank().getId());
+                userSettingService.upsertForUser(user.getId(), UserSettingKey.DEFAULT_BANK, result.bank().getId());
             }
         }
 
@@ -49,6 +53,34 @@ public class BankAddService {
     @Transactional
     public Bank addBankToUser(String description, User user) {
         return this.resolveUserBank(description, user).bank();
+    }
+
+
+    @Transactional
+    public Map<String, Bank> addBanksToUser(List<String> descriptions, Long userId) {
+        var sanitizedByOriginal = descriptions.stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        description -> description.trim().toUpperCase(),
+                        (first, second) -> first,
+                        LinkedHashMap::new));
+
+        var banksByDescription = bankRepository.findByDescriptionIn(sanitizedByOriginal.values()).stream()
+                .collect(Collectors.toMap(Bank::getDescription, Function.identity()));
+
+        var newBanks = sanitizedByOriginal.values().stream()
+                .distinct()
+                .filter(description -> !banksByDescription.containsKey(description))
+                .map(description -> Bank.builder().description(description).build())
+                .toList();
+        bankRepository.saveAll(newBanks)
+                .forEach(bank -> banksByDescription.put(bank.getDescription(), bank));
+
+        var bankIds = banksByDescription.values().stream().map(Bank::getId).toList();
+        userBankRepository.linkBanksToUser(userId, bankIds);
+
+        return sanitizedByOriginal.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> banksByDescription.get(entry.getValue())));
     }
 
     private BankResolutionResult resolveUserBank(String description, User user) {
@@ -87,7 +119,7 @@ public class BankAddService {
             // Queda exactamente 1 banco: establecerlo como default
             Long remainingBankId = remainingBanks.get(0).getBank().getId();
             log.debug("Setting bank {} as default for user {} (only remaining bank)", remainingBankId, user.getId());
-            userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, remainingBankId);
+            userSettingService.upsertForUser(user.getId(), UserSettingKey.DEFAULT_BANK, remainingBankId);
         }
         // Si quedan 2 o más bancos: no hacer nada, mantener el default actual
     }

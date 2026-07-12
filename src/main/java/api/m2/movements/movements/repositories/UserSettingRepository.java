@@ -3,6 +3,7 @@ package api.m2.movements.movements.repositories;
 import api.m2.movements.movements.entities.integrity.UserSetting;
 import api.m2.movements.movements.enums.UserSettingKey;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,16 @@ public interface UserSettingRepository extends JpaRepository<UserSetting, Long> 
     List<UserSetting> findAllByUser(User user);
 
     void deleteByUserAndSettingKey(User user, UserSettingKey settingKey);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO user_settings (user_id, setting_key, setting_value, created_at, updated_at)
+            VALUES (:userId, :settingKey, :settingValue, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE setting_value = :settingValue, updated_at = NOW()
+            """, nativeQuery = true)
+    void upsertSetting(@Param("userId") Long userId,
+                       @Param("settingKey") String settingKey,
+                       @Param("settingValue") Long settingValue);
 
     @Query("""
             SELECT u FROM User u

@@ -2,7 +2,6 @@ package api.m2.movements.movements.services.onboarding;
 
 import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.UserSettingKey;
-import api.m2.movements.movements.enums.UserType;
 import api.m2.movements.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.movements.records.income.IncomeToAdd;
 import api.m2.movements.movements.records.onboarding.BankToAdd;
@@ -51,31 +50,36 @@ public class OnboardingService {
                 .findFirst()
                 .orElseThrow();
 
-        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, defaultWorkspace.id());
+        userSettingService.upsertForUser(user.id(), UserSettingKey.DEFAULT_WORKSPACE, defaultWorkspace.id());
 
-        this.addBanks(onBoardingForm, user);
-        this.addDefaultCurrency(user);
+        this.addBanks(onBoardingForm, user.id());
+        this.addDefaultCurrency(user.id());
         this.addCategories(onBoardingForm, defaultWorkspace);
         this.addInitialIncome(onBoardingForm, defaultWorkspace);
-        userAddService.changeUserFirstLoginStatus(UserType.valueOf(onBoardingForm.userType()), user.getId());
+        userAddService.changeUserFirstLoginStatus(user.id());
     }
 
-    private void addBanks(OnBoardingForm onBoardingForm, User user) {
+    private void addBanks(OnBoardingForm onBoardingForm, Long userId) {
         List<BankToAdd> banks = onBoardingForm.banksToAdd();
-        boolean hasExplicitDefault = banks.stream().anyMatch(BankToAdd::isDefault);
-        for (int i = 0; i < banks.size(); i++) {
-            var bankToAdd = banks.get(i);
-            var bank = bankAddService.addBankToUser(bankToAdd.description(), user);
-            boolean isDefault = hasExplicitDefault ? bankToAdd.isDefault() : i == 0;
-            if (isDefault) {
-                userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, bank.getId());
-            }
+        if (banks.isEmpty()) {
+            return;
         }
+
+        var descriptions = banks.stream().map(BankToAdd::description).toList();
+        var banksByDescription = bankAddService.addBanksToUser(descriptions, userId);
+
+        var defaultBank = banks.stream()
+                .filter(BankToAdd::isDefault)
+                .findFirst()
+                .orElse(banks.getFirst());
+
+        userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_BANK,
+                banksByDescription.get(defaultBank.description()).getId());
     }
 
-    private void addDefaultCurrency(User user) {
+    private void addDefaultCurrency(Long userId) {
         var usd = currencyAddService.findBySymbol(DEFAULT_CURRENCY);
-        userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_CURRENCY, usd.getId());
+        userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_CURRENCY, usd.getId());
     }
 
     private void addCategories(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {

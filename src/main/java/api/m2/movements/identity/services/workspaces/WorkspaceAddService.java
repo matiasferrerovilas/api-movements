@@ -121,6 +121,6 @@ public class WorkspaceAddService {
     }
 
     public List<WorkspaceAdded> createWorkspaces(UserToAdd user, List<AddWorkspaceRecord> workspacesToAdd) {
-        return identityClient.createWorkspaces(user, workspacesToAdd);
+        return identityClient.createWorkspaces(user.id(), workspacesToAdd);
     }
 }
