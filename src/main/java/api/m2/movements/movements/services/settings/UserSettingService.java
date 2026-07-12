@@ -1,5 +1,6 @@
 package api.m2.movements.movements.services.settings;
 
+import api.m2.movements.identity.records.users.UserToAdd;
 import api.m2.movements.movements.entities.commons.Bank;
 import api.m2.movements.movements.entities.integrity.UserSetting;
 import api.m2.movements.movements.enums.UserSettingKey;
@@ -56,7 +57,7 @@ public class UserSettingService {
     }
 
     @Transactional
-    public void upsertForUser(User user, UserSettingKey key, Long value) {
+    public void upsertForUser(UserToAdd user, UserSettingKey key, Long value) {
         UserSetting setting = userSettingRepository.findByUserAndSettingKey(user, key)
                 .orElseGet(() -> UserSetting.builder()
                         .user(user)

@@ -1,13 +1,16 @@
 package api.m2.movements.identity.services.workspaces;
 
+import api.m2.movements.clients.IdentityClient;
+import api.m2.movements.identity.WorkspaceAdded;
 import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.identity.entities.WorkspaceMember;
+import api.m2.movements.identity.records.users.UserToAdd;
 import api.m2.movements.movements.enums.UserSettingKey;
 import api.m2.movements.movements.enums.WorkspaceRole;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.identity.mappers.WorkspaceMapper;
-import api.m2.movements.identity.records.workspaces.AddWorkspaceRecord;
+import api.m2.movements.identity.AddWorkspaceRecord;
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail;
 import api.m2.movements.identity.records.workspaces.WorkspaceLeftEvent;
 import api.m2.movements.identity.repositories.MembershipRepository;
@@ -22,6 +25,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,6 +39,8 @@ public class WorkspaceAddService {
     private final WorkspaceMapper workspaceMapper;
     private final UserSettingService userSettingService;
     private final ApplicationEventPublisher eventPublisher;
+
+    private final IdentityClient identityClient;
 
     @Transactional
     public void createWorkspace(AddWorkspaceRecord addWorkspaceRecord) {
@@ -110,16 +117,10 @@ public class WorkspaceAddService {
 
     @Transactional
     public void updateDefaultWorkspace(Long id) {
-        var user = userService.getAuthenticatedUserRecord();
-        var keycloakUserId = userService.getCurrentKeycloakId();
-        var newDefaultMembership = membershipRepository.findMember(id, user.id())
-                .orElseThrow(() -> new PermissionDeniedException("El usuario no pertenece a este workspace"));
 
-        userSettingService.upsert(UserSettingKey.DEFAULT_WORKSPACE, newDefaultMembership.getWorkspace().getId());
+    }
 
-        long membersCount = membershipRepository.countByWorkspaceId(id);
-        var workspace = newDefaultMembership.getWorkspace();
-        var workspaceDetail = new WorkspaceDetail(workspace.getId(), workspace.getName(), (int) membersCount, true);
-        workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(workspaceDetail, keycloakUserId);
+    public List<WorkspaceAdded> createWorkspaces(UserToAdd user, List<AddWorkspaceRecord> workspacesToAdd) {
+        return identityClient.createWorkspaces(user, workspacesToAdd);
     }
 }

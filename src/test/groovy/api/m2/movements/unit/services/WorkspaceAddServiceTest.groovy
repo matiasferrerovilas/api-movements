@@ -8,7 +8,7 @@ import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.identity.mappers.WorkspaceMapper
 import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.identity.records.workspaces.AddWorkspaceRecord
+import api.m2.movements.identity.AddWorkspaceRecord
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail
 import api.m2.movements.identity.records.workspaces.WorkspaceLeftEvent
 import api.m2.movements.identity.records.workspaces.WorkspaceRecord
