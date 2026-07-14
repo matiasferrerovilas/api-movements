@@ -9,7 +9,7 @@ import api.m2.movements.movements.repositories.BankRepository;
 import api.m2.movements.movements.services.currencies.ExchangeRateResolver;
 import api.m2.movements.movements.services.category.CategoryResolver;
 import api.m2.movements.movements.services.currencies.CurrencyResolver;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

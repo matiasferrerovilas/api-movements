@@ -6,7 +6,7 @@ import api.m2.movements.movements.records.balance.MonthlySummaryComparisonRecord
 import api.m2.movements.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.movements.records.balance.MonthlySummaryUnifiedRecord;
 import api.m2.movements.movements.repositories.MovementRepository;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

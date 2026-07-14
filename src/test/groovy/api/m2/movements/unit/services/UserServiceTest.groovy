@@ -7,7 +7,7 @@ import api.m2.movements.exceptions.ServiceException
 import api.m2.movements.identity.records.users.UserBaseRecord
 
 import api.m2.movements.movements.repositories.UserSettingRepository
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder

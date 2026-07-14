@@ -17,7 +17,7 @@ import api.m2.movements.investment.records.InvestmentToAdd
 import api.m2.movements.investment.records.InvestmentToUpdate
 import api.m2.movements.investment.records.InvestmentUpdatedEvent
 import api.m2.movements.movements.repositories.CurrencyRepository
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification

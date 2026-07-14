@@ -7,7 +7,7 @@ import api.m2.movements.movements.mappers.BankMapper
 import api.m2.movements.movements.repositories.UserBankRepository
 import api.m2.movements.movements.services.banks.BankQueryService
 import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

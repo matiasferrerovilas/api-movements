@@ -17,7 +17,7 @@ import api.m2.movements.movements.services.currencies.CurrencyAddService
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import api.m2.movements.movements.services.income.IncomeAddService
 import api.m2.movements.movements.services.movements.MovementAddService
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

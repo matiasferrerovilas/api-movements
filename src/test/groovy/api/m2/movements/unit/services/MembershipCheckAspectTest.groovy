@@ -9,7 +9,7 @@ import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import org.aspectj.lang.JoinPoint
 import spock.lang.Specification
 

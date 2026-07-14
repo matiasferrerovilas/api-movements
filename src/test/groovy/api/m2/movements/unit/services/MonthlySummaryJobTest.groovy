@@ -5,7 +5,7 @@ import api.m2.movements.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.movements.services.balance.MonthlySummaryJob
 import api.m2.movements.movements.services.balance.MonthlySummaryService
 import api.m2.movements.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import spock.lang.Specification
 
 class MonthlySummaryJobTest extends Specification {

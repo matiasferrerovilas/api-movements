@@ -14,7 +14,7 @@ import api.m2.movements.investment.records.InvestmentUpdatedEvent;
 import api.m2.movements.investment.repositories.InvestmentRepository;
 import api.m2.movements.investment.repositories.InvestmentTypeRepository;
 import api.m2.movements.movements.repositories.CurrencyRepository;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

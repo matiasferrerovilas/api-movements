@@ -3,7 +3,7 @@ package api.m2.movements.aspect;
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry;
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;

@@ -12,8 +12,8 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: api-movements
-    password: api-movements
+    username: localhost
+    password: localhost
   data:
     redis:
       host: localhost

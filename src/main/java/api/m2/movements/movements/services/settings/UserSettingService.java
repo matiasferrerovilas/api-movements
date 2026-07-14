@@ -7,7 +7,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.movements.records.settings.UserSettingResponse;
 import api.m2.movements.movements.repositories.BankRepository;
 import api.m2.movements.movements.repositories.UserSettingRepository;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

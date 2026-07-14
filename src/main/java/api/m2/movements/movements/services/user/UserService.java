@@ -1,10 +1,11 @@
-package api.m2.movements.identity.services.user;
+package api.m2.movements.movements.services.user;
 
 import api.m2.movements.clients.IdentityClient;
 import api.m2.movements.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.exceptions.ServiceException;
 import api.m2.movements.identity.records.users.UserBaseRecord;
+import api.m2.movements.movements.records.users.UserMe;
 import api.m2.movements.movements.repositories.UserSettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,21 @@ public class UserService {
 
     private final IdentityClient identityClient;
     private final UserSettingRepository userSettingRepository;
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    public UserMe getMe() {
+        return identityClient.getMe(BEARER_PREFIX + this.getCurrentToken());
+    }
+
+    private String getCurrentToken() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken().getTokenValue();
+        }
+
+        throw new PermissionDeniedException("Usuario no autenticado");
+    }
 
     public UserBaseRecord getAuthenticatedUser() {
         return identityClient.getUserByEmail(this.getAuthenticatedEmail());

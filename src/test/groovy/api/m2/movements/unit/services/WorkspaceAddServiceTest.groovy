@@ -10,7 +10,7 @@ import api.m2.movements.identity.records.workspaces.WorkspaceDetail
 import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.WorkspacePublishServiceWebSocket
 import api.m2.movements.movements.services.settings.UserSettingService
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceAddService
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus

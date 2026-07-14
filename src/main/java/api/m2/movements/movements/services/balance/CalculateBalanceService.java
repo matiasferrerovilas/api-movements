@@ -9,7 +9,7 @@ import api.m2.movements.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.movements.repositories.CurrencyRepository;
 import api.m2.movements.movements.repositories.MovementRepository;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

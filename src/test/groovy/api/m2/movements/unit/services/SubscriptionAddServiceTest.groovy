@@ -12,7 +12,7 @@ import api.m2.movements.movements.records.subscriptions.SubscriptionPaidEvent
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.SubscriptionRepository
 import api.m2.movements.movements.services.subscriptions.SubscriptionAddService
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers

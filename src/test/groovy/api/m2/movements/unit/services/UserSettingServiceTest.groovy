@@ -9,7 +9,7 @@ import api.m2.movements.movements.repositories.BankRepository
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.movements.services.settings.UserSettingService
 import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import spock.lang.Specification
 
 class UserSettingServiceTest extends Specification {

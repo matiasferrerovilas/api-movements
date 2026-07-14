@@ -12,7 +12,7 @@ import api.m2.movements.movements.repositories.BankRepository;
 import api.m2.movements.movements.repositories.IncomeRepository;
 import api.m2.movements.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.movements.services.movements.MovementAddService;
-import api.m2.movements.identity.services.user.UserService;
+import api.m2.movements.movements.services.user.UserService;
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

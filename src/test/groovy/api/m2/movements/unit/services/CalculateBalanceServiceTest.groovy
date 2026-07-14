@@ -10,7 +10,7 @@ import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.MovementRepository
 import api.m2.movements.movements.services.balance.CalculateBalanceService
 import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.services.user.UserService
+import api.m2.movements.movements.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
