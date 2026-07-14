@@ -5,7 +5,7 @@ package api.m2.movements.exceptions;
  * Permite un manejo exhaustivo de excepciones en switch expressions.
  */
 public sealed class DomainException extends RuntimeException
-        permits BusinessException, EntityNotFoundException, PermissionDeniedException, ExchangeRateNotFoundException, ServiceException {
+        permits BusinessException, EntityAlreadyExistsException, EntityNotFoundException, ExchangeRateNotFoundException, PermissionDeniedException, ServiceException {
 
     protected DomainException(String message) {
         super(message);

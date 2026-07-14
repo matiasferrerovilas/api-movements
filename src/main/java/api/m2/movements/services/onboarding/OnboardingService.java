@@ -1,5 +1,6 @@
 package api.m2.movements.services.onboarding;
 
+import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.income.IncomeToAdd;
@@ -18,7 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +37,12 @@ public class OnboardingService {
     private final WorkspaceCategoryService workspaceCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
+    private final IdentityClient identityClient;
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser(onBoardingForm.userType());
-        var workspacesToAdd = onBoardingForm.accountsToAdd().stream()
-                .map(AddWorkspaceRecord::new)
-                .toList();
+        var workspacesToAdd = this.buildWorkspacesToAdd(onBoardingForm.accountsToAdd());
 
         var defaultWorkspace = workspaceAddService.createWorkspaces(workspacesToAdd)
                 .stream().filter(workspaceAdded -> DEFAULT_WORKSPACE_NAME.equals(workspaceAdded.description()))
@@ -54,6 +56,19 @@ public class OnboardingService {
         this.addCategories(onBoardingForm, defaultWorkspace.id());
         this.addInitialIncome(onBoardingForm, defaultWorkspace.id());
         userAddService.changeUserFirstLoginStatus(user.id());
+    }
+
+    private List<AddWorkspaceRecord> buildWorkspacesToAdd(List<String> accountsToAdd) {
+        var workspacesToAdd = accountsToAdd.stream()
+                .map(AddWorkspaceRecord::new)
+                .collect(Collectors.toList());
+
+        boolean hasDefault = accountsToAdd.stream().anyMatch(DEFAULT_WORKSPACE_NAME::equals);
+        if (!hasDefault) {
+            workspacesToAdd.add(new AddWorkspaceRecord(DEFAULT_WORKSPACE_NAME));
+        }
+
+        return workspacesToAdd;
     }
 
     private void addBanks(OnBoardingForm onBoardingForm, Long userId) {
@@ -95,5 +110,9 @@ public class OnboardingService {
                     amount.amount()),
                     defaultWorkspaceId);
         }
+    }
+
+    public void markTourAsSeen() {
+        identityClient.markTourAsSeen();
     }
 }

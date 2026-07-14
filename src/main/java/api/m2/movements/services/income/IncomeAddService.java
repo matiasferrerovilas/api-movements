@@ -49,7 +49,7 @@ public class IncomeAddService {
     @Transactional
     public void loadIncome(IncomeToAdd incomeToAdd, Long workspaceId) {
         var income = incomeMapper.toEntity(incomeToAdd);
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         income.setUserId(userId);
         income.setWorkspaceId(workspaceId);
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());

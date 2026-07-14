@@ -14,6 +14,7 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
+import org.springframework.web.service.annotation.PutExchange;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public interface IdentityClient {
     @PostExchange("/v1/users")
     UserMe createLogInUser(@RequestBody UserToAdd user);
 
-    @PatchExchange("/v1/users/{userId}/first-login")
+    @PatchExchange("/v1/onboarding/{userId}/first-login")
     void changeUserFirstLoginStatus(@PathVariable Long userId);
 
     @GetExchange("/v1/users/by-email")
@@ -43,4 +44,7 @@ public interface IdentityClient {
 
     @DeleteExchange("/v1/workspaces/{workspaceId}/members/{userId}")
     void leaveWorkspace(@PathVariable Long workspaceId, @PathVariable Long userId);
+
+    @PutExchange("/v1/onboarding/tour")
+    void markTourAsSeen();
 }

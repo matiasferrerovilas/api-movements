@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -35,23 +34,14 @@ public class WorkspaceAddService {
         if (StringUtils.isAllBlank(addWorkspaceRecord.description())) {
             throw new BusinessException("La descripción del workspace no puede estar vacía");
         }
-        Long userId = userService.getAuthenticatedUser().id();
-        try {
-            identityClient.createWorkspaces(List.of(addWorkspaceRecord));
-        } catch (RestClientResponseException e) {
-            throw new BusinessException("No se pudo crear el workspace: " + e.getMessage());
-        }
+        identityClient.createWorkspaces(List.of(addWorkspaceRecord));
     }
 
     @Transactional
     public void leaveWorkspace(Long workspaceId) {
         Long userId = userService.getAuthenticatedUser().id();
 
-        try {
-            identityClient.leaveWorkspace(workspaceId, userId);
-        } catch (RestClientResponseException e) {
-            throw new BusinessException("No se pudo abandonar el workspace: " + e.getMessage());
-        }
+        identityClient.leaveWorkspace(workspaceId, userId);
 
         userSettingService.getDefaultWorkspaceId(userId)
                 .filter(workspaceId::equals)

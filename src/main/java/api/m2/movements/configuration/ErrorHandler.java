@@ -1,6 +1,7 @@
 package api.m2.movements.configuration;
 
 import api.m2.movements.exceptions.BusinessException;
+import api.m2.movements.exceptions.EntityAlreadyExistsException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.ErrorResponse;
 import api.m2.movements.exceptions.ExchangeRateNotFoundException;
@@ -110,6 +111,21 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEntityAlreadyExistsException(EntityAlreadyExistsException ex) {
+        log.info("Entidad ya existente: {}", ex.getMessage());
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.CONFLICT.value()),
+                "Conflict",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(errorResponse);
     }
