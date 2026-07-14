@@ -1,6 +1,7 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.response.UserMe;
 import api.m2.movements.records.workspaces.WorkspaceAdded;
 import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.enums.UserSettingKey;
@@ -36,7 +37,7 @@ public class WorkspaceAddService {
         }
         Long userId = userService.getAuthenticatedUser().id();
         try {
-            identityClient.createWorkspaces(userId, List.of(addWorkspaceRecord));
+            identityClient.createWorkspaces(List.of(addWorkspaceRecord));
         } catch (RestClientResponseException e) {
             throw new BusinessException("No se pudo crear el workspace: " + e.getMessage());
         }
@@ -71,7 +72,7 @@ public class WorkspaceAddService {
         workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(workspaceDetail, keycloakSubject);
     }
 
-    public List<WorkspaceAdded> createWorkspaces(UserToAdd user, List<AddWorkspaceRecord> workspacesToAdd) {
-        return identityClient.createWorkspaces(user.id(), workspacesToAdd);
+    public List<WorkspaceAdded> createWorkspaces(List<AddWorkspaceRecord> workspacesToAdd) {
+        return identityClient.createWorkspaces(workspacesToAdd);
     }
 }

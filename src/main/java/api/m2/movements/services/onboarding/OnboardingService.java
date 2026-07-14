@@ -42,7 +42,7 @@ public class OnboardingService {
                 .map(AddWorkspaceRecord::new)
                 .toList();
 
-        var defaultWorkspace = workspaceAddService.createWorkspaces(user, workspacesToAdd)
+        var defaultWorkspace = workspaceAddService.createWorkspaces(workspacesToAdd)
                 .stream().filter(workspaceAdded -> DEFAULT_WORKSPACE_NAME.equals(workspaceAdded.description()))
                 .findFirst()
                 .orElseThrow();

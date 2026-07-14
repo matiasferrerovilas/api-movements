@@ -8,7 +8,6 @@ import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.clients.identity.response.UserMe;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.DeleteExchange;
 import org.springframework.web.service.annotation.GetExchange;
@@ -22,7 +21,7 @@ import java.util.List;
 public interface IdentityClient {
 
     @PostExchange("/v1/users")
-    UserToAdd createLogInUser(@RequestBody UserToAdd user);
+    UserMe createLogInUser(@RequestBody UserToAdd user);
 
     @PatchExchange("/v1/users/{userId}/first-login")
     void changeUserFirstLoginStatus(@PathVariable Long userId);
@@ -31,10 +30,10 @@ public interface IdentityClient {
     UserBaseRecord getUserByEmail(@RequestParam String email);
 
     @GetExchange("/v1/users/me")
-    UserMe getMe(@RequestHeader("Authorization") String authorization);
+    UserMe getMe();
 
-    @PostExchange("/v1/users/{userId}/workspaces")
-    List<WorkspaceAdded> createWorkspaces(@PathVariable Long userId, @RequestBody List<AddWorkspaceRecord> workspaces);
+    @PostExchange("/v1/workspaces")
+    List<WorkspaceAdded> createWorkspaces(@RequestBody List<AddWorkspaceRecord> workspaces);
 
     @GetExchange("/v1/users/{userId}/workspaces")
     List<WorkspacesWithUser> getWorkspaces(@PathVariable Long userId);

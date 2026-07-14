@@ -25,20 +25,9 @@ public class UserService {
 
     private final IdentityClient identityClient;
     private final UserSettingRepository userSettingRepository;
-    private static final String BEARER_PREFIX = "Bearer ";
 
     public UserMe getMe() {
-        return identityClient.getMe(BEARER_PREFIX + this.getCurrentToken());
-    }
-
-    private String getCurrentToken() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth instanceof JwtAuthenticationToken jwtAuth) {
-            return jwtAuth.getToken().getTokenValue();
-        }
-
-        throw new PermissionDeniedException("Usuario no autenticado");
+        return identityClient.getMe();
     }
 
     public UserBaseRecord getAuthenticatedUser() {
