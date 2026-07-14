@@ -1,20 +1,20 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.identity.entities.WorkspaceCategory
-import api.m2.movements.movements.enums.DefaultCategory
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.WorkspaceCategory
+import api.m2.movements.enums.DefaultCategory
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.identity.mappers.WorkspaceCategoryMapper
-import api.m2.movements.movements.records.categories.CategoryPatchRequest
-import api.m2.movements.movements.records.categories.CategoryRecord
-import api.m2.movements.movements.records.categories.CategoryUpdatedEvent
-import api.m2.movements.movements.repositories.CategoryRepository
-import api.m2.movements.identity.repositories.WorkspaceCategoryRepository
-import api.m2.movements.movements.services.category.CategoryAddService
-import api.m2.movements.identity.services.category.WorkspaceCategoryService
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.mappers.WorkspaceCategoryMapper
+import api.m2.movements.records.categories.CategoryPatchRequest
+import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.records.categories.CategoryUpdatedEvent
+import api.m2.movements.repositories.CategoryRepository
+import api.m2.movements.repositories.WorkspaceCategoryRepository
+import api.m2.movements.services.category.CategoryAddService
+import api.m2.movements.services.category.WorkspaceCategoryService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 

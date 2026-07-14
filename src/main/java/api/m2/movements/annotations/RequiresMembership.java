@@ -1,6 +1,6 @@
 package api.m2.movements.annotations;
 
-import api.m2.movements.movements.enums.MembershipDomain;
+import api.m2.movements.enums.MembershipDomain;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

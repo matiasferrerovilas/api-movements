@@ -1,0 +1,123 @@
+package api.m2.movements.services.income;
+
+import api.m2.movements.annotations.RequiresMembership;
+import api.m2.movements.enums.DefaultCategory;
+import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.enums.MovementType;
+import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.mappers.IncomeMapper;
+import api.m2.movements.records.income.IncomeToAdd;
+import api.m2.movements.records.movements.MovementToAdd;
+import api.m2.movements.repositories.BankRepository;
+import api.m2.movements.repositories.IncomeRepository;
+import api.m2.movements.services.currencies.CurrencyAddService;
+import api.m2.movements.services.movements.MovementAddService;
+import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class IncomeAddService {
+    private final IncomeRepository incomeRepository;
+    private final UserService userService;
+    private final IncomeMapper incomeMapper;
+    private final WorkspaceContextService workspaceContextService;
+    private final CurrencyAddService currencyAddService;
+    private final MovementAddService movementAddService;
+    private final BankRepository bankRepository;
+
+    @Transactional
+    public void loadIncome(IncomeToAdd incomeToAdd) {
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        this.loadIncome(incomeToAdd, workspaceId);
+    }
+
+    /**
+     * Carga un ingreso asociándolo a un workspace específico.
+     * Usado por el onboarding donde el usuario aún no tiene DEFAULT_WORKSPACE configurado.
+     */
+    @Transactional
+    public void loadIncome(IncomeToAdd incomeToAdd, Long workspaceId) {
+        var income = incomeMapper.toEntity(incomeToAdd);
+        var userId = userService.getAuthenticatedUser().id();
+        income.setUserId(userId);
+        income.setWorkspaceId(workspaceId);
+        var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
+        income.setCurrency(currency);
+        var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
+                .orElseThrow(() -> new EntityNotFoundException("Banco no encontrado: " + incomeToAdd.bank()));
+        income.setBank(bank);
+
+        incomeRepository.save(income);
+    }
+
+    @Transactional
+    @RequiresMembership(domain = MembershipDomain.INCOME)
+    public void deleteIncome(Long id) {
+        log.debug("Eliminando Income {}", id);
+        var incomeToDelete = incomeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
+
+        incomeRepository.delete(incomeToDelete);
+    }
+
+    public void addIngreso(@Valid IncomeToAdd incomeToAdd) {
+        var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
+        movementAddService.saveMovement(
+                this.buildIncomeMovement(incomeToAdd.amount(), currency.getSymbol(), incomeToAdd.bank(), "Sueldo Recibido"));
+    }
+
+    @Transactional
+    @RequiresMembership(domain = MembershipDomain.INCOME)
+    public void reloadIncome(Long id) {
+        log.debug("Reloading Income {}", id);
+        var income = incomeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Ingreso no encontrada"));
+
+        movementAddService.saveMovement(
+                this.buildIncomeMovement(income.getAmount(), income.getCurrency().getSymbol(),
+                        income.getBank().getDescription(), "Ingreso"));
+
+        log.debug("Income {} recargado", id);
+    }
+
+    @Transactional
+    public int generateRecurringIncomeForUser(Long userId) {
+        var incomes = incomeRepository.findAllByUserId(userId);
+        log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), userId);
+
+        for (var income : incomes) {
+            movementAddService.saveMovement(
+                    this.buildIncomeMovement(income.getAmount(), income.getCurrency().getSymbol(),
+                            income.getBank().getDescription(), "Ingreso recurrente"),
+                    income.getWorkspaceId(),
+                    income.getUserId());
+        }
+
+        return incomes.size();
+    }
+
+    private MovementToAdd buildIncomeMovement(BigDecimal amount, String currencySymbol,
+                                              String bankDescription, String description) {
+        return new MovementToAdd(
+                amount,
+                LocalDate.now(ZoneOffset.UTC),
+                description,
+                DefaultCategory.HOGAR.getDescription(),
+                MovementType.INGRESO.name(),
+                currencySymbol,
+                null,
+                null,
+                bankDescription);
+    }
+}

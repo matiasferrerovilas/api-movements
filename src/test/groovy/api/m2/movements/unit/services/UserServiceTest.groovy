@@ -1,13 +1,13 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.IdentityClient
-import api.m2.movements.movements.enums.UserSettingKey
+import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.exceptions.ServiceException
-import api.m2.movements.identity.records.users.UserBaseRecord
+import api.m2.movements.records.users.UserBaseRecord
 
-import api.m2.movements.movements.repositories.UserSettingRepository
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.repositories.UserSettingRepository
+import api.m2.movements.services.user.UserService
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder

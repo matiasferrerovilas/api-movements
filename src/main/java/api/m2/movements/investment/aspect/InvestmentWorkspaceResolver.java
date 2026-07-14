@@ -1,7 +1,7 @@
 package api.m2.movements.investment.aspect;
 
 import api.m2.movements.aspect.membership.WorkspaceIdResolver;
-import api.m2.movements.movements.enums.MembershipDomain;
+import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.investment.repositories.InvestmentRepository;
 import lombok.RequiredArgsConstructor;

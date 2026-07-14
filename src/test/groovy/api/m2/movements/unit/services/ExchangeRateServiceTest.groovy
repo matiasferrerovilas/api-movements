@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.movements.records.accounts.AccountBaseRecord
-import api.m2.movements.movements.records.categories.CategoryRecord
-import api.m2.movements.movements.records.currencies.CurrencyRecord
-import api.m2.movements.movements.records.currencies.ExchangeRateRecord
-import api.m2.movements.movements.records.movements.MovementRecord
-import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.movements.services.currencies.ExchangeRateService
-import api.m2.movements.movements.services.currencies.FrankfurterClient
+import api.m2.movements.records.accounts.AccountBaseRecord
+import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.records.currencies.CurrencyRecord
+import api.m2.movements.records.currencies.ExchangeRateRecord
+import api.m2.movements.records.movements.MovementRecord
+import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.services.currencies.ExchangeRateService
+import api.m2.movements.services.currencies.FrankfurterClient
 import spock.lang.Specification
 
 import java.time.LocalDate

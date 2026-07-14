@@ -1,8 +1,8 @@
 package api.m2.movements.integration
 
-import api.m2.movements.movements.entities.movements.Movement
-import api.m2.movements.movements.enums.MovementType
-import api.m2.movements.movements.repositories.MovementRepository
+import api.m2.movements.entities.movements.Movement
+import api.m2.movements.enums.MovementType
+import api.m2.movements.repositories.MovementRepository
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.time.LocalDate

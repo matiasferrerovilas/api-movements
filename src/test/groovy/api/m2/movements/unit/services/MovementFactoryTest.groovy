@@ -1,23 +1,23 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Bank
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.movements.entities.movements.Movement
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
 
-import api.m2.movements.identity.records.users.UserBaseRecord
+import api.m2.movements.records.users.UserBaseRecord
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.mappers.MovementMapper
-import api.m2.movements.movements.records.categories.CategoryUpdateRecord
-import api.m2.movements.movements.records.movements.ExpenseToUpdate
-import api.m2.movements.movements.records.movements.MovementToAdd
-import api.m2.movements.movements.repositories.BankRepository
-import api.m2.movements.movements.services.category.CategoryResolver
-import api.m2.movements.movements.services.currencies.CurrencyResolver
-import api.m2.movements.movements.services.currencies.ExchangeRateResolver
-import api.m2.movements.movements.services.movements.MovementFactory
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.mappers.MovementMapper
+import api.m2.movements.records.categories.CategoryUpdateRecord
+import api.m2.movements.records.movements.ExpenseToUpdate
+import api.m2.movements.records.movements.MovementToAdd
+import api.m2.movements.repositories.BankRepository
+import api.m2.movements.services.category.CategoryResolver
+import api.m2.movements.services.currencies.CurrencyResolver
+import api.m2.movements.services.currencies.ExchangeRateResolver
+import api.m2.movements.services.movements.MovementFactory
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 import java.time.LocalDate

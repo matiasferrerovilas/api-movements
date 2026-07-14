@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.movements.entities.movements.Movement
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.records.categories.CategoryMigrateRequest
-import api.m2.movements.movements.repositories.CategoryRepository
-import api.m2.movements.movements.repositories.MovementRepository
-import api.m2.movements.movements.services.category.CategoryMigrateService
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.records.categories.CategoryMigrateRequest
+import api.m2.movements.repositories.CategoryRepository
+import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.services.category.CategoryMigrateService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class CategoryMigrateServiceTest extends Specification {

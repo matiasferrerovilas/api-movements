@@ -1,18 +1,19 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.IdentityClient
+import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.requests.UserToAdd
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord
-import api.m2.movements.movements.records.workspaces.WorkspaceAdded
-import api.m2.movements.identity.records.workspaces.WorkspaceDetail
-import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.services.WorkspacePublishServiceWebSocket
-import api.m2.movements.movements.services.settings.UserSettingService
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.identity.services.workspaces.WorkspaceAddService
-import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
+import api.m2.movements.enums.UserSettingKey
+import api.m2.movements.records.workspaces.AddWorkspaceRecord
+import api.m2.movements.records.workspaces.WorkspaceAdded
+import api.m2.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.services.WorkspacePublishServiceWebSocket
+import api.m2.movements.services.settings.UserSettingService
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceAddService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 import spock.lang.Specification
@@ -158,7 +159,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "createWorkspaces - should delegate to IdentityClient"() {
         given:
-        def user = api.m2.movements.identity.records.users.UserToAdd.builder().id(1L).email("test@test.com").build()
+        def user = UserToAdd.builder().id(1L).email("test@test.com").build()
         def workspacesToAdd = [new AddWorkspaceRecord("DEFAULT")]
         def expected = [new WorkspaceAdded(100L, "DEFAULT")]
 

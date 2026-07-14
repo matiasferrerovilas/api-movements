@@ -1,11 +1,11 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.movements.entities.movements.Movement
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Movement
 import api.m2.movements.exceptions.ExchangeRateNotFoundException
-import api.m2.movements.movements.repositories.MovementRepository
-import api.m2.movements.movements.services.currencies.ExchangeRateResolver
-import api.m2.movements.movements.services.movements.MigrateExchangeRateService
+import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.services.currencies.ExchangeRateResolver
+import api.m2.movements.services.movements.MigrateExchangeRateService
 import spock.lang.Specification
 
 import java.time.LocalDate

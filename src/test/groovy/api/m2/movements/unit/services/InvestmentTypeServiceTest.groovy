@@ -10,7 +10,7 @@ import api.m2.movements.investment.services.InvestmentTypeService
 import api.m2.movements.investment.records.InvestmentTypeRecord
 import api.m2.movements.investment.records.InvestmentTypeToAdd
 import api.m2.movements.investment.records.InvestmentTypeToUpdate
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class InvestmentTypeServiceTest extends Specification {

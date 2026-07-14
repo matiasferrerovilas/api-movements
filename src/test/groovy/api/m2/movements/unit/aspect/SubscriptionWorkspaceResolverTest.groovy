@@ -1,10 +1,10 @@
 package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.SubscriptionWorkspaceResolver
-import api.m2.movements.movements.entities.movements.Subscription
-import api.m2.movements.movements.enums.MembershipDomain
+import api.m2.movements.entities.movements.Subscription
+import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.repositories.SubscriptionRepository
+import api.m2.movements.repositories.SubscriptionRepository
 import spock.lang.Specification
 
 class SubscriptionWorkspaceResolverTest extends Specification {

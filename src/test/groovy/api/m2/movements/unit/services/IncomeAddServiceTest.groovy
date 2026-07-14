@@ -1,23 +1,23 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Bank
-import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.movements.entities.movements.Income
+import api.m2.movements.entities.commons.Bank
+import api.m2.movements.entities.commons.Currency
+import api.m2.movements.entities.movements.Income
 
-import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.movements.enums.MovementType
+import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.mappers.IncomeMapper
-import api.m2.movements.movements.records.currencies.CurrencyRecord
-import api.m2.movements.movements.records.income.IncomeToAdd
-import api.m2.movements.movements.records.movements.MovementToAdd
-import api.m2.movements.movements.repositories.BankRepository
-import api.m2.movements.movements.repositories.IncomeRepository
-import api.m2.movements.movements.services.currencies.CurrencyAddService
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
-import api.m2.movements.movements.services.income.IncomeAddService
-import api.m2.movements.movements.services.movements.MovementAddService
-import api.m2.movements.movements.services.user.UserService
+import api.m2.movements.mappers.IncomeMapper
+import api.m2.movements.records.currencies.CurrencyRecord
+import api.m2.movements.records.income.IncomeToAdd
+import api.m2.movements.records.movements.MovementToAdd
+import api.m2.movements.repositories.BankRepository
+import api.m2.movements.repositories.IncomeRepository
+import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.income.IncomeAddService
+import api.m2.movements.services.movements.MovementAddService
+import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 

@@ -65,7 +65,7 @@ api.m2.movements
 ├── exceptions/         DomainException (sealed), BusinessException, EntityNotFoundException,
 │                       PermissionDeniedException, ServiceException, ExchangeRateNotFoundException
 ├── helpers/            PdfExtractorHelper (interface), BBVA/Galicia impls, ParserRegistry, PdfReaderService
-├── investment/         → Módulo Spring Modulith separado (ver sección)
+├── investment/         → Paquete separado (ver sección)
 ├── mappers/            MapStruct interfaces — organizados por dominio
 ├── projections/        JPA interface projections (read-only)
 ├── records/            DTOs como Java records
@@ -99,7 +99,7 @@ api.m2.movements
     └── workspaces/     WorkspaceAddService, WorkspaceQueryService, WorkspaceContextService, MembershipService
 ```
 
-### Módulo `investment/` (Spring Modulith)
+### Módulo `investment/`
 
 ```
 investment/
@@ -120,7 +120,7 @@ investment/
     └── valuation/      InvestmentValuationService, YahooFinanceClient, PlazaFijoValueCalculator
 ```
 
-El módulo `investment` es el único separado como módulo Modulith. Depende de infraestructura compartida (`CurrencyRepository`, `WorkspaceContextService`, `UserService`) pero **ningún otro módulo depende de él**.
+El módulo `investment` es el único separado en su propio paquete. Depende de infraestructura compartida (`CurrencyRepository`, `WorkspaceContextService`, `UserService`) pero **ningún otro módulo depende de él**.
 
 ---
 

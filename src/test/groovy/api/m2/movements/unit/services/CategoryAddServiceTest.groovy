@@ -1,11 +1,11 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Category
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.mappers.CategoryMapper
-import api.m2.movements.movements.records.categories.CategoryRecord
-import api.m2.movements.movements.repositories.CategoryRepository
-import api.m2.movements.movements.services.category.CategoryAddService
+import api.m2.movements.mappers.CategoryMapper
+import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.repositories.CategoryRepository
+import api.m2.movements.services.category.CategoryAddService
 import spock.lang.Specification
 
 class CategoryAddServiceTest extends Specification {

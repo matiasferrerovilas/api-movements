@@ -1,17 +1,17 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.entities.Budget
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.movements.entities.commons.Currency
+import api.m2.movements.entities.Budget
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.exceptions.EntityNotFoundException
-import api.m2.movements.movements.mappers.BudgetMapper
-import api.m2.movements.movements.records.BudgetToAdd
-import api.m2.movements.movements.records.budgets.BudgetToUpdate
-import api.m2.movements.movements.repositories.BudgetRepository
-import api.m2.movements.movements.repositories.CategoryRepository
-import api.m2.movements.movements.repositories.CurrencyRepository
-import api.m2.movements.movements.services.budgets.BudgetAddService
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService
+import api.m2.movements.mappers.BudgetMapper
+import api.m2.movements.records.BudgetToAdd
+import api.m2.movements.records.budgets.BudgetToUpdate
+import api.m2.movements.repositories.BudgetRepository
+import api.m2.movements.repositories.CategoryRepository
+import api.m2.movements.repositories.CurrencyRepository
+import api.m2.movements.services.budgets.BudgetAddService
+import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
 class BudgetAddServiceTest extends Specification {

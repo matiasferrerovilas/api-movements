@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.IdentityClient
+import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.records.workspaces.WorkspacesWithUser
-import api.m2.movements.movements.services.settings.UserSettingService
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
+import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.records.workspaces.WorkspacesWithUser
+import api.m2.movements.services.settings.UserSettingService
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 import spock.lang.Specification

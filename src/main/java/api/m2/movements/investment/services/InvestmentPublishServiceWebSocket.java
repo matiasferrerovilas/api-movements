@@ -1,11 +1,11 @@
 package api.m2.movements.investment.services;
 
 import api.m2.movements.constants.WebSocketTopics;
-import api.m2.movements.movements.enums.EventType;
+import api.m2.movements.enums.EventType;
 import api.m2.movements.investment.records.InvestmentAddedEvent;
 import api.m2.movements.investment.records.InvestmentDeletedEvent;
 import api.m2.movements.investment.records.InvestmentUpdatedEvent;
-import api.m2.movements.movements.services.publishing.websockets.WebSocketMessageService;
+import api.m2.movements.services.publishing.websockets.WebSocketMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

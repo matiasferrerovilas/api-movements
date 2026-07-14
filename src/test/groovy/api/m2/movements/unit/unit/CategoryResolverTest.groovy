@@ -1,10 +1,10 @@
 package api.m2.movements.unit.unit
 
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.movements.records.categories.CategoryRecord
-import api.m2.movements.movements.services.category.CategoryAddService
-import api.m2.movements.movements.services.category.CategoryResolver
-import api.m2.movements.identity.services.category.WorkspaceCategoryService
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.services.category.CategoryAddService
+import api.m2.movements.services.category.CategoryResolver
+import api.m2.movements.services.category.WorkspaceCategoryService
 import spock.lang.Specification
 import spock.lang.Subject
 

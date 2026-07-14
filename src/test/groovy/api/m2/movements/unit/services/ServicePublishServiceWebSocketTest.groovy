@@ -1,12 +1,12 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.enums.EventType
-import api.m2.movements.movements.records.services.ServiceAddedEvent
-import api.m2.movements.movements.records.services.ServiceDeletedEvent
-import api.m2.movements.movements.records.services.ServicePaidEvent
-import api.m2.movements.movements.records.services.ServiceUpdatedEvent
-import api.m2.movements.movements.records.services.SubscriptionRecord
-import api.m2.movements.movements.services.publishing.websockets.ServicePublishServiceWebSocket
+import api.m2.movements.enums.EventType
+import api.m2.movements.records.services.ServiceAddedEvent
+import api.m2.movements.records.services.ServiceDeletedEvent
+import api.m2.movements.records.services.ServicePaidEvent
+import api.m2.movements.records.services.ServiceUpdatedEvent
+import api.m2.movements.records.services.SubscriptionRecord
+import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

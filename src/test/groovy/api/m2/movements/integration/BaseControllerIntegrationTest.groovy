@@ -1,15 +1,15 @@
 package api.m2.movements.integration
 
-import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.movements.entities.commons.Currency
+import api.m2.movements.entities.commons.Category
+import api.m2.movements.entities.commons.Currency
 
-import api.m2.movements.movements.entities.integrity.UserSetting
-import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.movements.repositories.CategoryRepository
-import api.m2.movements.movements.repositories.CurrencyRepository
+import api.m2.movements.entities.integrity.UserSetting
+import api.m2.movements.enums.UserSettingKey
+import api.m2.movements.repositories.CategoryRepository
+import api.m2.movements.repositories.CurrencyRepository
 
-import api.m2.movements.movements.repositories.UserSettingRepository
-import api.m2.movements.movements.services.currencies.ExchangeRateResolver
+import api.m2.movements.repositories.UserSettingRepository
+import api.m2.movements.services.currencies.ExchangeRateResolver
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.github.tomakehurst.wiremock.WireMockServer

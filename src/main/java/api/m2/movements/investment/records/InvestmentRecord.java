@@ -1,6 +1,6 @@
 package api.m2.movements.investment.records;
 
-import api.m2.movements.movements.records.currencies.CurrencyRecord;
+import api.m2.movements.records.currencies.CurrencyRecord;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;

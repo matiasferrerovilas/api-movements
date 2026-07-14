@@ -1,8 +1,8 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.movements.enums.EventType
-import api.m2.movements.identity.records.workspaces.WorkspaceDetail
-import api.m2.movements.identity.services.WorkspacePublishServiceWebSocket
+import api.m2.movements.enums.EventType
+import api.m2.movements.records.workspaces.WorkspaceDetail
+import api.m2.movements.services.WorkspacePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 

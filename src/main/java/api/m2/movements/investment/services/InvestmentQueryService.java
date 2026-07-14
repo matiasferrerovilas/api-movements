@@ -3,7 +3,7 @@ package api.m2.movements.investment.services;
 import api.m2.movements.investment.mappers.InvestmentMapper;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.repositories.InvestmentRepository;
-import api.m2.movements.identity.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

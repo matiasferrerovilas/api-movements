@@ -1,14 +1,14 @@
 package api.m2.movements.unit.services
 
 
-import api.m2.movements.movements.enums.MovementType
-import api.m2.movements.movements.records.balance.MonthlySummaryResponse
-import api.m2.movements.movements.repositories.MovementRepository
-import api.m2.movements.movements.services.balance.MonthlySummaryService
-import api.m2.movements.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.movements.services.user.UserService
-import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
+import api.m2.movements.enums.MovementType
+import api.m2.movements.records.balance.MonthlySummaryResponse
+import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.services.balance.MonthlySummaryService
+import api.m2.movements.services.balance.MonthlySummarySnapshotService
+import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 import spock.lang.Unroll
 
