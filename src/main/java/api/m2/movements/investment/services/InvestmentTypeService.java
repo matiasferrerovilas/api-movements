@@ -31,13 +31,13 @@ public class InvestmentTypeService {
 
     @Transactional
     public InvestmentTypeRecord add(InvestmentTypeToAdd dto) {
-        var workspace = workspaceContextService.getActiveWorkspace();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var type = InvestmentType.builder()
                 .name(dto.name())
                 .category(dto.category())
                 .iconName(dto.iconName() != null ? dto.iconName() : "QuestionOutlined")
                 .iconColor(dto.iconColor() != null ? dto.iconColor() : "#d9d9d9")
-                .workspace(workspace)
+                .workspaceId(workspaceId)
                 .build();
         return investmentTypeMapper.toRecord(investmentTypeRepository.save(type));
     }
@@ -74,7 +74,7 @@ public class InvestmentTypeService {
     }
 
     private void checkWorkspaceOwnership(InvestmentType type, Long workspaceId) {
-        if (!type.getWorkspace().getId().equals(workspaceId)) {
+        if (!type.getWorkspaceId().equals(workspaceId)) {
             throw new PermissionDeniedException("No tenés permiso para modificar este tipo de inversión");
         }
     }

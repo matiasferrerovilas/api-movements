@@ -13,9 +13,8 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         SELECT DISTINCT i
         FROM Income i
         JOIN FETCH i.currency
-        JOIN FETCH i.workspace w
         JOIN FETCH i.bank b
-        WHERE w.id = :workspaceId
+        WHERE i.workspaceId = :workspaceId
 """)
     List<Income> findAllByWorkspaceId(Long workspaceId);
 
@@ -23,9 +22,8 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         SELECT i
         FROM Income i
         JOIN FETCH i.currency
-        JOIN FETCH i.workspace
         JOIN FETCH i.bank
-        WHERE i.user.id = :userId
+        WHERE i.userId = :userId
     """)
     List<Income> findAllByUserId(Long userId);
 }

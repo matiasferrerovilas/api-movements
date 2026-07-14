@@ -38,8 +38,8 @@ public class InvestmentAddService {
 
     @Transactional
     public InvestmentRecord add(@Valid InvestmentToAdd dto) {
-        var workspace = workspaceContextService.getActiveWorkspace();
-        var user = userService.getAuthenticatedUser();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        var userId = userService.getAuthenticatedUser().id();
         var currency = currencyRepository.findBySymbol(dto.currencySymbol())
                 .orElseThrow(() -> new EntityNotFoundException("Moneda no encontrada: " + dto.currencySymbol()));
         var investmentType = investmentTypeRepository.findById(dto.investmentTypeId())
@@ -54,8 +54,8 @@ public class InvestmentAddService {
                 .tna(dto.tna())
                 .investmentType(investmentType)
                 .currency(currency)
-                .workspace(workspace)
-                .owner(user)
+                .workspaceId(workspaceId)
+                .ownerId(userId)
                 .build();
 
         var record = investmentMapper.toRecord(investmentRepository.save(investment));

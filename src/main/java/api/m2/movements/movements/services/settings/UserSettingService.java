@@ -27,16 +27,16 @@ public class UserSettingService {
     private final BankRepository bankRepository;
 
     public List<UserSettingResponse> getAll() {
-        User user = userService.getAuthenticatedUser();
-        return userSettingRepository.findAllByUser(user)
+        Long userId = userService.getAuthenticatedUser().id();
+        return userSettingRepository.findAllByUserId(userId)
                 .stream()
                 .map(s -> new UserSettingResponse(s.getSettingKey(), s.getSettingValue()))
                 .toList();
     }
 
     public UserSettingResponse getByKey(UserSettingKey key) {
-        User user = userService.getAuthenticatedUser();
-        return userSettingRepository.findByUserAndSettingKey(user, key)
+        Long userId = userService.getAuthenticatedUser().id();
+        return userSettingRepository.findByUserIdAndSettingKey(userId, key)
                 .map(s -> new UserSettingResponse(s.getSettingKey(), s.getSettingValue()))
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró un default configurado para: " + key.name()));
@@ -44,10 +44,10 @@ public class UserSettingService {
 
     @Transactional
     public UserSettingResponse upsert(UserSettingKey key, Long value) {
-        User user = userService.getAuthenticatedUser();
-        UserSetting setting = userSettingRepository.findByUserAndSettingKey(user, key)
+        Long userId = userService.getAuthenticatedUser().id();
+        UserSetting setting = userSettingRepository.findByUserIdAndSettingKey(userId, key)
                 .orElseGet(() -> UserSetting.builder()
-                        .user(user)
+                        .userId(userId)
                         .settingKey(key)
                         .build());
         setting.setSettingValue(value);
@@ -62,17 +62,17 @@ public class UserSettingService {
 
     @Transactional
     public void deleteByKey(UserSettingKey key) {
-        User user = userService.getAuthenticatedUser();
-        userSettingRepository.deleteByUserAndSettingKey(user, key);
+        Long userId = userService.getAuthenticatedUser().id();
+        userSettingRepository.deleteByUserIdAndSettingKey(userId, key);
     }
 
-    public Optional<Bank> getDefaultBank(User user) {
-        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
+    public Optional<Bank> getDefaultBank(Long userId) {
+        return userSettingRepository.findByUserIdAndSettingKey(userId, UserSettingKey.DEFAULT_BANK)
                 .flatMap(s -> bankRepository.findById(s.getSettingValue()));
     }
 
-    public Optional<Long> getDefaultWorkspaceId(User user) {
-        return userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE)
+    public Optional<Long> getDefaultWorkspaceId(Long userId) {
+        return userSettingRepository.findByUserIdAndSettingKey(userId, UserSettingKey.DEFAULT_WORKSPACE)
                 .map(UserSetting::getSettingValue);
     }
 }

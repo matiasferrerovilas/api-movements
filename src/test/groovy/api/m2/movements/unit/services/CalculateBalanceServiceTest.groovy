@@ -9,6 +9,7 @@ import api.m2.movements.movements.records.balance.*
 import api.m2.movements.movements.repositories.CurrencyRepository
 import api.m2.movements.movements.repositories.MovementRepository
 import api.m2.movements.movements.services.balance.CalculateBalanceService
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
@@ -27,10 +28,6 @@ class CalculateBalanceServiceTest extends Specification {
 
     CalculateBalanceService service
 
-    def user = Stub(User) {
-        getEmail() >> "user@test.com"
-    }
-
     def setup() {
         service = new CalculateBalanceService(
                 movementRepository,
@@ -40,7 +37,7 @@ class CalculateBalanceServiceTest extends Specification {
                 workspaceContextService
         )
         // stub de usuario en todos los tests
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
     }
 
@@ -56,13 +53,13 @@ class CalculateBalanceServiceTest extends Specification {
         currencyRepository.findAllBySymbol(["EUR"]) >> []
 
         movementRepository.getBalanceByFilters(
-                _ as LocalDate, _ as LocalDate, "user@test.com",
+                _ as LocalDate, _ as LocalDate, 1L,
                 [MovementType.INGRESO.toString()],
                 _ as List<Integer>, _ as List
         ) >> new BigDecimal("1000")
 
         movementRepository.getBalanceByFilters(
-                _ as LocalDate, _ as LocalDate, "user@test.com",
+                _ as LocalDate, _ as LocalDate, 1L,
                 [MovementType.DEBITO.toString()],
                 _ as List<Integer>, _ as List
         ) >> new BigDecimal("400")
@@ -94,7 +91,7 @@ class CalculateBalanceServiceTest extends Specification {
         result[BalanceEnum.GASTO] == BigDecimal.ZERO
     }
 
-    def "getBalance - should call repository with correct email from authenticated user"() {
+    def "getBalance - should call repository with correct userId from authenticated user"() {
         given:
         def filter = new BalanceFilterRecord(
                 LocalDate.of(2026, 1, 1),
@@ -108,10 +105,10 @@ class CalculateBalanceServiceTest extends Specification {
         service.getBalance(filter)
 
         then:
-        // verifica que el email correcto se pasa al repositorio
+        // verifica que el userId correcto se pasa al repositorio
         2 * movementRepository.getBalanceByFilters(
                 _ as LocalDate, _ as LocalDate,
-                "user@test.com",
+                1L,
                 _ as List, _ as List, _ as List
         )
     }
@@ -156,7 +153,7 @@ class CalculateBalanceServiceTest extends Specification {
         ] as Set
 
         movementRepository.getBalanceWithCategoryByYear(
-                2026, 3, [1], ["EUR"], "user@test.com"
+                2026, 3, [1], ["EUR"]
         ) >> expectedResult
 
         when:
@@ -179,7 +176,7 @@ class CalculateBalanceServiceTest extends Specification {
         service.getBalanceWithCategoryByYear(filter)
 
         then: "year and month must come from startDate (2026, 3) — NOT endDate month (9)"
-        1 * movementRepository.getBalanceWithCategoryByYear(2026, 3, [1], ["EUR"], "user@test.com") >> ([] as Set)
+        1 * movementRepository.getBalanceWithCategoryByYear(2026, 3, [1], ["EUR"]) >> ([] as Set)
     }
 
     def "getBalanceWithCategoryByYear - should return empty set when no data"() {
@@ -203,7 +200,7 @@ class CalculateBalanceServiceTest extends Specification {
     @Unroll
     def "getBalanceByYearAndGroup - should work for year=#year month=#month"() {
         given:
-        movementRepository.getBalanceByYearAndGroup(year, month, "user@test.com") >> ([] as Set)
+        movementRepository.getBalanceByYearAndGroup(year, month, 1L) >> ([] as Set)
 
         when:
         def result = service.getBalanceByYearAndGroup(year, month)

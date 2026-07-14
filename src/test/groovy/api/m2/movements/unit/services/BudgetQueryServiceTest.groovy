@@ -3,7 +3,6 @@ package api.m2.movements.unit.services
 import api.m2.movements.movements.entities.Budget
 import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.mappers.BudgetMapper
 import api.m2.movements.movements.records.budgets.BudgetRecord
 import api.m2.movements.movements.records.categories.CategoryRecord
@@ -26,7 +25,6 @@ class BudgetQueryServiceTest extends Specification {
     }
 
     def buildBudget(String categoryName, String currencySymbol, BigDecimal amount) {
-        def workspace = Stub(Workspace) { getId() >> 1L }
         def category = categoryName == null ? null : Stub(Category) {
             getId() >> 1L
             getDescription() >> categoryName
@@ -35,7 +33,7 @@ class BudgetQueryServiceTest extends Specification {
         def currency = Stub(Currency) { getId() >> 1L; getSymbol() >> currencySymbol }
         return Stub(Budget) {
             getId() >> 1L
-            getWorkspace() >> workspace
+            getWorkspaceId() >> 1L
             getCategory() >> category
             getCurrency() >> currency
             getAmount() >> amount

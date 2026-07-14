@@ -109,7 +109,7 @@ dependencies {
 	testImplementation 'org.spockframework:spock-spring:2.4-groovy-5.0'
     testImplementation 'org.apache.groovy:groovy:5.0.4'
 	testImplementation 'org.apache.groovy:groovy-json:5.0.4'
-	testImplementation 'org.mock-server:mockserver-junit-jupiter:5.15.0'
+	testImplementation 'org.wiremock:wiremock-standalone:3.9.2'
 
     // Testcontainers
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"

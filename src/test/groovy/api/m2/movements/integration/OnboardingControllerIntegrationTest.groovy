@@ -1,9 +1,10 @@
 package api.m2.movements.integration
 
-
-import api.m2.movements.movements.enums.UserType
 import org.springframework.http.MediaType
 
+import static com.github.tomakehurst.wiremock.client.WireMock.patchRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -39,10 +40,10 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
         then:
         result.andExpect(status().isNoContent())
 
-        and: "User should be created and updated"
-        def createdUser = userRepository.findByEmail(uniqueEmail).get()
-        createdUser.isFirstLogin == false
-        createdUser.userType == UserType.PERSONAL
+        and: "Onboarding should have created the user, its workspaces and flipped first-login via IdentityClient"
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users")))
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users/${testUserId}/workspaces")))
+        identityMock.verify(patchRequestedFor(urlPathEqualTo("/v1/users/${testUserId}/first-login")))
     }
 
     def "POST /v1/onboarding - should complete onboarding without income"() {
@@ -68,9 +69,8 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
         then:
         result.andExpect(status().isNoContent())
 
-        and:
-        def createdUser = userRepository.findByEmail(uniqueEmail).get()
-        createdUser.userType == UserType.ENTERPRISE
+        and: "Onboarding should have created the user via IdentityClient"
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users")))
     }
 
     def "POST /v1/onboarding - should return 400 for invalid request"() {

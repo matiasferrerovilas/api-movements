@@ -8,6 +8,7 @@ import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.BankRepository
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.movements.services.settings.UserSettingService
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.user.UserService
 import spock.lang.Specification
 
@@ -25,7 +26,6 @@ class UserSettingServiceTest extends Specification {
 
     def "getAll - should return all settings for authenticated user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def setting1 = Stub(UserSetting) {
             getSettingKey() >> UserSettingKey.DEFAULT_BANK
             getSettingValue() >> 10L
@@ -35,8 +35,8 @@ class UserSettingServiceTest extends Specification {
             getSettingValue() >> 20L
         }
 
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findAllByUser(user) >> [setting1, setting2]
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findAllByUserId(1L) >> [setting1, setting2]
 
         when:
         def result = service.getAll()
@@ -51,9 +51,8 @@ class UserSettingServiceTest extends Specification {
 
     def "getAll - should return empty list when user has no settings"() {
         given:
-        def user = Stub(User)
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findAllByUser(user) >> []
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findAllByUserId(1L) >> []
 
         when:
         def result = service.getAll()
@@ -64,14 +63,13 @@ class UserSettingServiceTest extends Specification {
 
     def "getByKey - should return setting when found"() {
         given:
-        def user = Stub(User)
         def setting = Stub(UserSetting) {
             getSettingKey() >> UserSettingKey.DEFAULT_BANK
             getSettingValue() >> 42L
         }
 
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
 
         when:
         def result = service.getByKey(UserSettingKey.DEFAULT_BANK)
@@ -83,9 +81,8 @@ class UserSettingServiceTest extends Specification {
 
     def "getByKey - should throw EntityNotFoundException when setting not found"() {
         given:
-        def user = Stub(User)
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_CURRENCY) >> Optional.empty()
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_CURRENCY) >> Optional.empty()
 
         when:
         service.getByKey(UserSettingKey.DEFAULT_CURRENCY)
@@ -97,9 +94,8 @@ class UserSettingServiceTest extends Specification {
 
     def "upsert - should create new setting when not exists"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.empty()
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.empty()
 
         def savedSetting = Stub(UserSetting) {
             getSettingKey() >> UserSettingKey.DEFAULT_BANK
@@ -117,13 +113,12 @@ class UserSettingServiceTest extends Specification {
 
     def "upsert - should update existing setting"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def existingSetting = new UserSetting()
         existingSetting.setSettingKey(UserSettingKey.DEFAULT_BANK)
         existingSetting.setSettingValue(10L)
 
-        userService.getAuthenticatedUser() >> user
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.of(existingSetting)
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(existingSetting)
 
         def savedSetting = Stub(UserSetting) {
             getSettingKey() >> UserSettingKey.DEFAULT_BANK
@@ -138,32 +133,24 @@ class UserSettingServiceTest extends Specification {
         result.value() == 50L
     }
 
-    def "upsertForUser - should save setting for given user"() {
-        given:
-        def user = Stub(User) { getId() >> 5L }
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE) >> Optional.empty()
-
+    def "upsertForUser - should upsert setting for given user"() {
         when:
-        service.upsertForUser(user, UserSettingKey.DEFAULT_WORKSPACE, 100L)
+        service.upsertForUser(5L, UserSettingKey.DEFAULT_WORKSPACE, 100L)
 
         then:
-        1 * userSettingRepository.saveAndFlush(_ as UserSetting) >> { UserSetting s ->
-            assert s.settingValue == 100L
-            s
-        }
+        1 * userSettingRepository.upsertSetting(5L, UserSettingKey.DEFAULT_WORKSPACE.name(), 100L)
     }
 
     def "getDefaultBank - should return bank when setting exists"() {
         given:
-        def user = Stub(User)
         def setting = Stub(UserSetting) { getSettingValue() >> 7L }
         def bank = Stub(Bank) { getId() >> 7L }
 
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
         bankRepository.findById(7L) >> Optional.of(bank)
 
         when:
-        def result = service.getDefaultBank(user)
+        def result = service.getDefaultBank(1L)
 
         then:
         result.isPresent()
@@ -172,11 +159,10 @@ class UserSettingServiceTest extends Specification {
 
     def "getDefaultBank - should return empty when setting not found"() {
         given:
-        def user = Stub(User)
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.empty()
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.empty()
 
         when:
-        def result = service.getDefaultBank(user)
+        def result = service.getDefaultBank(1L)
 
         then:
         result.isEmpty()
@@ -184,14 +170,13 @@ class UserSettingServiceTest extends Specification {
 
     def "getDefaultBank - should return empty when bank not found"() {
         given:
-        def user = Stub(User)
         def setting = Stub(UserSetting) { getSettingValue() >> 999L }
 
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
         bankRepository.findById(999L) >> Optional.empty()
 
         when:
-        def result = service.getDefaultBank(user)
+        def result = service.getDefaultBank(1L)
 
         then:
         result.isEmpty()
@@ -199,13 +184,12 @@ class UserSettingServiceTest extends Specification {
 
     def "getDefaultWorkspaceId - should return workspace id when setting exists"() {
         given:
-        def user = Stub(User)
         def setting = Stub(UserSetting) { getSettingValue() >> 123L }
 
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE) >> Optional.of(setting)
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_WORKSPACE) >> Optional.of(setting)
 
         when:
-        def result = service.getDefaultWorkspaceId(user)
+        def result = service.getDefaultWorkspaceId(1L)
 
         then:
         result.isPresent()
@@ -214,11 +198,10 @@ class UserSettingServiceTest extends Specification {
 
     def "getDefaultWorkspaceId - should return empty when setting not found"() {
         given:
-        def user = Stub(User)
-        userSettingRepository.findByUserAndSettingKey(user, UserSettingKey.DEFAULT_WORKSPACE) >> Optional.empty()
+        userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_WORKSPACE) >> Optional.empty()
 
         when:
-        def result = service.getDefaultWorkspaceId(user)
+        def result = service.getDefaultWorkspaceId(1L)
 
         then:
         result.isEmpty()
@@ -226,14 +209,12 @@ class UserSettingServiceTest extends Specification {
 
     def "deleteByKey - should delete setting for authenticated user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
 
         when:
         service.deleteByKey(UserSettingKey.DEFAULT_BANK)
 
         then:
-        1 * userSettingRepository.deleteByUserAndSettingKey(user, UserSettingKey.DEFAULT_BANK)
+        1 * userSettingRepository.deleteByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK)
     }
 }

@@ -17,7 +17,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             SELECT b FROM Budget b
             JOIN FETCH b.category
             JOIN FETCH b.currency
-            WHERE b.workspace.id = :workspaceId
+            WHERE b.workspaceId = :workspaceId
               AND b.currency.symbol = :currencySymbol
               AND (b.year IS NULL OR (b.year = :year AND b.month = :month))
             """)
@@ -32,7 +32,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             SELECT b FROM Budget b
             JOIN FETCH b.category
             JOIN FETCH b.currency
-            WHERE b.workspace.id = :workspaceId
+            WHERE b.workspaceId = :workspaceId
               AND (b.year IS NULL OR (b.year = :year AND b.month = :month))
             """)
     List<Budget> findByWorkspaceAndPeriod(

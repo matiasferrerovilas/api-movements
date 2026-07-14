@@ -1,13 +1,11 @@
 package api.m2.movements.movements.services.onboarding;
 
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.UserSettingKey;
 import api.m2.movements.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.movements.records.income.IncomeToAdd;
 import api.m2.movements.movements.records.onboarding.BankToAdd;
 import api.m2.movements.movements.records.onboarding.OnBoardingForm;
-import api.m2.movements.identity.AddWorkspaceRecord;
-import api.m2.movements.identity.repositories.WorkspaceRepository;
+import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.movements.services.banks.BankAddService;
 import api.m2.movements.identity.services.category.WorkspaceCategoryService;
 import api.m2.movements.movements.services.currencies.CurrencyAddService;
@@ -36,7 +34,6 @@ public class OnboardingService {
     private final WorkspaceCategoryService workspaceCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
-    private final WorkspaceRepository workspaceRepository;
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
@@ -54,8 +51,8 @@ public class OnboardingService {
 
         this.addBanks(onBoardingForm, user.id());
         this.addDefaultCurrency(user.id());
-        this.addCategories(onBoardingForm, defaultWorkspace);
-        this.addInitialIncome(onBoardingForm, defaultWorkspace);
+        this.addCategories(onBoardingForm, defaultWorkspace.id());
+        this.addInitialIncome(onBoardingForm, defaultWorkspace.id());
         userAddService.changeUserFirstLoginStatus(user.id());
     }
 
@@ -82,12 +79,12 @@ public class OnboardingService {
         userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_CURRENCY, usd.getId());
     }
 
-    private void addCategories(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {
-        workspaceCategoryService.addCategories(defaultWorkspace, onBoardingForm.categoriesToAdd());
-        workspaceCategoryService.addDefaultCategories(defaultWorkspace);
+    private void addCategories(OnBoardingForm onBoardingForm, Long defaultWorkspaceId) {
+        workspaceCategoryService.addCategories(defaultWorkspaceId, onBoardingForm.categoriesToAdd());
+        workspaceCategoryService.addDefaultCategories(defaultWorkspaceId);
     }
 
-    private void addInitialIncome(OnBoardingForm onBoardingForm, Workspace defaultWorkspace) {
+    private void addInitialIncome(OnBoardingForm onBoardingForm, Long defaultWorkspaceId) {
         var amount = onBoardingForm.onBoardingAmount();
         if (amount != null
                 && amount.bank() != null
@@ -96,7 +93,7 @@ public class OnboardingService {
             incomeAddService.loadIncome(new IncomeToAdd(amount.bank(),
                     new CurrencyRecord(amount.currency(), null),
                     amount.amount()),
-                    defaultWorkspace);
+                    defaultWorkspaceId);
         }
     }
 }

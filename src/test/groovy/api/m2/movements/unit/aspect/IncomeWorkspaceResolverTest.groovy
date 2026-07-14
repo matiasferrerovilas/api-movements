@@ -2,7 +2,6 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.IncomeWorkspaceResolver
 import api.m2.movements.movements.entities.movements.Income
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.IncomeRepository
@@ -31,8 +30,7 @@ class IncomeWorkspaceResolverTest extends Specification {
 
     def "resolveWorkspaceId - should return workspace id when income exists"() {
         given:
-        def workspace = Stub(Workspace) { getId() >> 77L }
-        def income = Stub(Income) { getWorkspace() >> workspace }
+        def income = Stub(Income) { getWorkspaceId() >> 77L }
         incomeRepository.findById(20L) >> Optional.of(income)
 
         when:

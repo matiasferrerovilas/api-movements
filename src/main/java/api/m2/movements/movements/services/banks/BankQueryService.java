@@ -22,8 +22,8 @@ public class BankQueryService {
 
     @Transactional(readOnly = true)
     public List<BankRecord> getAllBanks() {
-        var user = userService.getAuthenticatedUser();
-        return userBankRepository.findByUserId(user.getId())
+        var userId = userService.getAuthenticatedUser().id();
+        return userBankRepository.findByUserId(userId)
                 .stream()
                 .map(ub -> bankMapper.toRecord(ub.getBank()))
                 .toList();

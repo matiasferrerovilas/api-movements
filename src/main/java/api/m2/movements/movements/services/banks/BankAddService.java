@@ -35,15 +35,15 @@ public class BankAddService {
 
     @Transactional
     public BankRecord addBankToUser(String description) {
-        var user = userService.getAuthenticatedUser();
-        var result = this.resolveUserBank(description, user);
+        var userId = userService.getAuthenticatedUser().id();
+        var result = this.resolveUserBank(description, userId);
 
         // Si es el único banco del usuario Y fue recién agregado, establecerlo como default automáticamente
         if (result.wasAdded()) {
-            List<UserBank> userBanks = userBankRepository.findByUserId(user.getId());
+            List<UserBank> userBanks = userBankRepository.findByUserId(userId);
             if (userBanks.size() == 1) {
-                log.debug("Setting bank {} as default for user {} (first bank)", result.bank().getId(), user.getId());
-                userSettingService.upsertForUser(user.getId(), UserSettingKey.DEFAULT_BANK, result.bank().getId());
+                log.debug("Setting bank {} as default for user {} (first bank)", result.bank().getId(), userId);
+                userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_BANK, result.bank().getId());
             }
         }
 
@@ -51,8 +51,8 @@ public class BankAddService {
     }
 
     @Transactional
-    public Bank addBankToUser(String description, User user) {
-        return this.resolveUserBank(description, user).bank();
+    public Bank addBankToUser(String description, Long userId) {
+        return this.resolveUserBank(description, userId).bank();
     }
 
 
@@ -83,15 +83,15 @@ public class BankAddService {
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> banksByDescription.get(entry.getValue())));
     }
 
-    private BankResolutionResult resolveUserBank(String description, User user) {
+    private BankResolutionResult resolveUserBank(String description, Long userId) {
         String sanitized = description.trim().toUpperCase();
 
         Bank bank = bankRepository.findByDescription(sanitized)
                 .orElseGet(() -> bankRepository.save(Bank.builder().description(sanitized).build()));
 
         boolean wasAdded = false;
-        if (!userBankRepository.existsByUserIdAndBankId(user.getId(), bank.getId())) {
-            userBankRepository.save(UserBank.builder().user(user).bank(bank).build());
+        if (!userBankRepository.existsByUserIdAndBankId(userId, bank.getId())) {
+            userBankRepository.save(UserBank.builder().userId(userId).bank(bank).build());
             wasAdded = true;
         }
 
@@ -100,26 +100,26 @@ public class BankAddService {
 
     @Transactional
     public void removeBankFromUser(Long bankId) {
-        var user = userService.getAuthenticatedUser();
+        var userId = userService.getAuthenticatedUser().id();
 
-        if (!userBankRepository.existsByUserIdAndBankId(user.getId(), bankId)) {
+        if (!userBankRepository.existsByUserIdAndBankId(userId, bankId)) {
             throw new EntityNotFoundException("El banco con id " + bankId + " no está en la lista del usuario");
         }
 
-        userBankRepository.deleteByUserIdAndBankId(user.getId(), bankId);
+        userBankRepository.deleteByUserIdAndBankId(userId, bankId);
 
         // Gestionar DEFAULT_BANK según los bancos restantes
-        List<UserBank> remainingBanks = userBankRepository.findByUserId(user.getId());
+        List<UserBank> remainingBanks = userBankRepository.findByUserId(userId);
 
         if (remainingBanks.isEmpty()) {
             // No quedan bancos: eliminar el setting DEFAULT_BANK
-            log.debug("User {} has no banks left, clearing DEFAULT_BANK setting", user.getId());
+            log.debug("User {} has no banks left, clearing DEFAULT_BANK setting", userId);
             userSettingService.deleteByKey(UserSettingKey.DEFAULT_BANK);
         } else if (remainingBanks.size() == 1) {
             // Queda exactamente 1 banco: establecerlo como default
             Long remainingBankId = remainingBanks.get(0).getBank().getId();
-            log.debug("Setting bank {} as default for user {} (only remaining bank)", remainingBankId, user.getId());
-            userSettingService.upsertForUser(user.getId(), UserSettingKey.DEFAULT_BANK, remainingBankId);
+            log.debug("Setting bank {} as default for user {} (only remaining bank)", remainingBankId, userId);
+            userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_BANK, remainingBankId);
         }
         // Si quedan 2 o más bancos: no hacer nada, mantener el default actual
     }

@@ -1,15 +1,13 @@
 package api.m2.movements.unit.services
 
-
+import api.m2.movements.clients.IdentityClient
 import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.movements.enums.UserType
-import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.identity.mappers.UserMapper
+import api.m2.movements.exceptions.ServiceException
+import api.m2.movements.identity.records.users.UserBaseRecord
 
 import api.m2.movements.movements.repositories.UserSettingRepository
 import api.m2.movements.identity.services.user.UserService
-import org.mapstruct.factory.Mappers
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
@@ -19,16 +17,14 @@ import spock.lang.Specification
 
 class UserServiceTest extends Specification {
 
-    UserRepository userRepository = Mock(UserRepository)
-    UserMapper userMapper = Mappers.getMapper(UserMapper)
+    IdentityClient identityClient = Mock(IdentityClient)
     UserSettingRepository userSettingRepository = Mock(UserSettingRepository)
 
     UserService service
 
     def setup() {
         service = new UserService(
-                userRepository,
-                userMapper,
+                identityClient,
                 userSettingRepository
         )
     }
@@ -37,20 +33,20 @@ class UserServiceTest extends Specification {
         SecurityContextHolder.clearContext()
     }
 
-    def "getAuthenticatedUser - should return user from security context"() {
+    def "getAuthenticatedUser - should resolve user via IdentityClient using email from security context"() {
         given:
         def email = "test@test.com"
-        def user = new User(id: 1L, email: email, isFirstLogin: false)
+        def user = new UserBaseRecord("John", 1L)
 
         setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
+        identityClient.getUserByEmail(email) >> user
 
         when:
         def result = service.getAuthenticatedUser()
 
         then:
-        result.id == 1L
-        result.email == email
+        result.id() == 1L
+        result.givenName() == "John"
     }
 
     def "getAuthenticatedUser - should throw PermissionDeniedException when not authenticated"() {
@@ -66,78 +62,17 @@ class UserServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "getAuthenticatedUser - should throw EntityNotFoundException when user not found"() {
-        given:
-        def email = "unknown@test.com"
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.empty()
-
-        when:
-        service.getAuthenticatedUser()
-
-        then:
-        thrown(EntityNotFoundException)
-    }
-
-    def "getAuthenticatedUserRecord - should return mapped record"() {
+    def "getAuthenticatedEmail - should return email from security context without calling IdentityClient"() {
         given:
         def email = "test@test.com"
-        def givenName = "John"
-        def user = new User(id: 1L, email: email, givenName: givenName, isFirstLogin: false)
-
         setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
 
         when:
-        def result = service.getAuthenticatedUserRecord()
+        def result = service.getAuthenticatedEmail()
 
         then:
-        result.id() == 1L
-        result.givenName() == givenName
-    }
-
-    def "getUserByEmail - should return users by email list"() {
-        given:
-        def emails = ["user1@test.com", "user2@test.com"]
-        def user1 = new User(id: 1L, email: "user1@test.com")
-        def user2 = new User(id: 2L, email: "user2@test.com")
-
-        userRepository.findByEmail(emails) >> [user1, user2]
-
-        when:
-        def result = service.getUserByEmail(emails)
-
-        then:
-        result.size() == 2
-    }
-
-    def "findUserByEmail - should return optional user"() {
-        given:
-        def email = "test@test.com"
-        def user = new User(id: 1L, email: email)
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        def result = service.findUserByEmail()
-
-        then:
-        result.isPresent()
-        result.get().email == email
-    }
-
-    def "findUserByEmail - should return empty optional when user not found"() {
-        given:
-        def email = "unknown@test.com"
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.empty()
-
-        when:
-        def result = service.findUserByEmail()
-
-        then:
-        result.isEmpty()
+        result == email
+        0 * identityClient.getUserByEmail(_)
     }
 
     def "getCurrentKeycloakId - should return JWT subject"() {
@@ -170,63 +105,12 @@ class UserServiceTest extends Specification {
         service.getCurrentKeycloakId()
 
         then:
-        thrown(api.m2.movements.exceptions.ServiceException)
-    }
-
-    def "getMe - should return UserMeRecord for existing user"() {
-        given:
-        def email = "test@test.com"
-        def user = new User(
-            id: 1L,
-            email: email,
-            givenName: "John",
-            familyName: "Doe",
-            isFirstLogin: false,
-            userType: UserType.PERSONAL,
-            hasSeenTour: true
-        )
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        def result = service.getMe()
-
-        then:
-        result.id() == 1L
-        result.email() == email
-        result.givenName() == "John"
-        result.familyName() == "Doe"
-        result.isFirstLogin() == false
-        result.userType() == "PERSONAL"
-        result.hasSeenTour() == true
-    }
-
-    def "getMe - should return empty record for new user"() {
-        given:
-        def email = "newuser@test.com"
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.empty()
-
-        when:
-        def result = service.getMe()
-
-        then:
-        result.id() == null
-        result.email() == null
-        result.givenName() == null
-        result.familyName() == null
-        result.isFirstLogin() == true
-        result.userType() == null
-        result.hasSeenTour() == false
+        thrown(ServiceException)
     }
 
     def "getUsersWithMonthlySnapshotEnabled - should delegate to repository"() {
         given:
-        def user1 = new User(id: 1L, email: "user1@test.com")
-        def user2 = new User(id: 2L, email: "user2@test.com")
-
-        userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED) >> [user1, user2]
+        userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED) >> [1L, 2L]
 
         when:
         def result = service.getUsersWithMonthlySnapshotEnabled()
@@ -237,110 +121,13 @@ class UserServiceTest extends Specification {
 
     def "getUsersWithAutoIncomeEnabled - should delegate to repository"() {
         given:
-        def user = new User(id: 1L, email: "user@test.com")
-
-        userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED) >> [user]
+        userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED) >> [1L]
 
         when:
         def result = service.getUsersWithAutoIncomeEnabled()
 
         then:
         result.size() == 1
-    }
-
-    def "markTourAsSeen - should set hasSeenTour to true and save user"() {
-        given:
-        def email = "test@test.com"
-        def user = new User(id: 1L, email: email, hasSeenTour: false)
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        service.markTourAsSeen()
-
-        then:
-        1 * userRepository.save({ User u ->
-            u.id == 1L && u.hasSeenTour == true
-        })
-    }
-
-    def "markTourAsSeen - should throw EntityNotFoundException when user not found"() {
-        given:
-        def email = "unknown@test.com"
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.empty()
-
-        when:
-        service.markTourAsSeen()
-
-        then:
-        thrown(EntityNotFoundException)
-    }
-
-    def "changeUserType - should update user type from PERSONAL to ENTERPRISE"() {
-        given:
-        def email = "admin@example.com"
-        def user = User.builder()
-                .id(1L)
-                .email(email)
-                .userType(UserType.PERSONAL)
-                .build()
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        service.changeUserType(UserType.ENTERPRISE)
-
-        then:
-        1 * userRepository.save(_ as User) >> { List args ->
-            def savedUser = args[0] as User
-            assert savedUser.userType == UserType.ENTERPRISE
-            savedUser
-        }
-    }
-
-    def "changeUserType - should update user type from ENTERPRISE to PERSONAL"() {
-        given:
-        def email = "admin@example.com"
-        def user = User.builder()
-                .id(1L)
-                .email(email)
-                .userType(UserType.ENTERPRISE)
-                .build()
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        service.changeUserType(UserType.PERSONAL)
-
-        then:
-        1 * userRepository.save(_ as User) >> { List args ->
-            def savedUser = args[0] as User
-            assert savedUser.userType == UserType.PERSONAL
-            savedUser
-        }
-    }
-
-    def "changeUserType - should not save when user type is already the same"() {
-        given:
-        def email = "admin@example.com"
-        def user = User.builder()
-                .id(1L)
-                .email(email)
-                .userType(UserType.PERSONAL)
-                .build()
-
-        setupSecurityContext(email)
-        userRepository.findByEmail(email) >> Optional.of(user)
-
-        when:
-        service.changeUserType(UserType.PERSONAL)
-
-        then:
-        0 * userRepository.save(_ as User)
     }
 
     private void setupSecurityContext(String email) {

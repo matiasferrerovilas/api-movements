@@ -24,12 +24,12 @@ public class MonthlySummaryJob {
         int year = target.getYear();
         int month = target.getMonthValue();
 
-        List<User> users = userService.getUsersWithMonthlySnapshotEnabled();
-        log.info("Generando snapshots mensuales para {}/{} — {} usuarios", month, year, users.size());
+        List<Long> userIds = userService.getUsersWithMonthlySnapshotEnabled();
+        log.info("Generando snapshots mensuales para {}/{} — {} usuarios", month, year, userIds.size());
 
-        users.forEach(user -> {
-            var summary = monthlySummaryService.computeSummary(user.getEmail(), year, month);
-            snapshotService.save(user, year, month, summary);
+        userIds.forEach(userId -> {
+            var summary = monthlySummaryService.computeSummary(userId, year, month);
+            snapshotService.save(userId, year, month, summary);
         });
     }
 }

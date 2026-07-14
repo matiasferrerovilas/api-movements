@@ -25,36 +25,36 @@ class RecurringIncomeJobTest extends Specification {
         job.generateRecurringIncomes()
 
         then:
-        0 * incomeAddService.generateRecurringIncomeForUser(_ as User)
+        0 * incomeAddService.generateRecurringIncomeForUser(_ as Long)
     }
 
     def "generateRecurringIncomes - should call generateRecurringIncomeForUser once for a single user"() {
         given:
-        def user = Stub(User) { getEmail() >> "user@test.com" }
-        userService.getUsersWithAutoIncomeEnabled() >> [user]
-        incomeAddService.generateRecurringIncomeForUser(user) >> 2
+        def userId = 1L
+        userService.getUsersWithAutoIncomeEnabled() >> [userId]
+        incomeAddService.generateRecurringIncomeForUser(userId) >> 2
 
         when:
         job.generateRecurringIncomes()
 
         then:
-        1 * incomeAddService.generateRecurringIncomeForUser(user) >> 2
+        1 * incomeAddService.generateRecurringIncomeForUser(userId) >> 2
     }
 
     def "generateRecurringIncomes - should call generateRecurringIncomeForUser once per user"() {
         given:
-        def user1 = Stub(User) { getEmail() >> "user1@test.com" }
-        def user2 = Stub(User) { getEmail() >> "user2@test.com" }
-        def user3 = Stub(User) { getEmail() >> "user3@test.com" }
-        userService.getUsersWithAutoIncomeEnabled() >> [user1, user2, user3]
+        def userId1 = 1L
+        def userId2 = 2L
+        def userId3 = 3L
+        userService.getUsersWithAutoIncomeEnabled() >> [userId1, userId2, userId3]
 
         when:
         job.generateRecurringIncomes()
 
         then:
-        1 * incomeAddService.generateRecurringIncomeForUser(user1) >> 1
-        1 * incomeAddService.generateRecurringIncomeForUser(user2) >> 3
-        1 * incomeAddService.generateRecurringIncomeForUser(user3) >> 2
+        1 * incomeAddService.generateRecurringIncomeForUser(userId1) >> 1
+        1 * incomeAddService.generateRecurringIncomeForUser(userId2) >> 3
+        1 * incomeAddService.generateRecurringIncomeForUser(userId3) >> 2
     }
 
     def "generateRecurringIncomes - should call getUsersWithAutoIncomeEnabled exactly once"() {
@@ -70,21 +70,21 @@ class RecurringIncomeJobTest extends Specification {
 
     def "generateRecurringIncomes - should continue processing other users when one fails"() {
         given:
-        def user1 = Stub(User) { getEmail() >> "user1@test.com" }
-        def user2 = Stub(User) { getEmail() >> "user2@test.com" }
-        def user3 = Stub(User) { getEmail() >> "user3@test.com" }
-        userService.getUsersWithAutoIncomeEnabled() >> [user1, user2, user3]
-        incomeAddService.generateRecurringIncomeForUser(user1) >> 1
-        incomeAddService.generateRecurringIncomeForUser(user2) >> { throw new RuntimeException("DB error") }
-        incomeAddService.generateRecurringIncomeForUser(user3) >> 2
+        def userId1 = 1L
+        def userId2 = 2L
+        def userId3 = 3L
+        userService.getUsersWithAutoIncomeEnabled() >> [userId1, userId2, userId3]
+        incomeAddService.generateRecurringIncomeForUser(userId1) >> 1
+        incomeAddService.generateRecurringIncomeForUser(userId2) >> { throw new RuntimeException("DB error") }
+        incomeAddService.generateRecurringIncomeForUser(userId3) >> 2
 
         when:
         job.generateRecurringIncomes()
 
         then:
         noExceptionThrown()
-        1 * incomeAddService.generateRecurringIncomeForUser(user1)
-        1 * incomeAddService.generateRecurringIncomeForUser(user2)
-        1 * incomeAddService.generateRecurringIncomeForUser(user3)
+        1 * incomeAddService.generateRecurringIncomeForUser(userId1)
+        1 * incomeAddService.generateRecurringIncomeForUser(userId2)
+        1 * incomeAddService.generateRecurringIncomeForUser(userId3)
     }
 }

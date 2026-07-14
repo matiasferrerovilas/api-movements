@@ -9,7 +9,6 @@ public final class WebSocketTopics {
     // Base paths
     public static final String MOVEMENTS = "/topic/movimientos";
     public static final String SERVICES = "/topic/servicios";
-    public static final String INVITATIONS = "/topic/invitation";
     public static final String WORKSPACES = "/topic/workspace";
     public static final String CATEGORIES = "/topic/categories";
     public static final String INVESTMENTS = "/topic/inversiones";
@@ -19,8 +18,6 @@ public final class WebSocketTopics {
     public static final String UPDATE = "/update";
     public static final String DELETE = "/delete";
     public static final String REMOVE = "/remove";
-    public static final String LEAVE = "/leave";
-    public static final String MEMBERS_UPDATE = "/members/update";
     public static final String DEFAULT = "/default";
 
     private WebSocketTopics() {
@@ -60,41 +57,6 @@ public final class WebSocketTopics {
      */
     public static String servicesRemove(Long workspaceId) {
         return SERVICES + "/" + workspaceId + REMOVE;
-    }
-
-    /**
-     * Construye el topic para nuevas invitaciones de un usuario.
-     */
-    public static String invitationsNew(Long userId) {
-        return INVITATIONS + "/" + userId + NEW;
-    }
-
-    /**
-     * Construye el topic para invitaciones actualizadas de un usuario.
-     */
-    public static String invitationsUpdate(Long userId) {
-        return INVITATIONS + "/" + userId + UPDATE;
-    }
-
-    /**
-     * Construye el topic para nuevos workspaces de un owner.
-     */
-    public static String workspacesNew(Long ownerId) {
-        return WORKSPACES + "/" + ownerId + NEW;
-    }
-
-    /**
-     * Construye el topic para salida de un workspace.
-     */
-    public static String workspacesLeave(Long workspaceId) {
-        return WORKSPACES + "/" + workspaceId + LEAVE;
-    }
-
-    /**
-     * Construye el topic para actualización de miembros de un workspace.
-     */
-    public static String workspacesMembersUpdate(Long workspaceId) {
-        return WORKSPACES + "/" + workspaceId + MEMBERS_UPDATE;
     }
 
     /**

@@ -1,6 +1,6 @@
 package api.m2.movements.identity.controller;
 
-import api.m2.movements.identity.AddWorkspaceRecord;
+import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord;
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail;
 import api.m2.movements.identity.services.workspaces.WorkspaceAddService;
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService;

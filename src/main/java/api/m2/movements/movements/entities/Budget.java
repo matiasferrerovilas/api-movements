@@ -2,7 +2,6 @@ package api.m2.movements.movements.entities;
 
 import api.m2.movements.movements.entities.commons.Category;
 import api.m2.movements.movements.entities.commons.Currency;
-import api.m2.movements.identity.entities.Workspace;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,9 +32,8 @@ public class Budget {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

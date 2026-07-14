@@ -4,7 +4,6 @@ import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Movement
 
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
@@ -12,7 +11,6 @@ import api.m2.movements.movements.mappers.CategoryMapper
 import api.m2.movements.movements.mappers.CurrencyMapper
 import api.m2.movements.movements.mappers.MovementMapper
 import api.m2.movements.movements.mappers.MovementMapperImpl
-import api.m2.movements.identity.mappers.UserMapper
 import api.m2.movements.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.movements.records.movements.MovementRecord
@@ -40,7 +38,6 @@ class MovementAddServiceTest extends Specification {
         movementMapper = new MovementMapperImpl()
         ReflectionTestUtils.setField(movementMapper, "categoryMapper", Mappers.getMapper(CategoryMapper))
         ReflectionTestUtils.setField(movementMapper, "currencyMapper", Mappers.getMapper(CurrencyMapper))
-        ReflectionTestUtils.setField(movementMapper, "userMapper", Mappers.getMapper(UserMapper))
 
         service = new MovementAddService(
                 movementRepository,
@@ -51,17 +48,16 @@ class MovementAddServiceTest extends Specification {
     }
 
     def buildMovement(Long workspaceId) {
-        def workspace = Workspace.builder().id(workspaceId).name("Test Workspace").build()
         def movement = Movement.builder()
                 .id(42L)
                 .amount(new BigDecimal("500.00"))
                 .description("Supermercado")
                 .date(LocalDate.now())
                 .type(MovementType.DEBITO)
-                .workspace(workspace)
+                .workspaceId(workspaceId)
                 .category(Category.builder().description("HOGAR").build())
                 .currency(Currency.builder().id(1L).symbol("ARS").build())
-                .owner(User.builder().id(10L).email("test@test.com").build())
+                .ownerId(10L)
                 .build()
         return movement
     }

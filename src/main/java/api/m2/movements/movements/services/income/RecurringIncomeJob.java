@@ -24,21 +24,21 @@ public class RecurringIncomeJob {
 
     @Scheduled(cron = "0 0 6 1 * *")
     public void generateRecurringIncomes() {
-        List<User> users = userService.getUsersWithAutoIncomeEnabled();
-        log.info("Generando ingresos recurrentes para {} usuarios", users.size());
+        List<Long> userIds = userService.getUsersWithAutoIncomeEnabled();
+        log.info("Generando ingresos recurrentes para {} usuarios", userIds.size());
 
         int totalMovements = 0;
-        for (User user : users) {
+        for (Long userId : userIds) {
             try {
-                int count = incomeAddService.generateRecurringIncomeForUser(user);
+                int count = incomeAddService.generateRecurringIncomeForUser(userId);
                 totalMovements += count;
             } catch (Exception e) {
                 log.error("Error generando ingresos para usuario {}: {}",
-                        user.getEmail(), e.getMessage(), e);
+                        userId, e.getMessage(), e);
             }
         }
 
         log.info("Ingresos recurrentes generados: {} movimientos para {} usuarios",
-                totalMovements, users.size());
+                totalMovements, userIds.size());
     }
 }

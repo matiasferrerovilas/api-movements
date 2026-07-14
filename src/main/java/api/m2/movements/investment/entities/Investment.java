@@ -1,7 +1,6 @@
 package api.m2.movements.investment.entities;
 
 import api.m2.movements.movements.entities.commons.Currency;
-import api.m2.movements.identity.entities.Workspace;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +31,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
-@ToString(exclude = {"currency", "workspace", "owner", "investmentType"})
+@ToString(exclude = {"currency", "investmentType"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
@@ -69,13 +68,11 @@ public class Investment {
     @JoinColumn(name = "currency_id", nullable = false)
     private Currency currency;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @Column(name = "owner_id")
+    private Long ownerId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

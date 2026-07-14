@@ -30,7 +30,7 @@ public class SubscriptionMovementHandler {
         var category = categoryAddService
                 .findCategoryByDescription(DefaultCategory.SERVICIOS.getDescription());
 
-        String defaultBank = userSettingService.getDefaultBank(event.owner())
+        String defaultBank = userSettingService.getDefaultBank(event.ownerId())
                 .map(Bank::getDescription)
                 .orElse(null);
 
@@ -45,7 +45,7 @@ public class SubscriptionMovementHandler {
                 0,
                 defaultBank);
 
-        movementAddService.saveMovement(dto, event.workspace(), event.owner());
+        movementAddService.saveMovement(dto, event.workspaceId(), event.ownerId());
     }
 
     @EventListener

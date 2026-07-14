@@ -1,10 +1,9 @@
 package api.m2.movements.identity.services.user;
 
+import api.m2.movements.clients.IdentityClient;
 import api.m2.movements.movements.enums.UserSettingKey;
-import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.exceptions.ServiceException;
-import api.m2.movements.identity.mappers.UserMapper;
 import api.m2.movements.identity.records.users.UserBaseRecord;
 import api.m2.movements.movements.repositories.UserSettingRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,38 +22,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserMapper userMapper;
+    private final IdentityClient identityClient;
     private final UserSettingRepository userSettingRepository;
 
-    @Transactional(readOnly = true)
-    public User getAuthenticatedUser() {
-        String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+    public UserBaseRecord getAuthenticatedUser() {
+        return identityClient.getUserByEmail(this.getAuthenticatedEmail());
+    }
+
+    public String getAuthenticatedEmail() {
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .filter(Authentication::isAuthenticated)
                 .map(Authentication::getName)
                 .orElseThrow(() -> new PermissionDeniedException("Usuario no autenticado"));
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario inexistente"));
-    }
-
-    @Transactional(readOnly = true)
-    public UserBaseRecord getAuthenticatedUserRecord() {
-        return userMapper.toRecord(getAuthenticatedUser());
-    }
-
-    @Transactional(readOnly = true)
-    public List<User> getUserByEmail(List<String> email) {
-        return userRepository.findByEmail(email);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<User> findUserByEmail() {
-        String email = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .filter(Authentication::isAuthenticated)
-                .map(Authentication::getName)
-                .orElseThrow(() -> new PermissionDeniedException("Usuario no autenticado"));
-
-        return userRepository.findByEmail(email);
     }
 
     public String getCurrentKeycloakId() {
@@ -68,12 +47,12 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<User> getUsersWithMonthlySnapshotEnabled() {
-        return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
+    public List<Long> getUsersWithMonthlySnapshotEnabled() {
+        return userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
     }
 
     @Transactional(readOnly = true)
-    public List<User> getUsersWithAutoIncomeEnabled() {
-        return userSettingRepository.findUsersWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED);
+    public List<Long> getUsersWithAutoIncomeEnabled() {
+        return userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED);
     }
 }

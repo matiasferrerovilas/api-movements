@@ -25,6 +25,6 @@ public class SubscriptionWorkspaceResolver implements WorkspaceIdResolver {
         return subscriptionRepository.findById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Servicio no encontrado: " + entityId))
-                .getWorkspace().getId();
+                .getWorkspaceId();
     }
 }

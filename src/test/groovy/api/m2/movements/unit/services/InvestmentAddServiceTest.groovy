@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.movements.entities.commons.Currency
 
-import api.m2.movements.identity.entities.Workspace
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.entities.Investment
 import api.m2.movements.investment.entities.InvestmentType
@@ -49,13 +49,11 @@ class InvestmentAddServiceTest extends Specification {
     }
 
     def buildInvestment(Long workspaceId = 1L) {
-        def workspace = Stub(Workspace) { getId() >> workspaceId }
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
         def type = Stub(InvestmentType) { getId() >> 1L }
-        def owner = Stub(User)
         return new Investment(id: 10L, amount: new BigDecimal("50000.00"),
-                startDate: LocalDate.of(2026, 1, 1), workspace: workspace,
-                currency: currency, investmentType: type, owner: owner)
+                startDate: LocalDate.of(2026, 1, 1), workspaceId: workspaceId,
+                currency: currency, investmentType: type, ownerId: 1L)
     }
 
     def buildRecord(Long workspaceId = 1L) {
@@ -68,15 +66,13 @@ class InvestmentAddServiceTest extends Specification {
         given:
         def dto = new InvestmentToAdd(new BigDecimal("50000.00"), LocalDate.of(2026, 1, 1),
                 null, "Plazo Fijo Galicia", null, null, 1L, "ARS")
-        def workspace = Stub(Workspace) { getId() >> 1L }
-        def user = Stub(User)
         def currency = Stub(Currency)
         def investmentType = Stub(InvestmentType)
         def investment = buildInvestment()
         def record = buildRecord()
 
-        workspaceContextService.getActiveWorkspace() >> workspace
-        userService.getAuthenticatedUser() >> user
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         currencyRepository.findBySymbol("ARS") >> Optional.of(currency)
         investmentTypeRepository.findById(1L) >> Optional.of(investmentType)
         investmentRepository.save(_ as Investment) >> investment
@@ -95,8 +91,8 @@ class InvestmentAddServiceTest extends Specification {
         def dto = new InvestmentToAdd(new BigDecimal("1000.00"), LocalDate.now(),
                 null, null, null, null, 1L, "USD_INEXISTENTE")
 
-        workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
-        userService.getAuthenticatedUser() >> Stub(User)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         currencyRepository.findBySymbol("USD_INEXISTENTE") >> Optional.empty()
 
         when:
@@ -112,8 +108,8 @@ class InvestmentAddServiceTest extends Specification {
         def dto = new InvestmentToAdd(new BigDecimal("1000.00"), LocalDate.now(),
                 null, null, null, null, 999L, "ARS")
 
-        workspaceContextService.getActiveWorkspace() >> Stub(Workspace)
-        userService.getAuthenticatedUser() >> Stub(User)
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         currencyRepository.findBySymbol("ARS") >> Optional.of(Stub(Currency))
         investmentTypeRepository.findById(999L) >> Optional.empty()
 

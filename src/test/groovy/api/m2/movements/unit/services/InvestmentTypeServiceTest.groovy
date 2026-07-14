@@ -1,6 +1,5 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.investment.entities.InvestmentType
@@ -27,9 +26,8 @@ class InvestmentTypeServiceTest extends Specification {
     }
 
     def buildType(Long workspaceId = 1L) {
-        def workspace = Stub(Workspace) { getId() >> workspaceId }
         return new InvestmentType(id: 1L, name: "Plazo Fijo", iconName: "BankOutlined",
-                iconColor: "#1890ff", category: InvestmentCategory.PLAZO_FIJO, workspace: workspace)
+                iconColor: "#1890ff", category: InvestmentCategory.PLAZO_FIJO, workspaceId: workspaceId)
     }
 
     // --- getByWorkspace ---
@@ -57,11 +55,10 @@ class InvestmentTypeServiceTest extends Specification {
     def "add - should save type and return record"() {
         given:
         def dto = new InvestmentTypeToAdd("Cripto", InvestmentCategory.STOCK_ETF, "CryptoOutlined", "#faad14")
-        def workspace = Stub(Workspace) { getId() >> 1L }
         def type = buildType(1L)
         def record = new InvestmentTypeRecord(1L, "Cripto", "CryptoOutlined", "#faad14", 1L, InvestmentCategory.STOCK_ETF)
 
-        workspaceContextService.getActiveWorkspace() >> workspace
+        workspaceContextService.getActiveWorkspaceId() >> 1L
         investmentTypeRepository.save(_ as InvestmentType) >> type
         investmentTypeMapper.toRecord(type) >> record
 
@@ -73,7 +70,7 @@ class InvestmentTypeServiceTest extends Specification {
             def saved = args[0] as InvestmentType
             assert saved.name == "Cripto"
             assert saved.category == InvestmentCategory.STOCK_ETF
-            assert saved.workspace == workspace
+            assert saved.workspaceId == 1L
             type
         }
         result.name() == "Cripto"

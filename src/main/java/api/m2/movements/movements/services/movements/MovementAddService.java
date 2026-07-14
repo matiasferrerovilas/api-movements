@@ -1,7 +1,6 @@
 package api.m2.movements.movements.services.movements;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.movements.mappers.MovementMapper;
 import api.m2.movements.movements.records.movements.MovementDeletedEvent;
@@ -41,8 +40,8 @@ public class MovementAddService {
     }
 
     @Transactional
-    public MovementRecord saveMovement(@Valid MovementToAdd dto, Workspace workspace, User owner) {
-        var movement = movementFactory.create(dto, workspace, owner);
+    public MovementRecord saveMovement(@Valid MovementToAdd dto, Long workspaceId, Long ownerId) {
+        var movement = movementFactory.create(dto, workspaceId, ownerId);
         var movementRecord = movementMapper.toRecord(movementRepository.save(movement));
 
         eventPublisher.publishEvent(movementRecord);
@@ -87,7 +86,7 @@ public class MovementAddService {
         var movement = movementRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Movimiento con Id" + id + " no existe"));
 
-        Long workspaceId = movement.getWorkspace().getId();
+        Long workspaceId = movement.getWorkspaceId();
         movementRepository.deleteById(id);
         eventPublisher.publishEvent(new MovementDeletedEvent(id, workspaceId));
 

@@ -4,7 +4,6 @@ import api.m2.movements.movements.entities.commons.Bank
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Income
 
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.mappers.IncomeMapper
 import api.m2.movements.movements.repositories.IncomeRepository
 import api.m2.movements.movements.services.income.IncomeQueryService
@@ -32,16 +31,14 @@ class IncomeQueryServiceTest extends Specification {
         given:
         def workspaceId = 10L
 
-        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def bank = Stub(Bank) { getId() >> 1L; getDescription() >> "GALICIA" }
-        def user = Stub(User) { getId() >> 1L }
 
         def income = new Income(
                 id: 1L,
                 amount: new BigDecimal("50000.00"),
-                user: user,
-                workspace: workspace,
+                userId: 1L,
+                workspaceId: workspaceId,
                 currency: currency,
                 bank: bank
         )
@@ -77,25 +74,23 @@ class IncomeQueryServiceTest extends Specification {
         given:
         def workspaceId = 10L
 
-        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currencyArs = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         def currencyUsd = Stub(Currency) { getSymbol() >> "USD"; getId() >> 2L }
         def bank = Stub(Bank) { getId() >> 1L; getDescription() >> "BBVA" }
-        def user = Stub(User) { getId() >> 1L }
 
         def income1 = new Income(
                 id: 1L,
                 amount: new BigDecimal("50000.00"),
-                user: user,
-                workspace: workspace,
+                userId: 1L,
+                workspaceId: workspaceId,
                 currency: currencyArs,
                 bank: bank
         )
         def income2 = new Income(
                 id: 2L,
                 amount: new BigDecimal("1000.00"),
-                user: user,
-                workspace: workspace,
+                userId: 1L,
+                workspaceId: workspaceId,
                 currency: currencyUsd,
                 bank: bank
         )

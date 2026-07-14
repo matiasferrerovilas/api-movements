@@ -5,7 +5,7 @@ import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Movement
 
-import api.m2.movements.identity.entities.Workspace
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.mappers.MovementMapper
 import api.m2.movements.movements.records.categories.CategoryUpdateRecord
@@ -63,15 +63,13 @@ class MovementFactoryTest extends Specification {
         def movement = new Movement()
         def category = Stub(Category) { getId() >> 1L }
         def currency = Stub(Currency) { getSymbol() >> "USD" }
-        def user = Stub(User) { getId() >> 10L }
-        def workspace = Stub(Workspace) { getId() >> 1L }
         def bank = Stub(Bank) { getId() >> 5L }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspace() >> workspace
-        categoryResolver.resolve(_ as String, workspace) >> category
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("USD") >> currency
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         exchangeRateResolver.resolveRate("USD", dto.date()) >> new BigDecimal("1.0")
 
@@ -81,8 +79,8 @@ class MovementFactoryTest extends Specification {
         then:
         result.category == category
         result.currency == currency
-        result.owner == user
-        result.workspace == workspace
+        result.ownerId == 10L
+        result.workspaceId == 1L
         result.bank == bank
         result.exchangeRate == new BigDecimal("1.0")
     }
@@ -104,14 +102,12 @@ class MovementFactoryTest extends Specification {
         def movement = new Movement()
         def category = Stub(Category)
         def currency = Stub(Currency) { getSymbol() >> "EUR" }
-        def user = Stub(User)
-        def workspace = Stub(Workspace)
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspace() >> workspace
-        categoryResolver.resolve(_ as String, workspace) >> category
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("EUR") >> currency
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> new BigDecimal("1.08")
 
         when:
@@ -139,14 +135,12 @@ class MovementFactoryTest extends Specification {
         def movement = new Movement()
         def category = Stub(Category)
         def currency = Stub(Currency) { getSymbol() >> "USD" }
-        def user = Stub(User)
-        def workspace = Stub(Workspace)
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspace() >> workspace
-        categoryResolver.resolve(_ as String, workspace) >> category
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("USD") >> currency
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
         bankRepository.findByDescription("UNKNOWN_BANK") >> Optional.empty()
 
         when:

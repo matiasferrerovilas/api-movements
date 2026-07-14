@@ -1,9 +1,10 @@
 package api.m2.movements.unit.services
 
 
+import api.m2.movements.clients.IdentityClient
 import api.m2.movements.movements.enums.UserType
-import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.identity.records.users.UserToAdd
 
 import api.m2.movements.identity.services.user.UserAddService
 import org.springframework.security.core.Authentication
@@ -15,12 +16,12 @@ import spock.lang.Specification
 
 class UserAddServiceTest extends Specification {
 
-    UserRepository userRepository = Mock(UserRepository)
+    IdentityClient identityClient = Mock(IdentityClient)
 
     UserAddService service
 
     def setup() {
-        service = new UserAddService(userRepository)
+        service = new UserAddService(identityClient)
     }
 
     def cleanup() {
@@ -35,26 +36,25 @@ class UserAddServiceTest extends Specification {
         def userType = "PERSONAL"
         setupJwtSecurityContext(email, givenName, familyName)
 
-        def savedUser = new User(id: 1L, email: email, givenName: givenName, familyName: familyName, isFirstLogin: true, userType: UserType.PERSONAL)
-        userRepository.save(_ as User) >> savedUser
+        def savedUser = UserToAdd.builder().id(1L).email(email).givenName(givenName).familyName(familyName)
+                .isFirstLogin(true).userType(UserType.PERSONAL).build()
+        identityClient.createLogInUser(_ as UserToAdd) >> savedUser
 
         when:
         def result = service.createLogInUser(userType)
 
         then:
-        1 * userRepository.save({ User u ->
-            u.email == email &&
-            u.givenName == givenName &&
-            u.familyName == familyName &&
-            u.isFirstLogin == true &&
-            u.userType == UserType.PERSONAL
+        1 * identityClient.createLogInUser({ UserToAdd u ->
+            u.email() == email &&
+            u.givenName() == givenName &&
+            u.familyName() == familyName &&
+            u.isFirstLogin() == true &&
+            u.userType() == UserType.PERSONAL
         }) >> savedUser
-        result.id == 1L
-        result.email == email
-        result.givenName == givenName
-        result.familyName == familyName
-        result.isFirstLogin == true
-        result.userType == UserType.PERSONAL
+        result.id() == 1L
+        result.email() == email
+        result.givenName() == givenName
+        result.familyName() == familyName
     }
 
     def "createLogInUser - should create user with null givenName and familyName when not in JWT"() {
@@ -63,23 +63,21 @@ class UserAddServiceTest extends Specification {
         def userType = "ENTERPRISE"
         setupJwtSecurityContext(email, null, null)
 
-        def savedUser = new User(id: 1L, email: email, givenName: null, familyName: null, isFirstLogin: true, userType: UserType.ENTERPRISE)
-        userRepository.save(_ as User) >> savedUser
+        def savedUser = UserToAdd.builder().id(1L).email(email).isFirstLogin(true).userType(UserType.ENTERPRISE).build()
+        identityClient.createLogInUser(_ as UserToAdd) >> savedUser
 
         when:
         def result = service.createLogInUser(userType)
 
         then:
-        1 * userRepository.save({ User u ->
-            u.email == email &&
-            u.givenName == null &&
-            u.familyName == null &&
-            u.isFirstLogin == true &&
-            u.userType == UserType.ENTERPRISE
+        1 * identityClient.createLogInUser({ UserToAdd u ->
+            u.email() == email &&
+            u.givenName() == null &&
+            u.familyName() == null &&
+            u.userType() == UserType.ENTERPRISE
         }) >> savedUser
-        result.givenName == null
-        result.familyName == null
-        result.userType == UserType.ENTERPRISE
+        result.givenName() == null
+        result.familyName() == null
     }
 
     def "createLogInUser - should throw PermissionDeniedException when not authenticated"() {
@@ -111,51 +109,12 @@ class UserAddServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "changeUserFirstLoginStatus - should update user status and type"() {
-        given:
-        def userId = 1L
-        def userType = UserType.PERSONAL
-        def existingUser = new User(id: userId, email: "test@test.com", isFirstLogin: true)
-
-        userRepository.findById(userId) >> Optional.of(existingUser)
-        userRepository.save(_ as User) >> { User u -> u }
-
+    def "changeUserFirstLoginStatus - should delegate to IdentityClient"() {
         when:
-        service.changeUserFirstLoginStatus(userType, userId)
+        service.changeUserFirstLoginStatus(1L)
 
         then:
-        1 * userRepository.save({ User u ->
-            u.isFirstLogin == false && u.userType == UserType.PERSONAL
-        })
-    }
-
-    def "changeUserFirstLoginStatus - should throw EntityNotFoundException when user not found"() {
-        given:
-        def userId = 999L
-        userRepository.findById(userId) >> Optional.empty()
-
-        when:
-        service.changeUserFirstLoginStatus(UserType.PERSONAL, userId)
-
-        then:
-        thrown(EntityNotFoundException)
-    }
-
-    def "changeUserFirstLoginStatus - should set ENTERPRISE user type"() {
-        given:
-        def userId = 1L
-        def existingUser = new User(id: userId, email: "company@test.com", isFirstLogin: true)
-
-        userRepository.findById(userId) >> Optional.of(existingUser)
-        userRepository.save(_ as User) >> { User u -> u }
-
-        when:
-        service.changeUserFirstLoginStatus(UserType.ENTERPRISE, userId)
-
-        then:
-        1 * userRepository.save({ User u ->
-            u.userType == UserType.ENTERPRISE
-        })
+        1 * identityClient.changeUserFirstLoginStatus(1L)
     }
 
     private void setupJwtSecurityContext(String email, String givenName, String familyName) {

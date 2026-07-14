@@ -24,15 +24,15 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
-            WHERE (m.date >= :startDate)
+            WHERE m.user_id = :userId
+                  AND (m.date >= :startDate)
                   AND (m.date  <= :endDate)
                   AND m.type IN (:type)
                   AND m.currency_id IN (:currencies)
                    AND m.workspace_id IN (:groups)
             """, nativeQuery = true)
     BigDecimal getBalanceByFilters(LocalDate startDate, LocalDate endDate,
-                                   String email,
+                                   Long userId,
                                    List<String> type,
                                    List<Integer> groups,
                                    List<Integer> currencies);
@@ -41,7 +41,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     SELECT g
     FROM Movement g
     WHERE
-    (:#{#accountsId} IS NULL OR g.workspace.id IN :#{#accountsId})
+    (:#{#accountsId} IS NULL OR g.workspaceId IN :#{#accountsId})
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
       AND (:#{#filter.bank} IS NULL OR g.bank.description IN :#{#filter.bank})
       AND (:#{#filter.type} IS NULL OR g.type IN :#{#filter.type})
@@ -86,31 +86,28 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
                                                               List<Integer> groups,
-                                                              List<String> currencies,
-                                                              String email);
+                                                              List<String> currencies);
 
 
 
     @Query(value = """
-            SELECT   ac.name AS workspaceDescription,
+            SELECT   g.workspace_id AS workspaceId,
                     c.symbol AS currencySymbol,
                     YEAR(g.`date`) AS year,
                     MONTH(g.`date`) AS month,
                     SUM(g.amount) AS total
             from movements g
             INNER JOIN currency c ON g.currency_id = c.id
-            INNER JOIN users u ON g.user_id = u.id
-            INNER JOIN workspaces ac on ac.id = g.workspace_id
-            WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month AND u.email = :email
-            GROUP BY ac.name, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
-            ORDER BY ac.name, YEAR(g.`date`)
+            WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month AND g.user_id = :userId
+            GROUP BY g.workspace_id, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
+            ORDER BY g.workspace_id, YEAR(g.`date`)
     """, nativeQuery = true)
-    Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, String email);
+    Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, Long userId);
 
     @Query("""
     SELECT m FROM Movement m
     WHERE m.description = :description
-      AND m.workspace.id = :workspaceId
+      AND m.workspaceId = :workspaceId
       AND YEAR(m.date) = :year
       AND MONTH(m.date) = :month
     """)
@@ -133,7 +130,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             api.m2.movements.movements.enums.MovementType.CREDITO
           )
       AND (:#{#workspaceIds == null || #workspaceIds.isEmpty()} = true
-           OR m.workspace.id IN :workspaceIds)
+           OR m.workspaceId IN :workspaceIds)
     GROUP BY MONTH(m.date), c.symbol
     ORDER BY MONTH(m.date)
     """)
@@ -145,33 +142,33 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE YEAR(m.date) = :year
+            WHERE m.user_id = :userId
+              AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type = :type
               AND c.symbol = :currency
             """, nativeQuery = true)
-    BigDecimal getTotalByTypeAndMonth(String email, Integer year, Integer month, String type, String currency);
+    BigDecimal getTotalByTypeAndMonth(Long userId, Integer year, Integer month, String type, String currency);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
-            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
-            WHERE YEAR(m.date) = :year
+            WHERE m.user_id = :userId
+              AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type = :type
               AND m.exchange_rate IS NOT NULL
             """, nativeQuery = true)
-    BigDecimal getTotalInUsdByTypeAndMonth(String email, Integer year, Integer month, String type);
+    BigDecimal getTotalInUsdByTypeAndMonth(Long userId, Integer year, Integer month, String type);
 
     @Query(value = """
             SELECT ca.description
             FROM movements m
-            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
             INNER JOIN category ca ON m.category_id = ca.id
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE YEAR(m.date) = :year
+            WHERE m.user_id = :userId
+              AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type IN ('DEBITO', 'CREDITO')
               AND c.symbol = :currency
@@ -179,17 +176,17 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             ORDER BY SUM(m.amount) DESC
             LIMIT 1
             """, nativeQuery = true)
-    Optional<String> getTopCategoryByMonth(String email, Integer year, Integer month, String currency);
+    Optional<String> getTopCategoryByMonth(Long userId, Integer year, Integer month, String currency);
 
     @Query(value = """
             SELECT DISTINCT c.symbol
             FROM movements m
-            INNER JOIN users u ON u.email = :email AND m.user_id = u.id
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE (YEAR(m.date) = :year AND MONTH(m.date) = :month)
-               OR (YEAR(m.date) = :prevYear AND MONTH(m.date) = :prevMonth)
+            WHERE m.user_id = :userId
+              AND ((YEAR(m.date) = :year AND MONTH(m.date) = :month)
+               OR (YEAR(m.date) = :prevYear AND MONTH(m.date) = :prevMonth))
             """, nativeQuery = true)
-    List<String> findDistinctCurrenciesByMonth(String email, Integer year, Integer month,
+    List<String> findDistinctCurrenciesByMonth(Long userId, Integer year, Integer month,
                                                Integer prevYear, Integer prevMonth);
 
     List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);

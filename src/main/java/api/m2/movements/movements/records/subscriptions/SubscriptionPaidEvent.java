@@ -1,7 +1,5 @@
 package api.m2.movements.movements.records.subscriptions;
 
-import api.m2.movements.identity.entities.Workspace;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -10,6 +8,6 @@ public record SubscriptionPaidEvent(
         LocalDate paymentDate,
         String description,
         String currencySymbol,
-        User owner,
-        Workspace workspace) {
+        Long ownerId,
+        Long workspaceId) {
 }

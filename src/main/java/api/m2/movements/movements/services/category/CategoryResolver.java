@@ -1,7 +1,6 @@
 package api.m2.movements.movements.services.category;
 
 import api.m2.movements.movements.entities.commons.Category;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.identity.services.category.WorkspaceCategoryService;
 import api.m2.movements.movements.records.categories.CategoryRecord;
 import api.m2.movements.movements.records.categories.CategoryUpdateRecord;
@@ -16,11 +15,11 @@ public class CategoryResolver {
     private final CategoryAddService categoryAddService;
     private final WorkspaceCategoryService workspaceCategoryService;
 
-    public Category resolve(CategoryRecord record, Workspace workspace) {
+    public Category resolve(CategoryRecord record, Long workspaceId) {
         if (record == null) {
-            return this.resolveAndEnsureInWorkspace(categoryAddService.getDefaultCategory(), workspace);
+            return this.resolveAndEnsureInWorkspace(categoryAddService.getDefaultCategory(), workspaceId);
         }
-        return this.resolveAndEnsureInWorkspace(record.description(), workspace);
+        return this.resolveAndEnsureInWorkspace(record.description(), workspaceId);
     }
 
     public Category resolve(CategoryUpdateRecord record) {
@@ -29,13 +28,13 @@ public class CategoryResolver {
         return categoryAddService.addCategory(record.description());
     }
 
-    public Category resolve(String description, Workspace workspace) {
-        return this.resolveAndEnsureInWorkspace(description, workspace);
+    public Category resolve(String description, Long workspaceId) {
+        return this.resolveAndEnsureInWorkspace(description, workspaceId);
     }
 
-    private Category resolveAndEnsureInWorkspace(String description, Workspace workspace) {
+    private Category resolveAndEnsureInWorkspace(String description, Long workspaceId) {
         var category = categoryAddService.addCategory(description);
-        workspaceCategoryService.ensureCategoryInWorkspace(workspace, category);
+        workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category);
         return category;
     }
 }

@@ -1,14 +1,10 @@
 package api.m2.movements.identity.services.workspaces;
 
-import api.m2.movements.identity.entities.Workspace;
+import api.m2.movements.clients.IdentityClient;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
-import api.m2.movements.identity.mappers.WorkspaceMapper;
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail;
-import api.m2.movements.identity.records.workspaces.WorkspaceRecord;
-import api.m2.movements.identity.repositories.MembershipRepository;
-import api.m2.movements.identity.repositories.WorkspaceRepository;
 import api.m2.movements.movements.services.settings.UserSettingService;
 import api.m2.movements.identity.services.user.UserService;
 import jakarta.validation.constraints.NotNull;
@@ -16,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -24,60 +20,40 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceQueryService {
-    private final WorkspaceRepository workspaceRepository;
+    private final IdentityClient identityClient;
     private final UserService userService;
-    private final WorkspaceMapper workspaceMapper;
-    private final MembershipRepository membershipRepository;
     private final UserSettingService userSettingService;
 
-    @Transactional(readOnly = true)
-    public List<WorkspaceRecord> findAllWorkspacesOfLogInUser() {
-        var owner = userService.getAuthenticatedUser();
-        return workspaceRepository.findAllWorkspacesByMemberIdWithAllMembers(owner.getId())
-                .stream().map(workspaceMapper::toRecord)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public List<WorkspaceDetail> getAllWorkspaceDetails() {
-        var owner = userService.getAuthenticatedUser();
-        var defaultWorkspaceId = userSettingService.getDefaultWorkspaceId(owner).orElse(null);
-        return workspaceRepository.findWorkspaceSummariesByMemberUserId(owner.getId())
-                .stream()
-                .map(a -> new WorkspaceDetail(
-                        a.getAccountId(),
-                        a.getAccountName(),
-                        a.getMembersCount().intValue(),
-                        a.getAccountId().equals(defaultWorkspaceId)))
+        Long userId = userService.getAuthenticatedUser().id();
+        Long defaultWorkspaceId = userSettingService.getDefaultWorkspaceId(userId).orElse(null);
+        return identityClient.getWorkspaces(userId).stream()
+                .map(workspace -> new WorkspaceDetail(
+                        workspace.id(),
+                        workspace.name(),
+                        (int) workspace.membersCount(),
+                        workspace.id().equals(defaultWorkspaceId)))
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public boolean verifyWorkspaceExist(@NotNull String name, Long id) {
-        return workspaceRepository.findWorkspaceByNameAndOwnerId(name, id)
-                .isPresent();
-    }
-
-    @Transactional(readOnly = true)
-    public Workspace findWorkspaceByName(String name) {
+    public Long findWorkspaceIdByName(@NotNull String name) {
         if (StringUtils.isBlank(name)) {
             throw new BusinessException("El nombre del workspace no puede estar vacío");
         }
 
-        var owner = userService.getAuthenticatedUser();
-        return workspaceRepository.findWorkspaceByNameAndOwnerId(name, owner.getId())
+        Long userId = userService.getAuthenticatedUser().id();
+        return identityClient.getWorkspaces(userId).stream()
+                .filter(workspace -> name.equals(workspace.name()))
+                .map(workspace -> workspace.id())
+                .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("No existe workspace con ese nombre para el usuario"));
     }
 
-    @Transactional(readOnly = true)
-    public Workspace findWorkspaceById(Long workspaceId) {
-        return workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new EntityNotFoundException("No existe workspace con ese id"));
-    }
-
-    @Transactional(readOnly = true)
     public void verifyUserIsMemberOfWorkspace(Long workspaceId, Long userId) {
-        membershipRepository.findMember(workspaceId, userId)
-                .orElseThrow(() -> new PermissionDeniedException("No tienes permiso para operar sobre este recurso"));
+        try {
+            identityClient.verifyMembership(workspaceId, userId);
+        } catch (RestClientResponseException e) {
+            throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso");
+        }
     }
 }

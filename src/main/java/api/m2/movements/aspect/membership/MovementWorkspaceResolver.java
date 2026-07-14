@@ -25,6 +25,6 @@ public class MovementWorkspaceResolver implements WorkspaceIdResolver {
         return movementRepository.findById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Movimiento no encontrado: " + entityId))
-                .getWorkspace().getId();
+                .getWorkspaceId();
     }
 }

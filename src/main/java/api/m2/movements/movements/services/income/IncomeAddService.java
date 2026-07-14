@@ -1,7 +1,6 @@
 package api.m2.movements.movements.services.income;
 
 import api.m2.movements.annotations.RequiresMembership;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.DefaultCategory;
 import api.m2.movements.movements.enums.MembershipDomain;
 import api.m2.movements.movements.enums.MovementType;
@@ -39,8 +38,8 @@ public class IncomeAddService {
 
     @Transactional
     public void loadIncome(IncomeToAdd incomeToAdd) {
-        var workspace = workspaceContextService.getActiveWorkspace();
-        this.loadIncome(incomeToAdd, workspace);
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        this.loadIncome(incomeToAdd, workspaceId);
     }
 
     /**
@@ -48,11 +47,11 @@ public class IncomeAddService {
      * Usado por el onboarding donde el usuario aún no tiene DEFAULT_WORKSPACE configurado.
      */
     @Transactional
-    public void loadIncome(IncomeToAdd incomeToAdd, Workspace workspace) {
+    public void loadIncome(IncomeToAdd incomeToAdd, Long workspaceId) {
         var income = incomeMapper.toEntity(incomeToAdd);
-        var user = userService.getAuthenticatedUser();
-        income.setUser(user);
-        income.setWorkspace(workspace);
+        var userId = userService.getAuthenticatedUser().id();
+        income.setUserId(userId);
+        income.setWorkspaceId(workspaceId);
         var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
         income.setCurrency(currency);
         var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
@@ -93,16 +92,16 @@ public class IncomeAddService {
     }
 
     @Transactional
-    public int generateRecurringIncomeForUser(User user) {
-        var incomes = incomeRepository.findAllByUserId(user.getId());
-        log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), user.getEmail());
+    public int generateRecurringIncomeForUser(Long userId) {
+        var incomes = incomeRepository.findAllByUserId(userId);
+        log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), userId);
 
         for (var income : incomes) {
             movementAddService.saveMovement(
                     this.buildIncomeMovement(income.getAmount(), income.getCurrency().getSymbol(),
                             income.getBank().getDescription(), "Ingreso recurrente"),
-                    income.getWorkspace(),
-                    income.getUser());
+                    income.getWorkspaceId(),
+                    income.getUserId());
         }
 
         return incomes.size();

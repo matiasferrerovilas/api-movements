@@ -14,7 +14,7 @@ public interface WorkspaceCategoryRepository extends JpaRepository<WorkspaceCate
 
     @Query("SELECT wc FROM WorkspaceCategory wc "
             + "JOIN FETCH wc.category "
-            + "WHERE wc.workspace.id = :workspaceId AND wc.isActive = true")
+            + "WHERE wc.workspaceId = :workspaceId AND wc.isActive = true")
     List<WorkspaceCategory> findByWorkspaceIdAndIsActiveTrue(@Param("workspaceId") Long workspaceId);
 
     Optional<WorkspaceCategory> findByWorkspaceIdAndCategoryId(Long workspaceId, Long categoryId);

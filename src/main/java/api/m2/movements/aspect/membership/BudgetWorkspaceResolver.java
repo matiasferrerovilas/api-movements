@@ -25,6 +25,6 @@ public class BudgetWorkspaceResolver implements WorkspaceIdResolver {
         return budgetRepository.findById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Presupuesto no encontrado: " + entityId))
-                .getWorkspace().getId();
+                .getWorkspaceId();
     }
 }

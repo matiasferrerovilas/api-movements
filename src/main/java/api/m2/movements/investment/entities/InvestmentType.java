@@ -1,18 +1,14 @@
 package api.m2.movements.investment.entities;
 
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.investment.enums.InvestmentCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +27,6 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
-@ToString(exclude = {"workspace"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
@@ -58,9 +53,8 @@ public class InvestmentType {
     @Column(nullable = false, length = 20)
     private InvestmentCategory category;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

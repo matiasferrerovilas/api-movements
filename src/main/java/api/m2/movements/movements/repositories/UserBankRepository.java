@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface UserBankRepository extends JpaRepository<UserBank, Long> {
 
-    @Query("SELECT ub FROM UserBank ub JOIN FETCH ub.bank WHERE ub.user.id = :userId")
+    @Query("SELECT ub FROM UserBank ub JOIN FETCH ub.bank WHERE ub.userId = :userId")
     List<UserBank> findByUserId(@Param("userId") Long userId);
 
     @Modifying

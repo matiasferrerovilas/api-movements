@@ -16,9 +16,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
        SELECT DISTINCT s
        FROM Subscription s
        JOIN FETCH s.currency c
-       JOIN FETCH s.workspace w
-       LEFT JOIN FETCH s.owner
-       WHERE w.id = :workspaceId
+       WHERE s.workspaceId = :workspaceId
          AND (:symbols IS NULL OR c.symbol IN :symbols)
          AND (:lastPayment IS NULL OR s.lastPayment = :lastPayment)
 """)

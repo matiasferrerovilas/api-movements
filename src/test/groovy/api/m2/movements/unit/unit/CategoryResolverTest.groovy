@@ -1,7 +1,6 @@
 package api.m2.movements.unit.unit
 
 import api.m2.movements.movements.entities.commons.Category
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.records.categories.CategoryRecord
 import api.m2.movements.movements.services.category.CategoryAddService
 import api.m2.movements.movements.services.category.CategoryResolver
@@ -24,50 +23,50 @@ class CategoryResolverTest extends Specification {
     def "resolve - should add category when record is null"() {
         given:
         def defaultCategory = "Default Category"
-        def workspace = Stub(Workspace) { getId() >> 1L }
+        def workspaceId = 1L
         def category = Stub(Category) { getId() >> 1L }
 
         categoryAddService.getDefaultCategory() >> defaultCategory
         categoryAddService.addCategory(defaultCategory) >> category
 
         when:
-        def result = service.resolve(null as CategoryRecord, workspace)
+        def result = service.resolve(null as CategoryRecord, workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspace, category)
+        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
         result == category
     }
 
     def "resolve - should add category when record is not null"() {
         given:
         def description = "Test Category"
-        def workspace = Stub(Workspace) { getId() >> 1L }
+        def workspaceId = 1L
         def record = new CategoryRecord(1L, description, true, true, null, null)
         def category = Stub(Category) { getId() >> 1L }
 
         categoryAddService.addCategory(description) >> category
 
         when:
-        def result = service.resolve(record, workspace)
+        def result = service.resolve(record, workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspace, category)
+        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
         result == category
     }
 
     def "resolve - should add category when description is provided"() {
         given:
         def description = "Test Category"
-        def workspace = Stub(Workspace) { getId() >> 1L }
+        def workspaceId = 1L
         def category = Stub(Category) { getId() >> 1L }
 
         categoryAddService.addCategory(description) >> category
 
         when:
-        def result = service.resolve(description, workspace)
+        def result = service.resolve(description, workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspace, category)
+        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
         result == category
     }
 }

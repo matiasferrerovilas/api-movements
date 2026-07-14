@@ -32,7 +32,7 @@ public class BudgetQueryService {
 
         return budgets.stream()
                 .map(budget -> {
-                    BigDecimal spent = this.resolveSpent(budget.getWorkspace().getId(),
+                    BigDecimal spent = this.resolveSpent(budget.getWorkspaceId(),
                             budget.getCategory() == null ? null : budget.getCategory().getDescription(),
                             budget.getCurrency().getSymbol(),
                             year,

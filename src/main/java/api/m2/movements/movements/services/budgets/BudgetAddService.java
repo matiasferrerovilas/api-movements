@@ -29,12 +29,12 @@ public class BudgetAddService {
 
     @Transactional
     public void save(@Valid BudgetToAdd dto) {
-        var workspace = workspaceContextService.getActiveWorkspace();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var budget = budgetMapper.toEntity(dto, categoryRepository, currencyRepository);
-        budget.setWorkspace(workspace);
+        budget.setWorkspaceId(workspaceId);
         budgetRepository.save(budget);
         log.debug("Presupuesto creado: workspaceId={}, category={}, currency={}",
-                workspace.getId(), dto.category(), dto.currency());
+                workspaceId, dto.category(), dto.currency());
     }
 
     @Transactional

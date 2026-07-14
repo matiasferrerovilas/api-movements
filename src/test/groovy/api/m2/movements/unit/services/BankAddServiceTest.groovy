@@ -10,6 +10,7 @@ import api.m2.movements.movements.repositories.BankRepository
 import api.m2.movements.movements.repositories.UserBankRepository
 import api.m2.movements.movements.services.banks.BankAddService
 import api.m2.movements.movements.services.settings.UserSettingService
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
@@ -30,10 +31,9 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should find existing bank and associate it to user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(10L).description("GALICIA").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> false
         userBankRepository.findByUserId(1L) >> [Stub(UserBank), Stub(UserBank)]
 
@@ -49,10 +49,9 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should create bank if it does not exist and associate it to user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def savedBank = Bank.builder().id(99L).description("BANCO NACION").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         bankRepository.findByDescription("BANCO NACION") >> Optional.empty()
         userBankRepository.existsByUserIdAndBankId(1L, 99L) >> false
         userBankRepository.findByUserId(1L) >> [Stub(UserBank), Stub(UserBank)]
@@ -68,10 +67,9 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should sanitize description (trim and uppercase) before lookup"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(2L).description("BBVA").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 2L) >> false
         userBankRepository.findByUserId(1L) >> [Stub(UserBank)]
 
@@ -85,10 +83,9 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should not duplicate association if user already has the bank"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(10L).description("GALICIA").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> [Stub(UserBank)]
@@ -103,11 +100,10 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should set bank as default when it is the only bank for user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(10L).description("GALICIA").build()
         def userBank = Stub(UserBank) { getBank() >> bank }
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> false
         userBankRepository.findByUserId(1L) >> [userBank]
@@ -117,15 +113,14 @@ class BankAddServiceTest extends Specification {
 
         then:
         1 * userBankRepository.save(_ as UserBank)
-        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 10L)
+        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_BANK, 10L)
     }
 
     def "addBankToUser - should NOT set as default when user already has other banks"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(10L).description("GALICIA").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> false
         userBankRepository.findByUserId(1L) >> [Stub(UserBank), Stub(UserBank)]
@@ -140,10 +135,9 @@ class BankAddServiceTest extends Specification {
 
     def "addBankToUser - should not query banks when bank already associated"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def bank = Bank.builder().id(10L).description("GALICIA").build()
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> [Stub(UserBank)]
@@ -158,9 +152,7 @@ class BankAddServiceTest extends Specification {
 
     def "removeBankFromUser - should delete association when bank exists for user"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> [Stub(UserBank), Stub(UserBank), Stub(UserBank)]
 
@@ -173,9 +165,7 @@ class BankAddServiceTest extends Specification {
 
     def "removeBankFromUser - should throw EntityNotFoundException when bank is not in user list"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 99L) >> false
 
         when:
@@ -188,11 +178,10 @@ class BankAddServiceTest extends Specification {
 
     def "removeBankFromUser - should set remaining bank as default when only one left"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
         def remainingBank = Bank.builder().id(99L).description("BBVA").build()
         def userBank = Stub(UserBank) { getBank() >> remainingBank }
 
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> [userBank]
 
@@ -201,15 +190,13 @@ class BankAddServiceTest extends Specification {
 
         then:
         1 * userBankRepository.deleteByUserIdAndBankId(1L, 10L)
-        1 * userSettingService.upsertForUser(user, UserSettingKey.DEFAULT_BANK, 99L)
+        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_BANK, 99L)
         0 * userSettingService.deleteByKey(_)
     }
 
     def "removeBankFromUser - should NOT change default when multiple banks remain"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> [Stub(UserBank), Stub(UserBank), Stub(UserBank)]
 
@@ -224,9 +211,7 @@ class BankAddServiceTest extends Specification {
 
     def "removeBankFromUser - should clear DEFAULT_BANK setting when no banks remain"() {
         given:
-        def user = Stub(User) { getId() >> 1L }
-
-        userService.getAuthenticatedUser() >> user
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userBankRepository.existsByUserIdAndBankId(1L, 10L) >> true
         userBankRepository.findByUserId(1L) >> []
 

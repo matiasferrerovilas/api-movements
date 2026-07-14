@@ -2,7 +2,6 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.SubscriptionWorkspaceResolver
 import api.m2.movements.movements.entities.movements.Subscription
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.SubscriptionRepository
@@ -31,8 +30,7 @@ class SubscriptionWorkspaceResolverTest extends Specification {
 
     def "resolveWorkspaceId - should return workspace id when subscription exists"() {
         given:
-        def workspace = Stub(Workspace) { getId() >> 33L }
-        def subscription = Stub(Subscription) { getWorkspace() >> workspace }
+        def subscription = Stub(Subscription) { getWorkspaceId() >> 33L }
         subscriptionRepository.findById(30L) >> Optional.of(subscription)
 
         when:

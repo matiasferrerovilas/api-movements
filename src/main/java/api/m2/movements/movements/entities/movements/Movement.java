@@ -3,7 +3,6 @@ package api.m2.movements.movements.entities.movements;
 import api.m2.movements.movements.entities.commons.Bank;
 import api.m2.movements.movements.entities.commons.Category;
 import api.m2.movements.movements.entities.commons.Currency;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.movements.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,7 +38,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
-@ToString(exclude = {"category", "currency", "owner", "workspace", "bank"})
+@ToString(exclude = {"category", "currency", "bank"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
@@ -66,13 +65,11 @@ public class Movement {
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User owner;
+    @Column(name = "user_id")
+    private Long ownerId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bank_id")

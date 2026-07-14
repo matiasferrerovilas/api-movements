@@ -25,6 +25,6 @@ public class IncomeWorkspaceResolver implements WorkspaceIdResolver {
         return incomeRepository.findById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Ingreso no encontrado: " + entityId))
-                .getWorkspace().getId();
+                .getWorkspaceId();
     }
 }

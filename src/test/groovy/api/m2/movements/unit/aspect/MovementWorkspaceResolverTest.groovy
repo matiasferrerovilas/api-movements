@@ -2,7 +2,6 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.MovementWorkspaceResolver
 import api.m2.movements.movements.entities.movements.Movement
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.MovementRepository
@@ -31,8 +30,7 @@ class MovementWorkspaceResolverTest extends Specification {
 
     def "resolveWorkspaceId - should return workspace id when movement exists"() {
         given:
-        def workspace = Stub(Workspace) { getId() >> 42L }
-        def movement = Stub(Movement) { getWorkspace() >> workspace }
+        def movement = Stub(Movement) { getWorkspaceId() >> 42L }
         movementRepository.findById(10L) >> Optional.of(movement)
 
         when:

@@ -35,14 +35,14 @@ public class CalculateBalanceService {
 
     @Transactional(readOnly = true)
     public Map<BalanceEnum, BigDecimal> getBalance(BalanceFilterRecord balanceFilterRecord) {
-        var user = userService.getAuthenticatedUser();
+        var userId = userService.getAuthenticatedUser().id();
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var currencies = currencyRepository.findAllBySymbol(balanceFilterRecord.currencies());
 
         var ingresos = movementRepository.getBalanceByFilters(
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
-                user.getEmail(),
+                userId,
                 List.of(MovementType.INGRESO.toString()),
                 List.of(workspaceId.intValue()),
                 currencies);
@@ -50,7 +50,7 @@ public class CalculateBalanceService {
         var movements = movementRepository.getBalanceByFilters(
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
-                user.getEmail(),
+                userId,
                 List.of(MovementType.DEBITO.toString()),
                 List.of(workspaceId.intValue()),
                 currencies);
@@ -64,20 +64,18 @@ public class CalculateBalanceService {
 
     @Transactional(readOnly = true)
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(BalanceFilterRecord balanceFilterRecord) {
-        var user = userService.getAuthenticatedUser();
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
         return movementRepository.getBalanceWithCategoryByYear(
                 balanceFilterRecord.startDate().getYear(),
                 balanceFilterRecord.startDate().getMonthValue(),
                 List.of(workspaceId.intValue()),
-                balanceFilterRecord.currencies(),
-                user.getEmail());
+                balanceFilterRecord.currencies());
     }
 
     @Transactional(readOnly = true)
     public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
-        var user = userService.getAuthenticatedUser();
-        return movementRepository.getBalanceByYearAndGroup(year, month, user.getEmail());
+        var userId = userService.getAuthenticatedUser().id();
+        return movementRepository.getBalanceByYearAndGroup(year, month, userId);
     }
 
     @Transactional(readOnly = true)

@@ -2,7 +2,6 @@ package api.m2.movements.unit.aspect
 
 import api.m2.movements.aspect.membership.BudgetWorkspaceResolver
 import api.m2.movements.movements.entities.Budget
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.repositories.BudgetRepository
@@ -31,8 +30,7 @@ class BudgetWorkspaceResolverTest extends Specification {
 
     def "resolveWorkspaceId - should return workspace id when budget exists"() {
         given:
-        def workspace = Stub(Workspace) { getId() >> 55L }
-        def budget = Stub(Budget) { getWorkspace() >> workspace }
+        def budget = Stub(Budget) { getWorkspaceId() >> 55L }
         budgetRepository.findById(40L) >> Optional.of(budget)
 
         when:

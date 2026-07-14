@@ -1,6 +1,5 @@
 package api.m2.movements.unit.aspect
 
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.aspect.InvestmentWorkspaceResolver
@@ -32,8 +31,7 @@ class InvestmentWorkspaceResolverTest extends Specification {
 
     def "resolveWorkspaceId - should return workspace id when investment exists"() {
         given:
-        def workspace = Stub(Workspace) { getId() >> 42L }
-        def investment = Stub(Investment) { getWorkspace() >> workspace }
+        def investment = Stub(Investment) { getWorkspaceId() >> 42L }
         investmentRepository.findById(10L) >> Optional.of(investment)
 
         when:

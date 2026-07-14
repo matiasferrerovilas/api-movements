@@ -4,20 +4,17 @@ import api.m2.movements.movements.entities.commons.Category
 import api.m2.movements.movements.entities.commons.Currency
 
 import api.m2.movements.movements.entities.integrity.UserSetting
-import api.m2.movements.identity.entities.Workspace
-import api.m2.movements.identity.entities.WorkspaceMember
 import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.movements.enums.UserType
-import api.m2.movements.movements.enums.WorkspaceRole
 import api.m2.movements.movements.repositories.CategoryRepository
 import api.m2.movements.movements.repositories.CurrencyRepository
-import api.m2.movements.identity.repositories.MembershipRepository
 
 import api.m2.movements.movements.repositories.UserSettingRepository
-import api.m2.movements.identity.repositories.WorkspaceRepository
 import api.m2.movements.movements.services.currencies.ExchangeRateResolver
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import groovy.json.JsonOutput
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -32,6 +29,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.RequestPostProcessor
 import org.springframework.transaction.annotation.Transactional
@@ -48,6 +46,8 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*
+
 /**
  * Clase base abstracta para tests de integración E2E con MockMvc.
  * Configura:
@@ -56,12 +56,25 @@ import java.time.LocalDate
  * - Liquibase migrations
  * - JWT mock authentication
  * - Rollback automático después de cada test
+ *
+ * User/Workspace/membresías ahora viven en api-identity: en vez de mockear la
+ * interfaz IdentityClient, se levanta un WireMockServer y se apunta
+ * identity.base-url ahí. Así el RestClient/HttpServiceProxyFactory real (URLs,
+ * headers, (de)serialización JSON) queda ejercitado en los tests de
+ * integración, no solo el contrato Java del cliente.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Testcontainers
 @Transactional
 @Import(TestMockConfig)
+// RabbitTemplate y ExchangeRateResolver no son llamadas HTTP (AMQP el primero,
+// el segundo se simplifica para evitar acoplar el cache de tipo de cambio a
+// WireMock) así que siguen mockeados como bean. Spring Boot no permite bean
+// overriding por defecto: debe ser un @TestPropertySource (no
+// @DynamicPropertySource) para que también aplique durante el procesamiento
+// AOT de tests (processTestAot).
+@TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 abstract class BaseControllerIntegrationTest extends Specification {
 
     @TestConfiguration
@@ -82,6 +95,14 @@ abstract class BaseControllerIntegrationTest extends Specification {
                 }
             }
         }
+    }
+
+    @Shared
+    static WireMockServer identityMock
+
+    static {
+        identityMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
+        identityMock.start()
     }
 
     @Container
@@ -119,19 +140,11 @@ abstract class BaseControllerIntegrationTest extends Specification {
                         "org.springframework.boot.autoconfigure.amqp.RabbitStreamTemplateAutoConfiguration")
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> "https://test-issuer.local/realms/test")
         registry.add("keycloak.auth-server-url", () -> "https://test-issuer.local")
+        registry.add("identity.base-url", () -> "http://localhost:${identityMock.port()}".toString())
     }
 
     @Autowired
     protected MockMvc mockMvc
-
-    @Autowired
-    protected UserRepository userRepository
-
-    @Autowired
-    protected WorkspaceRepository workspaceRepository
-
-    @Autowired
-    protected MembershipRepository membershipRepository
 
     @Autowired
     protected CategoryRepository categoryRepository
@@ -147,36 +160,51 @@ abstract class BaseControllerIntegrationTest extends Specification {
     protected ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
 
     // Test fixtures
-    protected User testUser
-    protected Workspace testWorkspace
+    protected static final String TEST_USER_EMAIL = "integration-test@test.com"
+    protected Long testUserId = 1L
+    protected Long testWorkspaceId = 1L
     protected Currency testCurrency
 
     def setup() {
-        // Create test user
-        testUser = userRepository.save(User.builder()
-                .email("integration-test@test.com")
-                .isFirstLogin(false)
-                .userType(UserType.PERSONAL)
-                .build())
+        identityMock.resetAll()
 
-        // Create test workspace
-        testWorkspace = workspaceRepository.save(Workspace.builder()
-                .name("Integration Test Workspace")
-                .owner(testUser)
-                .build())
+        // User/Workspace/membresía ahora se resuelven vía IdentityClient (api-identity),
+        // stubeado acá con WireMock. Tests concretos pueden registrar un stubFor(...)
+        // más específico en su propio "given:" para pisar estos defaults.
+        stubFor(get(urlPathEqualTo("/v1/users/by-email"))
+                .withQueryParam("email", equalTo(TEST_USER_EMAIL))
+                .willReturn(okJson(JsonOutput.toJson([givenName: "Integration", id: testUserId]))))
 
-        // Create membership
-        membershipRepository.save(WorkspaceMember.builder()
-                .user(testUser)
-                .workspace(testWorkspace)
-                .role(WorkspaceRole.OWNER)
-                .build())
+        stubFor(get(urlPathMatching("/v1/workspaces/\\d+/members/\\d+"))
+                .willReturn(aResponse().withStatus(200)))
 
-        // Set default workspace for user
+        stubFor(post(urlPathEqualTo("/v1/users"))
+                .willReturn(okJson(JsonOutput.toJson([
+                        id          : testUserId,
+                        email       : TEST_USER_EMAIL,
+                        givenName   : "Integration",
+                        familyName  : "Test",
+                        isFirstLogin: true,
+                        userType    : "PERSONAL"
+                ]))))
+
+        stubFor(patch(urlPathMatching("/v1/users/\\d+/first-login"))
+                .willReturn(aResponse().withStatus(200)))
+
+        stubFor(post(urlPathMatching("/v1/users/\\d+/workspaces"))
+                .willReturn(okJson(JsonOutput.toJson([[id: testWorkspaceId, description: "DEFAULT"]]))))
+
+        stubFor(get(urlPathMatching("/v1/users/\\d+/workspaces"))
+                .willReturn(okJson(JsonOutput.toJson([]))))
+
+        stubFor(delete(urlPathMatching("/v1/workspaces/\\d+/members/\\d+"))
+                .willReturn(aResponse().withStatus(204)))
+
+        // Set default workspace for user (sigue siendo local)
         userSettingRepository.save(UserSetting.builder()
-                .user(testUser)
+                .userId(testUserId)
                 .settingKey(UserSettingKey.DEFAULT_WORKSPACE)
-                .settingValue(testWorkspace.id)
+                .settingValue(testWorkspaceId)
                 .build())
 
         // Get or create test currency
@@ -194,7 +222,7 @@ abstract class BaseControllerIntegrationTest extends Specification {
      * Simula la autenticación de Keycloak con claims típicos.
      */
     protected RequestPostProcessor jwtAuth() {
-        return jwtAuth(testUser.email, "550e8400-e29b-41d4-a716-446655440000", ["ROLE_ADMIN"])
+        return jwtAuth(TEST_USER_EMAIL, "550e8400-e29b-41d4-a716-446655440000", ["ROLE_ADMIN"])
     }
 
     /**

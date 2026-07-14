@@ -2,7 +2,7 @@ package api.m2.movements.movements.records.balance;
 
 import java.math.BigDecimal;
 
-public record BalanceByGroup(String workspaceDescription,
+public record BalanceByGroup(Long workspaceId,
                              String currencySymbol,
                              Integer year,
                              Integer month,

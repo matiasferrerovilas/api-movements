@@ -14,11 +14,11 @@ import java.util.Optional;
 @Repository
 public interface UserSettingRepository extends JpaRepository<UserSetting, Long> {
 
-    Optional<UserSetting> findByUserAndSettingKey(User user, UserSettingKey settingKey);
+    Optional<UserSetting> findByUserIdAndSettingKey(Long userId, UserSettingKey settingKey);
 
-    List<UserSetting> findAllByUser(User user);
+    List<UserSetting> findAllByUserId(Long userId);
 
-    void deleteByUserAndSettingKey(User user, UserSettingKey settingKey);
+    void deleteByUserIdAndSettingKey(Long userId, UserSettingKey settingKey);
 
     @Modifying
     @Query(value = """
@@ -31,11 +31,9 @@ public interface UserSettingRepository extends JpaRepository<UserSetting, Long> 
                        @Param("settingValue") Long settingValue);
 
     @Query("""
-            SELECT u FROM User u
-            JOIN UserSetting s ON s.user = u
+            SELECT s.userId FROM UserSetting s
             WHERE s.settingKey = :key
             AND s.settingValue = 1
-            AND u.isFirstLogin = false
             """)
-    List<User> findUsersWithSettingEnabled(@Param("key") UserSettingKey key);
+    List<Long> findUserIdsWithSettingEnabled(@Param("key") UserSettingKey key);
 }

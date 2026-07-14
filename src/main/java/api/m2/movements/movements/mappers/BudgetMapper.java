@@ -23,12 +23,11 @@ public interface BudgetMapper {
 
     @Mapping(target = "category", source = "category", qualifiedByName = "mapCategory")
     @Mapping(target = "currency", source = "currency", qualifiedByName = "mapCurrency")
-    @Mapping(target = "workspace", ignore = true)
+    @Mapping(target = "workspaceId", ignore = true)
     Budget toEntity(BudgetToAdd budgetToAdd,
                     @Context CategoryRepository categoryRepository,
                     @Context CurrencyRepository currencyRepository);
 
-    @Mapping(target = "workspaceId", expression = "java(budget.getWorkspace().getId())")
     @Mapping(target = "spent", expression = "java(java.math.BigDecimal.ZERO)")
     @Mapping(target = "percentage", expression = "java(java.math.BigDecimal.ZERO)")
     BudgetRecord toRecord(Budget budget);
@@ -57,7 +56,7 @@ public interface BudgetMapper {
                 : spent.multiply(new BigDecimal("100")).divide(budget.getAmount(), 2, java.math.RoundingMode.HALF_UP);
         return new BudgetRecord(
                 budget.getId(),
-                budget.getWorkspace().getId(),
+                budget.getWorkspaceId(),
                 budget.getCategory() == null ? null : new CategoryRecord(
                         budget.getCategory().getId(),
                         budget.getCategory().getDescription(),

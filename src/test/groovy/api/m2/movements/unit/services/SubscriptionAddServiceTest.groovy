@@ -3,7 +3,6 @@ package api.m2.movements.unit.services
 import api.m2.movements.movements.entities.commons.Currency
 import api.m2.movements.movements.entities.movements.Subscription
 
-import api.m2.movements.identity.entities.Workspace
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.mappers.SubscriptionMapper
 import api.m2.movements.movements.records.services.ServiceDeletedEvent
@@ -48,11 +47,9 @@ class SubscriptionAddServiceTest extends Specification {
     }
 
     def buildSubscription(Long workspaceId, LocalDate lastPayment = null) {
-        def workspace = Stub(Workspace) { getId() >> workspaceId; getName() >> "Mi cuenta" }
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
-        def owner = Stub(User)
         return new Subscription(id: 1L, description: "Netflix", amount: new BigDecimal("10.00"),
-                lastPayment: lastPayment, workspace: workspace, currency: currency, owner: owner)
+                lastPayment: lastPayment, workspaceId: workspaceId, currency: currency, ownerId: 1L)
     }
 
     // --- paySubscriptionById ---

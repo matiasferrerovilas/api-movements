@@ -7,6 +7,7 @@ import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
 import api.m2.movements.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.identity.records.users.UserBaseRecord
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
 import api.m2.movements.identity.services.user.UserService
 import org.aspectj.lang.JoinPoint
@@ -56,7 +57,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for MOVEMENT domain"() {
         given:
-        def user = Stub(User) { getId() >> 42L }
+        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
@@ -72,7 +73,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should use idParamIndex=1 to extract entity id"() {
         given:
-        def user = Stub(User) { getId() >> 7L }
+        def user = new UserBaseRecord("User", 7L)
         def ann = annotation(MembershipDomain.MOVEMENT, 1)
         def joinPoint = buildJoinPoint(new Object(), 99L)
 
@@ -105,7 +106,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (MOVEMENT)"() {
         given:
-        def user = Stub(User) { getId() >> 99L }
+        def user = new UserBaseRecord("User", 99L)
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
@@ -126,7 +127,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for INCOME domain"() {
         given:
-        def user = Stub(User) { getId() >> 42L }
+        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.INCOME)
         def joinPoint = buildJoinPoint(20L)
 
@@ -161,7 +162,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for SUBSCRIPTION domain"() {
         given:
-        def user = Stub(User) { getId() >> 42L }
+        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
@@ -194,7 +195,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (SUBSCRIPTION)"() {
         given:
-        def user = Stub(User) { getId() >> 99L }
+        def user = new UserBaseRecord("User", 99L)
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
@@ -215,7 +216,7 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for BUDGET domain"() {
         given:
-        def user = Stub(User) { getId() >> 42L }
+        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.BUDGET)
         def joinPoint = buildJoinPoint(40L)
 

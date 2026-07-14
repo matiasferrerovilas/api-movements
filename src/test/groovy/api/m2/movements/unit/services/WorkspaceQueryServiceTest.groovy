@@ -1,49 +1,37 @@
 package api.m2.movements.unit.services
 
-
-import api.m2.movements.identity.entities.WorkspaceMember
+import api.m2.movements.clients.IdentityClient
+import api.m2.movements.exceptions.BusinessException
+import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.identity.mappers.WorkspaceMapper
-import api.m2.movements.identity.mappers.WorkspaceMapperImpl
-import api.m2.movements.identity.mappers.UserMapper
-import api.m2.movements.identity.projections.WorkspaceSummaryProjection
-import api.m2.movements.identity.records.workspaces.WorkspaceDetail
-import api.m2.movements.identity.repositories.MembershipRepository
-import api.m2.movements.identity.repositories.WorkspaceRepository
+import api.m2.movements.identity.records.users.UserBaseRecord
+import api.m2.movements.identity.records.workspaces.WorkspacesWithUser
 import api.m2.movements.movements.services.settings.UserSettingService
 import api.m2.movements.identity.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
-import org.mapstruct.factory.Mappers
-import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpClientErrorException
 import spock.lang.Specification
 
 class WorkspaceQueryServiceTest extends Specification {
 
-    WorkspaceRepository workspaceRepository = Mock(WorkspaceRepository)
+    IdentityClient identityClient = Mock(IdentityClient)
     UserService userService = Mock(UserService)
-    WorkspaceMapper workspaceMapper
-    MembershipRepository membershipRepository = Mock(MembershipRepository)
     UserSettingService userSettingService = Mock(UserSettingService)
 
     WorkspaceQueryService service
 
     def setup() {
-        UserMapper userMapper = Mappers.getMapper(UserMapper)
-        workspaceMapper = new WorkspaceMapperImpl()
-        ReflectionTestUtils.setField(workspaceMapper, "userMapper", userMapper)
-
         service = new WorkspaceQueryService(
-                workspaceRepository,
+                identityClient,
                 userService,
-                workspaceMapper,
-                membershipRepository,
                 userSettingService
         )
     }
 
-    def "verifyUserIsMemberOfWorkspace - should not throw when user is member of workspace"() {
+    def "verifyUserIsMemberOfWorkspace - should not throw when IdentityClient confirms membership"() {
         given:
-        membershipRepository.findMember(1L, 42L) >> Optional.of(Stub(WorkspaceMember))
+        identityClient.verifyMembership(1L, 42L) >> {}
 
         when:
         service.verifyUserIsMemberOfWorkspace(1L, 42L)
@@ -52,9 +40,11 @@ class WorkspaceQueryServiceTest extends Specification {
         noExceptionThrown()
     }
 
-    def "verifyUserIsMemberOfWorkspace - should throw PermissionDeniedException when user is not member"() {
+    def "verifyUserIsMemberOfWorkspace - should throw PermissionDeniedException when IdentityClient rejects membership"() {
         given:
-        membershipRepository.findMember(1L, 99L) >> Optional.empty()
+        identityClient.verifyMembership(1L, 99L) >> {
+            throw HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null)
+        }
 
         when:
         service.verifyUserIsMemberOfWorkspace(1L, 99L)
@@ -63,39 +53,17 @@ class WorkspaceQueryServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "verifyUserIsMemberOfWorkspace - should query with the exact workspaceId and userId provided"() {
-        given:
-        def workspaceId = 5L
-        def userId = 10L
-        membershipRepository.findMember(workspaceId, userId) >> Optional.of(Stub(WorkspaceMember))
-
-        when:
-        service.verifyUserIsMemberOfWorkspace(workspaceId, userId)
-
-        then:
-        1 * membershipRepository.findMember(5L, 10L) >> Optional.of(Stub(WorkspaceMember))
-    }
-
     def "getAllWorkspaceDetails - should mark workspace as default when it matches DEFAULT_WORKSPACE setting"() {
         given:
-        def owner = User.builder().id(1L).email("user@test.com").build()
-        def proj1 = Stub(WorkspaceSummaryProjection) {
-            getAccountId() >> 10L
-            getAccountName() >> "Hogar"
-            getMembersCount() >> 2L
-        }
-        def proj2 = Stub(WorkspaceSummaryProjection) {
-            getAccountId() >> 20L
-            getAccountName() >> "Viajes"
-            getMembersCount() >> 1L
-        }
-
-        userService.getAuthenticatedUser() >> owner
-        userSettingService.getDefaultWorkspaceId(owner) >> Optional.of(10L)
-        workspaceRepository.findWorkspaceSummariesByMemberUserId(1L) >> [proj1, proj2]
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingService.getDefaultWorkspaceId(1L) >> Optional.of(10L)
+        identityClient.getWorkspaces(1L) >> [
+                new WorkspacesWithUser(10L, "Hogar", 2L, "user@test.com"),
+                new WorkspacesWithUser(20L, "Viajes", 1L, "user@test.com"),
+        ]
 
         when:
-        List<WorkspaceDetail> result = service.getAllWorkspaceDetails()
+        def result = service.getAllWorkspaceDetails()
 
         then:
         result.size() == 2
@@ -109,22 +77,50 @@ class WorkspaceQueryServiceTest extends Specification {
 
     def "getAllWorkspaceDetails - should mark isDefault false when no DEFAULT_WORKSPACE setting exists"() {
         given:
-        def owner = User.builder().id(1L).email("user@test.com").build()
-        def proj = Stub(WorkspaceSummaryProjection) {
-            getAccountId() >> 10L
-            getAccountName() >> "Hogar"
-            getMembersCount() >> 1L
-        }
-
-        userService.getAuthenticatedUser() >> owner
-        userSettingService.getDefaultWorkspaceId(owner) >> Optional.empty()
-        workspaceRepository.findWorkspaceSummariesByMemberUserId(1L) >> [proj]
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userSettingService.getDefaultWorkspaceId(1L) >> Optional.empty()
+        identityClient.getWorkspaces(1L) >> [new WorkspacesWithUser(10L, "Hogar", 1L, "user@test.com")]
 
         when:
-        List<WorkspaceDetail> result = service.getAllWorkspaceDetails()
+        def result = service.getAllWorkspaceDetails()
 
         then:
         result.size() == 1
         result[0].isDefault() == false
+    }
+
+    def "findWorkspaceIdByName - should return matching workspace id"() {
+        given:
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        identityClient.getWorkspaces(1L) >> [
+                new WorkspacesWithUser(10L, "Hogar", 1L, "user@test.com"),
+                new WorkspacesWithUser(20L, "Viajes", 1L, "user@test.com"),
+        ]
+
+        when:
+        def result = service.findWorkspaceIdByName("Viajes")
+
+        then:
+        result == 20L
+    }
+
+    def "findWorkspaceIdByName - should throw BusinessException when name is blank"() {
+        when:
+        service.findWorkspaceIdByName("   ")
+
+        then:
+        thrown(BusinessException)
+    }
+
+    def "findWorkspaceIdByName - should throw EntityNotFoundException when no workspace matches"() {
+        given:
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        identityClient.getWorkspaces(1L) >> [new WorkspacesWithUser(10L, "Hogar", 1L, "user@test.com")]
+
+        when:
+        service.findWorkspaceIdByName("Inexistente")
+
+        then:
+        thrown(EntityNotFoundException)
     }
 }

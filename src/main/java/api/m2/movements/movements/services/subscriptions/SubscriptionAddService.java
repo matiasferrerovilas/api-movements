@@ -44,11 +44,11 @@ public class SubscriptionAddService {
 
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
-        var user = userService.getAuthenticatedUser();
-        var workspace = workspaceContextService.getActiveWorkspace();
+        var userId = userService.getAuthenticatedUser().id();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyRepository);
-        subscription.setOwner(user);
-        subscription.setWorkspace(workspace);
+        subscription.setOwnerId(userId);
+        subscription.setWorkspaceId(workspaceId);
 
         if (subscription.getIsPaid()) {
             this.publishPaidEvent(subscription);
@@ -105,8 +105,8 @@ public class SubscriptionAddService {
                         .orElseGet(() -> LocalDate.now(ZoneOffset.UTC)),
                 "Servicio Pagado " + subscription.getDescription(),
                 subscription.getCurrency().getSymbol(),
-                subscription.getOwner(),
-                subscription.getWorkspace()));
+                subscription.getOwnerId(),
+                subscription.getWorkspaceId()));
     }
 
     private void publishSyncEventIfPaid(Subscription subscription, UpdateSubscriptionRecord update) {
@@ -116,7 +116,7 @@ public class SubscriptionAddService {
         var oldLastPayment = subscription.getLastPayment();
         eventPublisher.publishEvent(new SubscriptionMovementSyncEvent(
                 subscription.getDescription(),
-                subscription.getWorkspace().getId(),
+                subscription.getWorkspaceId(),
                 oldLastPayment.getYear(),
                 oldLastPayment.getMonthValue(),
                 update.amount(),
@@ -126,7 +126,7 @@ public class SubscriptionAddService {
 
     private void updateWorkspaceIfPresent(Subscription subscription, String workspace) {
         if (!StringUtils.isEmpty(workspace)) {
-            subscription.setWorkspace(workspaceQueryService.findWorkspaceByName(workspace));
+            subscription.setWorkspaceId(workspaceQueryService.findWorkspaceIdByName(workspace));
         }
     }
 }

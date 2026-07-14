@@ -1,11 +1,8 @@
 package api.m2.movements.configuration;
 
 import api.m2.movements.constraints.CuotasValidator;
-import api.m2.movements.identity.records.invite.InvitationToWorkspaceRecord;
 import api.m2.movements.identity.records.users.UserBaseRecord;
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail;
-import api.m2.movements.identity.records.workspaces.WorkspaceMemberRecord;
-import api.m2.movements.identity.records.workspaces.WorkspaceRecord;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.records.InvestmentTypeRecord;
 import api.m2.movements.investment.services.valuation.YahooFinanceHttpClient;
@@ -18,6 +15,7 @@ import api.m2.movements.movements.records.movements.MovementRecord;
 import api.m2.movements.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.movements.records.movements.file.MovementFileRequest;
 import api.m2.movements.movements.records.services.SubscriptionRecord;
+import api.m2.movements.identity.records.workspaces.WorkspacesWithUser;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -43,10 +41,8 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             CurrencyRecord.class,
             AccountBaseRecord.class,
             UserBaseRecord.class,
-            InvitationToWorkspaceRecord.class,
-            WorkspaceRecord.class,
             WorkspaceDetail.class,
-            WorkspaceMemberRecord.class,
+            WorkspacesWithUser.class,
             InvestmentRecord.class,
             InvestmentTypeRecord.class,
             YahooFinanceHttpClient.YahooChartResponse.class,

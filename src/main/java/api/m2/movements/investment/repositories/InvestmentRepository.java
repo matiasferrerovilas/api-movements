@@ -15,9 +15,7 @@ public interface InvestmentRepository extends JpaRepository<Investment, Long> {
             SELECT i FROM Investment i
             JOIN FETCH i.currency
             JOIN FETCH i.investmentType
-            JOIN FETCH i.workspace
-            LEFT JOIN FETCH i.owner
-            WHERE i.workspace.id = :workspaceId
+            WHERE i.workspaceId = :workspaceId
             ORDER BY i.startDate DESC
             """)
     List<Investment> findByWorkspaceId(@Param("workspaceId") Long workspaceId);

@@ -1,7 +1,6 @@
 package api.m2.movements.movements.services.movements;
 
 import api.m2.movements.movements.entities.movements.Movement;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.movements.mappers.MovementMapper;
 import api.m2.movements.movements.records.movements.ExpenseToUpdate;
@@ -29,22 +28,22 @@ public class MovementFactory {
     private final ExchangeRateResolver exchangeRateResolver;
 
     public Movement create(MovementToAdd dto) {
-        var workspace = workspaceContextService.getActiveWorkspace();
-        return this.create(dto, workspace);
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        return this.create(dto, workspaceId);
     }
 
-    public Movement create(MovementToAdd dto, Workspace workspace) {
-        return this.create(dto, workspace, userService.getAuthenticatedUser());
+    public Movement create(MovementToAdd dto, Long workspaceId) {
+        return this.create(dto, workspaceId, userService.getAuthenticatedUser().id());
     }
 
-    public Movement create(MovementToAdd dto, Workspace workspace, User owner) {
+    public Movement create(MovementToAdd dto, Long workspaceId, Long ownerId) {
         var movement = movementMapper.toEntity(dto);
 
-        movement.setWorkspace(workspace);
-        movement.setCategory(categoryResolver.resolve(dto.category(), workspace));
+        movement.setWorkspaceId(workspaceId);
+        movement.setCategory(categoryResolver.resolve(dto.category(), workspaceId));
         var currency = currencyResolver.resolve(dto.currency());
         movement.setCurrency(currency);
-        movement.setOwner(owner);
+        movement.setOwnerId(ownerId);
 
         if (dto.bank() != null) {
             var bank = bankRepository.findByDescription(dto.bank())

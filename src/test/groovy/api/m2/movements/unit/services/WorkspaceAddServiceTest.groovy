@@ -1,38 +1,29 @@
 package api.m2.movements.unit.services
 
-
-import api.m2.movements.identity.entities.Workspace
-import api.m2.movements.identity.entities.WorkspaceMember
-import api.m2.movements.movements.enums.WorkspaceRole
+import api.m2.movements.clients.IdentityClient
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.identity.mappers.WorkspaceMapper
+import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.movements.enums.UserSettingKey
-import api.m2.movements.identity.AddWorkspaceRecord
+import api.m2.movements.movements.records.workspaces.AddWorkspaceRecord
+import api.m2.movements.movements.records.workspaces.WorkspaceAdded
 import api.m2.movements.identity.records.workspaces.WorkspaceDetail
-import api.m2.movements.identity.records.workspaces.WorkspaceLeftEvent
-import api.m2.movements.identity.records.workspaces.WorkspaceRecord
 import api.m2.movements.identity.records.users.UserBaseRecord
-import api.m2.movements.identity.repositories.MembershipRepository
-import api.m2.movements.identity.repositories.WorkspaceRepository
 import api.m2.movements.identity.services.WorkspacePublishServiceWebSocket
 import api.m2.movements.movements.services.settings.UserSettingService
 import api.m2.movements.identity.services.user.UserService
 import api.m2.movements.identity.services.workspaces.WorkspaceAddService
 import api.m2.movements.identity.services.workspaces.WorkspaceQueryService
-import org.springframework.context.ApplicationEventPublisher
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpClientErrorException
 import spock.lang.Specification
 
 class WorkspaceAddServiceTest extends Specification {
 
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
-    WorkspaceRepository workspaceRepository = Mock(WorkspaceRepository)
-    MembershipRepository membershipRepository = Mock(MembershipRepository)
     WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket = Mock(WorkspacePublishServiceWebSocket)
-    WorkspaceMapper workspaceMapper = Mock(WorkspaceMapper)
     UserSettingService userSettingService = Mock(UserSettingService)
-    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+    IdentityClient identityClient = Mock(IdentityClient)
 
     WorkspaceAddService service
 
@@ -40,35 +31,24 @@ class WorkspaceAddServiceTest extends Specification {
         service = new WorkspaceAddService(
                 workspaceQueryService,
                 userService,
-                workspaceRepository,
-                membershipRepository,
                 workspacePublishServiceWebSocket,
-                workspaceMapper,
                 userSettingService,
-                eventPublisher
+                identityClient
         )
     }
 
-    def "createWorkspace - should save workspace and publish WorkspaceDetail via publishWorkspaceMembershipUpdated"() {
+    // --- createWorkspace ---
+
+    def "createWorkspace - should delegate to IdentityClient"() {
         given:
         def record = new AddWorkspaceRecord("Viajes")
-        def owner = User.builder().id(1L).email("user@test.com").build()
-        def savedWorkspace = Workspace.builder().id(10L).name("Viajes").owner(owner).build()
-
-        userService.getAuthenticatedUser() >> owner
-        userService.getCurrentKeycloakId() >> "keycloak-uuid-123"
-        workspaceQueryService.verifyWorkspaceExist("Viajes", 1L) >> false
-        workspaceRepository.save(_ as Workspace) >> savedWorkspace
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
 
         when:
         service.createWorkspace(record)
 
         then:
-        1 * workspaceRepository.save(_ as Workspace) >> savedWorkspace
-        1 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(
-                new WorkspaceDetail(10L, "Viajes", 1, false),
-                "keycloak-uuid-123"
-        )
+        1 * identityClient.createWorkspaces(1L, [record])
     }
 
     def "createWorkspace - should throw BusinessException when description is blank"() {
@@ -80,190 +60,114 @@ class WorkspaceAddServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
-        0 * workspaceRepository.save(_ as Workspace)
-        0 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(_ as WorkspaceDetail, _ as String)
+        0 * identityClient.createWorkspaces(_ as Long, _ as List)
     }
 
-    def "createWorkspace - should throw BusinessException when workspace already exists"() {
+    def "createWorkspace - should throw BusinessException when IdentityClient rejects the request"() {
         given:
         def record = new AddWorkspaceRecord("Hogar")
-        def owner = User.builder().id(2L).email("user@test.com").build()
-
-        userService.getAuthenticatedUser() >> owner
-        workspaceQueryService.verifyWorkspaceExist("Hogar", 2L) >> true
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
+        identityClient.createWorkspaces(2L, [record]) >> {
+            throw HttpClientErrorException.create(HttpStatus.CONFLICT, "Conflict", null, null, null)
+        }
 
         when:
         service.createWorkspace(record)
 
         then:
         thrown(BusinessException)
-        0 * workspaceRepository.save(_ as Workspace)
-        0 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(_ as WorkspaceDetail, _ as String)
     }
 
-    def "leaveWorkspace - should throw PermissionDeniedException when user is not a member"() {
-        given:
-        def user = User.builder().id(5L).email("john@test.com").build()
+    // --- leaveWorkspace ---
 
-        userService.getAuthenticatedUser() >> user
-        membershipRepository.findMember(99L, 5L) >> Optional.empty()
+    def "leaveWorkspace - should throw BusinessException when IdentityClient rejects the request"() {
+        given:
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 5L)
+        identityClient.leaveWorkspace(99L, 5L) >> {
+            throw HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null)
+        }
 
         when:
         service.leaveWorkspace(99L)
 
         then:
-        thrown(PermissionDeniedException)
-    }
-
-    def "leaveWorkspace - should throw PermissionDeniedException when owner tries to leave with other members"() {
-        given:
-        def user = User.builder().id(1L).email("owner@test.com").build()
-        def workspace = Workspace.builder().id(10L).name("Grupo").build()
-        def membership = Stub(WorkspaceMember) {
-            getRole() >> WorkspaceRole.OWNER
-            getWorkspace() >> workspace
-        }
-
-        userService.getAuthenticatedUser() >> user
-        membershipRepository.findMember(10L, 1L) >> Optional.of(membership)
-        membershipRepository.countByWorkspaceId(10L) >> 3L
-
-        when:
-        service.leaveWorkspace(10L)
-
-        then:
-        thrown(PermissionDeniedException)
-    }
-
-    def "leaveWorkspace - should deactivate workspace and publish event when owner leaves as sole member"() {
-        given:
-        def user = User.builder().id(1L).email("owner@test.com").build()
-        def workspace = Workspace.builder().id(10L).name("Solo").build()
-        def membership = Stub(WorkspaceMember) {
-            getRole() >> WorkspaceRole.OWNER
-            getWorkspace() >> workspace
-        }
-        def workspaceRecord = new WorkspaceRecord(10L, "Solo", new UserBaseRecord("Owner", 1L), [])
-
-        userService.getAuthenticatedUser() >> user
-        membershipRepository.findMember(10L, 1L) >> Optional.of(membership)
-        membershipRepository.countByWorkspaceId(10L) >> 1L
-        workspaceMapper.toRecord(workspace) >> workspaceRecord
-        userSettingService.getDefaultWorkspaceId(user) >> Optional.empty()
-
-        when:
-        service.leaveWorkspace(10L)
-
-        then:
-        workspace.isActive() == false
-        1 * workspaceRepository.save(workspace)
-        1 * membershipRepository.delete(membership)
-        0 * userSettingService.deleteByKey(_)
-        1 * eventPublisher.publishEvent(new WorkspaceLeftEvent(workspaceRecord))
-    }
-
-    def "leaveWorkspace - should delete membership and publish event for collaborator"() {
-        given:
-        def user = User.builder().id(2L).email("collab@test.com").build()
-        def workspace = Workspace.builder().id(10L).name("Grupo").build()
-        def membership = Stub(WorkspaceMember) {
-            getRole() >> WorkspaceRole.COLLABORATOR
-            getWorkspace() >> workspace
-        }
-        def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("Owner", 1L), [])
-
-        userService.getAuthenticatedUser() >> user
-        membershipRepository.findMember(10L, 2L) >> Optional.of(membership)
-        workspaceMapper.toRecord(workspace) >> workspaceRecord
-        userSettingService.getDefaultWorkspaceId(user) >> Optional.empty()
-
-        when:
-        service.leaveWorkspace(10L)
-
-        then:
-        0 * workspaceRepository.save(_ as Workspace)
-        1 * membershipRepository.delete(membership)
-        0 * userSettingService.deleteByKey(_)
-        1 * eventPublisher.publishEvent(new WorkspaceLeftEvent(workspaceRecord))
+        thrown(BusinessException)
     }
 
     def "leaveWorkspace - should clear DEFAULT_WORKSPACE setting when it points to the workspace being left"() {
         given:
-        def user = User.builder().id(2L).email("collab@test.com").build()
-        def workspace = Workspace.builder().id(10L).name("Grupo").build()
-        def membership = Stub(WorkspaceMember) {
-            getRole() >> WorkspaceRole.COLLABORATOR
-            getWorkspace() >> workspace
-        }
-        def workspaceRecord = new WorkspaceRecord(10L, "Grupo", new UserBaseRecord("Owner", 1L), [])
-
-        userService.getAuthenticatedUser() >> user
-        membershipRepository.findMember(10L, 2L) >> Optional.of(membership)
-        workspaceMapper.toRecord(workspace) >> workspaceRecord
-        userSettingService.getDefaultWorkspaceId(user) >> Optional.of(10L)
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
+        userSettingService.getDefaultWorkspaceId(2L) >> Optional.of(10L)
 
         when:
         service.leaveWorkspace(10L)
 
         then:
+        1 * identityClient.leaveWorkspace(10L, 2L)
         1 * userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE)
     }
 
-    def "addMemberToWorkspace - should publish MEMBERSHIP_UPDATED after member is saved"() {
+    def "leaveWorkspace - should not touch DEFAULT_WORKSPACE setting when it points elsewhere"() {
         given:
-        def owner = User.builder().id(1L).email("owner@test.com").build()
-        def workspace = Workspace.builder().id(20L).name("Familia").owner(owner).build()
-        def joiningUser = User.builder().id(2L).email("new@test.com").build()
-
-        userService.getAuthenticatedUser() >> joiningUser
-        membershipRepository.countByWorkspaceId(20L) >> 3L
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
+        userSettingService.getDefaultWorkspaceId(2L) >> Optional.of(20L)
 
         when:
-        service.addMemberToWorkspace(workspace)
+        service.leaveWorkspace(10L)
 
         then:
-        1 * membershipRepository.save(_ as WorkspaceMember)
-        1 * workspacePublishServiceWebSocket.publishMemberAdded(
-                new WorkspaceDetail(20L, "Familia", 3, false),
-                20L
-        )
+        1 * identityClient.leaveWorkspace(10L, 2L)
+        0 * userSettingService.deleteByKey(_)
     }
 
-    def "updateDefaultWorkspace - should upsert setting and publish WorkspaceDetail with isDefault true"() {
-        given:
-        def user = new UserBaseRecord("User", 1L)
-        def workspace = Workspace.builder().id(30L).name("Principal").build()
-        def membership = Stub(WorkspaceMember) {
-            getWorkspace() >> workspace
-        }
+    // --- updateDefaultWorkspace ---
 
-        userService.getAuthenticatedUserRecord() >> user
+    def "updateDefaultWorkspace - should upsert setting and publish WorkspaceDetail"() {
+        given:
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
         userService.getCurrentKeycloakId() >> "keycloak-uuid-456"
-        membershipRepository.findMember(30L, 1L) >> Optional.of(membership)
-        membershipRepository.countByWorkspaceId(30L) >> 2L
+        workspaceQueryService.getAllWorkspaceDetails() >> [
+                new WorkspaceDetail(30L, "Principal", 2, true),
+                new WorkspaceDetail(31L, "Otro", 1, false),
+        ]
 
         when:
         service.updateDefaultWorkspace(30L)
 
         then:
-        1 * userSettingService.upsert(_ as api.m2.movements.movements.enums.UserSettingKey, 30L)
+        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_WORKSPACE, 30L)
         1 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(
                 new WorkspaceDetail(30L, "Principal", 2, true),
                 "keycloak-uuid-456"
         )
     }
 
-    def "updateDefaultWorkspace - should throw PermissionDeniedException when user is not a member"() {
+    def "updateDefaultWorkspace - should throw EntityNotFoundException when workspace not in user's list"() {
         given:
-        def user = new UserBaseRecord("User", 1L)
-
-        userService.getAuthenticatedUserRecord() >> user
-        membershipRepository.findMember(99L, 1L) >> Optional.empty()
+        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        workspaceQueryService.getAllWorkspaceDetails() >> []
 
         when:
         service.updateDefaultWorkspace(99L)
 
         then:
-        thrown(PermissionDeniedException)
+        thrown(EntityNotFoundException)
+    }
+
+    // --- createWorkspaces ---
+
+    def "createWorkspaces - should delegate to IdentityClient"() {
+        given:
+        def user = api.m2.movements.identity.records.users.UserToAdd.builder().id(1L).email("test@test.com").build()
+        def workspacesToAdd = [new AddWorkspaceRecord("DEFAULT")]
+        def expected = [new WorkspaceAdded(100L, "DEFAULT")]
+
+        identityClient.createWorkspaces(1L, workspacesToAdd) >> expected
+
+        when:
+        def result = service.createWorkspaces(user, workspacesToAdd)
+
+        then:
+        result == expected
     }
 }

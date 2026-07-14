@@ -23,6 +23,6 @@ public class InvestmentWorkspaceResolver implements WorkspaceIdResolver {
         return investmentRepository.findById(entityId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Inversión no encontrada: " + entityId))
-                .getWorkspace().getId();
+                .getWorkspaceId();
     }
 }

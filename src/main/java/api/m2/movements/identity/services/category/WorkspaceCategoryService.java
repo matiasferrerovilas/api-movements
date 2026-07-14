@@ -1,7 +1,6 @@
 package api.m2.movements.identity.services.category;
 
 import api.m2.movements.movements.entities.commons.Category;
-import api.m2.movements.identity.entities.Workspace;
 import api.m2.movements.identity.entities.WorkspaceCategory;
 import api.m2.movements.movements.enums.DefaultCategory;
 import api.m2.movements.exceptions.BusinessException;
@@ -43,22 +42,22 @@ public class WorkspaceCategoryService {
 
     @Transactional
     public CategoryRecord addCategory(String description) {
-        var workspace = workspaceContextService.getActiveWorkspace();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var category = categoryAddService.addCategory(description);
-        return workspaceCategoryMapper.toRecord(this.resolveWorkspaceCategory(workspace, category));
+        return workspaceCategoryMapper.toRecord(this.resolveWorkspaceCategory(workspaceId, category));
     }
 
     @Transactional
-    public void addDefaultCategories(Workspace workspace) {
+    public void addDefaultCategories(Long workspaceId) {
         var category = categoryAddService.addCategory(DefaultCategory.SERVICIOS.getDescription());
-        this.resolveWorkspaceCategory(workspace, category);
+        this.resolveWorkspaceCategory(workspaceId, category);
     }
 
     @Transactional
-    public void addCategories(Workspace workspace, List<String> descriptions) {
+    public void addCategories(Long workspaceId, List<String> descriptions) {
         descriptions.forEach(description -> {
             var category = categoryAddService.addCategory(description);
-            this.resolveWorkspaceCategory(workspace, category);
+            this.resolveWorkspaceCategory(workspaceId, category);
         });
     }
 
@@ -68,7 +67,7 @@ public class WorkspaceCategoryService {
         var workspaceCategory = workspaceCategoryRepository.findById(workspaceCategoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
-        if (!workspaceCategory.getWorkspace().getId().equals(workspaceId)) {
+        if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
             throw new PermissionDeniedException("No tenés permiso para eliminar esta categoría");
         }
         if (!workspaceCategory.getCategory().isDeletable()) {
@@ -88,7 +87,7 @@ public class WorkspaceCategoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
         // Verificar que pertenece al workspace activo
-        if (!workspaceCategory.getWorkspace().getId().equals(workspaceId)) {
+        if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
             throw new PermissionDeniedException("No tenés acceso a esta categoría");
         }
 
@@ -121,12 +120,12 @@ public class WorkspaceCategoryService {
      * Usado por CategoryResolver para auto-agregar categorías.
      */
     @Transactional
-    public void ensureCategoryInWorkspace(Workspace workspace, Category category) {
-        this.resolveWorkspaceCategory(workspace, category);
+    public void ensureCategoryInWorkspace(Long workspaceId, Category category) {
+        this.resolveWorkspaceCategory(workspaceId, category);
     }
 
-    private WorkspaceCategory resolveWorkspaceCategory(Workspace workspace, Category category) {
-        return workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(workspace.getId(), category.getId())
+    private WorkspaceCategory resolveWorkspaceCategory(Long workspaceId, Category category) {
+        return workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(workspaceId, category.getId())
                 .map(existing -> {
                     if (!existing.isActive()) {
                         existing.setActive(true);
@@ -136,7 +135,7 @@ public class WorkspaceCategoryService {
                 })
                 .orElseGet(() -> workspaceCategoryRepository.save(
                         WorkspaceCategory.builder()
-                                .workspace(workspace)
+                                .workspaceId(workspaceId)
                                 .category(category)
                                 .build()));
     }

@@ -25,14 +25,13 @@ public interface SubscriptionMapper {
 
     @Mapping(target = "currency.symbol", source = "currency.symbol")
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
-    @Mapping(target = "workspaceName", expression = "java(subscription.getWorkspace().getName())")
-    @Mapping(target = "workspaceId", expression = "java(subscription.getWorkspace().getId())")
-    @Mapping(target = "user", source = "owner.givenName")
+    @Mapping(target = "workspaceName", ignore = true)
+    @Mapping(target = "user", ignore = true)
     SubscriptionRecord toRecord(Subscription subscription);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)
-    @Mapping(target = "workspace", ignore = true)
+    @Mapping(target = "workspaceId", ignore = true)
     void updateMovement(UpdateSubscriptionRecord changesToMovement, @MappingTarget Subscription subscription);
 
     @Named("mapCurrency")

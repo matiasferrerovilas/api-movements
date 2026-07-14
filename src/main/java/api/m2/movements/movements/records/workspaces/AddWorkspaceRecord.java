@@ -1,4 +1,4 @@
-package api.m2.movements.identity;
+package api.m2.movements.movements.records.workspaces;
 
 import jakarta.validation.constraints.NotBlank;
 
