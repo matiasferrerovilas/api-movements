@@ -1,5 +1,6 @@
 package api.m2.movements.services.banks;
 
+import api.m2.movements.entities.integrity.UserBank;
 import api.m2.movements.mappers.BankMapper;
 import api.m2.movements.records.banks.BankRecord;
 import api.m2.movements.repositories.UserBankRepository;
@@ -22,10 +23,12 @@ public class BankQueryService {
 
     @Transactional(readOnly = true)
     public List<BankRecord> getAllBanks() {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         return userBankRepository.findByUserId(userId)
                 .stream()
-                .map(ub -> bankMapper.toRecord(ub.getBank()))
+                .map(UserBank::getBank)
+                .distinct()
+                .map(bankMapper::toRecord)
                 .toList();
     }
 }

@@ -39,7 +39,7 @@ public class InvestmentAddService {
     @Transactional
     public InvestmentRecord add(@Valid InvestmentToAdd dto) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         var currency = currencyRepository.findBySymbol(dto.currencySymbol())
                 .orElseThrow(() -> new EntityNotFoundException("Moneda no encontrada: " + dto.currencySymbol()));
         var investmentType = investmentTypeRepository.findById(dto.investmentTypeId())

@@ -15,9 +15,12 @@ import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
+import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.test.util.ReflectionTestUtils
@@ -31,6 +34,8 @@ class MovementAddServiceTest extends Specification {
     MovementMapper movementMapper
     MovementFactory movementFactory = Mock(MovementFactory)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    UserService userService = Mock(UserService)
 
     MovementAddService service
 
@@ -43,8 +48,12 @@ class MovementAddServiceTest extends Specification {
                 movementRepository,
                 movementMapper,
                 movementFactory,
-                eventPublisher
+                eventPublisher,
+                workspaceQueryService,
+                userService
         )
+        workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
+        userService.getUserNamesByIds(_ as List<Long>) >> [:]
     }
 
     def buildMovement(Long workspaceId) {
@@ -80,6 +89,28 @@ class MovementAddServiceTest extends Specification {
         then:
         1 * movementRepository.save(_ as Movement) >> movement
         1 * eventPublisher.publishEvent(_ as MovementRecord)
+    }
+
+    def "saveMovement - should publish MovementRecord enriched with workspace and owner metadata"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                "HOGAR", "GASTO", "ARS", null, null, null
+        )
+        def movement = buildMovement(1L)
+
+        movementFactory.create(_ as MovementToAdd) >> movement
+        movementRepository.save(movement) >> movement
+        workspaceQueryService.findWorkspaceNameById(1L) >> "Familia"
+        userService.getUserNamesByIds([10L]) >> [10L: "Matias"]
+
+        when:
+        def result = service.saveMovement(dto)
+
+        then:
+        result.metadata().workspace() == new WorkspaceBaseRecord(1L, "Familia")
+        result.metadata().owner().givenName() == "Matias"
+        result.metadata().owner().id() == 10L
     }
 
     def "saveMovement - should throw PermissionDeniedException when user is not a member of the workspace"() {

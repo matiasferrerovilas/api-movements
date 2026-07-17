@@ -1,6 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.exceptions.ServiceException
@@ -128,6 +129,21 @@ class UserServiceTest extends Specification {
 
         then:
         result.size() == 1
+    }
+
+    def "getUserNamesByIds - should return a map of user id to given name"() {
+        given:
+        def ids = [1L, 2L]
+        identityClient.getUsersByIds(ids) >> [
+                new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null),
+                new UserMe(2L, "b@b.com", "Ana", "Perez", "ADMIN", null)
+        ]
+
+        when:
+        def result = service.getUserNamesByIds(ids)
+
+        then:
+        result == [1L: "Matias", 2L: "Ana"]
     }
 
     private void setupSecurityContext(String email) {

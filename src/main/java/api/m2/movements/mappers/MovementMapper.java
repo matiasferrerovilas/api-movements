@@ -1,8 +1,6 @@
 package api.m2.movements.mappers;
 
-import api.m2.movements.records.users.UserBaseRecord;
 import api.m2.movements.entities.movements.Movement;
-import api.m2.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -27,8 +25,7 @@ public interface MovementMapper {
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
 
     @Mapping(target = "bank", source = "movement.bank.description")
-    @Mapping(target = "account", expression = "java(new AccountBaseRecord(movement.getWorkspaceId(), null))")
-    @Mapping(target = "owner", expression = "java(new UserBaseRecord(null, movement.getOwnerId()))")
+    @Mapping(target = "metadata", ignore = true)
     MovementRecord toRecord(Movement movement);
 
     @Mapping(target = "currency", ignore = true)

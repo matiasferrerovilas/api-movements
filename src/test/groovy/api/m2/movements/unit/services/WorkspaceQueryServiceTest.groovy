@@ -1,10 +1,12 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.records.workspaces.WorkspaceInvitationDTO
 import api.m2.movements.records.workspaces.WorkspacesWithUser
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService
@@ -53,42 +55,6 @@ class WorkspaceQueryServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "getAllWorkspaceDetails - should mark workspace as default when it matches DEFAULT_WORKSPACE setting"() {
-        given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
-        userSettingService.getDefaultWorkspaceId(1L) >> Optional.of(10L)
-        identityClient.getWorkspaces(1L) >> [
-                new WorkspacesWithUser(10L, "Hogar", 2L, "user@test.com"),
-                new WorkspacesWithUser(20L, "Viajes", 1L, "user@test.com"),
-        ]
-
-        when:
-        def result = service.getAllWorkspaceDetails()
-
-        then:
-        result.size() == 2
-        result[0].id() == 10L
-        result[0].name() == "Hogar"
-        result[0].membersCount() == 2
-        result[0].isDefault() == true
-        result[1].id() == 20L
-        result[1].isDefault() == false
-    }
-
-    def "getAllWorkspaceDetails - should mark isDefault false when no DEFAULT_WORKSPACE setting exists"() {
-        given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
-        userSettingService.getDefaultWorkspaceId(1L) >> Optional.empty()
-        identityClient.getWorkspaces(1L) >> [new WorkspacesWithUser(10L, "Hogar", 1L, "user@test.com")]
-
-        when:
-        def result = service.getAllWorkspaceDetails()
-
-        then:
-        result.size() == 1
-        result[0].isDefault() == false
-    }
-
     def "findWorkspaceIdByName - should return matching workspace id"() {
         given:
         userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
@@ -110,6 +76,19 @@ class WorkspaceQueryServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
+    }
+
+    def "getMyInvitations - should delegate to IdentityClient"() {
+        given:
+        def now = java.time.LocalDateTime.now()
+        def expected = [new WorkspaceInvitationDTO(1L, 10L, "Hogar", "owner@test.com", InvitationStatus.PENDING, now)]
+        identityClient.getInvitations() >> expected
+
+        when:
+        def result = service.getMyInvitations()
+
+        then:
+        result == expected
     }
 
     def "findWorkspaceIdByName - should throw EntityNotFoundException when no workspace matches"() {

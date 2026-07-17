@@ -29,7 +29,7 @@ public class MonthlySummaryService {
      * Verifica que el usuario autenticado sea miembro del workspace.
      */
     public MonthlySummaryResponse getSummary(Long workspaceId, Integer year, Integer month) {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
         workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);
         return snapshotService.find(userId, year, month)
                 .orElseGet(() -> this.computeSummary(userId, year, month));

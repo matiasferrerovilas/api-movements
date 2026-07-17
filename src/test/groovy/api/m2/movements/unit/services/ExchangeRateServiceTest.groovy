@@ -1,18 +1,12 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.records.accounts.AccountBaseRecord
-import api.m2.movements.records.categories.CategoryRecord
-import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.currencies.ExchangeRateRecord
-import api.m2.movements.records.movements.MovementRecord
-import api.m2.movements.records.users.UserBaseRecord
 import api.m2.movements.services.currencies.ExchangeRateService
 import api.m2.movements.services.currencies.FrankfurterClient
 import spock.lang.Specification
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class ExchangeRateServiceTest extends Specification {
 
@@ -118,33 +112,5 @@ class ExchangeRateServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
-    }
-
-    // --- helpers ---
-
-    private static MovementRecord buildMovementRecord(
-            String currencySymbol, BigDecimal amount, BigDecimal exchangeRate) {
-        def currency = new CurrencyRecord(currencySymbol, 1L)
-        def category = new CategoryRecord(1L, "HOGAR", true, true, null, null)
-        def owner = new UserBaseRecord("John", 1L)
-        def account = new AccountBaseRecord(1L, "Mi cuenta")
-        return new MovementRecord(
-                1L,
-                amount,
-                "Test movement",
-                LocalDate.now(),
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                category,
-                currency,
-                "GALICIA",
-                "DEBITO",
-                owner,
-                account,
-                null,
-                null,
-                exchangeRate,
-                null
-        )
     }
 }

@@ -44,6 +44,8 @@ class SubscriptionAddServiceTest extends Specification {
                 workspaceQueryService,
                 eventPublisher
         )
+        workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
+        userService.getUserNamesByIds(_ as List<Long>) >> [1L: "Matias"]
     }
 
     def buildSubscription(Long workspaceId, LocalDate lastPayment = null) {

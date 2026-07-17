@@ -27,7 +27,7 @@ public class UserSettingService {
     private final BankRepository bankRepository;
 
     public List<UserSettingResponse> getAll() {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
         return userSettingRepository.findAllByUserId(userId)
                 .stream()
                 .map(s -> new UserSettingResponse(s.getSettingKey(), s.getSettingValue()))
@@ -35,7 +35,7 @@ public class UserSettingService {
     }
 
     public UserSettingResponse getByKey(UserSettingKey key) {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
         return userSettingRepository.findByUserIdAndSettingKey(userId, key)
                 .map(s -> new UserSettingResponse(s.getSettingKey(), s.getSettingValue()))
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -44,7 +44,7 @@ public class UserSettingService {
 
     @Transactional
     public UserSettingResponse upsert(UserSettingKey key, Long value) {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
         UserSetting setting = userSettingRepository.findByUserIdAndSettingKey(userId, key)
                 .orElseGet(() -> UserSetting.builder()
                         .userId(userId)
@@ -62,7 +62,7 @@ public class UserSettingService {
 
     @Transactional
     public void deleteByKey(UserSettingKey key) {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
         userSettingRepository.deleteByUserIdAndSettingKey(userId, key);
     }
 

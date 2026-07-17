@@ -11,7 +11,10 @@ import api.m2.movements.records.movements.MovementSearchFilterRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.services.movements.MovementGetService
+import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
+import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
@@ -23,6 +26,8 @@ class MovementGetServiceTest extends Specification {
     CategoryMapper categoryMapper = Mock(CategoryMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceCategoryRepository workspaceCategoryRepository = Mock(WorkspaceCategoryRepository)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    UserService userService = Mock(UserService)
 
     MovementGetService service
 
@@ -32,8 +37,12 @@ class MovementGetServiceTest extends Specification {
                 movementMapper,
                 categoryMapper,
                 workspaceContextService,
-                workspaceCategoryRepository
+                workspaceCategoryRepository,
+                workspaceQueryService,
+                userService
         )
+        workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
+        userService.getUserNamesByIds(_ as List<Long>) >> [:]
     }
 
     def "getExpensesBy - should enrich movements with icons from workspace categories"() {
@@ -94,6 +103,36 @@ class MovementGetServiceTest extends Specification {
         // Verificar que se llamó a enriquecer las categorías
         1 * categoryMapper.toRecordWithIcons(category1, workspaceCategory1)
         1 * categoryMapper.toRecordWithIcons(category2, workspaceCategory2)
+    }
+
+    def "getExpensesBy - should enrich movement with owner and workspace metadata"() {
+        given:
+        def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
+        def pageable = PageRequest.of(0, 10)
+
+        def movement = Stub(Movement) {
+            getCategory() >> null
+            getOwnerId() >> 7L
+            getExchangeRate() >> new BigDecimal("1.5")
+        }
+        def baseRecord = Stub(MovementRecord) { id() >> 1L }
+
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement])
+        workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> []
+        movementMapper.toRecord(movement) >> baseRecord
+        workspaceQueryService.findWorkspaceNameById(1L) >> "Familia"
+        userService.getUserNamesByIds([7L]) >> [7L: "Matias"]
+
+        when:
+        def result = service.getExpensesBy(filter, pageable)
+
+        then:
+        def metadata = result.content[0].metadata()
+        metadata.workspace() == new WorkspaceBaseRecord(1L, "Familia")
+        metadata.owner().givenName() == "Matias"
+        metadata.owner().id() == 7L
+        metadata.exchangeRate() == new BigDecimal("1.5")
     }
 
     def "getExpensesBy - should return empty page when user has no workspaces"() {

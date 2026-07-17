@@ -6,7 +6,6 @@ import api.m2.movements.records.workspaces.WorkspaceDetail;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.records.InvestmentTypeRecord;
 import api.m2.movements.investment.services.valuation.YahooFinanceHttpClient;
-import api.m2.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
@@ -15,6 +14,8 @@ import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.records.movements.file.MovementFileRequest;
 import api.m2.movements.records.services.SubscriptionRecord;
+import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
+import api.m2.movements.records.workspaces.WorkspaceDTO;
 import api.m2.movements.records.workspaces.WorkspacesWithUser;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -35,11 +36,14 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             MovementSearchFilterRecord.class,
             EventWrapper.class,
             MovementRecord.class,
+            MovementRecord.Metadata.class,
             MovementFileRequest.class,
             SubscriptionRecord.class,
             CategoryRecord.class,
             CurrencyRecord.class,
-            AccountBaseRecord.class,
+            WorkspaceDTO.class,
+            WorkspaceDTO.Metadata.class,
+            WorkspaceBaseRecord.class,
             UserBaseRecord.class,
             WorkspaceDetail.class,
             WorkspacesWithUser.class,

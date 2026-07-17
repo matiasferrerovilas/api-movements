@@ -35,7 +35,7 @@ public class CalculateBalanceService {
 
     @Transactional(readOnly = true)
     public Map<BalanceEnum, BigDecimal> getBalance(BalanceFilterRecord balanceFilterRecord) {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var currencies = currencyRepository.findAllBySymbol(balanceFilterRecord.currencies());
 
@@ -74,7 +74,7 @@ public class CalculateBalanceService {
 
     @Transactional(readOnly = true)
     public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         return movementRepository.getBalanceByYearAndGroup(year, month, userId);
     }
 

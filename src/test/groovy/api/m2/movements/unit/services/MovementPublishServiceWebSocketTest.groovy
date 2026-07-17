@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
-import api.m2.movements.records.accounts.AccountBaseRecord
 import api.m2.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementRecord
+import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
@@ -19,11 +19,11 @@ class MovementPublishServiceWebSocketTest extends Specification {
 
     def "publishMovementAdded - should publish to correct topic with MOVEMENT_ADDED event"() {
         given:
-        def accountRecord = Stub(AccountBaseRecord) {
-            id() >> 1L
+        def metadata = Stub(MovementRecord.Metadata) {
+            workspace() >> new WorkspaceBaseRecord(1L, "Familia")
         }
         def movementRecord = Stub(MovementRecord) {
-            account() >> accountRecord
+            metadata() >> metadata
         }
 
         when:
@@ -46,11 +46,11 @@ class MovementPublishServiceWebSocketTest extends Specification {
 
     def "publishMovementAdded - should publish EventWrapper with correct eventType"() {
         given:
-        def accountRecord = Stub(AccountBaseRecord) {
-            id() >> 5L
+        def metadata = Stub(MovementRecord.Metadata) {
+            workspace() >> new WorkspaceBaseRecord(5L, "Familia")
         }
         def movementRecord = Stub(MovementRecord) {
-            account() >> accountRecord
+            metadata() >> metadata
         }
 
         when:

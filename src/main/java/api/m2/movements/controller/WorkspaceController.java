@@ -1,7 +1,8 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.records.workspaces.AddWorkspaceRecord;
-import api.m2.movements.records.workspaces.WorkspaceDetail;
+import api.m2.movements.records.workspaces.WorkspaceInvitationDTO;
+import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
 import api.m2.movements.services.workspaces.WorkspaceAddService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,14 +47,15 @@ public class WorkspaceController {
 
     @Operation(
             summary = "Listar workspaces del usuario",
-            description = "Devuelve todos los workspaces a los que pertenece el usuario autenticado.",
+            description = "Pendiente de implementación.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Workspaces obtenidos correctamente")
             }
     )
-    @GetMapping("/count")
-    public List<WorkspaceDetail> getMyWorkspacesWithCount() {
-        return workspaceQueryService.getAllWorkspaceDetails();
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<WorkspaceMemberDTO> getWorkspaces() {
+        return workspaceQueryService.getWorkspaces();
     }
 
     @Operation(
@@ -80,5 +82,18 @@ public class WorkspaceController {
     @ResponseStatus(HttpStatus.OK)
     public void updateDefaultWorkspace(@PathVariable Long id) {
         workspaceAddService.updateDefaultWorkspace(id);
+    }
+
+    @Operation(
+            summary = "Listar invitaciones recibidas",
+            description = "Devuelve todas las invitaciones pendientes del usuario autenticado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Invitaciones obtenidas correctamente")
+            }
+    )
+    @GetMapping("/invitations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<WorkspaceInvitationDTO> getMyInvitations() {
+        return workspaceQueryService.getMyInvitations();
     }
 }

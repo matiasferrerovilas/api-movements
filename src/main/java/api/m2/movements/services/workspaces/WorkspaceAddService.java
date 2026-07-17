@@ -39,7 +39,7 @@ public class WorkspaceAddService {
 
     @Transactional
     public void leaveWorkspace(Long workspaceId) {
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
 
         identityClient.leaveWorkspace(workspaceId, userId);
 
@@ -50,7 +50,7 @@ public class WorkspaceAddService {
 
     @Transactional
     public void updateDefaultWorkspace(Long workspaceId) {
-        Long userId = userService.getAuthenticatedUser().id();
+        /*Long userId = userService.getMe().id();
         userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_WORKSPACE, workspaceId);
 
         var workspaceDetail = workspaceQueryService.getAllWorkspaceDetails().stream()
@@ -59,7 +59,7 @@ public class WorkspaceAddService {
                 .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
 
         var keycloakSubject = userService.getCurrentKeycloakId();
-        workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(workspaceDetail, keycloakSubject);
+        workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(workspaceDetail, keycloakSubject);*/
     }
 
     public List<WorkspaceAdded> createWorkspaces(List<AddWorkspaceRecord> workspacesToAdd) {

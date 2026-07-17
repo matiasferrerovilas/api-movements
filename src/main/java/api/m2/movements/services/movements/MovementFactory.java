@@ -33,7 +33,7 @@ public class MovementFactory {
     }
 
     public Movement create(MovementToAdd dto, Long workspaceId) {
-        return this.create(dto, workspaceId, userService.getAuthenticatedUser().id());
+        return this.create(dto, workspaceId, userService.getMe().id());
     }
 
     public Movement create(MovementToAdd dto, Long workspaceId, Long ownerId) {

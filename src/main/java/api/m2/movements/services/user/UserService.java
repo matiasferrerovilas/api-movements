@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -32,6 +34,11 @@ public class UserService {
 
     public UserBaseRecord getAuthenticatedUser() {
         return identityClient.getUserByEmail(this.getAuthenticatedEmail());
+    }
+
+    public Map<Long, String> getUserNamesByIds(List<Long> ids) {
+        return identityClient.getUsersByIds(ids).stream()
+                .collect(Collectors.toMap(UserMe::id, UserMe::givenName));
     }
 
     public String getAuthenticatedEmail() {

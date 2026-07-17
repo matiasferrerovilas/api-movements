@@ -31,7 +31,7 @@ public class MembershipCheckAspect {
         Long entityId = (Long) args[requiresMembership.idParamIndex()];
 
         Long workspaceId = resolverRegistry.resolve(requiresMembership.domain(), entityId);
-        Long userId = userService.getAuthenticatedUser().id();
+        Long userId = userService.getMe().id();
 
         log.debug("Verificando membresía: domain={}, entityId={}, workspaceId={}, userId={}",
                 requiresMembership.domain(), entityId, workspaceId, userId);

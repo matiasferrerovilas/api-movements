@@ -9,6 +9,7 @@ import api.m2.movements.records.services.ServiceAddedEvent;
 import api.m2.movements.records.services.ServiceDeletedEvent;
 import api.m2.movements.records.services.ServicePaidEvent;
 import api.m2.movements.records.services.ServiceUpdatedEvent;
+import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
 import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,7 +46,7 @@ public class SubscriptionAddService {
 
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyRepository);
         subscription.setOwnerId(userId);
@@ -55,7 +57,7 @@ public class SubscriptionAddService {
         }
 
         eventPublisher.publishEvent(new ServiceAddedEvent(
-                subscriptionMapper.toRecord(subscriptionRepository.save(subscription))));
+                this.enrich(subscriptionRepository.save(subscription))));
     }
 
     @Transactional
@@ -67,7 +69,7 @@ public class SubscriptionAddService {
         subscription.setLastPayment(LocalDate.now(ZoneOffset.UTC));
         this.publishPaidEvent(subscription);
 
-        var dto = subscriptionMapper.toRecord(subscriptionRepository.save(subscription));
+        var dto = this.enrich(subscriptionRepository.save(subscription));
         eventPublisher.publishEvent(new ServicePaidEvent(dto));
     }
 
@@ -83,7 +85,7 @@ public class SubscriptionAddService {
         subscriptionMapper.updateMovement(updateSubscription, subscription);
         subscription.setLastPayment(updateSubscription.lastPayment());
 
-        var dto = subscriptionMapper.toRecord(subscriptionRepository.save(subscription));
+        var dto = this.enrich(subscriptionRepository.save(subscription));
         eventPublisher.publishEvent(new ServiceUpdatedEvent(dto));
     }
 
@@ -94,7 +96,7 @@ public class SubscriptionAddService {
                 .orElseThrow(() -> new EntityNotFoundException("Entidad no encontrada"));
 
         subscriptionRepository.delete(subscription);
-        var dto = subscriptionMapper.toRecord(subscription);
+        var dto = this.enrich(subscription);
         eventPublisher.publishEvent(new ServiceDeletedEvent(dto));
     }
 
@@ -128,5 +130,15 @@ public class SubscriptionAddService {
         if (!StringUtils.isEmpty(workspace)) {
             subscription.setWorkspaceId(workspaceQueryService.findWorkspaceIdByName(workspace));
         }
+    }
+
+    private SubscriptionRecord enrich(Subscription subscription) {
+        var record = subscriptionMapper.toRecord(subscription);
+        var workspaceName = workspaceQueryService.findWorkspaceNameById(subscription.getWorkspaceId());
+        var ownerName = userService.getUserNamesByIds(List.of(subscription.getOwnerId()))
+                .get(subscription.getOwnerId());
+        return new SubscriptionRecord(
+                record.id(), record.description(), record.amount(), record.currency(),
+                record.lastPayment(), record.isPaid(), workspaceName, record.workspaceId(), ownerName);
     }
 }

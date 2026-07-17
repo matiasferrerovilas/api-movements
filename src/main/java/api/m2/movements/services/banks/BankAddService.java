@@ -35,7 +35,7 @@ public class BankAddService {
 
     @Transactional
     public BankRecord addBankToUser(String description) {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
         var result = this.resolveUserBank(description, userId);
 
         // Si es el único banco del usuario Y fue recién agregado, establecerlo como default automáticamente
@@ -100,7 +100,7 @@ public class BankAddService {
 
     @Transactional
     public void removeBankFromUser(Long bankId) {
-        var userId = userService.getAuthenticatedUser().id();
+        var userId = userService.getMe().id();
 
         if (!userBankRepository.existsByUserIdAndBankId(userId, bankId)) {
             throw new EntityNotFoundException("El banco con id " + bankId + " no está en la lista del usuario");

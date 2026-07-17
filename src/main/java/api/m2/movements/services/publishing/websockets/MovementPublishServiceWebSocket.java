@@ -22,7 +22,7 @@ public class MovementPublishServiceWebSocket extends WebSocketMessageService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishMovementAdded(MovementRecord record) {
-        this.publish(record, WebSocketTopics.movementsNew(record.account().id()), EventType.MOVEMENT_ADDED);
+        this.publish(record, WebSocketTopics.movementsNew(record.metadata().workspace().id()), EventType.MOVEMENT_ADDED);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

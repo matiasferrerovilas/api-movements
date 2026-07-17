@@ -23,7 +23,6 @@ public interface SubscriptionMapper {
             + "&& subscriptionToAdd.isPaid() ? subscriptionToAdd.lastPayment() : null)")
     Subscription toEntity(SubscriptionToAdd subscriptionToAdd, @Context CurrencyRepository currencyRepository);
 
-    @Mapping(target = "currency.symbol", source = "currency.symbol")
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
     @Mapping(target = "workspaceName", ignore = true)
     @Mapping(target = "user", ignore = true)

@@ -4,7 +4,11 @@ import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.records.workspaces.WorkspaceDTO;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
+import api.m2.movements.records.workspaces.WorkspaceInvitationDTO;
+import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
+import api.m2.movements.records.workspaces.WorkspacesWithUser;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import jakarta.validation.constraints.NotNull;
@@ -24,29 +28,26 @@ public class WorkspaceQueryService {
     private final UserService userService;
     private final UserSettingService userSettingService;
 
-    public List<WorkspaceDetail> getAllWorkspaceDetails() {
-        Long userId = userService.getAuthenticatedUser().id();
-        Long defaultWorkspaceId = userSettingService.getDefaultWorkspaceId(userId).orElse(null);
-        return identityClient.getWorkspaces(userId).stream()
-                .map(workspace -> new WorkspaceDetail(
-                        workspace.id(),
-                        workspace.name(),
-                        (int) workspace.membersCount(),
-                        workspace.id().equals(defaultWorkspaceId)))
-                .toList();
+    public List<WorkspaceMemberDTO> getWorkspaces() {
+        return identityClient.getWorkspaces();
     }
 
     public Long findWorkspaceIdByName(@NotNull String name) {
-        if (StringUtils.isBlank(name)) {
+        /*if (StringUtils.isBlank(name)) {
             throw new BusinessException("El nombre del workspace no puede estar vacío");
         }
 
-        Long userId = userService.getAuthenticatedUser().id();
-        return identityClient.getWorkspaces(userId).stream()
+        Long userId = userService.getMe().id();
+
+
+        return identityClient.getWorkspaces().stream()
                 .filter(workspace -> name.equals(workspace.name()))
-                .map(workspace -> workspace.id())
+                .map(WorkspacesWithUser::id)
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("No existe workspace con ese nombre para el usuario"));
+                .orElseThrow(() -> new EntityNotFoundException("
+                No existe workspace con ese nombre para el usuario"));
+         */
+        return null;
     }
 
     public void verifyUserIsMemberOfWorkspace(Long workspaceId, Long userId) {
@@ -55,5 +56,17 @@ public class WorkspaceQueryService {
         } catch (RestClientResponseException e) {
             throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso");
         }
+    }
+
+    public List<WorkspaceInvitationDTO> getMyInvitations() {
+        return identityClient.getInvitations();
+    }
+
+    public String findWorkspaceNameById(Long workspaceId) {
+        return identityClient.getWorkspaces().stream()
+                .filter(workspace -> workspaceId.equals(workspace.workspaceId()))
+                .map(WorkspaceMemberDTO::workspaceName)
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
     }
 }

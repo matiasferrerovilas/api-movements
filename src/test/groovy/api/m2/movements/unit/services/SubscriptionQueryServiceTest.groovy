@@ -3,9 +3,12 @@ package api.m2.movements.unit.services
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Subscription
 
+import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.mappers.SubscriptionMapper
+import api.m2.movements.records.workspaces.WorkspaceMemberDTO
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.subscriptions.SubscriptionQueryService
+import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
@@ -17,6 +20,7 @@ class SubscriptionQueryServiceTest extends Specification {
     SubscriptionMapper subscriptionMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    UserService userService = Mock(UserService)
 
     SubscriptionQueryService service
 
@@ -24,11 +28,12 @@ class SubscriptionQueryServiceTest extends Specification {
         service = new SubscriptionQueryService(
                 subscriptionMapper,
                 subscriptionRepository,
-                workspaceContextService
+                workspaceContextService,
+                userService
         )
     }
 
-    def "getSubscriptionsBy - should return subscriptions filtered by currency and lastPayment"() {
+    def "getSubscriptionsBy - should return subscriptions filtered by currency and lastPayment, enriched with workspace and owner names"() {
         given:
         def workspaceId = 10L
         def currencySymbols = ["ARS", "USD"]
@@ -45,8 +50,10 @@ class SubscriptionQueryServiceTest extends Specification {
                 ownerId: 1L
         )
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
+                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> [subscription]
+        userService.getUserNamesByIds([1L] as List<Long>) >> [1L: "Matias"]
 
         when:
         def result = service.getSubscriptionsBy(currencySymbols, lastPayment)
@@ -54,15 +61,18 @@ class SubscriptionQueryServiceTest extends Specification {
         then:
         result.size() == 1
         result[0].description() == "Netflix"
+        result[0].workspaceName() == "Familia"
+        result[0].user() == "Matias"
     }
 
-    def "getSubscriptionsBy - should return empty list when no subscriptions match"() {
+    def "getSubscriptionsBy - should return empty list when no subscriptions match without calling identity for owner names"() {
         given:
         def workspaceId = 10L
         def currencySymbols = ["EUR"]
         def lastPayment = LocalDate.of(2026, 3, 1)
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
+                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> []
 
         when:
@@ -70,5 +80,6 @@ class SubscriptionQueryServiceTest extends Specification {
 
         then:
         result.isEmpty()
+        0 * userService.getUserNamesByIds(_ as List<Long>)
     }
 }

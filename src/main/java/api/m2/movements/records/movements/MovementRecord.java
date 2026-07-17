@@ -1,9 +1,9 @@
 package api.m2.movements.records.movements;
 
-import api.m2.movements.records.accounts.AccountBaseRecord;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,10 +19,13 @@ public record MovementRecord(Long id,
                              CurrencyRecord currency,
                              String bank,
                              String type,
-                             UserBaseRecord owner,
-                             AccountBaseRecord account,
                              Integer cuotaActual,
                              Integer cuotasTotales,
-                             BigDecimal exchangeRate,
-                             BigDecimal amountUsd) {
+                             Metadata metadata) {
+
+    public record Metadata(UserBaseRecord owner,
+                            WorkspaceBaseRecord workspace,
+                            BigDecimal exchangeRate,
+                            BigDecimal amountUsd) {
+    }
 }
