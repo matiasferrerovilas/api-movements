@@ -5,7 +5,7 @@ import api.m2.movements.entities.movements.Subscription
 
 import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.mappers.SubscriptionMapper
-import api.m2.movements.records.workspaces.WorkspaceMemberDTO
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.subscriptions.SubscriptionQueryService
 import api.m2.movements.services.user.UserService

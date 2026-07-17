@@ -6,7 +6,7 @@ import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification

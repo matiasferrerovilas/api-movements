@@ -6,7 +6,7 @@ import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
-import api.m2.movements.records.workspaces.AddWorkspaceRecord;
+import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.services.banks.BankAddService;
 import api.m2.movements.services.category.WorkspaceCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;

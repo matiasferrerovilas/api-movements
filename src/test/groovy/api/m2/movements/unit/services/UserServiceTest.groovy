@@ -5,7 +5,7 @@ import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.exceptions.ServiceException
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 
 import api.m2.movements.repositories.UserSettingRepository
 import api.m2.movements.services.user.UserService

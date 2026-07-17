@@ -1,7 +1,7 @@
 package api.m2.movements.configuration;
 
 import api.m2.movements.constraints.CuotasValidator;
-import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
 import api.m2.movements.investment.records.InvestmentRecord;
 import api.m2.movements.investment.records.InvestmentTypeRecord;
@@ -15,7 +15,7 @@ import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.records.movements.file.MovementFileRequest;
 import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
-import api.m2.movements.records.workspaces.WorkspaceDTO;
+import api.m2.movements.clients.identity.response.WorkspaceDTO;
 import api.m2.movements.records.workspaces.WorkspacesWithUser;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;

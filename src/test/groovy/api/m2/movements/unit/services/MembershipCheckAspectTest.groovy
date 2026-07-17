@@ -7,7 +7,7 @@ import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.user.UserService
 import org.aspectj.lang.JoinPoint

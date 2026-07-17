@@ -1,4 +1,4 @@
-package api.m2.movements.records.workspaces;
+package api.m2.movements.clients.identity.response;
 
 import api.m2.movements.enums.WorkspaceRole;
 

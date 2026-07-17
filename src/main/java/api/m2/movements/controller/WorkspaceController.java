@@ -1,8 +1,9 @@
 package api.m2.movements.controller;
 
-import api.m2.movements.records.workspaces.AddWorkspaceRecord;
-import api.m2.movements.records.workspaces.WorkspaceInvitationDTO;
-import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
+import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
+import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.services.workspaces.WorkspaceAddService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,19 +72,6 @@ public class WorkspaceController {
     }
 
     @Operation(
-            summary = "Actualizar workspace por defecto",
-            description = "Establece un workspace como el workspace por defecto del usuario.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Workspace por defecto actualizado correctamente")
-            }
-    )
-    @PatchMapping("/{id}/default")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateDefaultWorkspace(@PathVariable Long id) {
-        workspaceAddService.updateDefaultWorkspace(id);
-    }
-
-    @Operation(
             summary = "Listar invitaciones recibidas",
             description = "Devuelve todas las invitaciones pendientes del usuario autenticado.",
             responses = {
@@ -96,4 +83,18 @@ public class WorkspaceController {
     public List<WorkspaceInvitationDTO> getMyInvitations() {
         return workspaceQueryService.getMyInvitations();
     }
+
+    @Operation(
+            summary = "Listar invitaciones recibidas",
+            description = "Devuelve todas las invitaciones pendientes del usuario autenticado.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Invitaciones obtenidas correctamente")
+            }
+    )
+    @PostMapping("/{workspaceId}/invitations")
+    @ResponseStatus(HttpStatus.OK)
+    public void sendInvitation(@PathVariable Long workspaceId, @Valid @RequestBody WorkspaceSendInvitationDTO body) {
+        workspaceQueryService.sendInvitation(workspaceId, body);
+    }
+
 }

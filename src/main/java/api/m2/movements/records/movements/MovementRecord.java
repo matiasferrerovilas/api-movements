@@ -2,7 +2,7 @@ package api.m2.movements.records.movements;
 
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
-import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 
 import java.math.BigDecimal;

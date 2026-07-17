@@ -7,7 +7,7 @@ import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
-import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;

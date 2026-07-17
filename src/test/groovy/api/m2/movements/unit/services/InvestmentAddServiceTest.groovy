@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.commons.Currency
 
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.entities.Investment
 import api.m2.movements.investment.entities.InvestmentType

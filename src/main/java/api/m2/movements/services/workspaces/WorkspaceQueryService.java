@@ -1,16 +1,18 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
-import api.m2.movements.records.workspaces.WorkspaceDTO;
+import api.m2.movements.clients.identity.response.WorkspaceDTO;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
-import api.m2.movements.records.workspaces.WorkspaceInvitationDTO;
-import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.records.workspaces.WorkspacesWithUser;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,5 +70,9 @@ public class WorkspaceQueryService {
                 .map(WorkspaceMemberDTO::workspaceName)
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
+    }
+
+    public void sendInvitation(Long workspaceId, @Valid WorkspaceSendInvitationDTO body) {
+        identityClient.sendInvitation(workspaceId, body);
     }
 }

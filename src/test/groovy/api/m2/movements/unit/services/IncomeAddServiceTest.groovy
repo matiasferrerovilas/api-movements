@@ -4,7 +4,7 @@ import api.m2.movements.entities.commons.Bank
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Income
 
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.IncomeMapper

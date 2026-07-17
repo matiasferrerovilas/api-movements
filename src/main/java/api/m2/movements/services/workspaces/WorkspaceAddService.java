@@ -1,14 +1,11 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
-import api.m2.movements.clients.identity.response.UserMe;
-import api.m2.movements.records.workspaces.WorkspaceAdded;
+import api.m2.movements.clients.identity.response.WorkspaceAdded;
 import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.BusinessException;
-import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.records.workspaces.AddWorkspaceRecord;
-import api.m2.movements.services.WorkspacePublishServiceWebSocket;
+import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceAddService {
-    private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
-    private final WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket;
     private final UserSettingService userSettingService;
     private final IdentityClient identityClient;
 
@@ -41,25 +36,13 @@ public class WorkspaceAddService {
     public void leaveWorkspace(Long workspaceId) {
         Long userId = userService.getMe().id();
 
-        identityClient.leaveWorkspace(workspaceId, userId);
+        identityClient.leaveWorkspace(workspaceId);
 
         userSettingService.getDefaultWorkspaceId(userId)
                 .filter(workspaceId::equals)
                 .ifPresent(id -> userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE));
-    }
 
-    @Transactional
-    public void updateDefaultWorkspace(Long workspaceId) {
-        /*Long userId = userService.getMe().id();
-        userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_WORKSPACE, workspaceId);
-
-        var workspaceDetail = workspaceQueryService.getAllWorkspaceDetails().stream()
-                .filter(detail -> detail.id().equals(workspaceId))
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
-
-        var keycloakSubject = userService.getCurrentKeycloakId();
-        workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(workspaceDetail, keycloakSubject);*/
+        log.info("Workspace {} has been removed", workspaceId);
     }
 
     public List<WorkspaceAdded> createWorkspaces(List<AddWorkspaceRecord> workspacesToAdd) {

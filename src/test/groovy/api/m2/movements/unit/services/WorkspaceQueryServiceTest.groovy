@@ -5,8 +5,8 @@ import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.records.workspaces.WorkspaceInvitationDTO
+import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO
 import api.m2.movements.records.workspaces.WorkspacesWithUser
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService

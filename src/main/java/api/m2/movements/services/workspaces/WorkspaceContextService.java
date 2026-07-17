@@ -2,7 +2,7 @@ package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;

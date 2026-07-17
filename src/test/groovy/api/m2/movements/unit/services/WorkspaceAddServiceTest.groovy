@@ -3,26 +3,20 @@ package api.m2.movements.unit.services
 import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.clients.identity.requests.UserToAdd
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.enums.UserSettingKey
-import api.m2.movements.records.workspaces.AddWorkspaceRecord
-import api.m2.movements.records.workspaces.WorkspaceAdded
-import api.m2.movements.records.workspaces.WorkspaceDetail
-import api.m2.movements.records.users.UserBaseRecord
-import api.m2.movements.services.WorkspacePublishServiceWebSocket
+import api.m2.movements.clients.identity.requests.AddWorkspaceRecord
+import api.m2.movements.clients.identity.response.WorkspaceAdded
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceAddService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 import spock.lang.Specification
 
 class WorkspaceAddServiceTest extends Specification {
 
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
-    WorkspacePublishServiceWebSocket workspacePublishServiceWebSocket = Mock(WorkspacePublishServiceWebSocket)
     UserSettingService userSettingService = Mock(UserSettingService)
     IdentityClient identityClient = Mock(IdentityClient)
 
@@ -30,9 +24,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     def setup() {
         service = new WorkspaceAddService(
-                workspaceQueryService,
                 userService,
-                workspacePublishServiceWebSocket,
                 userSettingService,
                 identityClient
         )
@@ -119,40 +111,6 @@ class WorkspaceAddServiceTest extends Specification {
         then:
         1 * identityClient.leaveWorkspace(10L, 2L)
         0 * userSettingService.deleteByKey(_)
-    }
-
-    // --- updateDefaultWorkspace ---
-
-    def "updateDefaultWorkspace - should upsert setting and publish WorkspaceDetail"() {
-        given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
-        userService.getCurrentKeycloakId() >> "keycloak-uuid-456"
-        workspaceQueryService.getAllWorkspaceDetails() >> [
-                new WorkspaceDetail(30L, "Principal", 2, true),
-                new WorkspaceDetail(31L, "Otro", 1, false),
-        ]
-
-        when:
-        service.updateDefaultWorkspace(30L)
-
-        then:
-        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_WORKSPACE, 30L)
-        1 * workspacePublishServiceWebSocket.publishWorkspaceMembershipUpdated(
-                new WorkspaceDetail(30L, "Principal", 2, true),
-                "keycloak-uuid-456"
-        )
-    }
-
-    def "updateDefaultWorkspace - should throw EntityNotFoundException when workspace not in user's list"() {
-        given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
-        workspaceQueryService.getAllWorkspaceDetails() >> []
-
-        when:
-        service.updateDefaultWorkspace(99L)
-
-        then:
-        thrown(EntityNotFoundException)
     }
 
     // --- createWorkspaces ---

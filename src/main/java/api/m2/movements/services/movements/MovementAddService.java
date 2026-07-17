@@ -8,7 +8,7 @@ import api.m2.movements.records.movements.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
-import api.m2.movements.records.users.UserBaseRecord;
+import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.exceptions.EntityNotFoundException;

@@ -5,7 +5,7 @@ import api.m2.movements.entities.commons.Currency
 
 import api.m2.movements.clients.identity.requests.UserToAdd
 import api.m2.movements.enums.UserSettingKey
-import api.m2.movements.records.workspaces.WorkspaceAdded
+import api.m2.movements.clients.identity.response.WorkspaceAdded
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.onboarding.BankToAdd
 import api.m2.movements.records.onboarding.OnBoardingAmount

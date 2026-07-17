@@ -1,14 +1,15 @@
 package api.m2.movements.clients.identity;
 
-import api.m2.movements.records.workspaces.AddWorkspaceRecord;
-import api.m2.movements.records.workspaces.WorkspaceAdded;
-import api.m2.movements.records.users.UserBaseRecord;
-import api.m2.movements.records.workspaces.WorkspaceDTO;
-import api.m2.movements.records.workspaces.WorkspaceInvitationDTO;
-import api.m2.movements.records.workspaces.WorkspaceMemberDTO;
-import api.m2.movements.records.workspaces.WorkspacesWithUser;
+import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
+import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
+import api.m2.movements.clients.identity.response.WorkspaceAdded;
+import api.m2.movements.clients.identity.response.UserBaseRecord;
+import api.m2.movements.clients.identity.response.WorkspaceDTO;
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.clients.identity.response.UserMe;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,9 +55,12 @@ public interface IdentityClient {
     @GetExchange("/v1/workspaces/{workspaceId}/members/{userId}")
     void verifyMembership(@PathVariable Long workspaceId, @PathVariable Long userId);
 
-    @DeleteExchange("/v1/workspaces/{workspaceId}/members/{userId}")
-    void leaveWorkspace(@PathVariable Long workspaceId, @PathVariable Long userId);
+    @DeleteExchange("/v1/workspaces/{workspaceId}")
+    void leaveWorkspace(@PathVariable Long workspaceId);
 
     @PutExchange("/v1/onboarding/tour")
     void markTourAsSeen();
+
+    @PostExchange("/v1/workspaces/{workspaceId}")
+    void sendInvitation(@PathVariable  Long workspaceId, @RequestBody WorkspaceSendInvitationDTO body);
 }

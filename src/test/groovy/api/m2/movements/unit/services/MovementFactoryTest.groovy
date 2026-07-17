@@ -5,7 +5,7 @@ import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Movement
 
-import api.m2.movements.records.users.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.records.categories.CategoryUpdateRecord
