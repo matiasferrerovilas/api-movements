@@ -1,5 +1,6 @@
 package api.m2.movements.clients.identity;
 
+import api.m2.movements.clients.identity.requests.AcceptRejectInvitationDTO;
 import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.clients.identity.response.WorkspaceAdded;
@@ -49,7 +50,7 @@ public interface IdentityClient {
     @GetExchange("/v1/workspaces/{workspaceId}")
     WorkspaceDTO getWorkspaceById(@PathVariable Long workspaceId);
 
-    @GetExchange("/v1/workspaces/invitations")
+    @GetExchange("/v1/invitations")
     List<WorkspaceInvitationDTO> getInvitations();
 
     @GetExchange("/v1/workspaces/{workspaceId}/members/{userId}")
@@ -61,6 +62,9 @@ public interface IdentityClient {
     @PutExchange("/v1/onboarding/tour")
     void markTourAsSeen();
 
-    @PostExchange("/v1/workspaces/{workspaceId}")
+    @PostExchange("/v1/invitations/{workspaceId}")
     void sendInvitation(@PathVariable  Long workspaceId, @RequestBody WorkspaceSendInvitationDTO body);
+
+    @PatchExchange("/v1/invitations")
+    void acceptRejectInvitation(@RequestBody AcceptRejectInvitationDTO body);
 }

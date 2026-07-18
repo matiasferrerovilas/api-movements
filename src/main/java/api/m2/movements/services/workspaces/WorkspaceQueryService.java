@@ -1,6 +1,7 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.requests.AcceptRejectInvitationDTO;
 import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -74,5 +75,9 @@ public class WorkspaceQueryService {
 
     public void sendInvitation(Long workspaceId, @Valid WorkspaceSendInvitationDTO body) {
         identityClient.sendInvitation(workspaceId, body);
+    }
+
+    public void acceptRejectInvitation(@Valid AcceptRejectInvitationDTO body) {
+        identityClient.acceptRejectInvitation(body);
     }
 }
