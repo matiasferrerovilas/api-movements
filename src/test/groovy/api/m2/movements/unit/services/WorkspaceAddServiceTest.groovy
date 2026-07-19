@@ -1,12 +1,11 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.clients.identity.IdentityClient
-import api.m2.movements.clients.identity.requests.UserToAdd
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord
 import api.m2.movements.clients.identity.response.WorkspaceAdded
-import api.m2.movements.clients.identity.response.UserBaseRecord
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceAddService
@@ -30,18 +29,21 @@ class WorkspaceAddServiceTest extends Specification {
         )
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     // --- createWorkspace ---
 
     def "createWorkspace - should delegate to IdentityClient"() {
         given:
         def record = new AddWorkspaceRecord("Viajes")
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
 
         when:
         service.createWorkspace(record)
 
         then:
-        1 * identityClient.createWorkspaces(1L, [record])
+        1 * identityClient.createWorkspaces([record])
     }
 
     def "createWorkspace - should throw BusinessException when description is blank"() {
@@ -53,14 +55,13 @@ class WorkspaceAddServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
-        0 * identityClient.createWorkspaces(_ as Long, _ as List)
+        0 * identityClient.createWorkspaces(_ as List)
     }
 
-    def "createWorkspace - should throw BusinessException when IdentityClient rejects the request"() {
+    def "createWorkspace - should propagate IdentityClient failure"() {
         given:
         def record = new AddWorkspaceRecord("Hogar")
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
-        identityClient.createWorkspaces(2L, [record]) >> {
+        identityClient.createWorkspaces([record]) >> {
             throw HttpClientErrorException.create(HttpStatus.CONFLICT, "Conflict", null, null, null)
         }
 
@@ -68,15 +69,15 @@ class WorkspaceAddServiceTest extends Specification {
         service.createWorkspace(record)
 
         then:
-        thrown(BusinessException)
+        thrown(HttpClientErrorException)
     }
 
     // --- leaveWorkspace ---
 
-    def "leaveWorkspace - should throw BusinessException when IdentityClient rejects the request"() {
+    def "leaveWorkspace - should propagate IdentityClient failure"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 5L)
-        identityClient.leaveWorkspace(99L, 5L) >> {
+        userService.getMe() >> userMe(5L)
+        identityClient.leaveWorkspace(99L) >> {
             throw HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null)
         }
 
@@ -84,32 +85,32 @@ class WorkspaceAddServiceTest extends Specification {
         service.leaveWorkspace(99L)
 
         then:
-        thrown(BusinessException)
+        thrown(HttpClientErrorException)
     }
 
     def "leaveWorkspace - should clear DEFAULT_WORKSPACE setting when it points to the workspace being left"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
+        userService.getMe() >> userMe(2L)
         userSettingService.getDefaultWorkspaceId(2L) >> Optional.of(10L)
 
         when:
         service.leaveWorkspace(10L)
 
         then:
-        1 * identityClient.leaveWorkspace(10L, 2L)
+        1 * identityClient.leaveWorkspace(10L)
         1 * userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE)
     }
 
     def "leaveWorkspace - should not touch DEFAULT_WORKSPACE setting when it points elsewhere"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 2L)
+        userService.getMe() >> userMe(2L)
         userSettingService.getDefaultWorkspaceId(2L) >> Optional.of(20L)
 
         when:
         service.leaveWorkspace(10L)
 
         then:
-        1 * identityClient.leaveWorkspace(10L, 2L)
+        1 * identityClient.leaveWorkspace(10L)
         0 * userSettingService.deleteByKey(_)
     }
 
@@ -117,14 +118,13 @@ class WorkspaceAddServiceTest extends Specification {
 
     def "createWorkspaces - should delegate to IdentityClient"() {
         given:
-        def user = UserToAdd.builder().id(1L).email("test@test.com").build()
         def workspacesToAdd = [new AddWorkspaceRecord("DEFAULT")]
         def expected = [new WorkspaceAdded(100L, "DEFAULT")]
 
-        identityClient.createWorkspaces(1L, workspacesToAdd) >> expected
+        identityClient.createWorkspaces(workspacesToAdd) >> expected
 
         when:
-        def result = service.createWorkspaces(user, workspacesToAdd)
+        def result = service.createWorkspaces(workspacesToAdd)
 
         then:
         result == expected

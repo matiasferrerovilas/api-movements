@@ -72,7 +72,7 @@ class SubscriptionAddServiceTest extends Specification {
             assert event.currencySymbol() == "ARS"
             assert event.description() == "Servicio Pagado Netflix"
         }
-        1 * subscriptionRepository.save(subscription)
+        1 * subscriptionRepository.save(subscription) >> subscription
     }
 
     def "paySubscriptionById - should throw EntityNotFoundException when subscription does not exist"() {
@@ -116,7 +116,7 @@ class SubscriptionAddServiceTest extends Specification {
         service.updateSubscription(20L, dto)
 
         then:
-        1 * subscriptionRepository.save(subscription)
+        1 * subscriptionRepository.save(subscription) >> subscription
     }
 
     def "updateSubscription - should throw EntityNotFoundException when subscription does not exist"() {

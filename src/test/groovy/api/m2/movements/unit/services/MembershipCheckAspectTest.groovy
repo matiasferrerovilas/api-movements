@@ -7,7 +7,7 @@ import api.m2.movements.aspect.membership.WorkspaceIdResolverRegistry
 import api.m2.movements.enums.MembershipDomain
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.user.UserService
 import org.aspectj.lang.JoinPoint
@@ -29,6 +29,10 @@ class MembershipCheckAspectTest extends Specification {
                 workspaceQueryService,
                 resolverRegistry
         )
+    }
+
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
     }
 
     /**
@@ -57,12 +61,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for MOVEMENT domain"() {
         given:
-        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
         resolverRegistry.resolve(MembershipDomain.MOVEMENT, 10L) >> 1L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(42L)
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -73,12 +76,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should use idParamIndex=1 to extract entity id"() {
         given:
-        def user = new UserBaseRecord("User", 7L)
         def ann = annotation(MembershipDomain.MOVEMENT, 1)
         def joinPoint = buildJoinPoint(new Object(), 99L)
 
         resolverRegistry.resolve(MembershipDomain.MOVEMENT, 99L) >> 5L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(7L)
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -106,12 +108,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (MOVEMENT)"() {
         given:
-        def user = new UserBaseRecord("User", 99L)
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
         resolverRegistry.resolve(MembershipDomain.MOVEMENT, 10L) >> 1L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(99L)
         workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 99L) >> {
             throw new PermissionDeniedException("No tienes permiso")
         }
@@ -127,12 +128,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for INCOME domain"() {
         given:
-        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.INCOME)
         def joinPoint = buildJoinPoint(20L)
 
         resolverRegistry.resolve(MembershipDomain.INCOME, 20L) >> 2L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(42L)
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -162,12 +162,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for SUBSCRIPTION domain"() {
         given:
-        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
         resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 30L) >> 3L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(42L)
 
         when:
         aspect.checkMembership(joinPoint, ann)
@@ -195,12 +194,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should throw PermissionDeniedException when user is not member (SUBSCRIPTION)"() {
         given:
-        def user = new UserBaseRecord("User", 99L)
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
         resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 30L) >> 3L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(99L)
         workspaceQueryService.verifyUserIsMemberOfWorkspace(3L, 99L) >> {
             throw new PermissionDeniedException("No tienes permiso")
         }
@@ -216,12 +214,11 @@ class MembershipCheckAspectTest extends Specification {
 
     def "checkMembership - should verify membership for BUDGET domain"() {
         given:
-        def user = new UserBaseRecord("User", 42L)
         def ann = annotation(MembershipDomain.BUDGET)
         def joinPoint = buildJoinPoint(40L)
 
         resolverRegistry.resolve(MembershipDomain.BUDGET, 40L) >> 4L
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> userMe(42L)
 
         when:
         aspect.checkMembership(joinPoint, ann)

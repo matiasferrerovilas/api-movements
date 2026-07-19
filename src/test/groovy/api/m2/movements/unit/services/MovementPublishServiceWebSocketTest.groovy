@@ -19,12 +19,9 @@ class MovementPublishServiceWebSocketTest extends Specification {
 
     def "publishMovementAdded - should publish to correct topic with MOVEMENT_ADDED event"() {
         given:
-        def metadata = Stub(MovementRecord.Metadata) {
-            workspace() >> new WorkspaceBaseRecord(1L, "Familia")
-        }
-        def movementRecord = Stub(MovementRecord) {
-            metadata() >> metadata
-        }
+        def metadata = new MovementRecord.Metadata(null, new WorkspaceBaseRecord(1L, "Familia"), null, null)
+        def movementRecord = new MovementRecord(
+                1L, null, null, null, null, null, null, null, null, null, null, null, metadata)
 
         when:
         service.publishMovementAdded(movementRecord)
@@ -46,12 +43,9 @@ class MovementPublishServiceWebSocketTest extends Specification {
 
     def "publishMovementAdded - should publish EventWrapper with correct eventType"() {
         given:
-        def metadata = Stub(MovementRecord.Metadata) {
-            workspace() >> new WorkspaceBaseRecord(5L, "Familia")
-        }
-        def movementRecord = Stub(MovementRecord) {
-            metadata() >> metadata
-        }
+        def metadata = new MovementRecord.Metadata(null, new WorkspaceBaseRecord(5L, "Familia"), null, null)
+        def movementRecord = new MovementRecord(
+                1L, null, null, null, null, null, null, null, null, null, null, null, metadata)
 
         when:
         service.publishMovementAdded(movementRecord)

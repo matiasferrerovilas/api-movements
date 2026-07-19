@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.commons.Currency
 
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.investment.entities.Investment
 import api.m2.movements.investment.entities.InvestmentType
@@ -48,6 +48,10 @@ class InvestmentAddServiceTest extends Specification {
         )
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     def buildInvestment(Long workspaceId = 1L) {
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
         def type = Stub(InvestmentType) { getId() >> 1L }
@@ -72,7 +76,7 @@ class InvestmentAddServiceTest extends Specification {
         def record = buildRecord()
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         currencyRepository.findBySymbol("ARS") >> Optional.of(currency)
         investmentTypeRepository.findById(1L) >> Optional.of(investmentType)
         investmentRepository.save(_ as Investment) >> investment
@@ -92,7 +96,7 @@ class InvestmentAddServiceTest extends Specification {
                 null, null, null, null, 1L, "USD_INEXISTENTE")
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         currencyRepository.findBySymbol("USD_INEXISTENTE") >> Optional.empty()
 
         when:
@@ -109,7 +113,7 @@ class InvestmentAddServiceTest extends Specification {
                 null, null, null, null, 999L, "ARS")
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         currencyRepository.findBySymbol("ARS") >> Optional.of(Stub(Currency))
         investmentTypeRepository.findById(999L) >> Optional.empty()
 

@@ -10,7 +10,6 @@ import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.clients.identity.response.UserMe;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;

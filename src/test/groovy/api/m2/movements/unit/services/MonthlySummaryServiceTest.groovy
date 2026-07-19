@@ -6,7 +6,7 @@ import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
@@ -21,13 +21,13 @@ class MonthlySummaryServiceTest extends Specification {
 
     MonthlySummaryService service
 
-    def user = new UserBaseRecord("User", 1L)
+    def user = new UserMe(1L, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
 
     def workspaceId = 10L
 
     def setup() {
         service = new MonthlySummaryService(movementRepository, userService, snapshotService, workspaceQueryService)
-        userService.getAuthenticatedUser() >> user
+        userService.getMe() >> user
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ class MonthlySummaryServiceTest extends Specification {
         service.getSummary(workspaceId, 2025, 4)
 
         then:
-        1 * userService.getAuthenticatedUser() >> user
+        1 * userService.getMe() >> user
     }
 
     def "getSummary - should verify user membership before returning data"() {
@@ -290,7 +290,7 @@ class MonthlySummaryServiceTest extends Specification {
         service.getSummary(workspaceId, 2025, 4)
 
         then:
-        1 * userService.getAuthenticatedUser() >> user
+        1 * userService.getMe() >> user
     }
 
     // ── @Unroll ────────────────────────────────────────────────────────────────

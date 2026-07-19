@@ -21,8 +21,8 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 .description("Netflix")
                 .amount(new BigDecimal("15.99"))
                 .currency(testCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .lastPayment(LocalDate.now())
                 .build())
 
@@ -57,16 +57,16 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 .description("Netflix")
                 .amount(new BigDecimal("15.99"))
                 .currency(testCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .build())
 
         subscriptionRepository.save(Subscription.builder()
                 .description("Spotify")
                 .amount(new BigDecimal("9.99"))
                 .currency(usdCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .build())
 
         when:
@@ -129,8 +129,8 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 .description("Netflix")
                 .amount(new BigDecimal("15.99"))
                 .currency(testCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .lastPayment(LocalDate.now().minusMonths(1))
                 .build())
 
@@ -152,8 +152,8 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 .description("Netflix")
                 .amount(new BigDecimal("15.99"))
                 .currency(testCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .build())
 
         def updateRequest = [
@@ -182,8 +182,8 @@ class SubscriptionControllerIntegrationTest extends BaseControllerIntegrationTes
                 .description("Netflix")
                 .amount(new BigDecimal("15.99"))
                 .currency(testCurrency)
-                .workspace(testWorkspace)
-                .owner(testUser)
+                .workspaceId(testWorkspaceId)
+                .ownerId(testUserId)
                 .build())
 
         when:

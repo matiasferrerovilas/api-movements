@@ -5,7 +5,7 @@ import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Movement
 
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.records.categories.CategoryUpdateRecord
@@ -46,6 +46,10 @@ class MovementFactoryTest extends Specification {
         )
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     def "create - should build movement with all resolved dependencies"() {
         given:
         def dto = new MovementToAdd(
@@ -69,7 +73,7 @@ class MovementFactoryTest extends Specification {
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("USD") >> currency
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
+        userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         exchangeRateResolver.resolveRate("USD", dto.date()) >> new BigDecimal("1.0")
 
@@ -107,7 +111,7 @@ class MovementFactoryTest extends Specification {
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("EUR") >> currency
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
+        userService.getMe() >> userMe(10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> new BigDecimal("1.08")
 
         when:
@@ -140,7 +144,7 @@ class MovementFactoryTest extends Specification {
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
         currencyResolver.resolve("USD") >> currency
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 10L)
+        userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("UNKNOWN_BANK") >> Optional.empty()
 
         when:

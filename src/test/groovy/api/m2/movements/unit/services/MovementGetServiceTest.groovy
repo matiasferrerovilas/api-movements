@@ -122,12 +122,12 @@ class MovementGetServiceTest extends Specification {
         workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> []
         movementMapper.toRecord(movement) >> baseRecord
         workspaceQueryService.findWorkspaceNameById(1L) >> "Familia"
-        userService.getUserNamesByIds([7L]) >> [7L: "Matias"]
 
         when:
         def result = service.getExpensesBy(filter, pageable)
 
         then:
+        1 * userService.getUserNamesByIds([7L]) >> [7L: "Matias"]
         def metadata = result.content[0].metadata()
         metadata.workspace() == new WorkspaceBaseRecord(1L, "Familia")
         metadata.owner().givenName() == "Matias"

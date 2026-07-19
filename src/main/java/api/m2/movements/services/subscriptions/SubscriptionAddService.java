@@ -19,7 +19,6 @@ import api.m2.movements.repositories.SubscriptionRepository;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
-import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -80,7 +79,6 @@ public class SubscriptionAddService {
                 .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado"));
 
         this.publishSyncEventIfPaid(subscription, updateSubscription);
-        this.updateWorkspaceIfPresent(subscription, updateSubscription.workspace());
 
         subscriptionMapper.updateMovement(updateSubscription, subscription);
         subscription.setLastPayment(updateSubscription.lastPayment());
@@ -124,12 +122,6 @@ public class SubscriptionAddService {
                 update.amount(),
                 update.description(),
                 update.lastPayment()));
-    }
-
-    private void updateWorkspaceIfPresent(Subscription subscription, String workspace) {
-        if (!StringUtils.isEmpty(workspace)) {
-            subscription.setWorkspaceId(workspaceQueryService.findWorkspaceIdByName(workspace));
-        }
     }
 
     private SubscriptionRecord enrich(Subscription subscription) {

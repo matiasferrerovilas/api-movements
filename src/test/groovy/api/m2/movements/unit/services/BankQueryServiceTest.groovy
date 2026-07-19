@@ -6,7 +6,7 @@ import api.m2.movements.entities.integrity.UserBank
 import api.m2.movements.mappers.BankMapper
 import api.m2.movements.repositories.UserBankRepository
 import api.m2.movements.services.banks.BankQueryService
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
@@ -23,12 +23,16 @@ class BankQueryServiceTest extends Specification {
         service = new BankQueryService(userBankRepository, userService, bankMapper)
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     def "getAllBanks - should return only banks associated with the authenticated user"() {
         given:
         def bank = Bank.builder().id(10L).description("GALICIA").build()
         def userBank = Stub(UserBank) { getBank() >> bank }
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userBankRepository.findByUserId(1L) >> [userBank]
 
         when:
@@ -41,7 +45,7 @@ class BankQueryServiceTest extends Specification {
 
     def "getAllBanks - should return empty list when user has no banks"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userBankRepository.findByUserId(1L) >> []
 
         when:

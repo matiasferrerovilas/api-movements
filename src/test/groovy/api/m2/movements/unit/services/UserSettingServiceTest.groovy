@@ -8,7 +8,7 @@ import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.UserSettingRepository
 import api.m2.movements.services.settings.UserSettingService
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.services.user.UserService
 import spock.lang.Specification
 
@@ -24,6 +24,10 @@ class UserSettingServiceTest extends Specification {
         service = new UserSettingService(userSettingRepository, userService, bankRepository)
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     def "getAll - should return all settings for authenticated user"() {
         given:
         def setting1 = Stub(UserSetting) {
@@ -35,7 +39,7 @@ class UserSettingServiceTest extends Specification {
             getSettingValue() >> 20L
         }
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findAllByUserId(1L) >> [setting1, setting2]
 
         when:
@@ -51,7 +55,7 @@ class UserSettingServiceTest extends Specification {
 
     def "getAll - should return empty list when user has no settings"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findAllByUserId(1L) >> []
 
         when:
@@ -68,7 +72,7 @@ class UserSettingServiceTest extends Specification {
             getSettingValue() >> 42L
         }
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(setting)
 
         when:
@@ -81,7 +85,7 @@ class UserSettingServiceTest extends Specification {
 
     def "getByKey - should throw EntityNotFoundException when setting not found"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_CURRENCY) >> Optional.empty()
 
         when:
@@ -94,7 +98,7 @@ class UserSettingServiceTest extends Specification {
 
     def "upsert - should create new setting when not exists"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.empty()
 
         def savedSetting = Stub(UserSetting) {
@@ -117,7 +121,7 @@ class UserSettingServiceTest extends Specification {
         existingSetting.setSettingKey(UserSettingKey.DEFAULT_BANK)
         existingSetting.setSettingValue(10L)
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         userSettingRepository.findByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK) >> Optional.of(existingSetting)
 
         def savedSetting = Stub(UserSetting) {
@@ -209,7 +213,7 @@ class UserSettingServiceTest extends Specification {
 
     def "deleteByKey - should delete setting for authenticated user"() {
         given:
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
 
         when:
         service.deleteByKey(UserSettingKey.DEFAULT_BANK)

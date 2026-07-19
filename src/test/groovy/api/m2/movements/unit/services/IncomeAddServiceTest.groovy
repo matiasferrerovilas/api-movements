@@ -4,7 +4,7 @@ import api.m2.movements.entities.commons.Bank
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Income
 
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.IncomeMapper
@@ -50,13 +50,17 @@ class IncomeAddServiceTest extends Specification {
         )
     }
 
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    }
+
     def "loadIncome - should set bank on income before saving"() {
         given:
         def incomeToAdd = new IncomeToAdd("galicia", new CurrencyRecord("ARS", null), new BigDecimal("150000.00"))
         def currency = Stub(Currency)
         def bank = Bank.builder().id(1L).description("GALICIA").build()
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
         currencyAddService.findBySymbol("ARS") >> currency
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
@@ -75,7 +79,7 @@ class IncomeAddServiceTest extends Specification {
         def incomeToAdd = new IncomeToAdd("  bbva  ", new CurrencyRecord("USD", null), new BigDecimal("500.00"))
         def bank = Bank.builder().id(2L).description("BBVA").build()
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
         currencyAddService.findBySymbol("USD") >> Stub(Currency)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
@@ -91,7 +95,7 @@ class IncomeAddServiceTest extends Specification {
         given:
         def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", new CurrencyRecord("ARS", null), new BigDecimal("100.00"))
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
         currencyAddService.findBySymbol("ARS") >> Stub(Currency)
         bankRepository.findByDescription("BANCO_INEXISTENTE") >> Optional.empty()
@@ -110,7 +114,7 @@ class IncomeAddServiceTest extends Specification {
         def currency = Stub(Currency)
         def bank = Bank.builder().id(3L).description("SANTANDER").build()
 
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
         currencyAddService.findBySymbol("ARS") >> currency
         bankRepository.findByDescription("SANTANDER") >> Optional.of(bank)

@@ -2,7 +2,6 @@ package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.clients.identity.response.WorkspaceAdded;
-import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;

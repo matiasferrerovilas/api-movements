@@ -11,7 +11,6 @@ import api.m2.movements.records.categories.CategoryPatchRequest;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.categories.CategoryUpdatedEvent;
 import api.m2.movements.repositories.CategoryRepository;
-import api.m2.movements.services.category.CategoryAddService;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;

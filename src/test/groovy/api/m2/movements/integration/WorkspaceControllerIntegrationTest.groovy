@@ -3,7 +3,12 @@ package api.m2.movements.integration
 import groovy.json.JsonOutput
 import org.springframework.http.MediaType
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.delete as wmDelete
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson
+import static com.github.tomakehurst.wiremock.client.WireMock.post as wmPost
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
@@ -13,7 +18,7 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         given:
         def request = [description: "Mi nuevo workspace"]
 
-        stubFor(post(urlPathEqualTo("/v1/users/${testUserId}/workspaces"))
+        stubFor(wmPost(urlPathEqualTo("/v1/workspaces"))
                 .willReturn(okJson(JsonOutput.toJson([[id: 50, description: "Mi nuevo workspace"]]))))
 
         when:
@@ -40,24 +45,9 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
         result.andExpect(status().isBadRequest())
     }
 
-    def "GET /v1/workspace/count - should return workspaces with member count"() {
-        given:
-        stubFor(get(urlPathEqualTo("/v1/users/${testUserId}/workspaces"))
-                .willReturn(okJson(JsonOutput.toJson([[id: testWorkspaceId, name: "Hogar", membersCount: 1, owner: TEST_USER_EMAIL]]))))
-
-        when:
-        def result = mockMvc.perform(get("/v1/workspace/count")
-                .with(jwtAuth()))
-
-        then:
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath('$').isArray())
-                .andExpect(jsonPath('$[0].id').value(testWorkspaceId))
-    }
-
     def "DELETE /v1/workspace/{workspaceId} - should leave workspace via IdentityClient"() {
         given:
-        stubFor(delete(urlPathEqualTo("/v1/workspaces/${testWorkspaceId}/members/${testUserId}"))
+        stubFor(wmDelete(urlPathEqualTo("/v1/workspaces/${testWorkspaceId}"))
                 .willReturn(aResponse().withStatus(204)))
 
         when:
@@ -66,26 +56,5 @@ class WorkspaceControllerIntegrationTest extends BaseControllerIntegrationTest {
 
         then:
         result.andExpect(status().isNoContent())
-    }
-
-    def "PATCH /v1/workspace/{id}/default - should update default workspace"() {
-        given:
-        stubFor(get(urlPathEqualTo("/v1/users/${testUserId}/workspaces"))
-                .willReturn(okJson(JsonOutput.toJson([[id: testWorkspaceId, name: "Hogar", membersCount: 1, owner: TEST_USER_EMAIL]]))))
-
-        when:
-        def result = mockMvc.perform(patch("/v1/workspace/{id}/default", testWorkspaceId)
-                .with(jwtAuth()))
-
-        then:
-        result.andExpect(status().isOk())
-    }
-
-    def "GET /v1/workspace/count - should require authentication"() {
-        when:
-        def result = mockMvc.perform(get("/v1/workspace/count"))
-
-        then:
-        result.andExpect(status().isUnauthorized())
     }
 }

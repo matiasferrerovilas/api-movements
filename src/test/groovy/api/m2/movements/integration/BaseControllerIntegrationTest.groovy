@@ -103,6 +103,7 @@ abstract class BaseControllerIntegrationTest extends Specification {
     static {
         identityMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort())
         identityMock.start()
+        configureFor("localhost", identityMock.port())
     }
 
     @Container
@@ -175,6 +176,16 @@ abstract class BaseControllerIntegrationTest extends Specification {
                 .withQueryParam("email", equalTo(TEST_USER_EMAIL))
                 .willReturn(okJson(JsonOutput.toJson([givenName: "Integration", id: testUserId]))))
 
+        stubFor(get(urlPathEqualTo("/v1/users/me"))
+                .willReturn(okJson(JsonOutput.toJson([
+                        id        : testUserId,
+                        email     : TEST_USER_EMAIL,
+                        givenName : "Integration",
+                        familyName: "Test",
+                        userType  : "PERSONAL",
+                        metadata  : [isFirstLogin: false, hasSeenTour: true, userRole: []]
+                ]))))
+
         stubFor(get(urlPathMatching("/v1/workspaces/\\d+/members/\\d+"))
                 .willReturn(aResponse().withStatus(200)))
 
@@ -188,16 +199,31 @@ abstract class BaseControllerIntegrationTest extends Specification {
                         userType    : "PERSONAL"
                 ]))))
 
-        stubFor(patch(urlPathMatching("/v1/users/\\d+/first-login"))
+        stubFor(patch(urlPathMatching("/v1/onboarding/\\d+/first-login"))
                 .willReturn(aResponse().withStatus(200)))
 
-        stubFor(post(urlPathMatching("/v1/users/\\d+/workspaces"))
+        stubFor(post(urlPathEqualTo("/v1/workspaces"))
                 .willReturn(okJson(JsonOutput.toJson([[id: testWorkspaceId, description: "DEFAULT"]]))))
 
-        stubFor(get(urlPathMatching("/v1/users/\\d+/workspaces"))
-                .willReturn(okJson(JsonOutput.toJson([]))))
+        stubFor(get(urlPathEqualTo("/v1/workspaces/members"))
+                .willReturn(okJson(JsonOutput.toJson([[
+                        id           : testWorkspaceId,
+                        workspaceId  : testWorkspaceId,
+                        workspaceName: "Familia",
+                        metadata     : [members: [], role: "OWNER", joinedAt: null, isDefault: true]
+                ]]))))
 
-        stubFor(delete(urlPathMatching("/v1/workspaces/\\d+/members/\\d+"))
+        stubFor(get(urlPathEqualTo("/v1/users"))
+                .willReturn(okJson(JsonOutput.toJson([[
+                        id        : testUserId,
+                        email     : TEST_USER_EMAIL,
+                        givenName : "Integration",
+                        familyName: "Test",
+                        userType  : "PERSONAL",
+                        metadata  : [isFirstLogin: false, hasSeenTour: true, userRole: []]
+                ]]))))
+
+        stubFor(delete(urlPathMatching("/v1/workspaces/\\d+"))
                 .willReturn(aResponse().withStatus(204)))
 
         // Set default workspace for user (sigue siendo local)

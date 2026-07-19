@@ -30,6 +30,11 @@ public class IdentityClientConfig {
     private static final String SOURCE_SERVICE_NAME = "api-movements";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String UNKNOWN_ERROR_DETAIL = "Error desconocido al comunicarse con api-identity";
+    private static final int HTTP_BAD_REQUEST = 400;
+    private static final int HTTP_UNAUTHORIZED = 401;
+    private static final int HTTP_FORBIDDEN = 403;
+    private static final int HTTP_NOT_FOUND = 404;
+    private static final int HTTP_CONFLICT = 409;
 
     @Bean
     public IdentityClient identityClient(@Value("${identity.base-url}") String baseUrl, JsonMapper jsonMapper) {
@@ -61,10 +66,10 @@ public class IdentityClientConfig {
         int statusCode = response.getStatusCode().value();
 
         throw switch (statusCode) {
-            case 409 -> new EntityAlreadyExistsException(detail);
-            case 404 -> new EntityNotFoundException(detail);
-            case 401, 403 -> new PermissionDeniedException(detail);
-            case 400 -> new BusinessException(detail);
+            case HTTP_CONFLICT -> new EntityAlreadyExistsException(detail);
+            case HTTP_NOT_FOUND -> new EntityNotFoundException(detail);
+            case HTTP_UNAUTHORIZED, HTTP_FORBIDDEN -> new PermissionDeniedException(detail);
+            case HTTP_BAD_REQUEST -> new BusinessException(detail);
             default -> new ServiceException("Error al comunicarse con api-identity: " + detail);
         };
     }

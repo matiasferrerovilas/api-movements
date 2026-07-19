@@ -102,12 +102,12 @@ class MovementAddServiceTest extends Specification {
         movementFactory.create(_ as MovementToAdd) >> movement
         movementRepository.save(movement) >> movement
         workspaceQueryService.findWorkspaceNameById(1L) >> "Familia"
-        userService.getUserNamesByIds([10L]) >> [10L: "Matias"]
 
         when:
         def result = service.saveMovement(dto)
 
         then:
+        1 * userService.getUserNamesByIds([10L]) >> [10L: "Matias"]
         result.metadata().workspace() == new WorkspaceBaseRecord(1L, "Familia")
         result.metadata().owner().givenName() == "Matias"
         result.metadata().owner().id() == 10L

@@ -9,7 +9,7 @@ import api.m2.movements.records.balance.*
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.CalculateBalanceService
-import api.m2.movements.clients.identity.response.UserBaseRecord
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
@@ -37,8 +37,12 @@ class CalculateBalanceServiceTest extends Specification {
                 workspaceContextService
         )
         // stub de usuario en todos los tests
-        userService.getAuthenticatedUser() >> new UserBaseRecord("User", 1L)
+        userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
+    }
+
+    def userMe(Long id) {
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
     }
 
     // ── getBalance ─────────────────────────────────────────────────────────────
@@ -284,6 +288,6 @@ class CalculateBalanceServiceTest extends Specification {
         service.getMonthlyEvolution(2026)
 
         then:
-        0 * userService.getAuthenticatedUser()
+        0 * userService.getMe()
     }
 }

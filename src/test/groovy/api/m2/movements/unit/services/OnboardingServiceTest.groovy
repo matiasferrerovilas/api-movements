@@ -3,7 +3,8 @@ package api.m2.movements.unit.services
 import api.m2.movements.entities.commons.Bank
 import api.m2.movements.entities.commons.Currency
 
-import api.m2.movements.clients.identity.requests.UserToAdd
+import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.clients.identity.response.WorkspaceAdded
 import api.m2.movements.records.income.IncomeToAdd
@@ -29,16 +30,17 @@ class OnboardingServiceTest extends Specification {
     WorkspaceCategoryService workspaceCategoryService = Mock(WorkspaceCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    IdentityClient identityClient = Mock(IdentityClient)
 
     OnboardingService service
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, workspaceAddService,
-                bankAddService, workspaceCategoryService, userSettingService, currencyAddService)
+                bankAddService, workspaceCategoryService, userSettingService, currencyAddService, identityClient)
     }
 
     def user(Long id) {
-        return UserToAdd.builder().id(id).email("test@test.com").build()
+        return new UserMe(id, "test@test.com", null, null, "PERSONAL", new UserMe.Metadata(true, false, []))
     }
 
     def "finish - should create user, accounts, banks, categories and income when all fields are present"() {
@@ -53,7 +55,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [
+        workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"),
                 new WorkspaceAdded(101L, "Viajes"),
                 new WorkspaceAdded(102L, "Casa"),
@@ -90,7 +92,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -112,7 +114,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA"], 1L) >> [GALICIA: galiciaBank]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -134,7 +136,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -154,7 +156,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 5L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
 
         when:
@@ -173,7 +175,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
 
         when:
@@ -192,7 +194,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
 
         when:
@@ -211,7 +213,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [
+        workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Hogar")]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -231,7 +233,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("ENTERPRISE") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [
+        workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Gastos")]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -251,7 +253,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [
+        workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Personal")]
         currencyAddService.findBySymbol("USD") >> usd
 
@@ -271,7 +273,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        workspaceAddService.createWorkspaces(loggedUser, _ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
 
         when:

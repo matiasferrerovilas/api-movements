@@ -5,6 +5,7 @@ import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.enums.UserType
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.clients.identity.requests.UserToAdd
+import api.m2.movements.clients.identity.response.UserMe
 
 import api.m2.movements.services.user.UserAddService
 import org.springframework.security.core.Authentication
@@ -36,8 +37,7 @@ class UserAddServiceTest extends Specification {
         def userType = "PERSONAL"
         setupJwtSecurityContext(email, givenName, familyName)
 
-        def savedUser = UserToAdd.builder().id(1L).email(email).givenName(givenName).familyName(familyName)
-                .isFirstLogin(true).userType(UserType.PERSONAL).build()
+        def savedUser = new UserMe(1L, email, givenName, familyName, "PERSONAL", new UserMe.Metadata(true, false, []))
         identityClient.createLogInUser(_ as UserToAdd) >> savedUser
 
         when:
@@ -63,7 +63,7 @@ class UserAddServiceTest extends Specification {
         def userType = "ENTERPRISE"
         setupJwtSecurityContext(email, null, null)
 
-        def savedUser = UserToAdd.builder().id(1L).email(email).isFirstLogin(true).userType(UserType.ENTERPRISE).build()
+        def savedUser = new UserMe(1L, email, null, null, "ENTERPRISE", new UserMe.Metadata(true, false, []))
         identityClient.createLogInUser(_ as UserToAdd) >> savedUser
 
         when:
