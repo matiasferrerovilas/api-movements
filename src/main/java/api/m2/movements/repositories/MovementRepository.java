@@ -189,8 +189,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     List<String> findDistinctCurrenciesByMonth(Long userId, Integer year, Integer month,
                                                Integer prevYear, Integer prevMonth);
 
-    List<Movement> findByOwnerIdAndCategoryId(Long ownerId, Long categoryId);
-
     List<Movement> findByWorkspaceIdAndCategoryId(Long workspaceId, Long categoryId);
 
     List<Movement> findAllByExchangeRateIsNull();

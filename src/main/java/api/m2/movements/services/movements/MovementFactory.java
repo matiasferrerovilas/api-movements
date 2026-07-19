@@ -8,7 +8,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.services.currencies.ExchangeRateResolver;
 import api.m2.movements.services.category.CategoryResolver;
-import api.m2.movements.services.currencies.CurrencyResolver;
+import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class MovementFactory {
     private final CategoryResolver categoryResolver;
-    private final CurrencyResolver currencyResolver;
+    private final CurrencyAddService currencyAddService;
     private final UserService userService;
     private final MovementMapper movementMapper;
     private final WorkspaceContextService workspaceContextService;
@@ -41,7 +41,7 @@ public class MovementFactory {
 
         movement.setWorkspaceId(workspaceId);
         movement.setCategory(categoryResolver.resolve(dto.category(), workspaceId));
-        var currency = currencyResolver.resolve(dto.currency());
+        var currency = currencyAddService.findBySymbol(dto.currency());
         movement.setCurrency(currency);
         movement.setOwnerId(ownerId);
 
@@ -60,7 +60,7 @@ public class MovementFactory {
 
     public void applyUpdates(ExpenseToUpdate dto, Movement movement) {
         if (dto.currency() != null) {
-            movement.setCurrency(currencyResolver.resolve(dto.currency()));
+            movement.setCurrency(currencyAddService.findBySymbol(dto.currency()));
         }
         if (dto.category() != null) {
             movement.setCategory(categoryResolver.resolve(dto.category()));

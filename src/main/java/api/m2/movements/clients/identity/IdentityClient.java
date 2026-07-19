@@ -4,8 +4,6 @@ import api.m2.movements.clients.identity.requests.AcceptRejectInvitationDTO;
 import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.clients.identity.response.WorkspaceAdded;
-import api.m2.movements.clients.identity.response.UserBaseRecord;
-import api.m2.movements.clients.identity.response.WorkspaceDTO;
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.clients.identity.requests.UserToAdd;
@@ -31,9 +29,6 @@ public interface IdentityClient {
     @PatchExchange("/v1/onboarding/{userId}/first-login")
     void changeUserFirstLoginStatus(@PathVariable Long userId);
 
-    @GetExchange("/v1/users/by-email")
-    UserBaseRecord getUserByEmail(@RequestParam String email);
-
     @GetExchange("/v1/users")
     List<UserMe> getUsersByIds(@RequestParam List<Long> ids);
 
@@ -45,9 +40,6 @@ public interface IdentityClient {
 
     @GetExchange("/v1/workspaces/members")
     List<WorkspaceMemberDTO> getWorkspaces();
-
-    @GetExchange("/v1/workspaces/{workspaceId}")
-    WorkspaceDTO getWorkspaceById(@PathVariable Long workspaceId);
 
     @GetExchange("/v1/invitations")
     List<WorkspaceInvitationDTO> getInvitations();

@@ -2,11 +2,10 @@ package api.m2.movements.mappers;
 
 import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.entities.movements.Subscription;
-import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.records.services.SubscriptionToAdd;
 import api.m2.movements.records.services.UpdateSubscriptionRecord;
-import api.m2.movements.repositories.CurrencyRepository;
+import api.m2.movements.services.currencies.CurrencyAddService;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
@@ -21,7 +20,7 @@ public interface SubscriptionMapper {
     @Mapping(target = "currency", source = "currency.symbol", qualifiedByName = "mapCurrency")
     @Mapping(target = "lastPayment", expression = "java(subscriptionToAdd.isPaid() != null "
             + "&& subscriptionToAdd.isPaid() ? subscriptionToAdd.lastPayment() : null)")
-    Subscription toEntity(SubscriptionToAdd subscriptionToAdd, @Context CurrencyRepository currencyRepository);
+    Subscription toEntity(SubscriptionToAdd subscriptionToAdd, @Context CurrencyAddService currencyAddService);
 
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
     @Mapping(target = "workspaceName", ignore = true)
@@ -34,12 +33,11 @@ public interface SubscriptionMapper {
     void updateMovement(UpdateSubscriptionRecord changesToMovement, @MappingTarget Subscription subscription);
 
     @Named("mapCurrency")
-    default Currency mapCurrency(String symbol, @Context CurrencyRepository currencyRepository) {
+    default Currency mapCurrency(String symbol, @Context CurrencyAddService currencyAddService) {
         if (symbol == null) {
             return null;
         }
-        return currencyRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new EntityNotFoundException("Currency not found: " + symbol));
+        return currencyAddService.findBySymbol(symbol);
     }
 }
 

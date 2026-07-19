@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
@@ -21,7 +20,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
               AND b.currency.symbol = :currencySymbol
               AND (b.year IS NULL OR (b.year = :year AND b.month = :month))
             """)
-    List<Budget> findByAccountAndPeriod(
+    List<Budget> findByWorkspaceCurrencyAndPeriod(
             @Param("workspaceId") Long workspaceId,
             @Param("currencySymbol") String currencySymbol,
             @Param("year") int year,
@@ -39,10 +38,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             @Param("workspaceId") Long workspaceId,
             @Param("year") int year,
             @Param("month") int month
-    );
-
-    Optional<Budget> findByWorkspaceIdAndCategoryIdAndCurrencyId(
-            Long workspaceId, Long categoryId, Long currencyId
     );
 
     @Query(value = """

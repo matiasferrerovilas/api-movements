@@ -28,7 +28,7 @@ public class BudgetQueryService {
 
         List<Budget> budgets = (currencySymbol == null)
                 ? budgetRepository.findByWorkspaceAndPeriod(workspaceId, year, month)
-                : budgetRepository.findByAccountAndPeriod(workspaceId, currencySymbol, year, month);
+                : budgetRepository.findByWorkspaceCurrencyAndPeriod(workspaceId, currencySymbol, year, month);
 
         return budgets.stream()
                 .map(budget -> {

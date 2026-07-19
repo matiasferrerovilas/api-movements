@@ -5,26 +5,26 @@ import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.services.balance.MonthlySummaryJob
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.services.user.UserService
+import api.m2.movements.services.settings.UserSettingService
 import spock.lang.Specification
 
 class MonthlySummaryJobTest extends Specification {
 
-    UserService userService = Mock()
+    UserSettingService userSettingService = Mock()
     MonthlySummaryService monthlySummaryService = Mock()
     MonthlySummarySnapshotService snapshotService = Mock()
 
     MonthlySummaryJob job
 
     def setup() {
-        job = new MonthlySummaryJob(userService, monthlySummaryService, snapshotService)
+        job = new MonthlySummaryJob(userSettingService, monthlySummaryService, snapshotService)
     }
 
     // ── lista vacía: no se invoca ningún servicio de cálculo ──────────────────
 
     def "generateMonthlySnapshots - should not call computeSummary or save when user list is empty"() {
         given:
-        userService.getUsersWithMonthlySnapshotEnabled() >> []
+        userSettingService.getUsersWithMonthlySnapshotEnabled() >> []
 
         when:
         job.generateMonthlySnapshots()
@@ -40,7 +40,7 @@ class MonthlySummaryJobTest extends Specification {
         given:
         def userId = 1L
         def summary = Stub(MonthlySummaryResponse)
-        userService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
         monthlySummaryService.computeSummary(userId, _ as Integer, _ as Integer) >> summary
 
         when:
@@ -56,7 +56,7 @@ class MonthlySummaryJobTest extends Specification {
     def "generateMonthlySnapshots - should call computeSummary and save once per user"() {
         given:
         def userIds = [1L, 2L, 3L]
-        userService.getUsersWithMonthlySnapshotEnabled() >> userIds
+        userSettingService.getUsersWithMonthlySnapshotEnabled() >> userIds
         monthlySummaryService.computeSummary(_ as Long, _ as Integer, _ as Integer) >> Stub(MonthlySummaryResponse)
 
         when:
@@ -69,19 +69,19 @@ class MonthlySummaryJobTest extends Specification {
         }
     }
 
-    // ── userService solo se llama una vez ─────────────────────────────────────
+    // ── userSettingService solo se llama una vez ─────────────────────────────────────
 
     def "generateMonthlySnapshots - should call getUsersWithMonthlySnapshotEnabled exactly once"() {
         given:
         def userId = 1L
-        userService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
         monthlySummaryService.computeSummary(*_) >> Stub(MonthlySummaryResponse)
 
         when:
         job.generateMonthlySnapshots()
 
         then:
-        1 * userService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        1 * userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
     }
 
     // ── el año y mes pasados a computeSummary y save son consistentes ─────────
@@ -90,7 +90,7 @@ class MonthlySummaryJobTest extends Specification {
         given:
         def userId = 1L
         def summary = Stub(MonthlySummaryResponse)
-        userService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
         int capturedYear
         int capturedMonth
 

@@ -15,7 +15,7 @@ Backend de gestión de finanzas personales. Permite registrar movimientos, suscr
 | Database | MySQL 8 + Liquibase (`ddl-auto: none`) |
 | ORM | Spring Data JPA / Hibernate |
 | Auth | Keycloak — OAuth2 Resource Server, JWT RS256 |
-| Messaging | RabbitMQ (AMQP) + WebSocket STOMP/SockJS |
+| Messaging | WebSocket STOMP/SockJS (RabbitMQ/AMQP queda provisionado en `RabbitConfig` — exchange `movement.topic`, queue `n8n.import.file.finished` — pero sin publisher ni listener activos en el código actual) |
 | Mapping | MapStruct 1.6.3 (`componentModel = "spring"`) |
 | Boilerplate | Lombok (`@Data`, `@Builder`, `@RequiredArgsConstructor`) |
 | Cache | Caffeine (in-memory, 5h TTL currency / 1h Yahoo Finance prices) |
@@ -85,13 +85,12 @@ api.m2.movements
     ├── balance/
     ├── budgets/        BudgetAddService, BudgetQueryService
     ├── category/       CategoryAddService, WorkspaceCategoryService, CategoryMigrateService
-    ├── currencies/     CurrencyAddService, CurrencyResolver
+    ├── currencies/     CurrencyAddService, ExchangeRateResolver
     ├── income/         IncomeAddService, IncomeQueryService
     ├── movements/      MovementAddService, MovementGetService, MovementFactory, SyncMovementsService
     │   ├── files/      MovementImportFileService, ExpenseFileStrategy (abstract), BBVA/Galicia impls
     │   └── resolvers/  CategoryResolver
     ├── publishing/
-    │   ├── rabbit/     RabbitSocketMessageService (base), MovementPublishServiceRabbit
     │   └── websockets/ WebSocketMessageService (base), Movement/Workspace/Service/CategoryPublishServiceWebSocket
     ├── settings/       UserSettingService
     ├── subscriptions/  SubscriptionAddService, SubscriptionQueryService, SubscriptionMovementHandler
@@ -192,13 +191,11 @@ DomainException (sealed)
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `POST` | `/v1/workspace` | Crear workspace |
-| `GET` | `/v1/workspace/membership` | Membresías del usuario |
-| `GET` | `/v1/workspace/count` | Workspaces con cantidad de miembros |
+| `GET` | `/v1/workspace` | Workspaces del usuario autenticado |
 | `DELETE` | `/v1/workspace/{workspaceId}` | Salir de un workspace |
 | `POST` | `/v1/workspace/{id}/invitations` | Invitar usuarios por email |
 | `GET` | `/v1/workspace/invitations` | Invitaciones pendientes del usuario |
 | `PATCH` | `/v1/workspace/invitations/{invitationId}` | Aceptar/rechazar invitación |
-| `PATCH` | `/v1/workspace/{id}/default` | Setear workspace por defecto |
 
 ### Ingresos, Suscripciones, Settings y Bancos
 | Método | Endpoint | Descripción |
@@ -292,7 +289,7 @@ Cada dominio tiene servicios separados por responsabilidad:
 No existe ningún servicio monolítico tipo `MovementService`.
 
 ### Factory + Resolver
-`MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, workspace) a través de `CategoryResolver` y `CurrencyResolver`. `CurrencyResolver` usa cache Caffeine (5h TTL).
+`MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, workspace) a través de `CategoryResolver` y `CurrencyAddService.findBySymbol` (usa cache Caffeine, 5h TTL). La resolución de moneda es un único camino compartido — `CurrencyAddService.findBySymbol` normaliza el símbolo (trim + uppercase) y cachea — usado también por Income y Subscription.
 
 ### Strategy (File Import)
 `ExpenseFileStrategy` es clase abstracta. `BBVACreditImportService` y `GaliciaCreditImportService` se registran como beans. `MovementImportFileService` despacha por `match(bank)`.
@@ -367,7 +364,6 @@ Para agregar un nuevo dominio: extender `MembershipDomain` y crear un bean que i
 | **Audit fields vía Hibernate** | `@CreationTimestamp` / `@UpdateTimestamp`, no Spring Data `@CreatedDate`. |
 | **Métodos privados con `this.`** | Distingue llamadas propias de llamadas a dependencias inyectadas. |
 | **`@EqualsAndHashCode` + `@ToString`** | Obligatorio en entidades bidireccionales para evitar recursión infinita. |
-| **RabbitMQ** | Exchange `movement.topic`, routing key `n8n.import.file` → integración con n8n. |
 | **Sin `IllegalArgumentException` ni `IllegalStateException`** | Usar siempre subclases de `DomainException`. Ver sección de Excepciones. |
 | **Event listeners con `@Transactional`** | Los `@EventListener` sincrónicos deben anotarse con `@Transactional` para garantizar propagación. |
 

@@ -1,6 +1,6 @@
 package api.m2.movements.services.income;
 
-import api.m2.movements.services.user.UserService;
+import api.m2.movements.services.settings.UserSettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,12 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecurringIncomeJob {
 
-    private final UserService userService;
+    private final UserSettingService userSettingService;
     private final IncomeAddService incomeAddService;
 
     @Scheduled(cron = "0 0 6 1 * *")
     public void generateRecurringIncomes() {
-        List<Long> userIds = userService.getUsersWithAutoIncomeEnabled();
+        List<Long> userIds = userSettingService.getUsersWithAutoIncomeEnabled();
         log.info("Generando ingresos recurrentes para {} usuarios", userIds.size());
 
         int totalMovements = 0;

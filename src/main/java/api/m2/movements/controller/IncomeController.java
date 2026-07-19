@@ -31,7 +31,7 @@ import java.util.List;
 @RequestMapping("/v1/income")
 @Slf4j
 @Tag(name = "Income", description = "API para la gestión de los ingresos personales del usuario")
-public class IngresoController {
+public class IncomeController {
 
     private final IncomeAddService incomeAddService;
     private final IncomeQueryService incomeQueryService;
@@ -95,7 +95,6 @@ public class IngresoController {
     public void deleteIncome(@PathVariable Long id) {
         incomeAddService.deleteIncome(id);
     }
-
 
     @Operation(
             summary = "Recargar ingreso",

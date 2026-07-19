@@ -16,10 +16,6 @@ public interface BalanceEvolutionMapper {
 
     int TOTAL_MONTHS = 12;
 
-    BalanceMonthlyEvolutionRecord toRecord(MonthlyEvolutionProjection projection);
-
-    List<BalanceMonthlyEvolutionRecord> toRecords(List<MonthlyEvolutionProjection> projections);
-
     default List<BalanceMonthlyEvolutionRecord> toRecordsWithFilledMonths(
             List<MonthlyEvolutionProjection> projections) {
 

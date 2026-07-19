@@ -115,8 +115,6 @@ abstract class BaseControllerIntegrationTest extends Specification {
             .withPassword("test")
             .withReuse(true)
             .withStartupTimeout(Duration.ofMinutes(5))
-            // Datos de test descartables: sin fsync por commit y datadir en tmpfs
-            // evita que InnoDB quede atado a la velocidad del disco del host.
             .withTmpFs(["/var/lib/mysql": "rw"])
             .withCommand(
                     "--innodb-flush-log-at-trx-commit=0",
@@ -172,10 +170,6 @@ abstract class BaseControllerIntegrationTest extends Specification {
         // User/Workspace/membresía ahora se resuelven vía IdentityClient (api-identity),
         // stubeado acá con WireMock. Tests concretos pueden registrar un stubFor(...)
         // más específico en su propio "given:" para pisar estos defaults.
-        stubFor(get(urlPathEqualTo("/v1/users/by-email"))
-                .withQueryParam("email", equalTo(TEST_USER_EMAIL))
-                .willReturn(okJson(JsonOutput.toJson([givenName: "Integration", id: testUserId]))))
-
         stubFor(get(urlPathEqualTo("/v1/users/me"))
                 .willReturn(okJson(JsonOutput.toJson([
                         id        : testUserId,

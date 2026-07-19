@@ -54,7 +54,7 @@ class BudgetQueryServiceTest extends Specification {
                 new BigDecimal("2000.00"), new BigDecimal("40.00"))
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
+        budgetRepository.findByWorkspaceCurrencyAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 4) >> new BigDecimal("2000.00")
         budgetMapper.toRecordWithSpent(budget, new BigDecimal("2000.00")) >> expectedRecord
 
@@ -70,7 +70,7 @@ class BudgetQueryServiceTest extends Specification {
     def "getByAccount - should return empty list when no budgets found"() {
         given:
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> []
+        budgetRepository.findByWorkspaceCurrencyAndPeriod(1L, "ARS", 2026, 4) >> []
 
         when:
         def result = service.getByAccount("ARS", 2026, 4)
@@ -89,7 +89,7 @@ class BudgetQueryServiceTest extends Specification {
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        budgetRepository.findByAccountAndPeriod(1L, "ARS", 2026, 4) >> [budget]
+        budgetRepository.findByWorkspaceCurrencyAndPeriod(1L, "ARS", 2026, 4) >> [budget]
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
 
         when:
@@ -110,7 +110,7 @@ class BudgetQueryServiceTest extends Specification {
                 BigDecimal.ZERO, BigDecimal.ZERO)
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        budgetRepository.findByAccountAndPeriod(1L, "USD", 2026, 4) >> [budget]
+        budgetRepository.findByWorkspaceCurrencyAndPeriod(1L, "USD", 2026, 4) >> [budget]
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Hogar", "USD", 2026, 4) >> null
         budgetMapper.toRecordWithSpent(budget, BigDecimal.ZERO) >> expectedRecord
 
@@ -149,7 +149,7 @@ class BudgetQueryServiceTest extends Specification {
 
         then:
         result.size() == 2
-        0 * budgetRepository.findByAccountAndPeriod(_, _, _, _)
+        0 * budgetRepository.findByWorkspaceCurrencyAndPeriod(_, _, _, _)
     }
 
     def "getByAccount - should call findByWorkspaceAndPeriod when currency is null"() {
@@ -161,7 +161,7 @@ class BudgetQueryServiceTest extends Specification {
 
         then:
         1 * budgetRepository.findByWorkspaceAndPeriod(1L, 2026, 4) >> []
-        0 * budgetRepository.findByAccountAndPeriod(_, _, _, _)
+        0 * budgetRepository.findByWorkspaceCurrencyAndPeriod(_, _, _, _)
         result.isEmpty()
     }
 }

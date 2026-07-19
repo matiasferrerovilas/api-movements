@@ -9,8 +9,8 @@ import api.m2.movements.records.services.ServiceDeletedEvent
 import api.m2.movements.records.services.UpdateSubscriptionRecord
 import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent
 import api.m2.movements.records.subscriptions.SubscriptionPaidEvent
-import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.SubscriptionRepository
+import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.subscriptions.SubscriptionAddService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
@@ -26,7 +26,7 @@ class SubscriptionAddServiceTest extends Specification {
 
     SubscriptionMapper subscriptionMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
-    CurrencyRepository currencyRepository = Mock(CurrencyRepository)
+    CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     UserService userService = Mock(UserService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
@@ -38,7 +38,7 @@ class SubscriptionAddServiceTest extends Specification {
         service = new SubscriptionAddService(
                 subscriptionMapper,
                 subscriptionRepository,
-                currencyRepository,
+                currencyAddService,
                 userService,
                 workspaceContextService,
                 workspaceQueryService,
