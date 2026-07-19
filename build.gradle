@@ -63,7 +63,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
-    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     // OpenAPI/Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
