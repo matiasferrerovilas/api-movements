@@ -147,7 +147,7 @@ tasks.matching { it.name in ['checkstyleAot', 'checkstyleAotTest'] }.configureEa
     enabled = false
 }
 
-tasks.matching { it.name in ['processAot', 'processTestAot'] }.configureEach {
+tasks.matching { it.name in ['processTestAot'] }.configureEach {
     enabled = false
 }
 
