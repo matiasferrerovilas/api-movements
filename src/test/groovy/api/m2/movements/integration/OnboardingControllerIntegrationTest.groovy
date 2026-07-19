@@ -42,8 +42,8 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         and: "Onboarding should have created the user, its workspaces and flipped first-login via IdentityClient"
         identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users")))
-        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users/${testUserId}/workspaces")))
-        identityMock.verify(patchRequestedFor(urlPathEqualTo("/v1/users/${testUserId}/first-login")))
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/workspaces")))
+        identityMock.verify(patchRequestedFor(urlPathEqualTo("/v1/onboarding/${testUserId}/first-login")))
     }
 
     def "POST /v1/onboarding - should complete onboarding without income"() {
