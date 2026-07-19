@@ -113,14 +113,6 @@ abstract class BaseControllerIntegrationTest extends Specification {
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withTmpFs(["/var/lib/mysql": "rw"])
-            .withCommand(
-                    "--innodb-flush-log-at-trx-commit=0",
-                    "--innodb-doublewrite=0",
-                    "--skip-log-bin"
-            )
 
     @Container
     @Shared
