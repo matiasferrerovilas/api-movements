@@ -63,7 +63,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*
  * headers, (de)serialización JSON) queda ejercitado en los tests de
  * integración, no solo el contrato Java del cliente.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @Testcontainers
 @Transactional
