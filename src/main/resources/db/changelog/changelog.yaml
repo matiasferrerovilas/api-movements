@@ -143,3 +143,6 @@ databaseChangeLog:
   - include:
       file: 048_drop_fk_constraints_users_workspaces.sql
       relativeToChangelogFile: true
+  - include:
+      file: 049_drop_tables_users_workspaces.sql
+      relativeToChangelogFile: true
