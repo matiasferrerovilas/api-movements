@@ -2,15 +2,11 @@ package api.m2.movements.controller;
 
 import api.m2.movements.enums.BalanceEnum;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
-import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.services.balance.CalculateBalanceService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -51,25 +47,6 @@ public class BalanceController {
     @GetMapping("/category")
     public Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(@ParameterObject BalanceFilterRecord balanceFilterRecord) {
         return calculateBalanceService.getBalanceWithCategoryByYear(balanceFilterRecord);
-    }
-
-    @Operation(
-            summary = "Obtener balance por grupo",
-            description = "Retorna el balance total agrupado por categoría para un año y mes específicos."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Balance calculado correctamente",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = BalanceByGroup.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Parámetros inválidos"),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
-    })
-    @GetMapping("/group")
-    public Set<BalanceByGroup> getBalanceByYearAndGroup(@RequestParam Integer year, @RequestParam Integer month) {
-        return calculateBalanceService.getBalanceByYearAndGroup(year, month);
     }
 
     @Operation(

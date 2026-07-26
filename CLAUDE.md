@@ -184,7 +184,6 @@ DomainException (sealed)
 |---|---|---|
 | `GET` | `/v1/balance` | Balance total (INGRESO/GASTO) |
 | `GET` | `/v1/balance/category` | Balance por categoría |
-| `GET` | `/v1/balance/group` | Balance por cuenta |
 | `GET` | `/v1/balance/monthly-evolution` | Evolución mensual por moneda |
 
 ### Workspaces

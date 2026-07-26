@@ -199,26 +199,6 @@ class CalculateBalanceServiceTest extends Specification {
         result.isEmpty()
     }
 
-    // ── getBalanceByYearAndGroup ───────────────────────────────────────────────
-
-    @Unroll
-    def "getBalanceByYearAndGroup - should work for year=#year month=#month"() {
-        given:
-        movementRepository.getBalanceByYearAndGroup(year, month, 1L) >> ([] as Set)
-
-        when:
-        def result = service.getBalanceByYearAndGroup(year, month)
-
-        then:
-        result != null
-
-        where:
-        year | month
-        2024 | 1
-        2025 | 6
-        2026 | 12
-    }
-
     // ── getMonthlyEvolution ────────────────────────────────────────────────────
 
     def "getMonthlyEvolution - should return 12 months filled for each currency in results"() {

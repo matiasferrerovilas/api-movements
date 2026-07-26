@@ -4,7 +4,6 @@ import api.m2.movements.enums.BalanceEnum;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.mappers.BalanceEvolutionMapper;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
-import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
 import api.m2.movements.repositories.CurrencyRepository;
@@ -70,12 +69,6 @@ public class CalculateBalanceService {
                 balanceFilterRecord.startDate().getMonthValue(),
                 List.of(workspaceId.intValue()),
                 balanceFilterRecord.currencies());
-    }
-
-    @Transactional(readOnly = true)
-    public Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month) {
-        var userId = userService.getMe().id();
-        return movementRepository.getBalanceByYearAndGroup(year, month, userId);
     }
 
     @Transactional(readOnly = true)

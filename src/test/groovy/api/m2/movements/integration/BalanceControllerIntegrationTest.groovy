@@ -117,35 +117,6 @@ class BalanceControllerIntegrationTest extends BaseControllerIntegrationTest {
                 .andExpect(jsonPath('$').isArray())
     }
 
-    def "GET /v1/balance/group - should return balance by workspace"() {
-        given:
-        def category = getOrCreateCategory("SIN_CATEGORIA")
-        def today = LocalDate.now()
-
-        movementRepository.save(Movement.builder()
-                .amount(new BigDecimal("500.00"))
-                .description("Workspace expense")
-                .type(MovementType.DEBITO)
-                .date(today)
-                .ownerId(testUserId)
-                .workspaceId(testWorkspaceId)
-                .currency(testCurrency)
-                .category(category)
-                .cuotaActual(0)
-                .cuotasTotales(0)
-                .build())
-
-        when:
-        def result = mockMvc.perform(get("/v1/balance/group")
-                .with(jwtAuth())
-                .param("year", today.year.toString())
-                .param("month", today.monthValue.toString()))
-
-        then:
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath('$').isArray())
-    }
-
     def "GET /v1/balance/monthly-evolution - should return monthly evolution"() {
         given:
         def category = getOrCreateCategory("SIN_CATEGORIA")
@@ -185,16 +156,6 @@ class BalanceControllerIntegrationTest extends BaseControllerIntegrationTest {
     def "GET /v1/balance/category - should require authentication"() {
         when:
         def result = mockMvc.perform(get("/v1/balance/category"))
-
-        then:
-        result.andExpect(status().isUnauthorized())
-    }
-
-    def "GET /v1/balance/group - should require authentication"() {
-        when:
-        def result = mockMvc.perform(get("/v1/balance/group")
-                .param("year", "2024")
-                .param("month", "1"))
 
         then:
         result.andExpect(status().isUnauthorized())

@@ -3,7 +3,6 @@ package api.m2.movements.repositories;
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.projections.MonthlyEvolutionProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
-import api.m2.movements.records.balance.BalanceByGroup;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 
 import org.springframework.data.domain.Page;
@@ -89,20 +88,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                                                               List<String> currencies);
 
 
-
-    @Query(value = """
-            SELECT   g.workspace_id AS workspaceId,
-                    c.symbol AS currencySymbol,
-                    YEAR(g.`date`) AS year,
-                    MONTH(g.`date`) AS month,
-                    SUM(g.amount) AS total
-            from movements g
-            INNER JOIN currency c ON g.currency_id = c.id
-            WHERE YEAR(g.`date`) = :year and MONTH(g.`date`) = :month AND g.user_id = :userId
-            GROUP BY g.workspace_id, YEAR(g.`date`), c.symbol, MONTH(g.`date`)
-            ORDER BY g.workspace_id, YEAR(g.`date`)
-    """, nativeQuery = true)
-    Set<BalanceByGroup> getBalanceByYearAndGroup(Integer year, Integer month, Long userId);
 
     @Query("""
     SELECT m FROM Movement m

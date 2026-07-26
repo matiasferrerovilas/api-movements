@@ -55,8 +55,6 @@ public class Movement {
     @Column(nullable = false, length = 60)
     private String description;
 
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
