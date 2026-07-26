@@ -76,10 +76,6 @@ public class UserSettingService {
                 .map(UserSetting::getSettingValue);
     }
 
-    public List<Long> getUsersWithMonthlySnapshotEnabled() {
-        return userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED);
-    }
-
     public List<Long> getUsersWithAutoIncomeEnabled() {
         return userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED);
     }

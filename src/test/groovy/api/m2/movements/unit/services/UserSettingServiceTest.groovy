@@ -222,17 +222,6 @@ class UserSettingServiceTest extends Specification {
         1 * userSettingRepository.deleteByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK)
     }
 
-    def "getUsersWithMonthlySnapshotEnabled - should delegate to repository"() {
-        given:
-        userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.MONTHLY_SUMMARY_ENABLED) >> [1L, 2L]
-
-        when:
-        def result = service.getUsersWithMonthlySnapshotEnabled()
-
-        then:
-        result.size() == 2
-    }
-
     def "getUsersWithAutoIncomeEnabled - should delegate to repository"() {
         given:
         userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED) >> [1L]

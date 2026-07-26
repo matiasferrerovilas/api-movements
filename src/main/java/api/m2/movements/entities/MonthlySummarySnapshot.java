@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "monthly_summary_snapshot",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_id", "year", "month"})
+                @UniqueConstraint(columnNames = {"workspace_id", "year", "month"})
         }
 )
 @Data
@@ -33,8 +33,8 @@ public class MonthlySummarySnapshot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "workspace_id", nullable = false)
+    private Long workspaceId;
 
     @Column(nullable = false)
     private Integer year;

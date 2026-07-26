@@ -1,6 +1,6 @@
 package api.m2.movements.services.balance;
 
-import api.m2.movements.services.settings.UserSettingService;
+import api.m2.movements.repositories.MovementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MonthlySummaryJob {
 
-    private final UserSettingService userSettingService;
+    private final MovementRepository movementRepository;
     private final MonthlySummaryService monthlySummaryService;
     private final MonthlySummarySnapshotService snapshotService;
 
@@ -24,12 +24,12 @@ public class MonthlySummaryJob {
         int year = target.getYear();
         int month = target.getMonthValue();
 
-        List<Long> userIds = userSettingService.getUsersWithMonthlySnapshotEnabled();
-        log.info("Generando snapshots mensuales para {}/{} — {} usuarios", month, year, userIds.size());
+        List<Long> workspaceIds = movementRepository.findDistinctWorkspaceIds();
+        log.info("Generando snapshots mensuales para {}/{} — {} workspaces", month, year, workspaceIds.size());
 
-        userIds.forEach(userId -> {
-            var summary = monthlySummaryService.computeSummary(userId, year, month);
-            snapshotService.save(userId, year, month, summary);
+        workspaceIds.forEach(workspaceId -> {
+            var summary = monthlySummaryService.computeSummary(workspaceId, year, month);
+            snapshotService.save(workspaceId, year, month, summary);
         });
     }
 }

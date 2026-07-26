@@ -31,35 +31,38 @@ public class MonthlySummaryService {
     public MonthlySummaryResponse getSummary(Long workspaceId, Integer year, Integer month) {
         Long userId = userService.getMe().id();
         workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);
-        return snapshotService.find(userId, year, month)
-                .orElseGet(() -> this.computeSummary(userId, year, month));
+        return snapshotService.find(workspaceId, year, month)
+                .orElseGet(() -> this.computeSummary(workspaceId, year, month));
     }
 
-    public MonthlySummaryResponse computeSummary(Long userId, Integer year, Integer month) {
+    public MonthlySummaryResponse computeSummary(Long workspaceId, Integer year, Integer month) {
         YearMonth prev = YearMonth.of(year, month).minusMonths(1);
         int prevYear = prev.getYear();
         int prevMonth = prev.getMonthValue();
 
         List<String> currencies = movementRepository
-                .findDistinctCurrenciesByMonth(userId, year, month, prevYear, prevMonth);
+                .findDistinctCurrenciesByMonth(workspaceId, year, month, prevYear, prevMonth);
 
         List<MonthlySummaryByCurrencyRecord> porMoneda = currencies.stream()
-                .map(currency -> this.buildCurrencySummary(userId, year, month, prevYear, prevMonth, currency))
+                .map(currency -> this.buildCurrencySummary(workspaceId, year, month, prevYear, prevMonth, currency))
                 .toList();
 
-        MonthlySummaryUnifiedRecord totalUnificadoUSD = this.buildUnifiedUsd(userId, year, month, prevYear, prevMonth);
+        MonthlySummaryUnifiedRecord totalUnificadoUSD =
+                this.buildUnifiedUsd(workspaceId, year, month, prevYear, prevMonth);
 
         return new MonthlySummaryResponse(year, month, totalUnificadoUSD, porMoneda);
     }
 
-    private MonthlySummaryByCurrencyRecord buildCurrencySummary(Long userId, int year, int month,
+    private MonthlySummaryByCurrencyRecord buildCurrencySummary(Long workspaceId, int year, int month,
                                                                  int prevYear, int prevMonth, String currency) {
-        BigDecimal ingresado = this.getTotalByCurrency(userId, year, month, MovementType.INGRESO, currency);
-        BigDecimal gastado = this.getTotalByCurrency(userId, year, month, MovementType.DEBITO, currency);
-        String topCategory = movementRepository.getTopCategoryByMonth(userId, year, month, currency).orElse(null);
+        BigDecimal ingresado = this.getTotalByCurrency(workspaceId, year, month, MovementType.INGRESO, currency);
+        BigDecimal gastado = this.getTotalByCurrency(workspaceId, year, month, MovementType.DEBITO, currency);
+        String topCategory = movementRepository.getTopCategoryByMonth(workspaceId, year, month, currency).orElse(null);
 
-        BigDecimal ingresadoAnterior = this.getTotalByCurrency(userId, prevYear, prevMonth, MovementType.INGRESO, currency);
-        BigDecimal gastadoAnterior = this.getTotalByCurrency(userId, prevYear, prevMonth, MovementType.DEBITO, currency);
+        BigDecimal ingresadoAnterior =
+                this.getTotalByCurrency(workspaceId, prevYear, prevMonth, MovementType.INGRESO, currency);
+        BigDecimal gastadoAnterior =
+                this.getTotalByCurrency(workspaceId, prevYear, prevMonth, MovementType.DEBITO, currency);
 
         return new MonthlySummaryByCurrencyRecord(
                 currency,
@@ -76,13 +79,13 @@ public class MonthlySummaryService {
         );
     }
 
-    private MonthlySummaryUnifiedRecord buildUnifiedUsd(Long userId, int year, int month,
+    private MonthlySummaryUnifiedRecord buildUnifiedUsd(Long workspaceId, int year, int month,
                                                          int prevYear, int prevMonth) {
-        BigDecimal ingresado = this.getTotalInUsd(userId, year, month, MovementType.INGRESO);
-        BigDecimal gastado = this.getTotalInUsd(userId, year, month, MovementType.DEBITO);
+        BigDecimal ingresado = this.getTotalInUsd(workspaceId, year, month, MovementType.INGRESO);
+        BigDecimal gastado = this.getTotalInUsd(workspaceId, year, month, MovementType.DEBITO);
 
-        BigDecimal ingresadoAnterior = this.getTotalInUsd(userId, prevYear, prevMonth, MovementType.INGRESO);
-        BigDecimal gastadoAnterior = this.getTotalInUsd(userId, prevYear, prevMonth, MovementType.DEBITO);
+        BigDecimal ingresadoAnterior = this.getTotalInUsd(workspaceId, prevYear, prevMonth, MovementType.INGRESO);
+        BigDecimal gastadoAnterior = this.getTotalInUsd(workspaceId, prevYear, prevMonth, MovementType.DEBITO);
 
         return new MonthlySummaryUnifiedRecord(
                 ingresado,
@@ -97,11 +100,11 @@ public class MonthlySummaryService {
         );
     }
 
-    private BigDecimal getTotalByCurrency(Long userId, int year, int month, MovementType type, String currency) {
-        return movementRepository.getTotalByTypeAndMonth(userId, year, month, type.name(), currency);
+    private BigDecimal getTotalByCurrency(Long workspaceId, int year, int month, MovementType type, String currency) {
+        return movementRepository.getTotalByTypeAndMonth(workspaceId, year, month, type.name(), currency);
     }
 
-    private BigDecimal getTotalInUsd(Long userId, int year, int month, MovementType type) {
-        return movementRepository.getTotalInUsdByTypeAndMonth(userId, year, month, type.name());
+    private BigDecimal getTotalInUsd(Long workspaceId, int year, int month, MovementType type) {
+        return movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, year, month, type.name());
     }
 }

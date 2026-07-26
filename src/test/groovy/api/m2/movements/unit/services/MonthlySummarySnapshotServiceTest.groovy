@@ -18,7 +18,7 @@ class MonthlySummarySnapshotServiceTest extends Specification {
 
     MonthlySummarySnapshotService service
 
-    Long userId = 1L
+    Long workspaceId = 1L
 
     def setup() {
         service = new MonthlySummarySnapshotService(snapshotRepository, jsonMapper)
@@ -52,15 +52,15 @@ class MonthlySummarySnapshotServiceTest extends Specification {
     def "save - should create new snapshot when none exists"() {
         given:
         def summary = buildSummary(2025, 4)
-        snapshotRepository.findByUserIdAndYearAndMonth(userId, 2025, 4) >> Optional.empty()
+        snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, 2025, 4) >> Optional.empty()
 
         when:
-        service.save(userId, 2025, 4, summary)
+        service.save(workspaceId, 2025, 4, summary)
 
         then:
         1 * snapshotRepository.save(_ as MonthlySummarySnapshot) >> { List args ->
             def s = args[0] as MonthlySummarySnapshot
-            assert s.userId == userId
+            assert s.workspaceId == workspaceId
             assert s.year == 2025
             assert s.month == 4
             assert s.payload != null
@@ -75,10 +75,10 @@ class MonthlySummarySnapshotServiceTest extends Specification {
             getPayload() >> '{"old":"data"}'
         }
         def summary = buildSummary(2025, 4)
-        snapshotRepository.findByUserIdAndYearAndMonth(userId, 2025, 4) >> Optional.of(existing)
+        snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, 2025, 4) >> Optional.of(existing)
 
         when:
-        service.save(userId, 2025, 4, summary)
+        service.save(workspaceId, 2025, 4, summary)
 
         then:
         1 * snapshotRepository.save(_ as MonthlySummarySnapshot)
@@ -89,10 +89,10 @@ class MonthlySummarySnapshotServiceTest extends Specification {
 
     def "find - should return empty when snapshot does not exist"() {
         given:
-        snapshotRepository.findByUserIdAndYearAndMonth(userId, 2025, 4) >> Optional.empty()
+        snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, 2025, 4) >> Optional.empty()
 
         when:
-        def result = service.find(userId, 2025, 4)
+        def result = service.find(workspaceId, 2025, 4)
 
         then:
         result.isEmpty()
@@ -107,10 +107,10 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         def snapshot = Stub(MonthlySummarySnapshot) {
             getPayload() >> json
         }
-        snapshotRepository.findByUserIdAndYearAndMonth(userId, 2025, 4) >> Optional.of(snapshot)
+        snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, 2025, 4) >> Optional.of(snapshot)
 
         when:
-        def result = service.find(userId, 2025, 4)
+        def result = service.find(workspaceId, 2025, 4)
 
         then:
         result.isPresent()
@@ -127,17 +127,17 @@ class MonthlySummarySnapshotServiceTest extends Specification {
 
     def "save and find - should round-trip serialize and deserialize correctly"() {
         given:
-        Long otherUserId = 2L
+        Long otherWorkspaceId = 2L
         def original = buildSummary(2026, 1)
         String capturedPayload = null
-        snapshotRepository.findByUserIdAndYearAndMonth(otherUserId, 2026, 1) >> Optional.empty()
+        snapshotRepository.findByWorkspaceIdAndYearAndMonth(otherWorkspaceId, 2026, 1) >> Optional.empty()
         snapshotRepository.save(_ as MonthlySummarySnapshot) >> { List args ->
             capturedPayload = (args[0] as MonthlySummarySnapshot).payload
             return args[0]
         }
 
         when:
-        service.save(otherUserId, 2026, 1, original)
+        service.save(otherWorkspaceId, 2026, 1, original)
         def deserialized = jsonMapper.readValue(capturedPayload, MonthlySummaryResponse)
 
         then:

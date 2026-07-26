@@ -45,7 +45,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should return snapshot from cache when it exists"() {
         given:
         def cached = new MonthlySummaryResponse(2025, 4, null, [])
-        snapshotService.find(1L, 2025, 4) >> Optional.of(cached)
+        snapshotService.find(workspaceId, 2025, 4) >> Optional.of(cached)
 
         when:
         def result = service.getSummary(workspaceId, 2025, 4)
@@ -58,7 +58,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should call userService exactly once on cache hit"() {
         given:
         def cached = new MonthlySummaryResponse(2025, 4, null, [])
-        snapshotService.find(1L, 2025, 4) >> Optional.of(cached)
+        snapshotService.find(workspaceId, 2025, 4) >> Optional.of(cached)
 
         when:
         service.getSummary(workspaceId, 2025, 4)
@@ -70,7 +70,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should verify user membership before returning data"() {
         given:
         def cached = new MonthlySummaryResponse(2025, 4, null, [])
-        snapshotService.find(1L, 2025, 4) >> Optional.of(cached)
+        snapshotService.find(workspaceId, 2025, 4) >> Optional.of(cached)
 
         when:
         service.getSummary(workspaceId, 2025, 4)
@@ -84,7 +84,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should compute on-demand when snapshot is absent"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
-        stubCurrencies([], 2025, 4, 2025, 3)
+        movementRepository.findDistinctCurrenciesByMonth(workspaceId, 2025, 4, 2025, 3) >> []
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
@@ -281,7 +281,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should call userService exactly once regardless of currency count"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
-        stubCurrencies(["ARS", "USD", "EUR"], 2025, 4, 2025, 3)
+        movementRepository.findDistinctCurrenciesByMonth(workspaceId, 2025, 4, 2025, 3) >> ["ARS", "USD", "EUR"]
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO

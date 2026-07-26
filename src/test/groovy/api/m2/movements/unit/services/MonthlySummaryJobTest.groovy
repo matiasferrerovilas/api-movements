@@ -2,29 +2,29 @@ package api.m2.movements.unit.services
 
 
 import api.m2.movements.records.balance.MonthlySummaryResponse
+import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.balance.MonthlySummaryJob
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
-import api.m2.movements.services.settings.UserSettingService
 import spock.lang.Specification
 
 class MonthlySummaryJobTest extends Specification {
 
-    UserSettingService userSettingService = Mock()
+    MovementRepository movementRepository = Mock()
     MonthlySummaryService monthlySummaryService = Mock()
     MonthlySummarySnapshotService snapshotService = Mock()
 
     MonthlySummaryJob job
 
     def setup() {
-        job = new MonthlySummaryJob(userSettingService, monthlySummaryService, snapshotService)
+        job = new MonthlySummaryJob(movementRepository, monthlySummaryService, snapshotService)
     }
 
     // ── lista vacía: no se invoca ningún servicio de cálculo ──────────────────
 
-    def "generateMonthlySnapshots - should not call computeSummary or save when user list is empty"() {
+    def "generateMonthlySnapshots - should not call computeSummary or save when workspace list is empty"() {
         given:
-        userSettingService.getUsersWithMonthlySnapshotEnabled() >> []
+        movementRepository.findDistinctWorkspaceIds() >> []
 
         when:
         job.generateMonthlySnapshots()
@@ -34,63 +34,63 @@ class MonthlySummaryJobTest extends Specification {
         0 * snapshotService.save(*_)
     }
 
-    // ── un usuario: se llama computeSummary y save exactamente una vez ────────
+    // ── un workspace: se llama computeSummary y save exactamente una vez ──────
 
-    def "generateMonthlySnapshots - should call computeSummary and save once for a single user"() {
+    def "generateMonthlySnapshots - should call computeSummary and save once for a single workspace"() {
         given:
-        def userId = 1L
+        def workspaceId = 1L
         def summary = Stub(MonthlySummaryResponse)
-        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
-        monthlySummaryService.computeSummary(userId, _ as Integer, _ as Integer) >> summary
+        movementRepository.findDistinctWorkspaceIds() >> [workspaceId]
+        monthlySummaryService.computeSummary(workspaceId, _ as Integer, _ as Integer) >> summary
 
         when:
         job.generateMonthlySnapshots()
 
         then:
-        1 * monthlySummaryService.computeSummary(userId, _ as Integer, _ as Integer) >> summary
-        1 * snapshotService.save(userId, _ as Integer, _ as Integer, summary)
+        1 * monthlySummaryService.computeSummary(workspaceId, _ as Integer, _ as Integer) >> summary
+        1 * snapshotService.save(workspaceId, _ as Integer, _ as Integer, summary)
     }
 
-    // ── varios usuarios: se llama una vez por cada uno ────────────────────────
+    // ── varios workspaces: se llama una vez por cada uno ──────────────────────
 
-    def "generateMonthlySnapshots - should call computeSummary and save once per user"() {
+    def "generateMonthlySnapshots - should call computeSummary and save once per workspace"() {
         given:
-        def userIds = [1L, 2L, 3L]
-        userSettingService.getUsersWithMonthlySnapshotEnabled() >> userIds
+        def workspaceIds = [1L, 2L, 3L]
+        movementRepository.findDistinctWorkspaceIds() >> workspaceIds
         monthlySummaryService.computeSummary(_ as Long, _ as Integer, _ as Integer) >> Stub(MonthlySummaryResponse)
 
         when:
         job.generateMonthlySnapshots()
 
         then:
-        userIds.each { id ->
+        workspaceIds.each { id ->
             1 * monthlySummaryService.computeSummary(id, _ as Integer, _ as Integer) >> Stub(MonthlySummaryResponse)
             1 * snapshotService.save(id, _ as Integer, _ as Integer, _ as MonthlySummaryResponse)
         }
     }
 
-    // ── userSettingService solo se llama una vez ─────────────────────────────────────
+    // ── movementRepository solo se llama una vez ─────────────────────────────
 
-    def "generateMonthlySnapshots - should call getUsersWithMonthlySnapshotEnabled exactly once"() {
+    def "generateMonthlySnapshots - should call findDistinctWorkspaceIds exactly once"() {
         given:
-        def userId = 1L
-        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        def workspaceId = 1L
+        movementRepository.findDistinctWorkspaceIds() >> [workspaceId]
         monthlySummaryService.computeSummary(*_) >> Stub(MonthlySummaryResponse)
 
         when:
         job.generateMonthlySnapshots()
 
         then:
-        1 * userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        1 * movementRepository.findDistinctWorkspaceIds() >> [workspaceId]
     }
 
     // ── el año y mes pasados a computeSummary y save son consistentes ─────────
 
     def "generateMonthlySnapshots - should pass the same year and month to computeSummary and save"() {
         given:
-        def userId = 1L
+        def workspaceId = 1L
         def summary = Stub(MonthlySummaryResponse)
-        userSettingService.getUsersWithMonthlySnapshotEnabled() >> [userId]
+        movementRepository.findDistinctWorkspaceIds() >> [workspaceId]
         int capturedYear
         int capturedMonth
 
@@ -98,11 +98,11 @@ class MonthlySummaryJobTest extends Specification {
         job.generateMonthlySnapshots()
 
         then:
-        1 * monthlySummaryService.computeSummary(userId, _ as Integer, _ as Integer) >> { Long id, Integer y, Integer m ->
+        1 * monthlySummaryService.computeSummary(workspaceId, _ as Integer, _ as Integer) >> { Long id, Integer y, Integer m ->
             capturedYear = y
             capturedMonth = m
             summary
         }
-        1 * snapshotService.save(userId, { it == capturedYear } as Integer, { it == capturedMonth } as Integer, summary)
+        1 * snapshotService.save(workspaceId, { it == capturedYear } as Integer, { it == capturedMonth } as Integer, summary)
     }
 }

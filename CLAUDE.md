@@ -327,14 +327,13 @@ Para agregar un nuevo dominio: extender `MembershipDomain` y crear un bean que i
 
 | Job | Cron | Descripción |
 |-----|------|-------------|
-| `MonthlySummaryJob` | `0 0 23 L * *` (último día del mes, 23:00) | Genera snapshots mensuales para usuarios con `MONTHLY_SUMMARY_ENABLED` |
+| `MonthlySummaryJob` | `0 0 23 L * *` (último día del mes, 23:00) | Genera un snapshot mensual por cada workspace con movimientos (sin opt-in) |
 | `RecurringIncomeJob` | `0 0 6 1 * *` (día 1 de cada mes, 06:00) | Genera movimientos de ingreso automáticos para usuarios con `AUTO_INCOME_ENABLED` |
 
 ### UserSettingKey para Jobs
 
 | Setting | Valor | Efecto |
 |---------|-------|--------|
-| `MONTHLY_SUMMARY_ENABLED` | `1` | Usuario recibe snapshot mensual automático |
 | `AUTO_INCOME_ENABLED` | `1` | Los `Income` del usuario generan movimientos automáticamente el día 1 |
 
 ### Flujo de RecurringIncomeJob

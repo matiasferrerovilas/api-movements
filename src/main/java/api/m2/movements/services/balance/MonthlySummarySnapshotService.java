@@ -20,24 +20,24 @@ public class MonthlySummarySnapshotService {
     private final MonthlySummarySnapshotRepository snapshotRepository;
     private final JsonMapper jsonMapper;
 
-    public void save(Long userId, Integer year, Integer month, MonthlySummaryResponse summary) {
+    public void save(Long workspaceId, Integer year, Integer month, MonthlySummaryResponse summary) {
         String payload = this.serialize(summary);
 
         MonthlySummarySnapshot snapshot = snapshotRepository
-                .findByUserIdAndYearAndMonth(userId, year, month)
+                .findByWorkspaceIdAndYearAndMonth(workspaceId, year, month)
                 .orElseGet(() -> MonthlySummarySnapshot.builder()
-                        .userId(userId)
+                        .workspaceId(workspaceId)
                         .year(year)
                         .month(month)
                         .build());
 
         snapshot.setPayload(payload);
         snapshotRepository.save(snapshot);
-        log.info("Snapshot guardado para userId={} year={} month={}", userId, year, month);
+        log.info("Snapshot guardado para workspaceId={} year={} month={}", workspaceId, year, month);
     }
 
-    public Optional<MonthlySummaryResponse> find(Long userId, Integer year, Integer month) {
-        return snapshotRepository.findByUserIdAndYearAndMonth(userId, year, month)
+    public Optional<MonthlySummaryResponse> find(Long workspaceId, Integer year, Integer month) {
+        return snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, year, month)
                 .map(s -> this.deserialize(s.getPayload()));
     }
 

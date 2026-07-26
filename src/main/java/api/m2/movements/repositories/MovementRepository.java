@@ -128,31 +128,31 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE m.user_id = :userId
+            WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type = :type
               AND c.symbol = :currency
             """, nativeQuery = true)
-    BigDecimal getTotalByTypeAndMonth(Long userId, Integer year, Integer month, String type, String currency);
+    BigDecimal getTotalByTypeAndMonth(Long workspaceId, Integer year, Integer month, String type, String currency);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
-            WHERE m.user_id = :userId
+            WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type = :type
               AND m.exchange_rate IS NOT NULL
             """, nativeQuery = true)
-    BigDecimal getTotalInUsdByTypeAndMonth(Long userId, Integer year, Integer month, String type);
+    BigDecimal getTotalInUsdByTypeAndMonth(Long workspaceId, Integer year, Integer month, String type);
 
     @Query(value = """
             SELECT ca.description
             FROM movements m
             INNER JOIN category ca ON m.category_id = ca.id
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE m.user_id = :userId
+            WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
               AND m.type IN ('DEBITO', 'CREDITO')
@@ -161,18 +161,21 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             ORDER BY SUM(m.amount) DESC
             LIMIT 1
             """, nativeQuery = true)
-    Optional<String> getTopCategoryByMonth(Long userId, Integer year, Integer month, String currency);
+    Optional<String> getTopCategoryByMonth(Long workspaceId, Integer year, Integer month, String currency);
 
     @Query(value = """
             SELECT DISTINCT c.symbol
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
-            WHERE m.user_id = :userId
+            WHERE m.workspace_id = :workspaceId
               AND ((YEAR(m.date) = :year AND MONTH(m.date) = :month)
                OR (YEAR(m.date) = :prevYear AND MONTH(m.date) = :prevMonth))
             """, nativeQuery = true)
-    List<String> findDistinctCurrenciesByMonth(Long userId, Integer year, Integer month,
+    List<String> findDistinctCurrenciesByMonth(Long workspaceId, Integer year, Integer month,
                                                Integer prevYear, Integer prevMonth);
+
+    @Query(value = "SELECT DISTINCT m.workspace_id FROM movements m", nativeQuery = true)
+    List<Long> findDistinctWorkspaceIds();
 
     List<Movement> findByWorkspaceIdAndCategoryId(Long workspaceId, Long categoryId);
 

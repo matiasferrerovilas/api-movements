@@ -146,3 +146,6 @@ databaseChangeLog:
   - include:
       file: 049_drop_tables_users_workspaces.sql
       relativeToChangelogFile: true
+  - include:
+      file: 050_alter_table_monthly_summary_snapshot_workspace.sql
+      relativeToChangelogFile: true

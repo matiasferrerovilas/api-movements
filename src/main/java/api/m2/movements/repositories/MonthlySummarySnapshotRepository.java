@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface MonthlySummarySnapshotRepository extends JpaRepository<MonthlySummarySnapshot, Long> {
 
-    Optional<MonthlySummarySnapshot> findByUserIdAndYearAndMonth(Long userId, Integer year, Integer month);
+    Optional<MonthlySummarySnapshot> findByWorkspaceIdAndYearAndMonth(Long workspaceId, Integer year, Integer month);
 }
