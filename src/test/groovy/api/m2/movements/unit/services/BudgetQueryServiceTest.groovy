@@ -24,7 +24,7 @@ class BudgetQueryServiceTest extends Specification {
         service = new BudgetQueryService(budgetRepository, budgetMapper, workspaceContextService)
     }
 
-    def buildBudget(String categoryName, String currencySymbol, BigDecimal amount) {
+    def buildBudget(String categoryName, String currencySymbol, BigDecimal amount, Integer year = null, Integer month = null) {
         def category = categoryName == null ? null : Stub(Category) {
             getId() >> 1L
             getDescription() >> categoryName
@@ -37,8 +37,8 @@ class BudgetQueryServiceTest extends Specification {
             getCategory() >> category
             getCurrency() >> currency
             getAmount() >> amount
-            getYear() >> null
-            getMonth() >> null
+            getYear() >> year
+            getMonth() >> month
         }
     }
 
@@ -150,6 +150,29 @@ class BudgetQueryServiceTest extends Specification {
         then:
         result.size() == 2
         0 * budgetRepository.findByWorkspaceCurrencyAndPeriod(_, _, _, _)
+    }
+
+    def "getByAccount - should sum spent for the whole year on annual budgets (year set, month null)"() {
+        given:
+        def budget = buildBudget("Vacaciones", "ARS", new BigDecimal("100000.00"), 2026, null)
+        def expectedRecord = new BudgetRecord(1L, 1L,
+                new CategoryRecord(1L, "Vacaciones", true, false, null, null),
+                new CurrencyRecord("ARS", 1L),
+                new BigDecimal("100000.00"), 2026, null,
+                new BigDecimal("40000.00"), new BigDecimal("40.00"))
+
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        budgetRepository.findByWorkspaceCurrencyAndPeriod(1L, "ARS", 2026, 4) >> [budget]
+        budgetMapper.toRecordWithSpent(budget, new BigDecimal("40000.00")) >> expectedRecord
+
+        when:
+        def result = service.getByAccount("ARS", 2026, 4)
+
+        then:
+        1 * budgetRepository.sumSpentByCategoryAndYear(1L, "Vacaciones", "ARS", 2026) >> new BigDecimal("40000.00")
+        0 * budgetRepository.sumSpentByCategoryAndPeriod(_, _, _, _, _)
+        result.size() == 1
+        result[0].spent() == new BigDecimal("40000.00")
     }
 
     def "getByAccount - should call findByWorkspaceAndPeriod when currency is null"() {

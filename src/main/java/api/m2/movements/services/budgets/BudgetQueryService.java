@@ -32,23 +32,23 @@ public class BudgetQueryService {
 
         return budgets.stream()
                 .map(budget -> {
-                    BigDecimal spent = this.resolveSpent(budget.getWorkspaceId(),
-                            budget.getCategory() == null ? null : budget.getCategory().getDescription(),
-                            budget.getCurrency().getSymbol(),
-                            year,
-                            month);
+                    BigDecimal spent = this.resolveSpent(budget, year, month);
                     return budgetMapper.toRecordWithSpent(budget, spent);
                 })
                 .toList();
     }
 
-    private BigDecimal resolveSpent(Long workspaceId, String categoryDescription,
-                                    String currencySymbol, int year, int month) {
+    private BigDecimal resolveSpent(Budget budget, int year, int month) {
+        String categoryDescription = budget.getCategory() == null ? null : budget.getCategory().getDescription();
         if (categoryDescription == null) {
             return BigDecimal.ZERO;
         }
-        BigDecimal result = budgetRepository.sumSpentByCategoryAndPeriod(
-                workspaceId, categoryDescription, currencySymbol, year, month);
+        String currencySymbol = budget.getCurrency().getSymbol();
+        BigDecimal result = (budget.getYear() != null && budget.getMonth() == null)
+                ? budgetRepository.sumSpentByCategoryAndYear(
+                        budget.getWorkspaceId(), categoryDescription, currencySymbol, budget.getYear())
+                : budgetRepository.sumSpentByCategoryAndPeriod(
+                        budget.getWorkspaceId(), categoryDescription, currencySymbol, year, month);
         return result != null ? result : BigDecimal.ZERO;
     }
 }
