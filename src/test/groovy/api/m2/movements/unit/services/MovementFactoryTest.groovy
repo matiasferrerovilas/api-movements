@@ -7,6 +7,7 @@ import api.m2.movements.entities.movements.Movement
 
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.EntityNotFoundException
+import api.m2.movements.exceptions.ExchangeRateNotFoundException
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
@@ -120,6 +121,40 @@ class MovementFactoryTest extends Specification {
         then:
         result.bank == null
         0 * bankRepository.findByDescription(_ as String)
+    }
+
+    def "create - should set null exchange rate when rate cannot be resolved"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("100.00"),
+                LocalDate.of(2024, 1, 15),
+                "Test",
+                "HOGAR",
+                "GASTO",
+                "EUR",
+                null,
+                null,
+                null
+        )
+
+        def movement = new Movement()
+        def category = Stub(Category)
+        def currency = Stub(Currency) { getSymbol() >> "EUR" }
+
+        movementMapper.toEntity(dto) >> movement
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolve(_ as String, 1L) >> category
+        currencyAddService.findBySymbol("EUR") >> currency
+        userService.getMe() >> userMe(10L)
+        exchangeRateResolver.resolveRate("EUR", dto.date()) >> {
+            throw new ExchangeRateNotFoundException("No se encontró tasa de cambio para EUR en " + dto.date())
+        }
+
+        when:
+        def result = factory.create(dto)
+
+        then:
+        result.exchangeRate == null
     }
 
     def "create - should throw EntityNotFoundException when bank not found"() {

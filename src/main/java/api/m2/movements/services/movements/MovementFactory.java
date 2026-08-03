@@ -2,6 +2,7 @@ package api.m2.movements.services.movements;
 
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementToAdd;
@@ -14,6 +15,9 @@ import api.m2.movements.services.workspaces.WorkspaceContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -51,11 +55,19 @@ public class MovementFactory {
             movement.setBank(bank);
         }
 
-        movement.setExchangeRate(
-                exchangeRateResolver.resolveRate(currency.getSymbol(), dto.date())
-        );
+        movement.setExchangeRate(this.resolveExchangeRateOrNull(currency.getSymbol(), dto.date()));
 
         return movement;
+    }
+
+    private BigDecimal resolveExchangeRateOrNull(String symbol, LocalDate date) {
+        try {
+            return exchangeRateResolver.resolveRate(symbol, date);
+        } catch (ExchangeRateNotFoundException e) {
+            log.warn("No se pudo resolver tasa de cambio para {} en {}, se guarda sin tasa: {}",
+                    symbol, date, e.getMessage());
+            return null;
+        }
     }
 
     public void applyUpdates(ExpenseToUpdate dto, Movement movement) {
