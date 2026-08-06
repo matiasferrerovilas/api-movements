@@ -163,17 +163,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             """, nativeQuery = true)
     Optional<String> getTopCategoryByMonth(Long workspaceId, Integer year, Integer month, String currency);
 
-    @Query(value = """
-            SELECT DISTINCT c.symbol
-            FROM movements m
-            INNER JOIN currency c ON m.currency_id = c.id
-            WHERE m.workspace_id = :workspaceId
-              AND ((YEAR(m.date) = :year AND MONTH(m.date) = :month)
-               OR (YEAR(m.date) = :prevYear AND MONTH(m.date) = :prevMonth))
-            """, nativeQuery = true)
-    List<String> findDistinctCurrenciesByMonth(Long workspaceId, Integer year, Integer month,
-                                               Integer prevYear, Integer prevMonth);
-
     @Query(value = "SELECT DISTINCT m.workspace_id FROM movements m", nativeQuery = true)
     List<Long> findDistinctWorkspaceIds();
 

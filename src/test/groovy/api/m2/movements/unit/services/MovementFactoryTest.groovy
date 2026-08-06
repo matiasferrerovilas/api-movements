@@ -14,7 +14,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.services.category.CategoryResolver
-import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.currencies.CurrencyResolver
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.user.UserService
@@ -26,7 +26,7 @@ import java.time.LocalDate
 class MovementFactoryTest extends Specification {
 
     CategoryResolver categoryResolver = Mock(CategoryResolver)
-    CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    CurrencyResolver currencyResolver = Mock(CurrencyResolver)
     UserService userService = Mock(UserService)
     MovementMapper movementMapper = Mock(MovementMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
@@ -38,7 +38,7 @@ class MovementFactoryTest extends Specification {
     def setup() {
         factory = new MovementFactory(
                 categoryResolver,
-                currencyAddService,
+                currencyResolver,
                 userService,
                 movementMapper,
                 workspaceContextService,
@@ -73,7 +73,7 @@ class MovementFactoryTest extends Specification {
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
-        currencyAddService.findBySymbol("USD") >> currency
+        currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
         exchangeRateResolver.resolveRate("USD", dto.date()) >> new BigDecimal("1.0")
@@ -111,7 +111,7 @@ class MovementFactoryTest extends Specification {
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
-        currencyAddService.findBySymbol("EUR") >> currency
+        currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> new BigDecimal("1.08")
 
@@ -144,7 +144,7 @@ class MovementFactoryTest extends Specification {
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
-        currencyAddService.findBySymbol("EUR") >> currency
+        currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> {
             throw new ExchangeRateNotFoundException("No se encontró tasa de cambio para EUR en " + dto.date())
@@ -178,7 +178,7 @@ class MovementFactoryTest extends Specification {
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
         categoryResolver.resolve(_ as String, 1L) >> category
-        currencyAddService.findBySymbol("USD") >> currency
+        currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("UNKNOWN_BANK") >> Optional.empty()
 
@@ -204,8 +204,9 @@ class MovementFactoryTest extends Specification {
                 null
         )
         def movement = new Movement()
+        movement.setWorkspaceId(1L)
 
-        currencyAddService.findBySymbol("ARS") >> newCurrency
+        currencyResolver.resolve("ARS", 1L) >> newCurrency
 
         when:
         factory.applyUpdates(dto, movement)
@@ -254,7 +255,7 @@ class MovementFactoryTest extends Specification {
         then:
         movement.currency == existingCurrency
         movement.category == existingCategory
-        0 * currencyAddService.findBySymbol(_ as String)
+        0 * currencyResolver.resolve(_ as String, _ as Long)
         0 * categoryResolver.resolve(_ as String)
     }
 }

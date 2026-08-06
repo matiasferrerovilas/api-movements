@@ -149,3 +149,6 @@ databaseChangeLog:
   - include:
       file: 050_alter_table_monthly_summary_snapshot_workspace.sql
       relativeToChangelogFile: true
+  - include:
+      file: 051_create_table_workspace_currencies.sql
+      relativeToChangelogFile: true

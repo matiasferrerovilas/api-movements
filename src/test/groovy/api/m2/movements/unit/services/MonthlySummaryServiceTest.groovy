@@ -1,9 +1,12 @@
 package api.m2.movements.unit.services
 
 
+import api.m2.movements.entities.WorkspaceCurrency
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.MovementType
 import api.m2.movements.records.balance.MonthlySummaryResponse
 import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.repositories.WorkspaceCurrencyRepository
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.balance.MonthlySummarySnapshotService
 import api.m2.movements.clients.identity.response.UserMe
@@ -15,6 +18,7 @@ import spock.lang.Unroll
 class MonthlySummaryServiceTest extends Specification {
 
     MovementRepository movementRepository = Mock()
+    WorkspaceCurrencyRepository workspaceCurrencyRepository = Mock()
     UserService userService = Mock()
     MonthlySummarySnapshotService snapshotService = Mock()
     WorkspaceQueryService workspaceQueryService = Mock()
@@ -26,14 +30,19 @@ class MonthlySummaryServiceTest extends Specification {
     def workspaceId = 10L
 
     def setup() {
-        service = new MonthlySummaryService(movementRepository, userService, snapshotService, workspaceQueryService)
+        service = new MonthlySummaryService(
+                movementRepository, workspaceCurrencyRepository, userService, snapshotService, workspaceQueryService)
         userService.getMe() >> user
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
 
-    private void stubCurrencies(List<String> currencies, int year, int month, int prevYear, int prevMonth) {
-        movementRepository.findDistinctCurrenciesByMonth(1L, year, month, prevYear, prevMonth) >> currencies
+    private void stubCurrencies(Long forWorkspaceId, List<String> symbols) {
+        def workspaceCurrencies = symbols.collect { symbol ->
+            def currency = Stub(Currency) { getSymbol() >> symbol }
+            Stub(WorkspaceCurrency) { getCurrency() >> currency }
+        }
+        workspaceCurrencyRepository.findByWorkspaceId(forWorkspaceId) >> workspaceCurrencies
     }
 
     private void stubTotalByCurrency(int year, int month, String type, String currency, BigDecimal value) {
@@ -84,7 +93,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should compute on-demand when snapshot is absent"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
-        movementRepository.findDistinctCurrenciesByMonth(workspaceId, 2025, 4, 2025, 3) >> []
+        this.stubCurrencies(workspaceId, [])
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
@@ -100,7 +109,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     def "computeSummary - should return year and month in response"() {
         given:
-        stubCurrencies([], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, [])
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
@@ -111,9 +120,9 @@ class MonthlySummaryServiceTest extends Specification {
         result.month() == 4
     }
 
-    def "computeSummary - should return empty porMoneda when no currencies found"() {
+    def "computeSummary - should return empty porMoneda when workspace has no currencies configured"() {
         given:
-        stubCurrencies([], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, [])
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
@@ -125,9 +134,9 @@ class MonthlySummaryServiceTest extends Specification {
 
     // ── computeSummary: porMoneda ─────────────────────────────────────────────
 
-    def "computeSummary - should return one entry per currency with correct totals"() {
+    def "computeSummary - should return one entry per currency configured in the workspace"() {
         given:
-        stubCurrencies(["ARS"], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, ["ARS"])
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "ARS", new BigDecimal("150000.00"))
         stubTotalByCurrency(2025, 4, MovementType.DEBITO.name(), "ARS", new BigDecimal("87500.00"))
         movementRepository.getTopCategoryByMonth(1L, 2025, 4, "ARS") >> Optional.of("HOGAR")
@@ -147,9 +156,9 @@ class MonthlySummaryServiceTest extends Specification {
         ars.categoriaConMayorGasto() == "HOGAR"
     }
 
-    def "computeSummary - should return two entries when two currencies exist"() {
+    def "computeSummary - should return two entries when workspace has two currencies configured"() {
         given:
-        stubCurrencies(["ARS", "USD"], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, ["ARS", "USD"])
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
@@ -162,9 +171,25 @@ class MonthlySummaryServiceTest extends Specification {
         result.porMoneda().collect { it.currency() }.containsAll(["ARS", "USD"])
     }
 
+    def "computeSummary - should not include a currency removed from the workspace even with historical movements"() {
+        given: "ARS tuvo movimientos el mes anterior pero ya no está configurada en el workspace"
+        this.stubCurrencies(1L, ["EUR"])
+        movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
+        movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
+        movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
+
+        when:
+        def result = service.computeSummary(1L, 2025, 4)
+
+        then:
+        result.porMoneda().size() == 1
+        result.porMoneda().collect { it.currency() } == ["EUR"]
+        0 * movementRepository.getTotalByTypeAndMonth(1L, _ as Integer, _ as Integer, _ as String, "ARS")
+    }
+
     def "computeSummary - should return null categoriaConMayorGasto when no DEBITO movements"() {
         given:
-        stubCurrencies(["USD"], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, ["USD"])
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTopCategoryByMonth(1L, 2025, 4, "USD") >> Optional.empty()
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
@@ -178,7 +203,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     def "computeSummary - should set diferencia negativa when gastado > ingresado"() {
         given:
-        stubCurrencies(["ARS"], 2025, 6, 2025, 5)
+        this.stubCurrencies(1L, ["ARS"])
         stubTotalByCurrency(2025, 6, MovementType.INGRESO.name(), "ARS", new BigDecimal("5000.00"))
         stubTotalByCurrency(2025, 6, MovementType.DEBITO.name(), "ARS", new BigDecimal("8000.00"))
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
@@ -197,7 +222,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     def "computeSummary - should calculate comparacion vs mes anterior correctly"() {
         given:
-        stubCurrencies(["ARS"], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, ["ARS"])
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "ARS", new BigDecimal("150000.00"))
         stubTotalByCurrency(2025, 4, MovementType.DEBITO.name(), "ARS", new BigDecimal("87500.00"))
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
@@ -219,7 +244,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     def "computeSummary - should return totalUnificadoUSD with converted amounts"() {
         given:
-        stubCurrencies([], 2025, 4, 2025, 3)
+        this.stubCurrencies(1L, [])
         movementRepository.getTotalInUsdByTypeAndMonth(1L, 2025, 4, MovementType.INGRESO.name()) >> new BigDecimal("850.50")
         movementRepository.getTotalInUsdByTypeAndMonth(1L, 2025, 4, MovementType.DEBITO.name()) >> new BigDecimal("610.20")
         movementRepository.getTotalInUsdByTypeAndMonth(1L, 2025, 3, MovementType.INGRESO.name()) >> new BigDecimal("780.00")
@@ -242,7 +267,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     def "computeSummary - should use December of previous year when month is January"() {
         given:
-        movementRepository.findDistinctCurrenciesByMonth(1L, 2025, 1, 2024, 12) >> []
+        this.stubCurrencies(1L, [])
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:
@@ -253,11 +278,11 @@ class MonthlySummaryServiceTest extends Specification {
         1 * movementRepository.getTotalInUsdByTypeAndMonth(1L, 2024, 12, MovementType.DEBITO.name()) >> BigDecimal.ZERO
     }
 
-    // ── moneda sin movimientos en mes actual aparece igual ────────────────────
+    // ── moneda sin movimientos en mes actual aparece igual, si sigue configurada ──
 
-    def "computeSummary - should include currency with zeros when only present in previous month"() {
-        given: "USD solo tuvo movimientos en marzo, no en abril"
-        stubCurrencies(["USD"], 2025, 4, 2025, 3)
+    def "computeSummary - should include configured currency with zeros when it has no movements this month"() {
+        given: "USD solo tuvo movimientos en marzo, no en abril, pero sigue configurada en el workspace"
+        this.stubCurrencies(1L, ["USD"])
         stubTotalByCurrency(2025, 4, MovementType.INGRESO.name(), "USD", BigDecimal.ZERO)
         stubTotalByCurrency(2025, 4, MovementType.DEBITO.name(), "USD", BigDecimal.ZERO)
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
@@ -281,7 +306,7 @@ class MonthlySummaryServiceTest extends Specification {
     def "getSummary - should call userService exactly once regardless of currency count"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
-        movementRepository.findDistinctCurrenciesByMonth(workspaceId, 2025, 4, 2025, 3) >> ["ARS", "USD", "EUR"]
+        this.stubCurrencies(workspaceId, ["ARS", "USD", "EUR"])
         movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
@@ -298,7 +323,7 @@ class MonthlySummaryServiceTest extends Specification {
     @Unroll
     def "computeSummary - should return non-null response for year=#year month=#month"() {
         given:
-        movementRepository.findDistinctCurrenciesByMonth(*_) >> []
+        this.stubCurrencies(1L, [])
         movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
 
         when:

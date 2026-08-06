@@ -14,6 +14,7 @@ import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.services.banks.BankAddService
 import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceAddService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.onboarding.OnboardingService
@@ -30,13 +31,15 @@ class OnboardingServiceTest extends Specification {
     WorkspaceCategoryService workspaceCategoryService = Mock(WorkspaceCategoryService)
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    WorkspaceCurrencyService workspaceCurrencyService = Mock(WorkspaceCurrencyService)
     IdentityClient identityClient = Mock(IdentityClient)
 
     OnboardingService service
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, workspaceAddService,
-                bankAddService, workspaceCategoryService, userSettingService, currencyAddService, identityClient)
+                bankAddService, workspaceCategoryService, userSettingService, currencyAddService,
+                workspaceCurrencyService, identityClient)
     }
 
     def user(Long id) {
@@ -72,6 +75,7 @@ class OnboardingServiceTest extends Specification {
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_CURRENCY, 1L)
         1 * workspaceCategoryService.addCategories(100L, categories)
         1 * workspaceCategoryService.addDefaultCategories(100L)
+        1 * workspaceCurrencyService.addDefaultCurrencies(100L)
         1 * incomeAddService.loadIncome(_ as IncomeToAdd, 100L) >> { List args ->
             def income = args[0] as IncomeToAdd
             assert income.bank() == "GALICIA"

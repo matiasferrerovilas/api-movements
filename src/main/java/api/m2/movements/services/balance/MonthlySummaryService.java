@@ -6,6 +6,7 @@ import api.m2.movements.records.balance.MonthlySummaryComparisonRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord;
 import api.m2.movements.repositories.MovementRepository;
+import api.m2.movements.repositories.WorkspaceCurrencyRepository;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 public class MonthlySummaryService {
 
     private final MovementRepository movementRepository;
+    private final WorkspaceCurrencyRepository workspaceCurrencyRepository;
     private final UserService userService;
     private final MonthlySummarySnapshotService snapshotService;
     private final WorkspaceQueryService workspaceQueryService;
@@ -40,8 +42,9 @@ public class MonthlySummaryService {
         int prevYear = prev.getYear();
         int prevMonth = prev.getMonthValue();
 
-        List<String> currencies = movementRepository
-                .findDistinctCurrenciesByMonth(workspaceId, year, month, prevYear, prevMonth);
+        List<String> currencies = workspaceCurrencyRepository.findByWorkspaceId(workspaceId).stream()
+                .map(workspaceCurrency -> workspaceCurrency.getCurrency().getSymbol())
+                .toList();
 
         List<MonthlySummaryByCurrencyRecord> porMoneda = currencies.stream()
                 .map(currency -> this.buildCurrencySummary(workspaceId, year, month, prevYear, prevMonth, currency))

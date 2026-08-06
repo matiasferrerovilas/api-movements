@@ -16,6 +16,7 @@ import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent;
 import api.m2.movements.records.subscriptions.SubscriptionPaidEvent;
 import api.m2.movements.repositories.SubscriptionRepository;
 import api.m2.movements.services.currencies.CurrencyAddService;
+import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
@@ -38,6 +39,7 @@ public class SubscriptionAddService {
     private final SubscriptionMapper subscriptionMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CurrencyAddService currencyAddService;
+    private final WorkspaceCurrencyService workspaceCurrencyService;
     private final UserService userService;
     private final WorkspaceContextService workspaceContextService;
     private final WorkspaceQueryService workspaceQueryService;
@@ -50,6 +52,7 @@ public class SubscriptionAddService {
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyAddService);
         subscription.setOwnerId(userId);
         subscription.setWorkspaceId(workspaceId);
+        workspaceCurrencyService.ensureCurrencyInWorkspace(workspaceId, subscription.getCurrency());
 
         if (subscription.getIsPaid()) {
             this.publishPaidEvent(subscription);

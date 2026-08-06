@@ -1,16 +1,20 @@
 package api.m2.movements.unit.services
 
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Subscription
 
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.SubscriptionMapper
+import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.services.ServiceDeletedEvent
+import api.m2.movements.records.services.SubscriptionToAdd
 import api.m2.movements.records.services.UpdateSubscriptionRecord
 import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent
 import api.m2.movements.records.subscriptions.SubscriptionPaidEvent
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.subscriptions.SubscriptionAddService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
@@ -27,6 +31,7 @@ class SubscriptionAddServiceTest extends Specification {
     SubscriptionMapper subscriptionMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    WorkspaceCurrencyService workspaceCurrencyService = Mock(WorkspaceCurrencyService)
     UserService userService = Mock(UserService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
@@ -39,6 +44,7 @@ class SubscriptionAddServiceTest extends Specification {
                 subscriptionMapper,
                 subscriptionRepository,
                 currencyAddService,
+                workspaceCurrencyService,
                 userService,
                 workspaceContextService,
                 workspaceQueryService,
@@ -52,6 +58,27 @@ class SubscriptionAddServiceTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
         return new Subscription(id: 1L, description: "Netflix", amount: new BigDecimal("10.00"),
                 lastPayment: lastPayment, workspaceId: workspaceId, currency: currency, ownerId: 1L)
+    }
+
+    // --- save ---
+
+    def "save - should ensure currency is associated to the workspace"() {
+        given:
+        def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
+        def dto = new SubscriptionToAdd("Netflix", new BigDecimal("10.00"),
+                new CurrencyRecord("ARS", null), null, false)
+
+        userService.getMe() >> new UserMe(1L, "user@test.com", "User", null, "PERSONAL",
+                new UserMe.Metadata(false, true, []))
+        workspaceContextService.getActiveWorkspaceId() >> 7L
+        currencyAddService.findBySymbol("ARS") >> currency
+        subscriptionRepository.save(_ as Subscription) >> { args -> args[0] as Subscription }
+
+        when:
+        service.save(dto)
+
+        then:
+        1 * workspaceCurrencyService.ensureCurrencyInWorkspace(7L, currency)
     }
 
     // --- paySubscriptionById ---

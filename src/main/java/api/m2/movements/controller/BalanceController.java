@@ -4,14 +4,18 @@ import api.m2.movements.enums.BalanceEnum;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.balance.BalanceMonthlyEvolutionRecord;
+import api.m2.movements.records.balance.RecoveryTimeRecord;
 import api.m2.movements.services.balance.CalculateBalanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +29,7 @@ import java.util.Set;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/balance")
+@Validated
 @Tag(name = "Balance", description = "Manejo de balance del usuario.")
 public class BalanceController {
     private final CalculateBalanceService calculateBalanceService;
@@ -58,5 +63,19 @@ public class BalanceController {
     public List<BalanceMonthlyEvolutionRecord> getMonthlyEvolution(
             @RequestParam @Min(2000) @Max(2100) Integer year) {
         return calculateBalanceService.getMonthlyEvolution(year);
+    }
+
+    @Operation(
+            summary = "Tiempo de recuperación de un gasto",
+            description = "Calcula cuántos meses tomaría recuperar un gasto de 'amount' dado el ahorro "
+                    + "promedio (ingresos - gastos) de los últimos 'months' meses cerrados, en la moneda indicada."
+    )
+    @ApiResponse(responseCode = "200", description = "Cálculo realizado correctamente")
+    @GetMapping("/recovery-time")
+    public RecoveryTimeRecord getRecoveryTime(
+            @RequestParam @Positive BigDecimal amount,
+            @RequestParam @NotBlank String currency,
+            @RequestParam(defaultValue = "3") @Min(1) @Max(24) Integer months) {
+        return calculateBalanceService.calculateRecoveryTime(amount, currency, months);
     }
 }

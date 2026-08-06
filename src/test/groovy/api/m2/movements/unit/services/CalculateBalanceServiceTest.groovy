@@ -1,8 +1,10 @@
 package api.m2.movements.unit.services
 
 
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.BalanceEnum
 import api.m2.movements.enums.MovementType
+import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.BalanceEvolutionMapper
 import api.m2.movements.projections.MonthlyEvolutionProjection
 import api.m2.movements.records.balance.*
@@ -269,5 +271,69 @@ class CalculateBalanceServiceTest extends Specification {
 
         then:
         0 * userService.getMe()
+    }
+
+    // ── calculateRecoveryTime ──────────────────────────────────────────────────
+
+    def "calculateRecoveryTime - should compute months to recover from average savings"() {
+        given:
+        currencyRepository.findBySymbol("ARS") >> Optional.of(Stub(Currency))
+        movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "ARS") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.DEBITO.name(), "ARS") >> BigDecimal.ZERO
+
+        when:
+        def result = service.calculateRecoveryTime(new BigDecimal("3000"), "ars", 3)
+
+        then:
+        result.moneda() == "ARS"
+        result.mesesConsiderados() == 3
+        result.ahorroPromedioMensual() == new BigDecimal("1000")
+        result.mesesParaRecuperar() == new BigDecimal("3")
+        result.recuperable()
+    }
+
+    def "calculateRecoveryTime - should mark as not recoverable when average savings is not positive"() {
+        given:
+        currencyRepository.findBySymbol("USD") >> Optional.of(Stub(Currency))
+        movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "USD") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.DEBITO.name(), "USD") >> new BigDecimal("100")
+
+        when:
+        def result = service.calculateRecoveryTime(new BigDecimal("500"), "USD", 3)
+
+        then:
+        !result.recuperable()
+        result.mesesParaRecuperar() == null
+        result.ahorroPromedioMensual() == new BigDecimal("-100")
+    }
+
+    def "calculateRecoveryTime - should throw EntityNotFoundException when currency does not exist"() {
+        given:
+        currencyRepository.findBySymbol("XYZ") >> Optional.empty()
+
+        when:
+        service.calculateRecoveryTime(new BigDecimal("100"), "xyz", 3)
+
+        then:
+        thrown(EntityNotFoundException)
+    }
+
+    def "calculateRecoveryTime - should query exactly the requested number of past months"() {
+        given:
+        currencyRepository.findBySymbol("EUR") >> Optional.of(Stub(Currency))
+        movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
+
+        when:
+        service.calculateRecoveryTime(new BigDecimal("100"), "EUR", 6)
+
+        then:
+        6 * movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "EUR")
+        6 * movementRepository.getTotalByTypeAndMonth(
+                1L, _ as Integer, _ as Integer, MovementType.DEBITO.name(), "EUR")
     }
 }

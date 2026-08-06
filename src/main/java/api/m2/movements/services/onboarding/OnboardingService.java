@@ -10,6 +10,7 @@ import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.services.banks.BankAddService;
 import api.m2.movements.services.category.WorkspaceCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
+import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserAddService;
@@ -36,6 +37,7 @@ public class OnboardingService {
     private final WorkspaceCategoryService workspaceCategoryService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
+    private final WorkspaceCurrencyService workspaceCurrencyService;
     private final IdentityClient identityClient;
 
     @Transactional(rollbackFor = Exception.class)
@@ -52,6 +54,7 @@ public class OnboardingService {
 
         this.addBanks(onBoardingForm, user.id());
         this.addDefaultCurrency(user.id());
+        workspaceCurrencyService.addDefaultCurrencies(defaultWorkspace.id());
         this.addCategories(onBoardingForm, defaultWorkspace.id());
         this.addInitialIncome(onBoardingForm, defaultWorkspace.id());
         userAddService.changeUserFirstLoginStatus(user.id());

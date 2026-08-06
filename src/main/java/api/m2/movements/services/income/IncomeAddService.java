@@ -11,6 +11,7 @@ import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
 import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.services.currencies.CurrencyAddService;
+import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
@@ -33,6 +34,7 @@ public class IncomeAddService {
     private final IncomeMapper incomeMapper;
     private final WorkspaceContextService workspaceContextService;
     private final CurrencyAddService currencyAddService;
+    private final CurrencyResolver currencyResolver;
     private final MovementAddService movementAddService;
     private final BankRepository bankRepository;
 
@@ -52,7 +54,7 @@ public class IncomeAddService {
         var userId = userService.getMe().id();
         income.setUserId(userId);
         income.setWorkspaceId(workspaceId);
-        var currency = currencyAddService.findBySymbol(incomeToAdd.currency().symbol());
+        var currency = currencyResolver.resolve(incomeToAdd.currency().symbol(), workspaceId);
         income.setCurrency(currency);
         var bank = bankRepository.findByDescription(incomeToAdd.bank().trim().toUpperCase())
                 .orElseThrow(() -> new EntityNotFoundException("Banco no encontrado: " + incomeToAdd.bank()));

@@ -14,6 +14,7 @@ import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.currencies.CurrencyAddService
+import api.m2.movements.services.currencies.CurrencyResolver
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
@@ -31,6 +32,7 @@ class IncomeAddServiceTest extends Specification {
     IncomeMapper incomeMapper
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
+    CurrencyResolver currencyResolver = Mock(CurrencyResolver)
     MovementAddService movementAddService = Mock(MovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
 
@@ -45,6 +47,7 @@ class IncomeAddServiceTest extends Specification {
                 incomeMapper,
                 workspaceContextService,
                 currencyAddService,
+                currencyResolver,
                 movementAddService,
                 bankRepository
         )
@@ -62,7 +65,7 @@ class IncomeAddServiceTest extends Specification {
 
         userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        currencyAddService.findBySymbol("ARS") >> currency
+        currencyResolver.resolve("ARS", 1L) >> currency
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
 
         when:
@@ -81,7 +84,7 @@ class IncomeAddServiceTest extends Specification {
 
         userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        currencyAddService.findBySymbol("USD") >> Stub(Currency)
+        currencyResolver.resolve("USD", 1L) >> Stub(Currency)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
 
         when:
@@ -97,7 +100,7 @@ class IncomeAddServiceTest extends Specification {
 
         userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        currencyAddService.findBySymbol("ARS") >> Stub(Currency)
+        currencyResolver.resolve("ARS", 1L) >> Stub(Currency)
         bankRepository.findByDescription("BANCO_INEXISTENTE") >> Optional.empty()
 
         when:
@@ -116,7 +119,7 @@ class IncomeAddServiceTest extends Specification {
 
         userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        currencyAddService.findBySymbol("ARS") >> currency
+        currencyResolver.resolve("ARS", 1L) >> currency
         bankRepository.findByDescription("SANTANDER") >> Optional.of(bank)
 
         when:

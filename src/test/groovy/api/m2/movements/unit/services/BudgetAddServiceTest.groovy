@@ -11,6 +11,7 @@ import api.m2.movements.repositories.BudgetRepository
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.budgets.BudgetAddService
+import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import spock.lang.Specification
 
@@ -20,6 +21,7 @@ class BudgetAddServiceTest extends Specification {
     BudgetMapper budgetMapper = Mock()
     CategoryRepository categoryRepository = Mock()
     CurrencyRepository currencyRepository = Mock()
+    WorkspaceCurrencyService workspaceCurrencyService = Mock()
     WorkspaceContextService workspaceContextService = Mock()
 
     BudgetAddService service
@@ -30,6 +32,7 @@ class BudgetAddServiceTest extends Specification {
                 budgetMapper,
                 categoryRepository,
                 currencyRepository,
+                workspaceCurrencyService,
                 workspaceContextService
         )
     }
