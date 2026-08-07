@@ -5,5 +5,6 @@ import java.math.BigDecimal;
 public interface MonthlyEvolutionProjection {
     Integer getMonth();
     String getCurrencySymbol();
-    BigDecimal getTotal();
+    BigDecimal getSpent();
+    BigDecimal getIncome();
 }

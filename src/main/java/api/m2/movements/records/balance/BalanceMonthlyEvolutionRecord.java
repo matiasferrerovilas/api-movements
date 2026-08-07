@@ -5,5 +5,6 @@ import java.math.BigDecimal;
 public record BalanceMonthlyEvolutionRecord(
         Integer month,
         String currencySymbol,
-        BigDecimal total
+        BigDecimal spent,
+        BigDecimal savings
 ) { }

@@ -106,14 +106,15 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query("""
     SELECT MONTH(m.date)   AS month,
            c.symbol        AS currencySymbol,
-           SUM(m.amount)   AS total
+           SUM(CASE WHEN m.type IN (
+                api.m2.movements.enums.MovementType.DEBITO,
+                api.m2.movements.enums.MovementType.CREDITO
+              ) THEN m.amount ELSE 0 END) AS spent,
+           SUM(CASE WHEN m.type = api.m2.movements.enums.MovementType.INGRESO
+              THEN m.amount ELSE 0 END)   AS income
     FROM Movement m
     JOIN m.currency c
     WHERE YEAR(m.date) = :year
-      AND m.type IN (
-            api.m2.movements.enums.MovementType.DEBITO,
-            api.m2.movements.enums.MovementType.CREDITO
-          )
       AND (:#{#workspaceIds == null || #workspaceIds.isEmpty()} = true
            OR m.workspaceId IN :workspaceIds)
     GROUP BY MONTH(m.date), c.symbol

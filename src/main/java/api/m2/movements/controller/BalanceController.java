@@ -55,8 +55,10 @@ public class BalanceController {
     }
 
     @Operation(
-            summary = "Evolución mensual de gastos por moneda",
-            description = "Devuelve los totales de gastos agrupados por mes y moneda para un año dado."
+            summary = "Evolución mensual de gastos y ahorro por moneda",
+            description = "Devuelve, agrupado por mes y moneda para un año dado, el total gastado "
+                    + "(spent = DEBITO + CREDITO) y el ahorro real de ese mes "
+                    + "(savings = ingresos - gastos)."
     )
     @ApiResponse(responseCode = "200", description = "Evolución calculada correctamente")
     @GetMapping("/monthly-evolution")

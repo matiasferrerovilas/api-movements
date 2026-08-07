@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -19,22 +20,28 @@ public interface BalanceEvolutionMapper {
     default List<BalanceMonthlyEvolutionRecord> toRecordsWithFilledMonths(
             List<MonthlyEvolutionProjection> projections) {
 
-        Map<String, Map<Integer, BigDecimal>> byCurrency = projections.stream()
+        Map<String, Map<Integer, MonthlyEvolutionProjection>> byCurrency = projections.stream()
                 .collect(Collectors.groupingBy(
                         MonthlyEvolutionProjection::getCurrencySymbol,
                         Collectors.toMap(
                                 MonthlyEvolutionProjection::getMonth,
-                                MonthlyEvolutionProjection::getTotal
+                                Function.identity()
                         )
                 ));
 
         return byCurrency.entrySet().stream()
                 .flatMap(entry -> IntStream.rangeClosed(1, TOTAL_MONTHS)
-                        .mapToObj(month -> new BalanceMonthlyEvolutionRecord(
-                                month,
-                                entry.getKey(),
-                                entry.getValue().getOrDefault(month, BigDecimal.ZERO)
-                        ))
+                        .mapToObj(month -> {
+                            var projection = entry.getValue().get(month);
+                            var spent = projection != null ? projection.getSpent() : BigDecimal.ZERO;
+                            var income = projection != null ? projection.getIncome() : BigDecimal.ZERO;
+                            return new BalanceMonthlyEvolutionRecord(
+                                    month,
+                                    entry.getKey(),
+                                    spent,
+                                    income.subtract(spent)
+                            );
+                        })
                 )
                 .sorted(Comparator.comparing(BalanceMonthlyEvolutionRecord::month))
                 .toList();

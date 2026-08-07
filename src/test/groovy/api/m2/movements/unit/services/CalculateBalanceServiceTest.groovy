@@ -208,12 +208,14 @@ class CalculateBalanceServiceTest extends Specification {
         def proj1 = Stub(MonthlyEvolutionProjection) {
             getMonth()          >> 1
             getCurrencySymbol() >> "EUR"
-            getTotal()          >> new BigDecimal("100")
+            getSpent()          >> new BigDecimal("100")
+            getIncome()         >> new BigDecimal("150")
         }
         def proj2 = Stub(MonthlyEvolutionProjection) {
             getMonth()          >> 6
             getCurrencySymbol() >> "EUR"
-            getTotal()          >> new BigDecimal("200")
+            getSpent()          >> new BigDecimal("200")
+            getIncome()         >> new BigDecimal("180")
         }
         movementRepository.findMonthlyEvolution(2026 as Integer, [1L]) >> [proj1, proj2]
 
@@ -222,9 +224,12 @@ class CalculateBalanceServiceTest extends Specification {
 
         then: "mapper fills all 12 months for EUR, missing months get BigDecimal.ZERO"
         result.size() == 12
-        result.find { it.month() == 1 }.total()  == new BigDecimal("100")
-        result.find { it.month() == 6 }.total()  == new BigDecimal("200")
-        result.find { it.month() == 3 }.total()  == BigDecimal.ZERO
+        result.find { it.month() == 1 }.spent()   == new BigDecimal("100")
+        result.find { it.month() == 1 }.savings() == new BigDecimal("50")
+        result.find { it.month() == 6 }.spent()   == new BigDecimal("200")
+        result.find { it.month() == 6 }.savings() == new BigDecimal("-20")
+        result.find { it.month() == 3 }.spent()   == BigDecimal.ZERO
+        result.find { it.month() == 3 }.savings() == BigDecimal.ZERO
         result.every { it.currencySymbol() == "EUR" }
     }
 
@@ -244,12 +249,14 @@ class CalculateBalanceServiceTest extends Specification {
         def eurProj = Stub(MonthlyEvolutionProjection) {
             getMonth()          >> 3
             getCurrencySymbol() >> "EUR"
-            getTotal()          >> new BigDecimal("300")
+            getSpent()          >> new BigDecimal("300")
+            getIncome()         >> new BigDecimal("300")
         }
         def usdProj = Stub(MonthlyEvolutionProjection) {
             getMonth()          >> 3
             getCurrencySymbol() >> "USD"
-            getTotal()          >> new BigDecimal("150")
+            getSpent()          >> new BigDecimal("150")
+            getIncome()         >> new BigDecimal("150")
         }
         movementRepository.findMonthlyEvolution(2026 as Integer, [1L]) >> [eurProj, usdProj]
 
