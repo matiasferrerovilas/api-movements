@@ -332,8 +332,8 @@ class CalculateBalanceServiceTest extends Specification {
 
         then:
         6 * movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "EUR")
+                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "EUR") >> BigDecimal.ZERO
         6 * movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.DEBITO.name(), "EUR")
+                1L, _ as Integer, _ as Integer, MovementType.DEBITO.name(), "EUR") >> BigDecimal.ZERO
     }
 }
