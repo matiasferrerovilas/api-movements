@@ -43,7 +43,8 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN category ca ON m.category_id = ca.id
+            INNER JOIN movement_categories mc ON mc.movement_id = m.id
+            INNER JOIN category ca ON mc.category_id = ca.id
             INNER JOIN currency c  ON m.currency_id  = c.id
             WHERE m.workspace_id   = :workspaceId
               AND ca.description = :categoryDescription
@@ -63,7 +64,8 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
-            INNER JOIN category ca ON m.category_id = ca.id
+            INNER JOIN movement_categories mc ON mc.movement_id = m.id
+            INNER JOIN category ca ON mc.category_id = ca.id
             INNER JOIN currency c  ON m.currency_id  = c.id
             WHERE m.workspace_id   = :workspaceId
               AND ca.description = :categoryDescription

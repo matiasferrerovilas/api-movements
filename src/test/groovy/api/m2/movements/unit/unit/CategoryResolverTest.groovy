@@ -1,7 +1,7 @@
 package api.m2.movements.unit.unit
 
 import api.m2.movements.entities.commons.Category
-import api.m2.movements.records.categories.CategoryRecord
+import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.category.CategoryResolver
 import api.m2.movements.services.category.WorkspaceCategoryService
@@ -20,7 +20,7 @@ class CategoryResolverTest extends Specification {
         service = new CategoryResolver(categoryAddService, workspaceCategoryService)
     }
 
-    def "resolve - should add category when record is null"() {
+    def "resolveAll(descriptions) - should resolve default category when descriptions is null"() {
         given:
         def defaultCategory = "Default Category"
         def workspaceId = 1L
@@ -30,43 +30,74 @@ class CategoryResolverTest extends Specification {
         categoryAddService.addCategory(defaultCategory) >> category
 
         when:
-        def result = service.resolve(null as CategoryRecord, workspaceId)
+        def result = service.resolveAll(null, workspaceId)
 
         then:
         1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
-        result == category
+        result == [category]
     }
 
-    def "resolve - should add category when record is not null"() {
+    def "resolveAll(descriptions) - should resolve default category when descriptions is empty"() {
         given:
-        def description = "Test Category"
-        def workspaceId = 1L
-        def record = new CategoryRecord(1L, description, true, true, null, null)
-        def category = Stub(Category) { getId() >> 1L }
-
-        categoryAddService.addCategory(description) >> category
-
-        when:
-        def result = service.resolve(record, workspaceId)
-
-        then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
-        result == category
-    }
-
-    def "resolve - should add category when description is provided"() {
-        given:
-        def description = "Test Category"
+        def defaultCategory = "Default Category"
         def workspaceId = 1L
         def category = Stub(Category) { getId() >> 1L }
 
-        categoryAddService.addCategory(description) >> category
+        categoryAddService.getDefaultCategory() >> defaultCategory
+        categoryAddService.addCategory(defaultCategory) >> category
 
         when:
-        def result = service.resolve(description, workspaceId)
+        def result = service.resolveAll([], workspaceId)
 
         then:
         1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
-        result == category
+        result == [category]
+    }
+
+    def "resolveAll(descriptions) - should resolve every description provided"() {
+        given:
+        def workspaceId = 1L
+        def hogar = Stub(Category) { getId() >> 1L }
+        def ocio = Stub(Category) { getId() >> 2L }
+
+        categoryAddService.addCategory("HOGAR") >> hogar
+        categoryAddService.addCategory("OCIO") >> ocio
+
+        when:
+        def result = service.resolveAll(["HOGAR", "OCIO"], workspaceId)
+
+        then:
+        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, hogar)
+        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, ocio)
+        result == [hogar, ocio]
+    }
+
+    def "resolveAll(records) - should resolve default category when records is null"() {
+        given:
+        def defaultCategory = "Default Category"
+        def category = Stub(Category) { getId() >> 1L }
+
+        categoryAddService.getDefaultCategory() >> defaultCategory
+        categoryAddService.addCategory(defaultCategory) >> category
+
+        when:
+        def result = service.resolveAll(null as List<CategoryUpdateRecord>)
+
+        then:
+        result == [category]
+    }
+
+    def "resolveAll(records) - should resolve every record provided"() {
+        given:
+        def record = new CategoryUpdateRecord(1L, "Test Category")
+        def category = Stub(Category) { getId() >> 1L }
+
+        categoryAddService.addCategory("Test Category") >> category
+
+        when:
+        def result = service.resolveAll([record])
+
+        then:
+        result == [category]
     }
 }

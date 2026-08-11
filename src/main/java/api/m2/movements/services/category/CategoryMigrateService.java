@@ -29,11 +29,17 @@ public class CategoryMigrateService {
         var toCategory = categoryRepository.findById(request.toCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Categoría destino no encontrada con id: " + request.toCategoryId()));
+        var fromCategory = categoryRepository.findById(request.fromCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Categoría origen no encontrada con id: " + request.fromCategoryId()));
 
         var movements = movementRepository.findByWorkspaceIdAndCategoryId(
                 workspaceId, request.fromCategoryId());
 
-        movements.forEach(movement -> movement.setCategory(toCategory));
+        movements.forEach(movement -> {
+            movement.getCategories().remove(fromCategory);
+            movement.getCategories().add(toCategory);
+        });
         movementRepository.saveAll(movements);
     }
 }

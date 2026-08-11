@@ -11,6 +11,7 @@ import api.m2.movements.mappers.CategoryMapper
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.mappers.MovementMapperImpl
+import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementRecord
@@ -64,7 +65,7 @@ class MovementAddServiceTest extends Specification {
                 .date(LocalDate.now())
                 .type(MovementType.DEBITO)
                 .workspaceId(workspaceId)
-                .category(Category.builder().description("HOGAR").build())
+                .categories([Category.builder().description("HOGAR").build()] as Set)
                 .currency(Currency.builder().id(1L).symbol("ARS").build())
                 .ownerId(10L)
                 .build()
@@ -77,7 +78,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                "HOGAR", "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -95,7 +96,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                "HOGAR", "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -117,7 +118,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                "HOGAR", "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null
         )
 
         movementFactory.create(_ as MovementToAdd) >> {

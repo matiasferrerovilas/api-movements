@@ -8,6 +8,7 @@ import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record MovementRecord(Long id,
                              BigDecimal amount,
@@ -15,7 +16,7 @@ public record MovementRecord(Long id,
                              LocalDate date,
                              LocalDateTime createdAt,
                              LocalDateTime updatedAt,
-                             CategoryRecord category,
+                             List<CategoryRecord> categories,
                              CurrencyRecord currency,
                              String bank,
                              String type,

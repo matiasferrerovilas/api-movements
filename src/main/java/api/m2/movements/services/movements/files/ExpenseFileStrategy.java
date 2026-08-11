@@ -2,6 +2,7 @@ package api.m2.movements.services.movements.files;
 
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.helpers.ParserRegistry;
+import api.m2.movements.records.categories.CategoryUpdateRecord;
 import api.m2.movements.records.movements.MovementFileToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.pdf.ParsedExpense;
@@ -50,7 +51,7 @@ public abstract class ExpenseFileStrategy {
                 this.resolveAmount(e),
                 e.date(),
                 e.reference(),
-                categoryDefault.description(),
+                List.of(new CategoryUpdateRecord(null, categoryDefault.description())),
                 this.getBankMethod().name(),
                 e.currency().getSymbol(),
                 cuotaActual,

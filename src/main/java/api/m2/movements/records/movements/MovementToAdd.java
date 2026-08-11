@@ -1,12 +1,14 @@
 package api.m2.movements.records.movements;
 
 import api.m2.movements.constraints.ValidCuotas;
+import api.m2.movements.records.categories.CategoryUpdateRecord;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @ValidCuotas
 public record MovementToAdd(
@@ -17,7 +19,7 @@ public record MovementToAdd(
         LocalDate date,
         @NotBlank(message = "Debe indicar una descripción")
         String description,
-        String category,
+        List<CategoryUpdateRecord> categories,
         @NotBlank(message = "Debe indicar un tipo de gasto")
         String type,
         @NotBlank(message = "Debe indicar un tipo de moneda")

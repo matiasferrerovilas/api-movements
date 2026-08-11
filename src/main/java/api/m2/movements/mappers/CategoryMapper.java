@@ -6,9 +6,14 @@ import api.m2.movements.records.categories.CategoryRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.List;
+import java.util.Set;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CategoryMapper {
     CategoryRecord toRecord(Category category);
+
+    List<CategoryRecord> toRecordList(Set<Category> categories);
 
     /**
      * Mapea Category a CategoryRecord incluyendo iconName e iconColor desde WorkspaceCategory.

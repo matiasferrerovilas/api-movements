@@ -44,7 +44,9 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
       AND (:#{#filter.bank} IS NULL OR g.bank.description IN :#{#filter.bank})
       AND (:#{#filter.type} IS NULL OR g.type IN :#{#filter.type})
-      AND (:#{#filter.categories} IS NULL OR g.category.description IN :#{#filter.categories})
+      AND (:#{#filter.categories} IS NULL OR EXISTS (
+          SELECT 1 FROM g.categories gc WHERE gc.description IN :#{#filter.categories}
+      ))
       AND (:#{#filter.description} IS NULL OR LOWER(g.description) LIKE LOWER(CONCAT('%', :#{#filter.description}, '%')))
       AND (
           (:#{#filter.isLive} = TRUE AND
@@ -75,7 +77,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                     SUM(g.amount) AS total
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
-                        INNER JOIN category ca ON g.category_id = ca.id
+                        INNER JOIN movement_categories mc ON mc.movement_id = g.id
+                        INNER JOIN category ca ON mc.category_id = ca.id
                             WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
                                   AND g.type !="INGRESO"
                                    AND g.workspace_id IN (:groups)
@@ -151,7 +154,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
             SELECT ca.description
             FROM movements m
-            INNER JOIN category ca ON m.category_id = ca.id
+            INNER JOIN movement_categories mc ON mc.movement_id = m.id
+            INNER JOIN category ca ON mc.category_id = ca.id
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
@@ -167,7 +171,13 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = "SELECT DISTINCT m.workspace_id FROM movements m", nativeQuery = true)
     List<Long> findDistinctWorkspaceIds();
 
-    List<Movement> findByWorkspaceIdAndCategoryId(Long workspaceId, Long categoryId);
+    @Query("""
+    SELECT m FROM Movement m
+    JOIN m.categories c
+    WHERE m.workspaceId = :workspaceId AND c.id = :categoryId
+    """)
+    List<Movement> findByWorkspaceIdAndCategoryId(@Param("workspaceId") Long workspaceId,
+                                                    @Param("categoryId") Long categoryId);
 
     List<Movement> findAllByExchangeRateIsNull();
 }

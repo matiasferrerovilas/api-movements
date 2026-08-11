@@ -52,10 +52,10 @@ class MovementGetServiceTest extends Specification {
 
         def category1 = Stub(Category) { getId() >> 1L }
         def category2 = Stub(Category) { getId() >> 2L }
-        
-        def movement1 = Stub(Movement) { getCategory() >> category1 }
-        def movement2 = Stub(Movement) { getCategory() >> category2 }
-        
+
+        def movement1 = Stub(Movement) { getCategories() >> ([category1] as Set) }
+        def movement2 = Stub(Movement) { getCategories() >> ([category2] as Set) }
+
         def workspaceCategory1 = Stub(WorkspaceCategory) {
             getCategory() >> category1
             getIconName() >> "HomeOutlined"
@@ -66,16 +66,10 @@ class MovementGetServiceTest extends Specification {
             getIconName() >> "CarOutlined"
             getIconColor() >> "#1890ff"
         }
-        
-        def baseRecord1 = Stub(MovementRecord) {
-            id() >> 1L
-            category() >> Stub(CategoryRecord)
-        }
-        def baseRecord2 = Stub(MovementRecord) {
-            id() >> 2L
-            category() >> Stub(CategoryRecord)
-        }
-        
+
+        def baseRecord1 = Stub(MovementRecord) { id() >> 1L }
+        def baseRecord2 = Stub(MovementRecord) { id() >> 2L }
+
         def enrichedCategory1 = Stub(CategoryRecord) {
             iconName() >> "HomeOutlined"
             iconColor() >> "#faad14"
@@ -88,21 +82,19 @@ class MovementGetServiceTest extends Specification {
         workspaceContextService.getActiveWorkspaceId() >> 1L
         movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement1, movement2])
         workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> [workspaceCategory1, workspaceCategory2]
-        
+
         movementMapper.toRecord(movement1) >> baseRecord1
         movementMapper.toRecord(movement2) >> baseRecord2
-        
-        categoryMapper.toRecordWithIcons(category1, workspaceCategory1) >> enrichedCategory1
-        categoryMapper.toRecordWithIcons(category2, workspaceCategory2) >> enrichedCategory2
 
         when:
         def result = service.getExpensesBy(filter, pageable)
 
         then:
+        1 * categoryMapper.toRecordWithIcons(category1, workspaceCategory1) >> enrichedCategory1
+        1 * categoryMapper.toRecordWithIcons(category2, workspaceCategory2) >> enrichedCategory2
         result.content.size() == 2
-        // Verificar que se llamó a enriquecer las categorías
-        1 * categoryMapper.toRecordWithIcons(category1, workspaceCategory1)
-        1 * categoryMapper.toRecordWithIcons(category2, workspaceCategory2)
+        result.content[0].categories() == [enrichedCategory1]
+        result.content[1].categories() == [enrichedCategory2]
     }
 
     def "getExpensesBy - should enrich movement with owner and workspace metadata"() {
@@ -111,7 +103,7 @@ class MovementGetServiceTest extends Specification {
         def pageable = PageRequest.of(0, 10)
 
         def movement = Stub(Movement) {
-            getCategory() >> null
+            getCategories() >> ([] as Set)
             getOwnerId() >> 7L
             getExchangeRate() >> new BigDecimal("1.5")
         }
@@ -150,17 +142,14 @@ class MovementGetServiceTest extends Specification {
         then:
         result.content.isEmpty()
     }
-    
-    def "getExpensesBy - should handle movements without category"() {
+
+    def "getExpensesBy - should handle movements with no categories"() {
         given:
         def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
         def pageable = PageRequest.of(0, 10)
 
-        def movement = Stub(Movement) { getCategory() >> null }
-        def baseRecord = Stub(MovementRecord) {
-            id() >> 1L
-            category() >> null
-        }
+        def movement = Stub(Movement) { getCategories() >> ([] as Set) }
+        def baseRecord = Stub(MovementRecord) { id() >> 1L }
 
         workspaceContextService.getActiveWorkspaceId() >> 1L
         movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement])
@@ -172,23 +161,20 @@ class MovementGetServiceTest extends Specification {
 
         then:
         result.content.size() == 1
-        // No debería intentar enriquecer categorías nulas
+        result.content[0].categories().isEmpty()
         0 * categoryMapper.toRecordWithIcons(_, _)
     }
-    
+
     def "getExpensesBy - should use default icons when category not in workspace"() {
         given:
         def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
         def pageable = PageRequest.of(0, 10)
 
         def category = Stub(Category) { getId() >> 99L } // Categoría que NO está en workspace
-        def movement = Stub(Movement) { getCategory() >> category }
-        
-        def baseRecord = Stub(MovementRecord) {
-            id() >> 1L
-            category() >> Stub(CategoryRecord)
-        }
-        
+        def movement = Stub(Movement) { getCategories() >> ([category] as Set) }
+
+        def baseRecord = Stub(MovementRecord) { id() >> 1L }
+
         def enrichedCategoryWithDefaults = Stub(CategoryRecord) {
             iconName() >> "QuestionOutlined"
             iconColor() >> "#d9d9d9"
@@ -198,14 +184,14 @@ class MovementGetServiceTest extends Specification {
         movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement])
         workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> [] // Workspace sin categorías
         movementMapper.toRecord(movement) >> baseRecord
-        categoryMapper.toRecordWithIcons(category, null) >> enrichedCategoryWithDefaults
 
         when:
         def result = service.getExpensesBy(filter, pageable)
 
         then:
-        result.content.size() == 1
         // Debería llamar al mapper con workspaceCategory = null para usar defaults
-        1 * categoryMapper.toRecordWithIcons(category, null)
+        1 * categoryMapper.toRecordWithIcons(category, null) >> enrichedCategoryWithDefaults
+        result.content.size() == 1
+        result.content[0].categories() == [enrichedCategoryWithDefaults]
     }
 }

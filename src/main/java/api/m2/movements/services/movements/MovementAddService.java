@@ -122,7 +122,7 @@ public class MovementAddService {
                 workspace, movement.getExchangeRate(), null);
         return new MovementRecord(
                 baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
-                baseRecord.createdAt(), baseRecord.updatedAt(), baseRecord.category(), baseRecord.currency(),
+                baseRecord.createdAt(), baseRecord.updatedAt(), baseRecord.categories(), baseRecord.currency(),
                 baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(), metadata);
     }
 }

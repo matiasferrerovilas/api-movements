@@ -8,6 +8,7 @@ import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.IncomeMapper
+import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.movements.MovementToAdd
@@ -208,7 +209,7 @@ class IncomeAddServiceTest extends Specification {
             assert m.amount()        == new BigDecimal("1000.00")
             assert m.date()          == LocalDate.now(ZoneOffset.UTC)
             assert m.description()   == "Sueldo Recibido"
-            assert m.category()      == "HOGAR"
+            assert m.categories() == [new CategoryUpdateRecord(null, "HOGAR")]
             assert m.type()          == MovementType.INGRESO.name()
             assert m.currency()      == "EUR"
             assert m.cuotaActual()   == null
@@ -226,7 +227,7 @@ class IncomeAddServiceTest extends Specification {
         service.addIngreso(incomeToAdd)
 
         then:
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.category() == "HOGAR" })
+        1 * movementAddService.saveMovement({ MovementToAdd m -> m.categories() == [new CategoryUpdateRecord(null, "HOGAR")] })
     }
 
     def "addIngreso - should use today date in UTC"() {
@@ -290,7 +291,7 @@ class IncomeAddServiceTest extends Specification {
             assert m.amount() == new BigDecimal("2500.00")
             assert m.date() == LocalDate.now(ZoneOffset.UTC)
             assert m.description() == "Ingreso recurrente"
-            assert m.category() == "HOGAR"
+            assert m.categories() == [new CategoryUpdateRecord(null, "HOGAR")]
             assert m.type() == MovementType.INGRESO.name()
             assert m.currency() == "USD"
             assert m.bank() == "BBVA"

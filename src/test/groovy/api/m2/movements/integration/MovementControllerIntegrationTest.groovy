@@ -32,7 +32,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 .ownerId(testUserId)
                 .workspaceId(testWorkspaceId)
                 .currency(testCurrency)
-                .category(category)
+                .categories([category] as Set)
                 .cuotaActual(0)
                 .cuotasTotales(0)
                 .build())
@@ -71,7 +71,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 amount     : 250.50,
                 date       : LocalDate.now().toString(),
                 description: "Almuerzo",
-                category   : "COMIDA",
+                categories : ["COMIDA"],
                 type       : "DEBITO",
                 currency   : "ARS",
                 cuotaActual: 0,
@@ -98,7 +98,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 amount     : null, // Required field missing
                 date       : LocalDate.now().toString(),
                 description: "", // Empty description
-                category   : "COMIDA",
+                categories : ["COMIDA"],
                 type       : "DEBITO",
                 currency   : "ARS"
         ]
@@ -124,7 +124,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 .ownerId(testUserId)
                 .workspaceId(testWorkspaceId)
                 .currency(testCurrency)
-                .category(category)
+                .categories([category] as Set)
                 .cuotaActual(0)
                 .cuotasTotales(0)
                 .build())
@@ -160,7 +160,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 .ownerId(testUserId)
                 .workspaceId(testWorkspaceId)
                 .currency(testCurrency)
-                .category(category)
+                .categories([category] as Set)
                 .cuotaActual(0)
                 .cuotasTotales(0)
                 .build())

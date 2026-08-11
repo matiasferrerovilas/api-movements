@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class MovementFactory {
         var movement = movementMapper.toEntity(dto);
 
         movement.setWorkspaceId(workspaceId);
-        movement.setCategory(categoryResolver.resolve(dto.category(), workspaceId));
+        movement.setCategories(new HashSet<>(categoryResolver.resolveAll(dto.categories(), workspaceId)));
         var currency = currencyResolver.resolve(dto.currency(), workspaceId);
         movement.setCurrency(currency);
         movement.setOwnerId(ownerId);
@@ -74,8 +75,8 @@ public class MovementFactory {
         if (dto.currency() != null) {
             movement.setCurrency(currencyResolver.resolve(dto.currency(), movement.getWorkspaceId()));
         }
-        if (dto.category() != null) {
-            movement.setCategory(categoryResolver.resolve(dto.category()));
+        if (dto.categories() != null) {
+            movement.setCategories(new HashSet<>(categoryResolver.resolveAll(dto.categories())));
         }
     }
 }

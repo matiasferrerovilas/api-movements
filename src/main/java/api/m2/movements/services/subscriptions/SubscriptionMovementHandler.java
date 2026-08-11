@@ -3,6 +3,7 @@ package api.m2.movements.services.subscriptions;
 import api.m2.movements.entities.commons.Bank;
 import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.records.categories.CategoryUpdateRecord;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent;
 import api.m2.movements.records.subscriptions.SubscriptionPaidEvent;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +41,7 @@ public class SubscriptionMovementHandler {
                 event.amount(),
                 event.paymentDate(),
                 event.description(),
-                category.description(),
+                List.of(new CategoryUpdateRecord(null, category.description())),
                 MovementType.DEBITO.name(),
                 event.currencySymbol(),
                 0,

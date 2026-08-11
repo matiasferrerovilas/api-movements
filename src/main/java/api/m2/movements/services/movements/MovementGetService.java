@@ -65,24 +65,14 @@ public class MovementGetService {
         MovementRecord baseRecord = movementMapper.toRecord(movement);
         var metadata = this.buildMetadata(movement, workspace, ownerNamesById);
 
-        if (movement.getCategory() == null) {
-            return this.withMetadata(baseRecord, metadata);
-        }
-
-        WorkspaceCategory workspaceCategory = iconMap.get(movement.getCategory().getId());
-        CategoryRecord enrichedCategory = categoryMapper.toRecordWithIcons(movement.getCategory(), workspaceCategory);
+        List<CategoryRecord> enrichedCategories = movement.getCategories().stream()
+                .map(category -> categoryMapper.toRecordWithIcons(category, iconMap.get(category.getId())))
+                .toList();
 
         return new MovementRecord(
                 baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
-                baseRecord.createdAt(), baseRecord.updatedAt(), enrichedCategory, baseRecord.currency(),
+                baseRecord.createdAt(), baseRecord.updatedAt(), enrichedCategories, baseRecord.currency(),
                 baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(), metadata);
-    }
-
-    private MovementRecord withMetadata(MovementRecord record, MovementRecord.Metadata metadata) {
-        return new MovementRecord(
-                record.id(), record.amount(), record.description(), record.date(), record.createdAt(),
-                record.updatedAt(), record.category(), record.currency(), record.bank(), record.type(),
-                record.cuotaActual(), record.cuotasTotales(), metadata);
     }
 
     private MovementRecord.Metadata buildMetadata(Movement movement, WorkspaceBaseRecord workspace,

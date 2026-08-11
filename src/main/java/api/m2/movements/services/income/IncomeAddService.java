@@ -6,6 +6,7 @@ import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.IncomeMapper;
+import api.m2.movements.records.categories.CategoryUpdateRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.repositories.BankRepository;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -115,7 +117,7 @@ public class IncomeAddService {
                 amount,
                 LocalDate.now(ZoneOffset.UTC),
                 description,
-                DefaultCategory.HOGAR.getDescription(),
+                List.of(new CategoryUpdateRecord(null, DefaultCategory.HOGAR.getDescription())),
                 MovementType.INGRESO.name(),
                 currencySymbol,
                 null,

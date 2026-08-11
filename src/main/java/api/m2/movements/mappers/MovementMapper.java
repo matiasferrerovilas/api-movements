@@ -19,7 +19,7 @@ public interface MovementMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)
-    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "categories", ignore = true)
     @Mapping(target = "workspaceId", ignore = true)
     @Mapping(target = "bank", ignore = true)
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
@@ -29,7 +29,7 @@ public interface MovementMapper {
     MovementRecord toRecord(Movement movement);
 
     @Mapping(target = "currency", ignore = true)
-    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "categories", ignore = true)
     @Mapping(target = "workspaceId", ignore = true)
     @Mapping(target = "bank", ignore = true)
     @Mapping(target = "type", source = "type")

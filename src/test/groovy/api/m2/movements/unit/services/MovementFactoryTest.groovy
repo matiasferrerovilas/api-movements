@@ -57,7 +57,7 @@ class MovementFactoryTest extends Specification {
                 new BigDecimal("100.00"),
                 LocalDate.of(2024, 1, 15),
                 "Test description",
-                "HOGAR",
+                [new CategoryUpdateRecord(null, "HOGAR")],
                 "GASTO",
                 "USD",
                 null,
@@ -72,7 +72,7 @@ class MovementFactoryTest extends Specification {
 
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        categoryResolver.resolve(_ as String, 1L) >> category
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
@@ -82,7 +82,7 @@ class MovementFactoryTest extends Specification {
         def result = factory.create(dto)
 
         then:
-        result.category == category
+        result.categories == [category] as Set
         result.currency == currency
         result.ownerId == 10L
         result.workspaceId == 1L
@@ -96,7 +96,7 @@ class MovementFactoryTest extends Specification {
                 new BigDecimal("50.00"),
                 LocalDate.of(2024, 2, 20),
                 "No bank",
-                "OCIO",
+                [new CategoryUpdateRecord(null, "OCIO")],
                 "GASTO",
                 "EUR",
                 null,
@@ -110,7 +110,7 @@ class MovementFactoryTest extends Specification {
 
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        categoryResolver.resolve(_ as String, 1L) >> category
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "OCIO")], 1L) >> [category]
         currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> new BigDecimal("1.08")
@@ -129,7 +129,7 @@ class MovementFactoryTest extends Specification {
                 new BigDecimal("100.00"),
                 LocalDate.of(2024, 1, 15),
                 "Test",
-                "HOGAR",
+                [new CategoryUpdateRecord(null, "HOGAR")],
                 "GASTO",
                 "EUR",
                 null,
@@ -143,7 +143,7 @@ class MovementFactoryTest extends Specification {
 
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        categoryResolver.resolve(_ as String, 1L) >> category
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
         exchangeRateResolver.resolveRate("EUR", dto.date()) >> {
@@ -163,7 +163,7 @@ class MovementFactoryTest extends Specification {
                 new BigDecimal("100.00"),
                 LocalDate.of(2024, 1, 15),
                 "Test",
-                "HOGAR",
+                [new CategoryUpdateRecord(null, "HOGAR")],
                 "GASTO",
                 "USD",
                 null,
@@ -177,7 +177,7 @@ class MovementFactoryTest extends Specification {
 
         movementMapper.toEntity(dto) >> movement
         workspaceContextService.getActiveWorkspaceId() >> 1L
-        categoryResolver.resolve(_ as String, 1L) >> category
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)
         bankRepository.findByDescription("UNKNOWN_BANK") >> Optional.empty()
@@ -215,7 +215,7 @@ class MovementFactoryTest extends Specification {
         movement.currency == newCurrency
     }
 
-    def "applyUpdates - should update category when provided"() {
+    def "applyUpdates - should update categories when provided"() {
         given:
         def newCategory = Stub(Category) { getDescription() >> "TRANSPORTE" }
         def categoryUpdateRecord = new CategoryUpdateRecord(5L, "TRANSPORTE")
@@ -223,7 +223,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 null,
-                categoryUpdateRecord,
+                [categoryUpdateRecord],
                 null,
                 null,
                 null,
@@ -231,13 +231,13 @@ class MovementFactoryTest extends Specification {
         )
         def movement = new Movement()
 
-        categoryResolver.resolve(_ as CategoryUpdateRecord) >> newCategory
+        categoryResolver.resolveAll([categoryUpdateRecord]) >> [newCategory]
 
         when:
         factory.applyUpdates(dto, movement)
 
         then:
-        movement.category == newCategory
+        movement.categories == [newCategory] as Set
     }
 
     def "applyUpdates - should not update when fields are null"() {
@@ -247,15 +247,15 @@ class MovementFactoryTest extends Specification {
         def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null)
         def movement = new Movement()
         movement.setCurrency(existingCurrency)
-        movement.setCategory(existingCategory)
+        movement.setCategories([existingCategory] as Set)
 
         when:
         factory.applyUpdates(dto, movement)
 
         then:
         movement.currency == existingCurrency
-        movement.category == existingCategory
+        movement.categories == [existingCategory] as Set
         0 * currencyResolver.resolve(_ as String, _ as Long)
-        0 * categoryResolver.resolve(_ as String)
+        0 * categoryResolver.resolveAll(_ as List)
     }
 }

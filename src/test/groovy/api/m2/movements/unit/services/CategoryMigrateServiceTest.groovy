@@ -23,25 +23,48 @@ class CategoryMigrateServiceTest extends Specification {
         service = new CategoryMigrateService(movementRepository, categoryRepository, workspaceContextService)
     }
 
-    def "migrateCategory - should reassign category to all matching workspace movements"() {
+    def "migrateCategory - should replace fromCategory with toCategory on all matching workspace movements"() {
         given:
         def workspaceId = 10L
         def request = new CategoryMigrateRequest(1L, 2L)
+        def fromCategory = Stub(Category) { getId() >> 1L }
         def toCategory = Stub(Category) { getId() >> 2L }
-        def movement1 = Mock(Movement)
-        def movement2 = Mock(Movement)
+        def movement1 = Movement.builder().categories([fromCategory] as Set).build()
+        def movement2 = Movement.builder().categories([fromCategory] as Set).build()
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
         categoryRepository.findById(2L) >> Optional.of(toCategory)
+        categoryRepository.findById(1L) >> Optional.of(fromCategory)
         movementRepository.findByWorkspaceIdAndCategoryId(workspaceId, 1L) >> [movement1, movement2]
 
         when:
         service.migrateCategory(request)
 
         then:
-        1 * movement1.setCategory(toCategory)
-        1 * movement2.setCategory(toCategory)
+        movement1.categories == [toCategory] as Set
+        movement2.categories == [toCategory] as Set
         1 * movementRepository.saveAll([movement1, movement2])
+    }
+
+    def "migrateCategory - should keep other categories untouched on the movement"() {
+        given:
+        def workspaceId = 10L
+        def request = new CategoryMigrateRequest(1L, 2L)
+        def fromCategory = Stub(Category) { getId() >> 1L }
+        def toCategory = Stub(Category) { getId() >> 2L }
+        def otherCategory = Stub(Category) { getId() >> 3L }
+        def movement = Movement.builder().categories([fromCategory, otherCategory] as Set).build()
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        categoryRepository.findById(2L) >> Optional.of(toCategory)
+        categoryRepository.findById(1L) >> Optional.of(fromCategory)
+        movementRepository.findByWorkspaceIdAndCategoryId(workspaceId, 1L) >> [movement]
+
+        when:
+        service.migrateCategory(request)
+
+        then:
+        movement.categories == [toCategory, otherCategory] as Set
     }
 
     def "migrateCategory - should throw BusinessException when fromId equals toId"() {
@@ -72,14 +95,34 @@ class CategoryMigrateServiceTest extends Specification {
         0 * movementRepository.findByWorkspaceIdAndCategoryId(_ as Long, _ as Long)
     }
 
+    def "migrateCategory - should throw EntityNotFoundException when fromCategoryId does not exist"() {
+        given:
+        def workspaceId = 10L
+        def request = new CategoryMigrateRequest(99L, 1L)
+        def toCategory = Stub(Category) { getId() >> 1L }
+
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        categoryRepository.findById(1L) >> Optional.of(toCategory)
+        categoryRepository.findById(99L) >> Optional.empty()
+
+        when:
+        service.migrateCategory(request)
+
+        then:
+        thrown(EntityNotFoundException)
+        0 * movementRepository.findByWorkspaceIdAndCategoryId(_ as Long, _ as Long)
+    }
+
     def "migrateCategory - should do nothing when no movements match fromCategoryId"() {
         given:
         def workspaceId = 10L
         def request = new CategoryMigrateRequest(1L, 2L)
+        def fromCategory = Stub(Category) { getId() >> 1L }
         def toCategory = Stub(Category) { getId() >> 2L }
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
         categoryRepository.findById(2L) >> Optional.of(toCategory)
+        categoryRepository.findById(1L) >> Optional.of(fromCategory)
         movementRepository.findByWorkspaceIdAndCategoryId(workspaceId, 1L) >> []
 
         when:

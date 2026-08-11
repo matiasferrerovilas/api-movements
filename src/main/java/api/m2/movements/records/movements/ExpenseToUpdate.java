@@ -5,13 +5,14 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record ExpenseToUpdate(
         @Positive(message = "El monto debe ser mayor a cero")
         BigDecimal amount,
         LocalDate date,
         String description,
-        CategoryUpdateRecord category,
+        List<CategoryUpdateRecord> categories,
         String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
