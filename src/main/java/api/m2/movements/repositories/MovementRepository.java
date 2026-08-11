@@ -69,8 +69,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
         SELECT
                     ca.description AS category,
-                    YEAR(g.`date`) as year,
-                    MONTH(g.`date`) as month,
+                    CAST(YEAR(g.`date`) AS SIGNED) as year,
+                    CAST(MONTH(g.`date`) AS SIGNED) as month,
                     c.symbol AS currencySymbol,
                     SUM(g.amount) AS total
                         FROM movements g
@@ -80,7 +80,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                                   AND g.type !="INGRESO"
                                    AND g.workspace_id IN (:groups)
                               AND c.symbol IN (:currencies)
-                        GROUP BY ca.description, YEAR(g.`date`), c.symbol, MONTH(g.`date`), g.workspace_id
+                        GROUP BY ca.description, CAST(YEAR(g.`date`) AS SIGNED), c.symbol, CAST(MONTH(g.`date`) AS SIGNED), g.workspace_id
     """, nativeQuery = true)
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
