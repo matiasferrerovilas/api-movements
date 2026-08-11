@@ -71,7 +71,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 amount     : 250.50,
                 date       : LocalDate.now().toString(),
                 description: "Almuerzo",
-                categories : ["COMIDA"],
+                categories : [[description: "COMIDA"]],
                 type       : "DEBITO",
                 currency   : "ARS",
                 cuotaActual: 0,
@@ -98,7 +98,7 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
                 amount     : null, // Required field missing
                 date       : LocalDate.now().toString(),
                 description: "", // Empty description
-                categories : ["COMIDA"],
+                categories : [[description: "COMIDA"]],
                 type       : "DEBITO",
                 currency   : "ARS"
         ]

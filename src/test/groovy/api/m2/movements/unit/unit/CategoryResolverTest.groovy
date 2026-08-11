@@ -64,7 +64,10 @@ class CategoryResolverTest extends Specification {
         categoryAddService.addCategory("OCIO") >> ocio
 
         when:
-        def result = service.resolveAll(["HOGAR", "OCIO"], workspaceId)
+        def result = service.resolveAll([
+                new CategoryUpdateRecord(null, "HOGAR"),
+                new CategoryUpdateRecord(null, "OCIO")
+        ], workspaceId)
 
         then:
         1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, hogar)
