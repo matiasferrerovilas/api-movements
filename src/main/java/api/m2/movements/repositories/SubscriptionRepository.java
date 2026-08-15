@@ -33,5 +33,20 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     WHERE s.id = :id
 """)
     Optional<Subscription> findByIdWithCurrency(Long id);
+
+    @Query(value = """
+    SELECT s
+    FROM Subscription s
+    WHERE (s.lastPayment IS NULL
+            OR YEAR(s.lastPayment) != :year
+            OR MONTH(s.lastPayment) != :month)
+      AND (s.overdueNotifiedYear IS NULL
+            OR s.overdueNotifiedYear != :year
+            OR s.overdueNotifiedMonth != :month)
+""")
+    List<Subscription> findOverdueUnpaidAndUnnotified(
+            @Param("year") int year,
+            @Param("month") int month
+    );
 }
 

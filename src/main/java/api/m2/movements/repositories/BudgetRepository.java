@@ -8,9 +8,24 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
+
+    @Query("""
+            SELECT b FROM Budget b
+            JOIN FETCH b.category c
+            JOIN FETCH b.currency cur
+            WHERE b.workspaceId = :workspaceId
+              AND c.description = :categoryDescription
+              AND cur.symbol = :currencySymbol
+            """)
+    Optional<Budget> findByWorkspaceCategoryDescriptionAndCurrency(
+            @Param("workspaceId") Long workspaceId,
+            @Param("categoryDescription") String categoryDescription,
+            @Param("currencySymbol") String currencySymbol
+    );
 
     @Query("""
             SELECT b FROM Budget b

@@ -12,6 +12,7 @@ public final class WebSocketTopics {
     public static final String WORKSPACES = "/topic/workspace";
     public static final String CATEGORIES = "/topic/categories";
     public static final String INVESTMENTS = "/topic/inversiones";
+    public static final String NOTIFICATIONS = "/topic/notifications";
 
     // Suffixes
     public static final String NEW = "/new";
@@ -84,5 +85,12 @@ public final class WebSocketTopics {
 
     public static String investmentsDelete(Long workspaceId) {
         return INVESTMENTS + "/" + workspaceId + DELETE;
+    }
+
+    /**
+     * Construye el topic para nuevas notificaciones de un workspace.
+     */
+    public static String notificationsNew(Long workspaceId) {
+        return NOTIFICATIONS + "/" + workspaceId + NEW;
     }
 }

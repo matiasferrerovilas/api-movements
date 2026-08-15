@@ -155,3 +155,6 @@ databaseChangeLog:
   - include:
       file: 052_create_table_movement_categories.sql
       relativeToChangelogFile: true
+  - include:
+      file: 053_alter_table_subscription_add_overdue_notified.sql
+      relativeToChangelogFile: true

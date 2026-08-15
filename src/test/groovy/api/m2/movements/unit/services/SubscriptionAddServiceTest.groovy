@@ -12,9 +12,11 @@ import api.m2.movements.records.services.SubscriptionToAdd
 import api.m2.movements.records.services.UpdateSubscriptionRecord
 import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent
 import api.m2.movements.records.subscriptions.SubscriptionPaidEvent
+import api.m2.movements.enums.NotificationSeverity
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
+import api.m2.movements.services.notifications.NotificationService
 import api.m2.movements.services.subscriptions.SubscriptionAddService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
@@ -36,6 +38,7 @@ class SubscriptionAddServiceTest extends Specification {
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+    NotificationService notificationService = Mock(NotificationService)
 
     SubscriptionAddService service
 
@@ -48,7 +51,8 @@ class SubscriptionAddServiceTest extends Specification {
                 userService,
                 workspaceContextService,
                 workspaceQueryService,
-                eventPublisher
+                eventPublisher,
+                notificationService
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [1L: "Matias"]
@@ -112,6 +116,20 @@ class SubscriptionAddServiceTest extends Specification {
         then:
         thrown(EntityNotFoundException)
         0 * eventPublisher.publishEvent(_ as SubscriptionPaidEvent)
+        0 * notificationService.publish(_ as Long, _ as String, _ as String, _ as NotificationSeverity)
+    }
+
+    def "paySubscriptionById - should publish a SUCCESS notification with service name and amount"() {
+        given:
+        def subscription = buildSubscription(1L)
+        subscriptionRepository.findById(10L) >> Optional.of(subscription)
+        subscriptionRepository.save(subscription) >> subscription
+
+        when:
+        service.paySubscriptionById(10L)
+
+        then:
+        1 * notificationService.publish(1L, "Servicio pagado", "Netflix — \$10.00", NotificationSeverity.SUCCESS)
     }
 
     def "paySubscriptionById - should set payment date to today UTC"() {

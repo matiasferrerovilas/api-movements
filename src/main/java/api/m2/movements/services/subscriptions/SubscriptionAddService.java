@@ -3,6 +3,7 @@ package api.m2.movements.services.subscriptions;
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.movements.Subscription;
 import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.enums.NotificationSeverity;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.SubscriptionMapper;
 import api.m2.movements.records.services.ServiceAddedEvent;
@@ -17,6 +18,7 @@ import api.m2.movements.records.subscriptions.SubscriptionPaidEvent;
 import api.m2.movements.repositories.SubscriptionRepository;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.currencies.WorkspaceCurrencyService;
+import api.m2.movements.services.notifications.NotificationService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
@@ -44,6 +46,7 @@ public class SubscriptionAddService {
     private final WorkspaceContextService workspaceContextService;
     private final WorkspaceQueryService workspaceQueryService;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
@@ -73,6 +76,8 @@ public class SubscriptionAddService {
 
         var dto = this.enrich(subscriptionRepository.save(subscription));
         eventPublisher.publishEvent(new ServicePaidEvent(dto));
+        notificationService.publish(subscription.getWorkspaceId(), "Servicio pagado",
+                subscription.getDescription() + " — $" + subscription.getAmount(), NotificationSeverity.SUCCESS);
     }
 
     @Transactional

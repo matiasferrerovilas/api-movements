@@ -62,6 +62,12 @@ public class Subscription {
     @Column(name = "user_id")
     private Long ownerId;
 
+    @Column(name = "overdue_notified_year")
+    private Integer overdueNotifiedYear;
+
+    @Column(name = "overdue_notified_month")
+    private Integer overdueNotifiedMonth;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
