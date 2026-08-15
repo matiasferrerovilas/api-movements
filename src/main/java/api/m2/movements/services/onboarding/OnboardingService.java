@@ -53,8 +53,10 @@ public class OnboardingService {
         userSettingService.upsertForUser(user.id(), UserSettingKey.DEFAULT_WORKSPACE, defaultWorkspace.id());
 
         this.addBanks(onBoardingForm, user.id());
-        this.addDefaultCurrency(user.id());
+        // Las monedas del workspace se crean antes de fijar la default: esta última necesita
+        // que ya exista la asociación workspace-moneda para poder guardar su id.
         workspaceCurrencyService.addDefaultCurrencies(defaultWorkspace.id());
+        this.addDefaultCurrency(user.id(), defaultWorkspace.id());
         this.addCategories(onBoardingForm, defaultWorkspace.id());
         this.addInitialIncome(onBoardingForm, defaultWorkspace.id());
         userAddService.changeUserFirstLoginStatus(user.id());
@@ -91,9 +93,17 @@ public class OnboardingService {
                 banksByDescription.get(defaultBank.description()).getId());
     }
 
-    private void addDefaultCurrency(Long userId) {
+    /**
+     * Guarda el id de la WorkspaceCurrency, no el de la Currency del catálogo global.
+     * GET /workspace/currencies expone WorkspaceCurrencyRecord.id, así que ese es el id contra
+     * el que las pantallas de configuración (web y mobile) comparan y escriben DEFAULT_CURRENCY.
+     * Guardar el id del catálogo dejaba la moneda por defecto sin coincidir con ninguna opción
+     * de la lista hasta que el usuario la elegía a mano.
+     */
+    private void addDefaultCurrency(Long userId, Long defaultWorkspaceId) {
         var usd = currencyAddService.findBySymbol(DEFAULT_CURRENCY);
-        userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_CURRENCY, usd.getId());
+        var workspaceCurrency = workspaceCurrencyService.ensureCurrencyInWorkspace(defaultWorkspaceId, usd);
+        userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_CURRENCY, workspaceCurrency.getId());
     }
 
     private void addCategories(OnBoardingForm onBoardingForm, Long defaultWorkspaceId) {

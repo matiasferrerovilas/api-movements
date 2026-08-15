@@ -1,5 +1,6 @@
 package api.m2.movements.unit.services
 
+import api.m2.movements.entities.WorkspaceCurrency
 import api.m2.movements.entities.commons.Bank
 import api.m2.movements.entities.commons.Currency
 
@@ -65,6 +66,7 @@ class OnboardingServiceTest extends Specification {
         ]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 42L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -72,7 +74,7 @@ class OnboardingServiceTest extends Specification {
         then:
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_WORKSPACE, 100L)
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_BANK, 10L)
-        1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_CURRENCY, 1L)
+        1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_CURRENCY, 900L)
         1 * workspaceCategoryService.addCategories(100L, categories)
         1 * workspaceCategoryService.addDefaultCategories(100L)
         1 * workspaceCurrencyService.addDefaultCurrencies(100L)
@@ -99,6 +101,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -121,6 +124,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA"], 1L) >> [GALICIA: galiciaBank]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -143,6 +147,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -152,12 +157,15 @@ class OnboardingServiceTest extends Specification {
         1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_BANK, 11L)
     }
 
-    def "finish - should set DEFAULT_CURRENCY to USD"() {
+    def "finish - should set DEFAULT_CURRENCY to the workspace currency id, not the catalog id"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
         def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
         def loggedUser = user(1L)
+        // Ids distintos a propósito: DEFAULT_CURRENCY debe guardar el de WorkspaceCurrency (55),
+        // que es el que expone GET /workspace/currencies, y no el del catálogo global (5).
         def usd = Stub(Currency) { getId() >> 5L }
+        def usdInWorkspace = Stub(WorkspaceCurrency) { getId() >> 55L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
@@ -168,7 +176,9 @@ class OnboardingServiceTest extends Specification {
 
         then:
         1 * currencyAddService.findBySymbol("USD") >> usd
-        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_CURRENCY, 5L)
+        1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> usdInWorkspace
+        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_CURRENCY, 55L)
+        0 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_CURRENCY, 5L)
     }
 
     def "finish - should always call addDefaultCategories regardless of categoriesToAdd"() {
@@ -181,6 +191,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -200,6 +211,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -220,6 +232,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Hogar")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -240,6 +253,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Gastos")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -260,6 +274,7 @@ class OnboardingServiceTest extends Specification {
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Personal")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)
@@ -279,6 +294,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
         service.finish(form)

@@ -45,9 +45,14 @@ public class WorkspaceCurrencyService {
                 .forEach(currency -> this.resolveWorkspaceCurrency(workspaceId, currency));
     }
 
+    /**
+     * Asocia la moneda al workspace si aún no lo estaba y devuelve la asociación.
+     * El retorno lo usa el onboarding para guardar DEFAULT_CURRENCY con el id correcto;
+     * el resto de los llamadores solo necesitan el efecto y pueden ignorarlo.
+     */
     @Transactional
-    public void ensureCurrencyInWorkspace(Long workspaceId, Currency currency) {
-        this.resolveWorkspaceCurrency(workspaceId, currency);
+    public WorkspaceCurrency ensureCurrencyInWorkspace(Long workspaceId, Currency currency) {
+        return this.resolveWorkspaceCurrency(workspaceId, currency);
     }
 
     @Transactional
