@@ -22,6 +22,12 @@ public class RabbitConfig {
     public static final String QUEUE_MOVEMENT_FILE_IMPORTED = "n8n.import.file.finished";
     private static final String ROUTING_KEY = "n8n.import.file.finished";
 
+    // api-identity owns this exchange; we only declare it here (same name/type) so our binding
+    // below works regardless of which service starts first, and bind our own durable queue to it.
+    public static final String IDENTITY_TOPIC_EXCHANGE = "identity.topic";
+    public static final String QUEUE_INVITATION_RECEIVED = "movements.invitation.received";
+    private static final String ROUTING_KEY_INVITATION_SENT = "identity.invitation.sent";
+
     @Bean
     public JacksonJsonMessageConverter jackson2JsonMessageConverter(JsonMapper jsonMapper) {
         return new JacksonJsonMessageConverter(jsonMapper);
@@ -71,6 +77,21 @@ public class RabbitConfig {
                 .bind(queue)
                 .to(exchange)
                 .with(ROUTING_KEY);
+    }
+    @Bean
+    TopicExchange identityTopicExchange() {
+        return new TopicExchange(IDENTITY_TOPIC_EXCHANGE);
+    }
+    @Bean
+    Queue invitationReceivedQueue() {
+        return QueueBuilder.durable(QUEUE_INVITATION_RECEIVED).build();
+    }
+    @Bean
+    Binding invitationReceivedBinding() {
+        return BindingBuilder
+                .bind(invitationReceivedQueue())
+                .to(identityTopicExchange())
+                .with(ROUTING_KEY_INVITATION_SENT);
     }
     @Bean
     RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {

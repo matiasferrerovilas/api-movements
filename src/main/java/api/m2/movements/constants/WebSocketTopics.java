@@ -13,6 +13,7 @@ public final class WebSocketTopics {
     public static final String CATEGORIES = "/topic/categories";
     public static final String INVESTMENTS = "/topic/inversiones";
     public static final String NOTIFICATIONS = "/topic/notifications";
+    public static final String INVITATIONS = "/topic/invitations";
 
     // Suffixes
     public static final String NEW = "/new";
@@ -92,5 +93,14 @@ public final class WebSocketTopics {
      */
     public static String notificationsNew(Long workspaceId) {
         return NOTIFICATIONS + "/" + workspaceId + NEW;
+    }
+
+    /**
+     * Construye el topic para invitaciones recibidas por un usuario, direccionado por email
+     * (el "name" del principal autenticado, igual que en el resto del backend) ya que el
+     * evento que llega desde api-identity no incluye el subject de Keycloak del invitado.
+     */
+    public static String invitationsNew(String invitedUserEmail) {
+        return INVITATIONS + "/" + invitedUserEmail + NEW;
     }
 }

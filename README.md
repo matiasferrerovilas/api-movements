@@ -1,19 +1,20 @@
 # Movement API
 
-A robust and scalable RESTful API for managing personal finances, built with Spring Boot and designed for containerized deployment. Supports movements, subscriptions, incomes, and shared workspaces with real-time updates via WebSocket.
+A RESTful API for managing personal finances, built with Spring Boot and designed for containerized deployment. Supports movements, recurring income, subscriptions, budgets, investments, and shared workspaces with real-time updates via WebSocket. User identity and workspace membership are delegated to [api-identity](https://github.com/matiasferrerovilas/api-identity) — this service owns financial domain data only.
 
 ## Features
 
-- **Expense Management**: Track expenses with categories, amounts, and dates
-- **Multi-currency Support**: Handle expenses in different currencies (ARS, USD, EUR, CHF)
-- **Credit/Debit Tracking**: Support for both credit and debit transactions
-- **Shared Workspaces**: Invite members to shared workspaces with role-based access
-- **Real-time Updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, and workspace events
-- **User Authentication**: Secure API with Keycloak OAuth2 and JWT (RS256)
-- **API Documentation**: Interactive documentation with Swagger/OpenAPI at `/docs`
-- **Metrics & Monitoring**: Built-in support for Prometheus and Grafana
-- **Container Ready**: Docker support for easy deployment
-- **Database Migrations**: Liquibase for database versioning (`ddl-auto: none`)
+- **Movement tracking**: expenses/income/credit with categories, installments, multi-bank and multi-currency support
+- **Bank statement import**: PDF parsing for BBVA and Galicia (Argentina), via a pluggable Strategy per bank
+- **Recurring income & subscriptions**: fixed monthly income and recurring bills with payment tracking
+- **Budgets**: per-category, per-currency budgets (monthly, annual, or one-time) with threshold-crossing alerts
+- **Investments**: live valuation via Yahoo Finance, plus a time-deposit (plazo fijo) calculator
+- **Shared workspaces**: invite members with role-based access (`OWNER`/`COLLABORATOR`/`READ_ONLY`), delegated to api-identity
+- **Real-time updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, investments, budgets, invitations, and workspace events
+- **User authentication**: Keycloak OAuth2 / JWT (RS256) resource server
+- **API documentation**: interactive Swagger/OpenAPI UI
+- **Metrics & monitoring**: built-in Prometheus support
+- **Database migrations**: Liquibase (`ddl-auto: none`)
 
 ## Tech Stack
 
@@ -25,8 +26,9 @@ A robust and scalable RESTful API for managing personal finances, built with Spr
 - **Spring Web** for REST endpoints
 - **Spring Data JPA** for data access
 - **Spring AOP** for cross-cutting concerns (membership guard)
-- **RabbitMQ** for async messaging
-- **Caffeine** in-memory cache (currency exchange rates)
+- **RabbitMQ** for async messaging (consumes workspace-invitation events published by api-identity)
+- **Caffeine** in-memory cache (currency exchange rates via [Frankfurter](https://frankfurter.dev))
+- **Yahoo Finance** client for investment valuation
 - **Micrometer** for application metrics
 - **TestContainers** for integration testing
 - **Spock** for testing
@@ -44,18 +46,20 @@ A robust and scalable RESTful API for managing personal finances, built with Spr
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/api-movements.git
+   git clone https://github.com/matiasferrerovilas/api-movements.git
    cd api-movements
    ```
 
-2. **Set up the database**
+2. **Run api-identity** — this service calls out to api-identity for users/workspaces/membership on every relevant request (`identity.base-url`, defaults to `http://localhost:8082`), so it needs to be running alongside this one.
+
+3. **Set up the database**
     - Create a MySQL database named `expenses`
     - Or use the provided docker-compose file:
       ```bash
       docker-compose up -d mysql
       ```
 
-3. **Configure application properties**
+4. **Configure application properties**
    Create `src/main/resources/application-dev.yml` with your database credentials:
    ```yaml
    spring:
@@ -65,7 +69,7 @@ A robust and scalable RESTful API for managing personal finances, built with Spr
        password: your_password
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
    ./gradlew bootRun --args='--spring.profiles.active=dev'
    ```
@@ -101,15 +105,18 @@ The API uses Keycloak OAuth2 with JWT (RS256). To authenticate:
 
 The database schema is managed using Liquibase (`ddl-auto: none`). All migrations are located in `src/main/resources/db/changelog/`.
 
+This service only owns financial domain data — workspaces, membership, and invitations live in api-identity's own database and are reached here through `IdentityClient`, not local tables.
+
 Key tables:
-- `movements`: Main expenses/income table
-- `workspaces`: Shared workspaces
-- `workspace_members`: Workspace membership with roles
-- `workspace_invitations`: Pending invitations
-- `category`: Expense categories
-- `currency`: Supported currencies
-- `subscriptions`: Recurring subscriptions
-- `income`: Income records
+- `movements`: expense/income/credit records, including installments
+- `ingreso`: recurring fixed income
+- `services`: recurring subscriptions/bills
+- `budget`: per-category, per-currency budgets
+- `investment`, `investment_type`: investment records and their valuation source
+- `banks`, `user_banks`: bank catalog and per-user bank associations
+- `category`, `workspace_categories`: category catalog and per-workspace associations
+- `currency`, `workspace_currencies`: currency catalog and per-workspace associations
+- `monthly_summary_snapshot`: precomputed monthly aggregates used for reporting
 
 ## Testing
 
