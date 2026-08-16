@@ -173,11 +173,12 @@ DomainException (sealed)
 ### Movimientos
 | Método | Endpoint | Descripción |
 |---|---|---|
-| `GET` | `/v1/expenses` | Movimientos paginados con filtros |
+| `GET` | `/v1/expenses` | Movimientos paginados con filtros (`type`, `bank`, `categories`, `currency`, `description`, `dateFrom`/`dateTo`, `isLive`) |
 | `POST` | `/v1/expenses` | Crear movimiento |
-| `POST` | `/v1/expenses/import-file` | Importar movimientos desde PDF bancario |
+| `POST` | `/v1/expenses/import-file` | Importar movimientos desde PDF bancario (multipart) |
 | `PATCH` | `/v1/expenses/{id}` | Actualización parcial (MapStruct `IGNORE` null) |
 | `DELETE` | `/v1/expenses/{id}` | Eliminar movimiento |
+| `POST` | `/v1/expenses/migrate-exchange-rate` | Solo `ADMIN` — recalcula `exchange_rate` en movimientos que lo tienen `null` |
 
 ### Balance
 | Método | Endpoint | Descripción |
@@ -185,6 +186,7 @@ DomainException (sealed)
 | `GET` | `/v1/balance` | Balance total (INGRESO/GASTO) |
 | `GET` | `/v1/balance/category` | Balance por categoría |
 | `GET` | `/v1/balance/monthly-evolution` | Evolución mensual por moneda |
+| `GET` | `/v1/balance/recovery-time` | Meses estimados para recuperar un gasto según el ahorro promedio |
 
 ### Workspaces
 | Método | Endpoint | Descripción |
@@ -195,6 +197,36 @@ DomainException (sealed)
 | `POST` | `/v1/workspace/{id}/invitations` | Invitar usuarios por email |
 | `GET` | `/v1/workspace/invitations` | Invitaciones pendientes del usuario |
 | `PATCH` | `/v1/workspace/invitations/{invitationId}` | Aceptar/rechazar invitación |
+| `GET` | `/v1/workspaces/{id}/summary/monthly?year=&month=` | Resumen mensual: total ingresado/gastado, diferencia, categoría de mayor gasto, comparación vs. mes anterior |
+
+### Categorías
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/workspace/categories` | Categorías activas del workspace |
+| `POST` | `/v1/workspace/categories` | Crear categoría (idempotente por nombre) |
+| `PATCH` | `/v1/workspace/categories/{categoryId}` | Actualizar descripción/ícono/color |
+| `DELETE` | `/v1/workspace/categories/{categoryId}` | Eliminar categoría |
+| `PATCH` | `/v1/workspace/categories/migrate` | Solo `ADMIN` — reasigna movimientos de una categoría a otra |
+
+### Monedas del workspace
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/workspace/currencies` | Monedas habilitadas en el workspace |
+| `POST` | `/v1/workspace/currencies` | Habilitar una moneda |
+| `DELETE` | `/v1/workspace/currencies/{currencyId}` | Deshabilitar una moneda |
+
+### Cotizaciones
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/rates?base=&quotes=` | Proxy de tipo de cambio (Frankfurter) |
+
+### Presupuestos
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/v1/budgets?currency=&year=&month=` | Presupuestos con `spent`/`percentage` calculados |
+| `POST` | `/v1/budgets` | Crear presupuesto (único, anual o recurrente según `year`/`month`) |
+| `PATCH` | `/v1/budgets/{id}` | Actualizar solo el monto |
+| `DELETE` | `/v1/budgets/{id}` | Eliminar presupuesto |
 
 ### Ingresos, Suscripciones, Settings y Bancos
 | Método | Endpoint | Descripción |
