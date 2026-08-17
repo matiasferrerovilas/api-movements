@@ -103,18 +103,37 @@ class WorkspaceCategoryServiceTest extends Specification {
         result.description() == description
     }
 
-    def "addDefaultCategories - should add SERVICIOS category to workspace"() {
+    def "addDefaultCategories - should add every default category except SIN_CATEGORIA to the workspace"() {
         given:
+        def expectedCount = DefaultCategory.values().length - 1 // todas menos SIN_CATEGORIA
         def category = Stub(Category) { getId() >> 5L }
 
-        categoryAddService.addCategory(DefaultCategory.SERVICIOS.getDescription()) >> category
         workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
 
         when:
         service.addDefaultCategories(1L)
 
         then:
-        1 * workspaceCategoryRepository.save(_ as WorkspaceCategory)
+        // Stub + conteo de invocaciones en el mismo bloque then: — si el stub queda en given: y
+        // la interacción en then: sin valor de retorno, Spock prioriza la interacción de then:
+        // (que devuelve null) por sobre el stub de given:, rompiendo todo lo que dependa del
+        // valor devuelto. Ya nos pasó antes en esta misma suite con este mismo patrón.
+        expectedCount * categoryAddService.addCategory(_ as String) >> category
+        expectedCount * workspaceCategoryRepository.save(_ as WorkspaceCategory)
+    }
+
+    def "addDefaultCategories - should never add SIN_CATEGORIA up front"() {
+        given:
+        def category = Stub(Category) { getId() >> 5L }
+
+        categoryAddService.addCategory(_ as String) >> category
+        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
+
+        when:
+        service.addDefaultCategories(1L)
+
+        then:
+        0 * categoryAddService.addCategory(DefaultCategory.SIN_CATEGORIA.getDescription())
     }
 
     def "addCategories - should add multiple categories to workspace"() {

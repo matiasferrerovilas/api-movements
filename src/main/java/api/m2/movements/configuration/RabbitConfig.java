@@ -18,10 +18,6 @@ import java.util.Optional;
 
 @Configuration
 public class RabbitConfig {
-    public static final String AMQ_TOPIC_EXCHANGE = "movement.topic";
-    public static final String QUEUE_MOVEMENT_FILE_IMPORTED = "n8n.import.file.finished";
-    private static final String ROUTING_KEY = "n8n.import.file.finished";
-
     // api-identity owns this exchange; we only declare it here (same name/type) so our binding
     // below works regardless of which service starts first, and bind our own durable queue to it.
     public static final String IDENTITY_TOPIC_EXCHANGE = "identity.topic";
@@ -62,21 +58,6 @@ public class RabbitConfig {
         });
 
         return factory;
-    }
-    @Bean
-    TopicExchange exchange() {
-        return new TopicExchange(AMQ_TOPIC_EXCHANGE);
-    }
-    @Bean
-    Queue queue() {
-        return QueueBuilder.durable(QUEUE_MOVEMENT_FILE_IMPORTED).build();
-    }
-    @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder
-                .bind(queue)
-                .to(exchange)
-                .with(ROUTING_KEY);
     }
     @Bean
     TopicExchange identityTopicExchange() {

@@ -15,7 +15,7 @@ Backend de gestión de finanzas personales. Permite registrar movimientos, suscr
 | Database | MySQL 8 + Liquibase (`ddl-auto: none`) |
 | ORM | Spring Data JPA / Hibernate |
 | Auth | Keycloak — OAuth2 Resource Server, JWT RS256 |
-| Messaging | WebSocket STOMP/SockJS (RabbitMQ/AMQP queda provisionado en `RabbitConfig` — exchange `movement.topic`, queue `n8n.import.file.finished` — pero sin publisher ni listener activos en el código actual) |
+| Messaging | WebSocket STOMP/SockJS + RabbitMQ/AMQP (`RabbitConfig`: consume `identity.topic`/`identity.invitation.sent` de api-identity y reenvía por WebSocket a `/topic/invitations/{email}/new`) |
 | Mapping | MapStruct 1.6.3 (`componentModel = "spring"`) |
 | Boilerplate | Lombok (`@Data`, `@Builder`, `@RequiredArgsConstructor`) |
 | Cache | Caffeine (in-memory, 5h TTL currency / 1h Yahoo Finance prices) |

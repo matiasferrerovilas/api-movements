@@ -12,7 +12,11 @@ public enum DefaultCategory {
     SIN_CATEGORIA("SIN_CATEGORIA", false),
     SERVICIOS("SERVICIOS", false),
     HOGAR("HOGAR", false),
-    STREAMING("STREAMING", true);
+    STREAMING("STREAMING", true),
+    SUPERMERCADO("SUPERMERCADO", true),
+    TRANSPORTE("TRANSPORTE", true),
+    SALUD("SALUD", true),
+    ENTRETENIMIENTO("ENTRETENIMIENTO", true);
 
     private final String description;
     private final boolean deletable;

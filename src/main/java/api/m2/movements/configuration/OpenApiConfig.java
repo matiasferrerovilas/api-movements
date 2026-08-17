@@ -27,20 +27,22 @@ public class OpenApiConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("Movement API")
+                        .title("api-movements API")
                         .description("""
                                 API para la gestión de finanzas personales.
 
                                 **Funcionalidades:**
                                 • Movimientos (ingresos/gastos) con importación desde PDF bancario
+                                • Presupuestos con alertas por umbral
+                                • Inversiones con valuación en vivo
                                 • Control de suscripciones y servicios recurrentes
                                 • Workspaces compartidos con invitaciones
                                 • Balance por período, categoría y cuenta
                                 • Tasas de cambio automáticas
 
-                                **Autenticación:** JWT Bearer Token (OAuth2)
+                                **Autenticación:** JWT Bearer Token (OAuth2, Keycloak realm `m2`)
                                 """)
-                        .version("2.0.1")
+                        .version("2.2.0")
                         .contact(new Contact()
                                 .name("API Support")
                                 .email("api-support@movement.eva-core.com")));

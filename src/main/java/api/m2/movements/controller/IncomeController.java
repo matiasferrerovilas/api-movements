@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,7 +66,7 @@ public class IncomeController {
 
     @Operation(
             summary = "Obtener ingresos",
-            description = "Devuelve el listado completo de ingresos configurados para el usuario autenticado.",
+            description = "Devuelve el listado paginado de ingresos configurados para el usuario autenticado.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -86,8 +86,8 @@ public class IncomeController {
     )
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<IncomeRecord> getAllIncomes() {
-        return incomeQueryService.getAllIncomes();
+    public Page<IncomeRecord> getAllIncomes(Pageable page) {
+        return incomeQueryService.getAllIncomes(page);
     }
 
     @DeleteMapping("/{id}")

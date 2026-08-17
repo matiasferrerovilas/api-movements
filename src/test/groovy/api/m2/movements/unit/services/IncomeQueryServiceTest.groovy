@@ -9,6 +9,8 @@ import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.income.IncomeQueryService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import org.mapstruct.factory.Mappers
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 
 class IncomeQueryServiceTest extends Specification {
@@ -18,6 +20,8 @@ class IncomeQueryServiceTest extends Specification {
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
 
     IncomeQueryService service
+
+    def pageable = PageRequest.of(0, 20)
 
     def setup() {
         service = new IncomeQueryService(
@@ -44,27 +48,27 @@ class IncomeQueryServiceTest extends Specification {
         )
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
-        incomeRepository.findAllByWorkspaceId(workspaceId) >> [income]
+        incomeRepository.findAllByWorkspaceId(workspaceId, pageable) >> new PageImpl<>([income], pageable, 1)
 
         when:
-        def result = service.getAllIncomes()
+        def result = service.getAllIncomes(pageable)
 
         then:
-        result.size() == 1
-        result[0].amount() == new BigDecimal("50000.00")
-        result[0].currency().symbol() == "ARS"
-        result[0].bank() == "GALICIA"
+        result.getContent().size() == 1
+        result.getContent()[0].amount() == new BigDecimal("50000.00")
+        result.getContent()[0].currency().symbol() == "ARS"
+        result.getContent()[0].bank() == "GALICIA"
     }
 
-    def "getAllIncomes - should return empty list when user has no incomes"() {
+    def "getAllIncomes - should return empty page when user has no incomes"() {
         given:
         def workspaceId = 10L
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
-        incomeRepository.findAllByWorkspaceId(workspaceId) >> []
+        incomeRepository.findAllByWorkspaceId(workspaceId, pageable) >> new PageImpl<>([], pageable, 0)
 
         when:
-        def result = service.getAllIncomes()
+        def result = service.getAllIncomes(pageable)
 
         then:
         result.isEmpty()
@@ -96,13 +100,13 @@ class IncomeQueryServiceTest extends Specification {
         )
 
         workspaceContextService.getActiveWorkspaceId() >> workspaceId
-        incomeRepository.findAllByWorkspaceId(workspaceId) >> [income1, income2]
+        incomeRepository.findAllByWorkspaceId(workspaceId, pageable) >> new PageImpl<>([income1, income2], pageable, 2)
 
         when:
-        def result = service.getAllIncomes()
+        def result = service.getAllIncomes(pageable)
 
         then:
-        result.size() == 2
-        result.collect { it.currency().symbol() } as Set == ["ARS", "USD"] as Set
+        result.getContent().size() == 2
+        result.getContent().collect { it.currency().symbol() } as Set == ["ARS", "USD"] as Set
     }
 }
