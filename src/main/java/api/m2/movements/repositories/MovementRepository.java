@@ -162,6 +162,41 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     BigDecimal getTotalInUsdByType(Long workspaceId, String type);
 
     @Query(value = """
+            SELECT COALESCE(SUM(m.amount), 0)
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND m.type = :type
+              AND c.symbol = :currency
+            """, nativeQuery = true)
+    BigDecimal getTotalByType(Long workspaceId, String type, String currency);
+
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type = :type
+              AND m.exchange_rate IS NOT NULL
+              AND c.symbol <> :currency
+            """, nativeQuery = true)
+    BigDecimal getTotalInUsdByTypeAndMonthExcludingCurrency(Long workspaceId, Integer year, Integer month,
+                                                              String type, String currency);
+
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND m.type = :type
+              AND m.exchange_rate IS NOT NULL
+              AND c.symbol <> :currency
+            """, nativeQuery = true)
+    BigDecimal getTotalInUsdByTypeExcludingCurrency(Long workspaceId, String type, String currency);
+
+    @Query(value = """
             SELECT ca.description
             FROM movements m
             INNER JOIN movement_categories mc ON mc.movement_id = m.id

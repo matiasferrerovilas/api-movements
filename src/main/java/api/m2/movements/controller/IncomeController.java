@@ -5,7 +5,6 @@ import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.income.IncomeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -70,12 +69,10 @@ public class IncomeController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Listado de ingresos obtenido correctamente",
+                            description = "Listado paginado de ingresos obtenido correctamente",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    array = @ArraySchema(
-                                            schema = @Schema(implementation = IncomeRecord.class)
-                                    )
+                                    schema = @Schema(implementation = Page.class)
                             )
                     ),
                     @ApiResponse(

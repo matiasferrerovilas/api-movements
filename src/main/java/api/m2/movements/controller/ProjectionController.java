@@ -28,9 +28,11 @@ public class ProjectionController {
 
     @Operation(
             summary = "Proyectar balance futuro",
-            description = "Calcula el ahorro neto promedio (ingresos - gastos, unificado en USD) de los últimos "
-                    + "'months' meses cerrados y extrapola linealmente el balance actual hacia adelante "
-                    + "(0, 3, 6 y 12 meses). Es una estimación conservadora de tendencia de flujo de caja: "
+            description = "Calcula el ahorro neto promedio (ingresos - gastos) de los últimos 'months' meses "
+                    + "cerrados y extrapola linealmente el balance actual hacia adelante (0, 3, 6 y 12 meses). "
+                    + "Los montos se devuelven en la moneda por defecto del usuario (o USD si no configuró una, "
+                    + "o si la tasa de cambio no estuvo disponible) — ver el campo `currency` de la respuesta. "
+                    + "Es una estimación conservadora de tendencia de flujo de caja: "
                     + "no incorpora rendimientos de inversión ni supuestos especulativos. "
                     + "Verifica que el usuario autenticado sea miembro del workspace.",
             responses = {

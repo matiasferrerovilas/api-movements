@@ -18,4 +18,13 @@ public interface WorkspaceCurrencyRepository extends JpaRepository<WorkspaceCurr
     List<WorkspaceCurrency> findByWorkspaceId(@Param("workspaceId") Long workspaceId);
 
     Optional<WorkspaceCurrency> findByWorkspaceIdAndCurrencyId(Long workspaceId, Long currencyId);
+
+    // open-in-view está deshabilitado (application.yaml), así que la sesión de Hibernate no
+    // sobrevive más allá de la llamada al repositorio — un findById() del JpaRepository base
+    // devuelve wc.currency como proxy lazy, y accederlo después (p. ej. wc.getCurrency().getSymbol())
+    // tira LazyInitializationException. Este JOIN FETCH trae la Currency ya resuelta.
+    @Query("SELECT wc FROM WorkspaceCurrency wc "
+            + "JOIN FETCH wc.currency "
+            + "WHERE wc.id = :id")
+    Optional<WorkspaceCurrency> findByIdFetchCurrency(@Param("id") Long id);
 }
