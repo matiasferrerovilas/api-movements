@@ -42,7 +42,7 @@ public class OpenApiConfig {
 
                                 **Autenticación:** JWT Bearer Token (OAuth2, Keycloak realm `m2`)
                                 """)
-                        .version("2.2.0")
+                        .version("2.3.0")
                         .contact(new Contact()
                                 .name("API Support")
                                 .email("api-support@movement.eva-core.com")));

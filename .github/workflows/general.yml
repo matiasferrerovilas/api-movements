@@ -109,6 +109,44 @@ jobs:
             build.phase
           retention-days: 1
 
+  tag:
+    name: Auto-tag Release
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read version from build.gradle
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -m1 "^version = " build.gradle | sed -E "s/version = ['\"]([^'\"]+)['\"]/\1/")
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: could not read version from build.gradle"
+            exit 1
+          fi
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag if it doesn't already exist
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+            echo "Tag ${TAG} already exists on remote — skipping (idempotent, not a failure)."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
   deploy:
     name: Deploy Docker Image
     needs: [test, build]

@@ -1,6 +1,7 @@
 package api.m2.movements.records.balance;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record MonthlySummaryByCurrencyRecord(
         String currency,
@@ -8,6 +9,7 @@ public record MonthlySummaryByCurrencyRecord(
         BigDecimal totalGastado,
         BigDecimal diferencia,
         String categoriaConMayorGasto,
-        MonthlySummaryComparisonRecord comparacionVsMesAnterior
+        MonthlySummaryComparisonRecord comparacionVsMesAnterior,
+        List<CategoryAmountRecord> gastosPorCategoria
 ) {
 }

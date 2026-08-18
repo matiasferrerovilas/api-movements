@@ -158,3 +158,6 @@ databaseChangeLog:
   - include:
       file: 053_alter_table_subscription_add_overdue_notified.sql
       relativeToChangelogFile: true
+  - include:
+      file: 054_create_table_goal.sql
+      relativeToChangelogFile: true

@@ -88,6 +88,27 @@ docker run -p 8081:8081 \
   expenses-api
 ```
 
+### Demo Mode
+
+A `demo` Spring profile seeds a few months of realistic demo data (categorized movements, a couple
+of budgets, a subscription, recurring income entries, and savings goals) against a fixed,
+suite-wide shared demo workspace id (`1`):
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=demo'
+```
+
+Notes:
+- The seeder (`DemoDataSeeder`) only runs when the `demo` profile is active — it never runs in
+  `dev`, `prod`, or the default profile.
+- It's idempotent: restarting in `demo` profile does not duplicate data, it detects existing demo
+  movements and skips seeding.
+- It assumes workspace id `1` exists (api-identity's own `demo` profile creates that workspace
+  record independently) — this service only inserts its own domain rows referencing that id, since
+  api-movements' tables have no local foreign key to a workspaces table (workspace membership is
+  delegated to api-identity).
+- Config: `src/main/resources/application-demo.yaml` (same datasource/env-var shape as `dev`).
+
 ## API Documentation
 
 Once the application is running, access the API documentation at:

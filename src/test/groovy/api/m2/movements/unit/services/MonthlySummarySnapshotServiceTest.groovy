@@ -2,6 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.MonthlySummarySnapshot
 
+import api.m2.movements.records.balance.CategoryAmountRecord
 import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord
 import api.m2.movements.records.balance.MonthlySummaryResponse
@@ -42,7 +43,8 @@ class MonthlySummarySnapshotServiceTest extends Specification {
                 new BigDecimal("300.00"),
                 new BigDecimal("200.00"),
                 "HOGAR",
-                comparison
+                comparison,
+                [new CategoryAmountRecord("HOGAR", new BigDecimal("300.00"))]
         )
         return new MonthlySummaryResponse(year, month, unified, [currency])
     }

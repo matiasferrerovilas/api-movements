@@ -1,6 +1,7 @@
 package api.m2.movements.services.balance;
 
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.records.balance.CategoryAmountRecord;
 import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord;
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
@@ -61,6 +62,8 @@ public class MonthlySummaryService {
         BigDecimal ingresado = this.getTotalByCurrency(workspaceId, year, month, MovementType.INGRESO, currency);
         BigDecimal gastado = this.getTotalByCurrency(workspaceId, year, month, MovementType.DEBITO, currency);
         String topCategory = movementRepository.getTopCategoryByMonth(workspaceId, year, month, currency).orElse(null);
+        List<CategoryAmountRecord> gastosPorCategoria =
+                movementRepository.getCategoryTotalsByMonth(workspaceId, year, month, currency);
 
         BigDecimal ingresadoAnterior =
                 this.getTotalByCurrency(workspaceId, prevYear, prevMonth, MovementType.INGRESO, currency);
@@ -78,7 +81,8 @@ public class MonthlySummaryService {
                         gastadoAnterior,
                         gastado.subtract(gastadoAnterior),
                         ingresado.subtract(ingresadoAnterior)
-                )
+                ),
+                gastosPorCategoria
         );
     }
 

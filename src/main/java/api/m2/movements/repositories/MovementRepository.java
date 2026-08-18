@@ -3,6 +3,7 @@ package api.m2.movements.repositories;
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.projections.MonthlyEvolutionProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
+import api.m2.movements.records.balance.CategoryAmountRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 
 import org.springframework.data.domain.Page;
@@ -152,6 +153,15 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     BigDecimal getTotalInUsdByTypeAndMonth(Long workspaceId, Integer year, Integer month, String type);
 
     @Query(value = """
+            SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
+            FROM movements m
+            WHERE m.workspace_id = :workspaceId
+              AND m.type = :type
+              AND m.exchange_rate IS NOT NULL
+            """, nativeQuery = true)
+    BigDecimal getTotalInUsdByType(Long workspaceId, String type);
+
+    @Query(value = """
             SELECT ca.description
             FROM movements m
             INNER JOIN movement_categories mc ON mc.movement_id = m.id
@@ -167,6 +177,24 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             LIMIT 1
             """, nativeQuery = true)
     Optional<String> getTopCategoryByMonth(Long workspaceId, Integer year, Integer month, String currency);
+
+    @Query(value = """
+            SELECT ca.description AS category, COALESCE(SUM(m.amount), 0) AS amount
+            FROM movements m
+            INNER JOIN movement_categories mc ON mc.movement_id = m.id
+            INNER JOIN category ca ON mc.category_id = ca.id
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type IN ('DEBITO', 'CREDITO')
+              AND c.symbol = :currency
+            GROUP BY ca.description
+            ORDER BY amount DESC
+            """, nativeQuery = true)
+    List<CategoryAmountRecord> getCategoryTotalsByMonth(Long workspaceId, Integer year, Integer month, String currency);
+
+    boolean existsByWorkspaceId(Long workspaceId);
 
     @Query(value = "SELECT DISTINCT m.workspace_id FROM movements m", nativeQuery = true)
     List<Long> findDistinctWorkspaceIds();
