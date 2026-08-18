@@ -25,8 +25,9 @@ import java.util.List;
 
 /**
  * Proyecta el balance futuro extrapolando linealmente el ahorro neto promedio
- * (ingresos - gastos) de los últimos meses cerrados, expresado en la moneda por defecto
- * del usuario (property {@link UserSettingKey#DEFAULT_CURRENCY}), o USD si no configuró una.
+ * (ingresos - gastos, donde "gastos" incluye tanto DEBITO como CREDITO — igual que el
+ * gráfico de evolución mensual) de los últimos meses cerrados, expresado en la moneda por
+ * defecto del usuario (property {@link UserSettingKey#DEFAULT_CURRENCY}), o USD si no configuró una.
  * Los movimientos que ya están en esa moneda se suman directo, sin ninguna conversión ni
  * pérdida de precisión; solo los movimientos en una moneda distinta pasan por el pivote USD
  * (mismo mecanismo que {@code MonthlySummaryService}) y se convierten a la moneda objetivo
@@ -43,6 +44,10 @@ public class ProjectionService {
     private static final int SCALE = 2;
     private static final String USD = "USD";
     private static final List<Integer> PROJECTION_HORIZONS_MONTHS = List.of(0, 3, 6, 12);
+    private static final List<String> INGRESO_TYPES = List.of(MovementType.INGRESO.name());
+    // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — así
+    // se calcula también en el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
+    private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
 
     private final MovementRepository movementRepository;
     private final WorkspaceQueryService workspaceQueryService;
@@ -125,9 +130,9 @@ public class ProjectionService {
      */
     private BigDecimal computeCurrentBalance(Long workspaceId, String targetCurrency, BigDecimal conversionRate) {
         BigDecimal totalIngresado = this.getTotalInTargetCurrency(
-                workspaceId, MovementType.INGRESO.name(), targetCurrency, conversionRate);
+                workspaceId, INGRESO_TYPES, targetCurrency, conversionRate);
         BigDecimal totalGastado = this.getTotalInTargetCurrency(
-                workspaceId, MovementType.DEBITO.name(), targetCurrency, conversionRate);
+                workspaceId, GASTO_TYPES, targetCurrency, conversionRate);
         return totalIngresado.subtract(totalGastado).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
@@ -139,9 +144,9 @@ public class ProjectionService {
         for (int i = 0; i < trailingMonths; i++) {
             YearMonth yearMonth = lastClosedMonth.minusMonths(i);
             BigDecimal ingresado = this.getTotalInTargetCurrencyByMonth(
-                    workspaceId, yearMonth, MovementType.INGRESO.name(), targetCurrency, conversionRate);
+                    workspaceId, yearMonth, INGRESO_TYPES, targetCurrency, conversionRate);
             BigDecimal gastado = this.getTotalInTargetCurrencyByMonth(
-                    workspaceId, yearMonth, MovementType.DEBITO.name(), targetCurrency, conversionRate);
+                    workspaceId, yearMonth, GASTO_TYPES, targetCurrency, conversionRate);
             totalNet = totalNet.add(ingresado.subtract(gastado));
         }
 
@@ -155,29 +160,29 @@ public class ProjectionService {
      * el camino existente de siempre (equivalente, ya que dividir por una tasa de 1 no cambia
      * nada).
      */
-    private BigDecimal getTotalInTargetCurrency(Long workspaceId, String type,
+    private BigDecimal getTotalInTargetCurrency(Long workspaceId, List<String> types,
                                                  String targetCurrency, BigDecimal conversionRate) {
         if (USD.equalsIgnoreCase(targetCurrency)) {
-            return movementRepository.getTotalInUsdByType(workspaceId, type);
+            return movementRepository.getTotalInUsdByTypes(workspaceId, types);
         }
-        BigDecimal nativeTotal = movementRepository.getTotalByType(workspaceId, type, targetCurrency);
+        BigDecimal nativeTotal = movementRepository.getTotalByTypes(workspaceId, types, targetCurrency);
         BigDecimal otherCurrenciesUsdTotal =
-                movementRepository.getTotalInUsdByTypeExcludingCurrency(workspaceId, type, targetCurrency);
+                movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, types, targetCurrency);
         return nativeTotal.add(otherCurrenciesUsdTotal.multiply(conversionRate));
     }
 
     /** Igual que {@link #getTotalInTargetCurrency}, pero acotado a un mes puntual. */
-    private BigDecimal getTotalInTargetCurrencyByMonth(Long workspaceId, YearMonth yearMonth, String type,
+    private BigDecimal getTotalInTargetCurrencyByMonth(Long workspaceId, YearMonth yearMonth, List<String> types,
                                                          String targetCurrency, BigDecimal conversionRate) {
         int year = yearMonth.getYear();
         int month = yearMonth.getMonthValue();
         if (USD.equalsIgnoreCase(targetCurrency)) {
-            return movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, year, month, type);
+            return movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, year, month, types);
         }
         BigDecimal nativeTotal =
-                movementRepository.getTotalByTypeAndMonth(workspaceId, year, month, type, targetCurrency);
-        BigDecimal otherCurrenciesUsdTotal = movementRepository.getTotalInUsdByTypeAndMonthExcludingCurrency(
-                workspaceId, year, month, type, targetCurrency);
+                movementRepository.getTotalByTypesAndMonth(workspaceId, year, month, types, targetCurrency);
+        BigDecimal otherCurrenciesUsdTotal = movementRepository.getTotalInUsdByTypesAndMonthExcludingCurrency(
+                workspaceId, year, month, types, targetCurrency);
         return nativeTotal.add(otherCurrenciesUsdTotal.multiply(conversionRate));
     }
 }

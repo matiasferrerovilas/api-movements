@@ -152,24 +152,53 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             """, nativeQuery = true)
     BigDecimal getTotalInUsdByTypeAndMonth(Long workspaceId, Integer year, Integer month, String type);
 
+    /**
+     * Igual que {@link #getTotalByTypeAndMonth}, pero acepta varios tipos a la vez (p. ej.
+     * DEBITO + CREDITO como "gasto") en vez de uno solo — usado por {@code ProjectionService}.
+     */
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount), 0)
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type IN (:types)
+              AND c.symbol = :currency
+            """, nativeQuery = true)
+    BigDecimal getTotalByTypesAndMonth(Long workspaceId, Integer year, Integer month,
+                                        List<String> types, String currency);
+
+    /** Igual que {@link #getTotalInUsdByTypeAndMonth}, pero acepta varios tipos a la vez. */
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
             WHERE m.workspace_id = :workspaceId
-              AND m.type = :type
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.type IN (:types)
               AND m.exchange_rate IS NOT NULL
             """, nativeQuery = true)
-    BigDecimal getTotalInUsdByType(Long workspaceId, String type);
+    BigDecimal getTotalInUsdByTypesAndMonth(Long workspaceId, Integer year, Integer month, List<String> types);
+
+    @Query(value = """
+            SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
+            FROM movements m
+            WHERE m.workspace_id = :workspaceId
+              AND m.type IN (:types)
+              AND m.exchange_rate IS NOT NULL
+            """, nativeQuery = true)
+    BigDecimal getTotalInUsdByTypes(Long workspaceId, List<String> types);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND m.type = :type
+              AND m.type IN (:types)
               AND c.symbol = :currency
             """, nativeQuery = true)
-    BigDecimal getTotalByType(Long workspaceId, String type, String currency);
+    BigDecimal getTotalByTypes(Long workspaceId, List<String> types, String currency);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
@@ -178,23 +207,23 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
-              AND m.type = :type
+              AND m.type IN (:types)
               AND m.exchange_rate IS NOT NULL
               AND c.symbol <> :currency
             """, nativeQuery = true)
-    BigDecimal getTotalInUsdByTypeAndMonthExcludingCurrency(Long workspaceId, Integer year, Integer month,
-                                                              String type, String currency);
+    BigDecimal getTotalInUsdByTypesAndMonthExcludingCurrency(Long workspaceId, Integer year, Integer month,
+                                                              List<String> types, String currency);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND m.type = :type
+              AND m.type IN (:types)
               AND m.exchange_rate IS NOT NULL
               AND c.symbol <> :currency
             """, nativeQuery = true)
-    BigDecimal getTotalInUsdByTypeExcludingCurrency(Long workspaceId, String type, String currency);
+    BigDecimal getTotalInUsdByTypesExcludingCurrency(Long workspaceId, List<String> types, String currency);
 
     @Query(value = """
             SELECT ca.description

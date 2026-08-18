@@ -59,8 +59,8 @@ class ProjectionServiceTest extends Specification {
     def "getProjection - should verify membership before returning projection"() {
         given:
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         service.getProjection(workspaceId)
@@ -72,8 +72,8 @@ class ProjectionServiceTest extends Specification {
     def "getProjection - should default to USD when the user has no default currency configured"() {
         given:
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId)
@@ -86,11 +86,11 @@ class ProjectionServiceTest extends Specification {
     def "getProjection - should project an increasing balance on a positive net trend, in USD"() {
         given: "ahorra neto +1000 USD por mes en los últimos 6 meses cerrados, balance acumulado de 5000"
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, MovementType.INGRESO.name()) >> new BigDecimal("20000.00")
-        movementRepository.getTotalInUsdByType(workspaceId, MovementType.DEBITO.name()) >> new BigDecimal("15000.00")
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, MovementType.INGRESO.name()) >>
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("20000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("15000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
                 new BigDecimal("3000.00")
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, MovementType.DEBITO.name()) >>
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
                 new BigDecimal("2000.00")
 
         when:
@@ -108,14 +108,32 @@ class ProjectionServiceTest extends Specification {
         result.projectedPoints().find { it.monthsOut() == 12 }.projectedBalance() == new BigDecimal("17000.00")
     }
 
+    def "getProjection - CREDITO movements count as gasto, not just DEBITO"() {
+        given: "1000 ingresado y 1000 en compras con tarjeta de crédito (CREDITO) en el mes; sin DEBITO"
+        userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
+                new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
+                new BigDecimal("1000.00")
+
+        when:
+        def result = service.getProjection(workspaceId, 6)
+
+        then: "el gasto en CREDITO cancela el ingreso — el ahorro real es cero, no 1000"
+        result.currentBalance() == BigDecimal.ZERO
+        result.averageMonthlyNet() == BigDecimal.ZERO
+    }
+
     def "getProjection - should project a decreasing balance on a negative net trend"() {
         given: "gasta 500 USD más de lo que ingresa por mes, balance acumulado de 2000"
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, MovementType.INGRESO.name()) >> new BigDecimal("10000.00")
-        movementRepository.getTotalInUsdByType(workspaceId, MovementType.DEBITO.name()) >> new BigDecimal("8000.00")
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, MovementType.INGRESO.name()) >>
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("10000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("8000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
                 new BigDecimal("1000.00")
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, MovementType.DEBITO.name()) >>
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
                 new BigDecimal("1500.00")
 
         when:
@@ -131,8 +149,8 @@ class ProjectionServiceTest extends Specification {
     def "getProjection - should not crash and should return a flat projection when there is no history"() {
         given: "workspace nuevo, sin movimientos"
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -147,8 +165,8 @@ class ProjectionServiceTest extends Specification {
     def "getProjection - should default trailingMonths to 6 when not provided"() {
         given:
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId)
@@ -166,12 +184,12 @@ class ProjectionServiceTest extends Specification {
         // convertir, así que no debe afectar el resultado final.
         exchangeRateResolver.resolveRate("EUR", _) >> new BigDecimal("999")
 
-        movementRepository.getTotalByType(workspaceId, MovementType.INGRESO.name(), "EUR") >> new BigDecimal("20000.00")
-        movementRepository.getTotalByType(workspaceId, MovementType.DEBITO.name(), "EUR") >> new BigDecimal("15000.00")
-        movementRepository.getTotalInUsdByTypeExcludingCurrency(workspaceId, _ as String, "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypes(workspaceId, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("20000.00")
+        movementRepository.getTotalByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> new BigDecimal("15000.00")
+        movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, _ as List, "EUR") >> BigDecimal.ZERO
 
-        movementRepository.getTotalByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String, "EUR") >> new BigDecimal("1000.00")
-        movementRepository.getTotalInUsdByTypeAndMonthExcludingCurrency(workspaceId, _ as Integer, _ as Integer, _ as String, "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypesAndMonthExcludingCurrency(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -187,11 +205,11 @@ class ProjectionServiceTest extends Specification {
         workspaceCurrencyRepository.findByIdFetchCurrency(2L) >> Optional.of(workspaceCurrencyOf(2L, "EUR"))
         exchangeRateResolver.resolveRate("EUR", _) >> new BigDecimal("0.90")
 
-        movementRepository.getTotalByType(workspaceId, _ as String, "EUR") >> BigDecimal.ZERO
-        movementRepository.getTotalByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String, "EUR") >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeExcludingCurrency(workspaceId, MovementType.INGRESO.name(), "EUR") >> new BigDecimal("1000.00")
-        movementRepository.getTotalInUsdByTypeExcludingCurrency(workspaceId, MovementType.DEBITO.name(), "EUR") >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonthExcludingCurrency(workspaceId, _ as Integer, _ as Integer, _ as String, "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypes(workspaceId, _ as List, "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonthExcludingCurrency(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -207,15 +225,15 @@ class ProjectionServiceTest extends Specification {
         workspaceCurrencyRepository.findByIdFetchCurrency(3L) >> Optional.of(workspaceCurrencyOf(3L, "GBP"))
         exchangeRateResolver.resolveRate("GBP", _) >> { throw new ExchangeRateNotFoundException("no rate for GBP") }
 
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId)
 
         then:
         result.currency() == "USD"
-        0 * movementRepository.getTotalByType(*_)
+        0 * movementRepository.getTotalByTypes(*_)
     }
 
     def "getProjection - falls back to USD when the DEFAULT_CURRENCY setting points to a WorkspaceCurrency that no longer exists"() {
@@ -223,8 +241,8 @@ class ProjectionServiceTest extends Specification {
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> new UserSettingResponse(UserSettingKey.DEFAULT_CURRENCY, 404L)
         workspaceCurrencyRepository.findByIdFetchCurrency(404L) >> Optional.empty()
 
-        movementRepository.getTotalInUsdByType(workspaceId, _ as String) >> BigDecimal.ZERO
-        movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, _ as Integer, _ as Integer, _ as String) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypes(workspaceId, _ as List) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId)
