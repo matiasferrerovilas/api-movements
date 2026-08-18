@@ -21,6 +21,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MonthlySummaryService {
 
+    // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — igual
+    // que el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
+    private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
+
     private final MovementRepository movementRepository;
     private final WorkspaceCurrencyRepository workspaceCurrencyRepository;
     private final UserService userService;
@@ -60,15 +64,14 @@ public class MonthlySummaryService {
     private MonthlySummaryByCurrencyRecord buildCurrencySummary(Long workspaceId, int year, int month,
                                                                  int prevYear, int prevMonth, String currency) {
         BigDecimal ingresado = this.getTotalByCurrency(workspaceId, year, month, MovementType.INGRESO, currency);
-        BigDecimal gastado = this.getTotalByCurrency(workspaceId, year, month, MovementType.DEBITO, currency);
+        BigDecimal gastado = this.getGastoByCurrency(workspaceId, year, month, currency);
         String topCategory = movementRepository.getTopCategoryByMonth(workspaceId, year, month, currency).orElse(null);
         List<CategoryAmountRecord> gastosPorCategoria =
                 movementRepository.getCategoryTotalsByMonth(workspaceId, year, month, currency);
 
         BigDecimal ingresadoAnterior =
                 this.getTotalByCurrency(workspaceId, prevYear, prevMonth, MovementType.INGRESO, currency);
-        BigDecimal gastadoAnterior =
-                this.getTotalByCurrency(workspaceId, prevYear, prevMonth, MovementType.DEBITO, currency);
+        BigDecimal gastadoAnterior = this.getGastoByCurrency(workspaceId, prevYear, prevMonth, currency);
 
         return new MonthlySummaryByCurrencyRecord(
                 currency,
@@ -89,10 +92,10 @@ public class MonthlySummaryService {
     private MonthlySummaryUnifiedRecord buildUnifiedUsd(Long workspaceId, int year, int month,
                                                          int prevYear, int prevMonth) {
         BigDecimal ingresado = this.getTotalInUsd(workspaceId, year, month, MovementType.INGRESO);
-        BigDecimal gastado = this.getTotalInUsd(workspaceId, year, month, MovementType.DEBITO);
+        BigDecimal gastado = this.getGastoInUsd(workspaceId, year, month);
 
         BigDecimal ingresadoAnterior = this.getTotalInUsd(workspaceId, prevYear, prevMonth, MovementType.INGRESO);
-        BigDecimal gastadoAnterior = this.getTotalInUsd(workspaceId, prevYear, prevMonth, MovementType.DEBITO);
+        BigDecimal gastadoAnterior = this.getGastoInUsd(workspaceId, prevYear, prevMonth);
 
         return new MonthlySummaryUnifiedRecord(
                 ingresado,
@@ -113,5 +116,13 @@ public class MonthlySummaryService {
 
     private BigDecimal getTotalInUsd(Long workspaceId, int year, int month, MovementType type) {
         return movementRepository.getTotalInUsdByTypeAndMonth(workspaceId, year, month, type.name());
+    }
+
+    private BigDecimal getGastoByCurrency(Long workspaceId, int year, int month, String currency) {
+        return movementRepository.getTotalByTypesAndMonth(workspaceId, year, month, GASTO_TYPES, currency);
+    }
+
+    private BigDecimal getGastoInUsd(Long workspaceId, int year, int month) {
+        return movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, year, month, GASTO_TYPES);
     }
 }

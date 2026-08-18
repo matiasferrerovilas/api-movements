@@ -33,6 +33,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CalculateBalanceService {
     private static final int SCALE = 2;
+    // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — igual
+    // que el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
+    private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
 
     private final MovementRepository movementRepository;
     private final UserService userService;
@@ -106,9 +109,9 @@ public class CalculateBalanceService {
             var ingresado = movementRepository.getTotalByTypeAndMonth(
                     workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
                     MovementType.INGRESO.name(), normalizedSymbol);
-            var gastado = movementRepository.getTotalByTypeAndMonth(
+            var gastado = movementRepository.getTotalByTypesAndMonth(
                     workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
-                    MovementType.DEBITO.name(), normalizedSymbol);
+                    GASTO_TYPES, normalizedSymbol);
             totalSavings = totalSavings.add(ingresado.subtract(gastado));
         }
 
