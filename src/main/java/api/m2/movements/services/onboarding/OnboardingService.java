@@ -3,6 +3,7 @@ package api.m2.movements.services.onboarding;
 import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.records.currencies.CurrencyRecord;
+import api.m2.movements.records.currencies.CurrencyToAdd;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
@@ -56,6 +57,7 @@ public class OnboardingService {
         // Las monedas del workspace se crean antes de fijar la default: esta última necesita
         // que ya exista la asociación workspace-moneda para poder guardar su id.
         workspaceCurrencyService.addDefaultCurrencies(defaultWorkspace.id());
+        this.addCurrencies(onBoardingForm, defaultWorkspace.id());
         this.addDefaultCurrency(user.id(), defaultWorkspace.id());
         this.addCategories(onBoardingForm, defaultWorkspace.id());
         this.addInitialIncome(onBoardingForm, defaultWorkspace.id());
@@ -91,6 +93,18 @@ public class OnboardingService {
 
         userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_BANK,
                 banksByDescription.get(defaultBank.description()).getId());
+    }
+
+    private void addCurrencies(OnBoardingForm onBoardingForm, Long workspaceId) {
+        List<CurrencyToAdd> currencies = onBoardingForm.currenciesToAdd();
+        if (currencies.isEmpty()) {
+            return;
+        }
+
+        currencies.forEach(currencyToAdd -> {
+            var currency = currencyAddService.addCurrency(currencyToAdd.symbol(), currencyToAdd.description());
+            workspaceCurrencyService.ensureCurrencyInWorkspace(workspaceId, currency);
+        });
     }
 
     /**

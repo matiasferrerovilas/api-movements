@@ -8,6 +8,7 @@ import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.clients.identity.response.WorkspaceAdded
+import api.m2.movements.records.currencies.CurrencyToAdd
 import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.onboarding.BankToAdd
 import api.m2.movements.records.onboarding.OnBoardingAmount
@@ -52,11 +53,14 @@ class OnboardingServiceTest extends Specification {
         def amount = new OnBoardingAmount(new BigDecimal("1500.00"), "DEFAULT", "GALICIA", "ARS")
         def banks = [new BankToAdd("GALICIA", true), new BankToAdd("SANTANDER", false)]
         def categories = ["COMIDA", "TRANSPORTE"]
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Viajes", "Casa"], categories, banks)
+        def currencies = [new CurrencyToAdd("ARS", "Peso argentino")]
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Viajes", "Casa"], categories, banks, currencies)
         def loggedUser = user(42L)
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
         def usd = Stub(Currency) { getId() >> 1L }
+
+        def ars = Stub(Currency) { getId() >> 2L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [
@@ -66,6 +70,7 @@ class OnboardingServiceTest extends Specification {
         ]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 42L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
         currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -78,6 +83,8 @@ class OnboardingServiceTest extends Specification {
         1 * workspaceCategoryService.addCategories(100L, categories)
         1 * workspaceCategoryService.addDefaultCategories(100L)
         1 * workspaceCurrencyService.addDefaultCurrencies(100L)
+        1 * currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
+        1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, ars)
         1 * incomeAddService.loadIncome(_ as IncomeToAdd, 100L) >> { List args ->
             def income = args[0] as IncomeToAdd
             assert income.bank() == "GALICIA"
@@ -91,7 +98,7 @@ class OnboardingServiceTest extends Specification {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
         def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", false)]
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks)
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks, [])
         def loggedUser = user(1L)
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -115,7 +122,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should set only bank as default when there is exactly one bank"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [new BankToAdd("GALICIA", false)])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [new BankToAdd("GALICIA", false)], [])
         def loggedUser = user(1L)
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def usd = Stub(Currency) { getId() >> 1L }
@@ -137,7 +144,7 @@ class OnboardingServiceTest extends Specification {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
         def banks = [new BankToAdd("GALICIA", false), new BankToAdd("SANTANDER", true)]
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks)
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], banks, [])
         def loggedUser = user(1L)
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -160,7 +167,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should set DEFAULT_CURRENCY to the workspace currency id, not the catalog id"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [], [])
         def loggedUser = user(1L)
         // Ids distintos a propósito: DEFAULT_CURRENCY debe guardar el de WorkspaceCurrency (55),
         // que es el que expone GET /workspace/currencies, y no el del catálogo global (5).
@@ -184,7 +191,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should always call addDefaultCategories regardless of categoriesToAdd"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "PERSONAL", [], ["HOGAR"], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], ["HOGAR"], [], [])
         def loggedUser = user(1L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -204,7 +211,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should call addDefaultCategories even when categoriesToAdd is empty"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [], [])
         def loggedUser = user(1L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -224,7 +231,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when bank is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", null, "ARS")
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Hogar"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Hogar"], [], [], [])
         def loggedUser = user(1L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -245,7 +252,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when currency is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", "GALICIA", null)
-        def form = new OnBoardingForm(amount, "ENTERPRISE", ["Gastos"], [], [])
+        def form = new OnBoardingForm(amount, "ENTERPRISE", ["Gastos"], [], [], [])
         def loggedUser = user(2L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -266,7 +273,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when amount is null"() {
         given:
         def amount = new OnBoardingAmount(null, "DEFAULT", "GALICIA", "ARS")
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Personal"], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", ["Personal"], [], [], [])
         def loggedUser = user(3L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -287,7 +294,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should not call addBankToUser or set DEFAULT_BANK when banksToAdd is empty"() {
         given:
         def amount = new OnBoardingAmount(null, null, null, null)
-        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [], [])
         def loggedUser = user(5L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -302,5 +309,51 @@ class OnboardingServiceTest extends Specification {
         then:
         0 * bankAddService.addBanksToUser(_ as List, _ as Long)
         0 * userSettingService.upsertForUser(_ as Long, UserSettingKey.DEFAULT_BANK, _ as Long)
+    }
+
+    def "finish - should not call addCurrency when currenciesToAdd is empty"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [], [])
+        def loggedUser = user(6L)
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser("PERSONAL") >> loggedUser
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
+
+        when:
+        service.finish(form)
+
+        then:
+        0 * currencyAddService.addCurrency(_ as String, _ as String)
+    }
+
+    def "finish - should create and associate each currency in currenciesToAdd to the workspace"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def currencies = [new CurrencyToAdd("ARS", "Peso argentino"), new CurrencyToAdd("EUR", "Euro")]
+        def form = new OnBoardingForm(amount, "PERSONAL", [], [], [], currencies)
+        def loggedUser = user(7L)
+        def usd = Stub(Currency) { getId() >> 1L }
+        def ars = Stub(Currency) { getId() >> 2L }
+        def eur = Stub(Currency) { getId() >> 3L }
+
+        userAddService.createLogInUser("PERSONAL") >> loggedUser
+        workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
+        currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
+        currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
+        currencyAddService.addCurrency("EUR", "Euro") >> eur
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
+        1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, ars)
+        1 * currencyAddService.addCurrency("EUR", "Euro") >> eur
+        1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, eur)
     }
 }

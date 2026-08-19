@@ -23,6 +23,10 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
                         [description: "GALICIA", isDefault: true],
                         [description: "BBVA", isDefault: false]
                 ],
+                currenciesToAdd: [
+                        [symbol: "ARS", description: "Peso argentino"],
+                        [symbol: "USD", description: "Dólar"]
+                ],
                 onBoardingAmount: [
                         amount      : 50000.00,
                         accountToAdd: "Cuenta principal",
@@ -57,6 +61,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
                 banksToAdd     : [
                         [description: "SANTANDER", isDefault: true]
                 ],
+                currenciesToAdd: [],
                 onBoardingAmount: null
         ]
 
@@ -142,6 +147,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
                 accountsToAdd  : [],
                 categoriesToAdd: [],
                 banksToAdd     : [],
+                currenciesToAdd: [],
                 onBoardingAmount: null
         ]
 
