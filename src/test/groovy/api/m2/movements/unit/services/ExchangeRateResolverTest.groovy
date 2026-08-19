@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.exceptions.ExchangeRateNotFoundException
-import api.m2.movements.records.currencies.ExchangeRateRecord
+import api.m2.movements.clients.rates.response.ExchangeRateRecord
 import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.currencies.ExchangeRateService
 import spock.lang.Specification

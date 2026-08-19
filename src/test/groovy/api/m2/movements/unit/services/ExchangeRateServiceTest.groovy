@@ -1,9 +1,9 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.exceptions.BusinessException
-import api.m2.movements.records.currencies.ExchangeRateRecord
+import api.m2.movements.clients.rates.response.ExchangeRateRecord
 import api.m2.movements.services.currencies.ExchangeRateService
-import api.m2.movements.services.currencies.FrankfurterClient
+import api.m2.movements.clients.rates.FrankfurterClient
 import spock.lang.Specification
 
 import java.time.LocalDate

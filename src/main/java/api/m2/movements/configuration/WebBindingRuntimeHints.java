@@ -3,9 +3,6 @@ package api.m2.movements.configuration;
 import api.m2.movements.constraints.CuotasValidator;
 import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
-import api.m2.movements.investment.records.InvestmentRecord;
-import api.m2.movements.investment.records.InvestmentTypeRecord;
-import api.m2.movements.investment.services.valuation.YahooFinanceHttpClient;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
@@ -40,12 +37,6 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             WorkspaceBaseRecord.class,
             UserBaseRecord.class,
             WorkspaceDetail.class,
-            InvestmentRecord.class,
-            InvestmentTypeRecord.class,
-            YahooFinanceHttpClient.YahooChartResponse.class,
-            YahooFinanceHttpClient.YahooChartResponse.Chart.class,
-            YahooFinanceHttpClient.YahooChartResponse.ChartResult.class,
-            YahooFinanceHttpClient.YahooChartResponse.Meta.class,
     };
 
     @Override

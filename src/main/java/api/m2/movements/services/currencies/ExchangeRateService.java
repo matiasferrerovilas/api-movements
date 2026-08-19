@@ -1,7 +1,8 @@
 package api.m2.movements.services.currencies;
 
+import api.m2.movements.clients.rates.FrankfurterClient;
 import api.m2.movements.exceptions.BusinessException;
-import api.m2.movements.records.currencies.ExchangeRateRecord;
+import api.m2.movements.clients.rates.response.ExchangeRateRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;

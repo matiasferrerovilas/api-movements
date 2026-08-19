@@ -5,6 +5,5 @@ public enum MembershipDomain {
     INCOME,
     SUBSCRIPTION,
     BUDGET,
-    INVESTMENT,
     GOAL
 }

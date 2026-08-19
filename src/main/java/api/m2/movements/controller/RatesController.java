@@ -1,6 +1,6 @@
 package api.m2.movements.controller;
 
-import api.m2.movements.records.currencies.ExchangeRateRecord;
+import api.m2.movements.clients.rates.response.ExchangeRateRecord;
 import api.m2.movements.services.currencies.ExchangeRateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

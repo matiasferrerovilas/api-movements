@@ -1,4 +1,4 @@
-package api.m2.movements.records.currencies;
+package api.m2.movements.clients.rates.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

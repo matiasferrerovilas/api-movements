@@ -1,6 +1,6 @@
 # Movement API
 
-A RESTful API for managing personal finances, built with Spring Boot and designed for containerized deployment. Supports movements, recurring income, subscriptions, budgets, investments, and shared workspaces with real-time updates via WebSocket. User identity and workspace membership are delegated to [api-identity](https://github.com/matiasferrerovilas/api-identity) — this service owns financial domain data only.
+A RESTful API for managing personal finances, built with Spring Boot and designed for containerized deployment. Supports movements, recurring income, subscriptions, budgets, savings goals, and shared workspaces with real-time updates via WebSocket. User identity and workspace membership are delegated to [api-identity](https://github.com/matiasferrerovilas/api-identity) — this service owns financial domain data only.
 
 ## Features
 
@@ -8,9 +8,8 @@ A RESTful API for managing personal finances, built with Spring Boot and designe
 - **Bank statement import**: PDF parsing for BBVA and Galicia (Argentina), via a pluggable Strategy per bank
 - **Recurring income & subscriptions**: fixed monthly income and recurring bills with payment tracking
 - **Budgets**: per-category, per-currency budgets (monthly, annual, or one-time) with threshold-crossing alerts
-- **Investments**: live valuation via Yahoo Finance, plus a time-deposit (plazo fijo) calculator
 - **Shared workspaces**: invite members with role-based access (`OWNER`/`COLLABORATOR`/`READ_ONLY`), delegated to api-identity
-- **Real-time updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, investments, budgets, invitations, and workspace events
+- **Real-time updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, budgets, invitations, and workspace events
 - **User authentication**: Keycloak OAuth2 / JWT (RS256) resource server
 - **API documentation**: interactive Swagger/OpenAPI UI
 - **Metrics & monitoring**: built-in Prometheus support
@@ -28,7 +27,6 @@ A RESTful API for managing personal finances, built with Spring Boot and designe
 - **Spring AOP** for cross-cutting concerns (membership guard)
 - **RabbitMQ** for async messaging (consumes workspace-invitation events published by api-identity)
 - **Caffeine** in-memory cache (currency exchange rates via [Frankfurter](https://frankfurter.dev))
-- **Yahoo Finance** client for investment valuation
 - **Micrometer** for application metrics
 - **TestContainers** for integration testing
 - **Spock** for testing
@@ -133,7 +131,6 @@ Key tables:
 - `ingreso`: recurring fixed income
 - `services`: recurring subscriptions/bills
 - `budget`: per-category, per-currency budgets
-- `investment`, `investment_type`: investment records and their valuation source
 - `banks`, `user_banks`: bank catalog and per-user bank associations
 - `category`, `workspace_categories`: category catalog and per-workspace associations
 - `currency`, `workspace_currencies`: currency catalog and per-workspace associations

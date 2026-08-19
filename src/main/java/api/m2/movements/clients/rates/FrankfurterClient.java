@@ -1,6 +1,6 @@
-package api.m2.movements.services.currencies;
+package api.m2.movements.clients.rates;
 
-import api.m2.movements.records.currencies.ExchangeRateRecord;
+import api.m2.movements.clients.rates.response.ExchangeRateRecord;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
