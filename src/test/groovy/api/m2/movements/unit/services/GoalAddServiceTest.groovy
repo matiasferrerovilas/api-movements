@@ -3,6 +3,7 @@ package api.m2.movements.unit.services
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.entities.Goal
 import api.m2.movements.entities.commons.Currency
+import api.m2.movements.enums.NotificationSeverity
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.GoalMapper
 import api.m2.movements.records.goals.GoalContribution
@@ -13,6 +14,7 @@ import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.repositories.GoalRepository
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.goals.GoalAddService
+import api.m2.movements.services.notifications.NotificationService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
@@ -27,6 +29,7 @@ class GoalAddServiceTest extends Specification {
     WorkspaceCurrencyService workspaceCurrencyService = Mock()
     WorkspaceQueryService workspaceQueryService = Mock()
     UserService userService = Mock()
+    NotificationService notificationService = Mock()
 
     GoalAddService service
 
@@ -37,7 +40,8 @@ class GoalAddServiceTest extends Specification {
                 currencyRepository,
                 workspaceCurrencyService,
                 workspaceQueryService,
-                userService
+                userService,
+                notificationService
         )
     }
 
@@ -109,7 +113,7 @@ class GoalAddServiceTest extends Specification {
         given:
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
         def goal = new Goal(id: 10L, workspaceId: 5L, currency: currency,
-                currentAmount: new BigDecimal("100.00"))
+                currentAmount: new BigDecimal("100.00"), targetAmount: new BigDecimal("500.00"))
         def dto = new GoalContribution(new BigDecimal("50.00"))
 
         goalRepository.findById(10L) >> Optional.of(goal)
@@ -122,6 +126,44 @@ class GoalAddServiceTest extends Specification {
         then:
         1 * goalRepository.save(goal)
         goal.currentAmount == new BigDecimal("150.00")
+        0 * notificationService.publish(_ as Long, _ as String, _ as String, _ as NotificationSeverity)
+    }
+
+    def "contribute - should notify when the contribution makes the goal reach its target"() {
+        given:
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def goal = new Goal(id: 10L, workspaceId: 5L, name: "Viaje", currency: currency,
+                currentAmount: new BigDecimal("400.00"), targetAmount: new BigDecimal("500.00"))
+        def dto = new GoalContribution(new BigDecimal("150.00"))
+
+        goalRepository.findById(10L) >> Optional.of(goal)
+        goalMapper.toRecord(goal) >> new GoalRecord(10L, 5L, "Viaje", new BigDecimal("500.00"),
+                new BigDecimal("550.00"), null, null, new BigDecimal("100.00"), null)
+
+        when:
+        service.contribute(dto, 10L)
+
+        then:
+        1 * notificationService.publish(5L, "¡Meta de ahorro alcanzada!", "Viaje — \$550.00/\$500.00",
+                NotificationSeverity.SUCCESS)
+    }
+
+    def "contribute - should not notify again when the goal was already at or past its target"() {
+        given:
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def goal = new Goal(id: 10L, workspaceId: 5L, name: "Viaje", currency: currency,
+                currentAmount: new BigDecimal("500.00"), targetAmount: new BigDecimal("500.00"))
+        def dto = new GoalContribution(new BigDecimal("50.00"))
+
+        goalRepository.findById(10L) >> Optional.of(goal)
+        goalMapper.toRecord(goal) >> new GoalRecord(10L, 5L, "Viaje", new BigDecimal("500.00"),
+                new BigDecimal("550.00"), null, null, new BigDecimal("110.00"), null)
+
+        when:
+        service.contribute(dto, 10L)
+
+        then:
+        0 * notificationService.publish(_ as Long, _ as String, _ as String, _ as NotificationSeverity)
     }
 
     def "contribute - should throw EntityNotFoundException when goal does not exist"() {

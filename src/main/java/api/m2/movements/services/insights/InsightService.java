@@ -47,6 +47,22 @@ public class InsightService {
         return this.getInsights(workspaceId, DEFAULT_TRAILING_MONTHS);
     }
 
+    /**
+     * Evalúa si una categoría estaría marcada como insight con un monto de gasto puntual dado,
+     * en vez del gasto acumulado real del mes actual. Usado por {@link
+     * api.m2.movements.services.insights.InsightThresholdEventHandler} para comparar el estado
+     * "antes" y "después" de un movimiento sin dos llamadas separadas a {@link #getInsights}.
+     */
+    public Optional<CategoryInsightRecord> evaluateCategory(Long workspaceId, String category, String currency,
+                                                              BigDecimal currentAmount) {
+        YearMonth current = YearMonth.now(clock);
+        List<MonthlySummaryResponse> history = IntStream.rangeClosed(1, DEFAULT_TRAILING_MONTHS)
+                .mapToObj(current::minusMonths)
+                .map(yearMonth -> this.fetchSummary(workspaceId, yearMonth))
+                .toList();
+        return this.buildInsight(new CategoryAmountRecord(category, currentAmount), currency, history);
+    }
+
     public List<CategoryInsightRecord> getInsights(Long workspaceId, int trailingMonths) {
         Long userId = userService.getMe().id();
         workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Goals and Insights now publish real-time notifications via the existing `NotificationService`,
+  the same mechanism budgets/subscriptions already use. `GoalAddService.contribute()` notifies
+  (`SUCCESS`) the first time a contribution makes `currentAmount` reach `targetAmount`. New
+  `InsightThresholdEventHandler` mirrors `BudgetThresholdEventHandler`'s stateless before/after
+  transition trick — on each non-income movement, it computes the affected category's spending
+  deviation just before and just after the movement (via a new `InsightService.evaluateCategory`
+  overload) and notifies (`INFO`) only on the exact movement that crosses the ±25% threshold, with
+  no schema changes or "already notified" tracking needed.
+
+### Removed
+- Investments feature entirely: `Investment`/`InvestmentType` entities, controllers, services, the
+  Yahoo Finance valuation client, and the plazo-fijo calculator. Migration `055_drop_tables_investment.sql`
+  drops the `investment` and `investment_type` tables (`044`-`047` are left untouched as history).
+  `MembershipDomain.INVESTMENT`, `EventType.INVESTMENT_*`, and `UserSettingKey.DEFAULT_INVESTMENT_TYPE`
+  removed accordingly.
+
 ## [2.3.0] - 2026-08-18
 
 ### Added

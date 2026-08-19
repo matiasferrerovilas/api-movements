@@ -139,4 +139,40 @@ class InsightServiceTest extends Specification {
         then:
         result.isEmpty()
     }
+
+    def "evaluateCategory - should flag using the given amount instead of the actual monthly total"() {
+        given: "el mes actual no tiene ningún gasto en Supermercado todavía, pero se evalúa un monto puntual"
+        (1..6).each { monthsAgo ->
+            def ym = java.time.YearMonth.of(2025, 6).minusMonths(monthsAgo)
+            monthlySummaryService.getSummary(workspaceId, ym.year, ym.monthValue) >>
+                    summaryWith(ym.year, ym.monthValue, "ARS",
+                            [new CategoryAmountRecord("Supermercado", new BigDecimal("1000.00"))])
+        }
+
+        when:
+        def result = service.evaluateCategory(workspaceId, "Supermercado", "ARS", new BigDecimal("2000.00"))
+
+        then:
+        0 * workspaceQueryService.verifyUserIsMemberOfWorkspace(_ as Long, _ as Long)
+        0 * monthlySummaryService.getSummary(workspaceId, 2025, 6)
+        result.isPresent()
+        result.get().percentDeviation() == new BigDecimal("100.00")
+        result.get().direction() == InsightDirection.ABOVE
+    }
+
+    def "evaluateCategory - should not flag when the given amount stays within the normal range"() {
+        given:
+        (1..6).each { monthsAgo ->
+            def ym = java.time.YearMonth.of(2025, 6).minusMonths(monthsAgo)
+            monthlySummaryService.getSummary(workspaceId, ym.year, ym.monthValue) >>
+                    summaryWith(ym.year, ym.monthValue, "ARS",
+                            [new CategoryAmountRecord("Supermercado", new BigDecimal("1000.00"))])
+        }
+
+        when:
+        def result = service.evaluateCategory(workspaceId, "Supermercado", "ARS", new BigDecimal("1100.00"))
+
+        then:
+        result.isEmpty()
+    }
 }

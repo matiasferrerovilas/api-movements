@@ -3,6 +3,7 @@ package api.m2.movements.services.goals;
 import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.Goal;
 import api.m2.movements.enums.MembershipDomain;
+import api.m2.movements.enums.NotificationSeverity;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.GoalMapper;
 import api.m2.movements.records.goals.GoalContribution;
@@ -12,6 +13,7 @@ import api.m2.movements.records.goals.GoalToUpdate;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.GoalRepository;
 import api.m2.movements.services.currencies.WorkspaceCurrencyService;
+import api.m2.movements.services.notifications.NotificationService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import jakarta.validation.Valid;
@@ -33,6 +35,7 @@ public class GoalAddService {
     private final WorkspaceCurrencyService workspaceCurrencyService;
     private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Transactional
     public GoalRecord save(@Valid GoalToAdd dto) {
@@ -72,10 +75,19 @@ public class GoalAddService {
     @RequiresMembership(domain = MembershipDomain.GOAL)
     public GoalRecord contribute(@Valid GoalContribution dto, Long id) {
         var goal = this.findOrThrow(id);
-        goal.setCurrentAmount(goal.getCurrentAmount().add(dto.amount()));
+        var amountBefore = goal.getCurrentAmount();
+        var amountAfter = amountBefore.add(dto.amount());
+        goal.setCurrentAmount(amountAfter);
 
         var saved = goalRepository.save(goal);
         log.debug("Contribución registrada en meta {}: +{}", id, dto.amount());
+
+        if (amountBefore.compareTo(goal.getTargetAmount()) < 0 && amountAfter.compareTo(goal.getTargetAmount()) >= 0) {
+            notificationService.publish(goal.getWorkspaceId(), "¡Meta de ahorro alcanzada!",
+                    goal.getName() + " — $" + amountAfter + "/$" + goal.getTargetAmount(),
+                    NotificationSeverity.SUCCESS);
+        }
+
         return goalMapper.toRecord(saved);
     }
 
