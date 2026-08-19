@@ -41,8 +41,7 @@ public class WorkspaceCurrencyService {
 
     @Transactional
     public void addDefaultCurrencies(Long workspaceId) {
-        currencyAddService.getDefaultCurrencies()
-                .forEach(currency -> this.resolveWorkspaceCurrency(workspaceId, currency));
+        this.resolveWorkspaceCurrency(workspaceId, currencyAddService.getDefaultCurrency());
     }
 
     /**

@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OnboardingService {
     private static final String DEFAULT_WORKSPACE_NAME = "DEFAULT";
-    private static final String DEFAULT_CURRENCY = "USD";
 
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
@@ -56,8 +55,6 @@ public class OnboardingService {
         userSettingService.upsertForUser(user.id(), UserSettingKey.DEFAULT_WORKSPACE, defaultWorkspace.id());
 
         this.addBanks(onBoardingForm, user.id());
-        // Las monedas del workspace se crean antes de fijar la default: esta última necesita
-        // que ya exista la asociación workspace-moneda para poder guardar su id.
         workspaceCurrencyService.addDefaultCurrencies(defaultWorkspace.id());
         this.addCurrencies(onBoardingForm, defaultWorkspace.id());
         this.addDefaultCurrency(user.id(), defaultWorkspace.id());
@@ -126,7 +123,7 @@ public class OnboardingService {
      * de la lista hasta que el usuario la elegía a mano.
      */
     private void addDefaultCurrency(Long userId, Long defaultWorkspaceId) {
-        var usd = currencyAddService.findBySymbol(DEFAULT_CURRENCY);
+        var usd = currencyAddService.getDefaultCurrency();
         var workspaceCurrency = workspaceCurrencyService.ensureCurrencyInWorkspace(defaultWorkspaceId, usd);
         userSettingService.upsertForUser(userId, UserSettingKey.DEFAULT_CURRENCY, workspaceCurrency.getId());
     }

@@ -71,7 +71,7 @@ class OnboardingServiceTest extends Specification {
                 new WorkspaceAdded(102L, "Casa"),
         ]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 42L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
@@ -105,7 +105,7 @@ class OnboardingServiceTest extends Specification {
         def usd = Stub(Currency) { getId() >> 1L }
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(201L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -134,7 +134,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -157,7 +157,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA"], 1L) >> [GALICIA: galiciaBank]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -180,7 +180,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
         bankAddService.addBanksToUser(["GALICIA", "SANTANDER"], 1L) >> [GALICIA: galiciaBank, SANTANDER: santanderBank]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -203,13 +203,13 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
 
         when:
         service.finish(form)
 
         then:
-        1 * currencyAddService.findBySymbol("USD") >> usd
+        1 * currencyAddService.getDefaultCurrency() >> usd
         1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> usdInWorkspace
         1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_CURRENCY, 55L)
         0 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_CURRENCY, 5L)
@@ -224,7 +224,7 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -244,7 +244,7 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -265,7 +265,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Hogar")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -286,7 +286,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("ENTERPRISE") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Gastos")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -307,7 +307,7 @@ class OnboardingServiceTest extends Specification {
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [
                 new WorkspaceAdded(100L, "DEFAULT"), new WorkspaceAdded(101L, "Personal")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -327,7 +327,7 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -347,7 +347,7 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
 
         when:
@@ -369,7 +369,7 @@ class OnboardingServiceTest extends Specification {
 
         userAddService.createLogInUser("PERSONAL") >> loggedUser
         workspaceAddService.createWorkspaces(_ as List) >> [new WorkspaceAdded(100L, "DEFAULT")]
-        currencyAddService.findBySymbol("USD") >> usd
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyService.ensureCurrencyInWorkspace(100L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
         currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
         currencyAddService.addCurrency("EUR", "Euro") >> eur

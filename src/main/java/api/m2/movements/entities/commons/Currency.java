@@ -36,4 +36,6 @@ public class Currency {
     private String symbol;
 
     private boolean enabled;
+
+    private boolean isDefault;
 }

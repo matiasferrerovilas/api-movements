@@ -85,20 +85,18 @@ class WorkspaceCurrencyServiceTest extends Specification {
         0 * workspaceCurrencyRepository.save(_ as WorkspaceCurrency)
     }
 
-    def "addDefaultCurrencies - should associate every enabled currency to the workspace"() {
+    def "addDefaultCurrencies - should associate the default currency to the workspace"() {
         given:
-        def ars = Stub(Currency) { getId() >> 1L }
         def usd = Stub(Currency) { getId() >> 2L }
 
-        currencyAddService.getDefaultCurrencies() >> [ars, usd]
-        workspaceCurrencyRepository.findByWorkspaceIdAndCurrencyId(1L, 1L) >> Optional.empty()
+        currencyAddService.getDefaultCurrency() >> usd
         workspaceCurrencyRepository.findByWorkspaceIdAndCurrencyId(1L, 2L) >> Optional.empty()
 
         when:
         service.addDefaultCurrencies(1L)
 
         then:
-        2 * workspaceCurrencyRepository.save(_ as WorkspaceCurrency)
+        1 * workspaceCurrencyRepository.save(_ as WorkspaceCurrency)
     }
 
     def "ensureCurrencyInWorkspace - should create association if not exists"() {

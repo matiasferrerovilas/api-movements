@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.time.Duration;
@@ -39,7 +40,12 @@ public class CacheConfiguration {
                 .build();
 
         var serializer = GenericJacksonJsonRedisSerializer.create(
-                builder -> builder.enableDefaultTyping(typeValidator));
+                builder -> builder.enableDefaultTyping(typeValidator)
+                        // Permite deserializar entradas cacheadas antes de agregar un nuevo campo
+                        // primitivo a una entidad (ej: Currency.isDefault): sin esto, Jackson
+                        // rompe con SerializationException al mapear el JSON viejo (sin el campo).
+                        .customize(mapperBuilder -> mapperBuilder.disable(
+                                DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)));
 
         return RedisCacheConfiguration.defaultCacheConfig()
                 .computePrefixWith(cacheName -> KEY_PREFIX + cacheName + "::")

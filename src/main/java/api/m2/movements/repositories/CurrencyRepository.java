@@ -1,8 +1,6 @@
 package api.m2.movements.repositories;
 
-import api.m2.movements.configuration.CacheConfiguration;
 import api.m2.movements.entities.commons.Currency;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -21,6 +19,5 @@ public interface CurrencyRepository extends JpaRepository<Currency, Long> {
 """)
     List<Integer> findAllBySymbol(List<String> symbols);
 
-    @Cacheable(CacheConfiguration.CURRENCY_CACHE)
-    List<Currency> findAllByEnabled(boolean enabled);
+    List<Currency> findAllByIsDefaultTrue();
 }

@@ -5,13 +5,12 @@ import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.exceptions.ServiceException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -52,11 +51,6 @@ public class CurrencyAddService {
                         .build()));
     }
 
-    @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE)
-    public List<Currency> getDefaultCurrencies() {
-        return currencyRepository.findAllByEnabled(true);
-    }
-
     @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE, key = "#symbol.trim().toUpperCase()")
     public Currency findBySymbol(@NotNull(message = "Debe indicar un tipo de moneda") String symbol) {
         var normalizedSymbol = symbol.trim().toUpperCase();
@@ -65,5 +59,19 @@ public class CurrencyAddService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Currency not found: " + normalizedSymbol
                 ));
+    }
+
+    @Cacheable(cacheNames = CacheConfiguration.CURRENCY_CACHE, key = "'DEFAULT_CURRENCY'")
+    public Currency getDefaultCurrency() {
+        var defaultCurrencies = currencyRepository.findAllByIsDefaultTrue();
+        if (defaultCurrencies.isEmpty()) {
+            throw new ServiceException("No hay ninguna moneda configurada como default");
+        }
+        if (defaultCurrencies.size() > 1) {
+            log.warn("Hay {} monedas marcadas como default, se usa la primera: {}",
+                    defaultCurrencies.size(), defaultCurrencies.getFirst().getSymbol());
+        }
+
+        return defaultCurrencies.getFirst();
     }
 }

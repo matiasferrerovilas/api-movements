@@ -5,6 +5,7 @@ import api.m2.movements.entities.commons.Currency
 import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException;
+import api.m2.movements.exceptions.ServiceException
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -55,21 +56,6 @@ class CurrencyAddServiceTest extends Specification {
         then:
         result == existingCurrency
         0 * currencyRepository.save(_)
-    }
-
-    def "getDefaultCurrencies - should return enabled currencies"() {
-        given:
-        def currencies = [
-                Stub(Currency) { getSymbol() >> "USD" },
-                Stub(Currency) { getSymbol() >> "EUR" }
-        ]
-        currencyRepository.findAllByEnabled(true) >> currencies
-
-        when:
-        def result = service.getDefaultCurrencies()
-
-        then:
-        result == currencies
     }
 
     def "addCurrency(symbol, description) - should save new currency when symbol does not exist"() {
@@ -149,6 +135,42 @@ class CurrencyAddServiceTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
+    }
+
+    def "getDefaultCurrency - should return the currency flagged as default"() {
+        given:
+        def usd = Stub(Currency) { getSymbol() >> "USD" }
+        currencyRepository.findAllByIsDefaultTrue() >> [usd]
+
+        when:
+        def result = service.getDefaultCurrency()
+
+        then:
+        result == usd
+    }
+
+    def "getDefaultCurrency - should throw ServiceException when no currency is flagged as default"() {
+        given:
+        currencyRepository.findAllByIsDefaultTrue() >> []
+
+        when:
+        service.getDefaultCurrency()
+
+        then:
+        thrown(ServiceException)
+    }
+
+    def "getDefaultCurrency - should return the first one when more than one currency is flagged as default"() {
+        given:
+        def usd = Stub(Currency) { getSymbol() >> "USD" }
+        def eur = Stub(Currency) { getSymbol() >> "EUR" }
+        currencyRepository.findAllByIsDefaultTrue() >> [usd, eur]
+
+        when:
+        def result = service.getDefaultCurrency()
+
+        then:
+        result == usd
     }
 
     @Unroll
