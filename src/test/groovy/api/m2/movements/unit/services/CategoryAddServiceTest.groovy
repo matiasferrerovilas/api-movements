@@ -95,22 +95,22 @@ class CategoryAddServiceTest extends Specification {
         def result = service.getDefaultCategory()
 
         then:
-        result == "SIN_CATEGORIA"
+        result == "SIN CATEGORIA"
     }
 
     def "resolveDefaultCategory - should return SIN_CATEGORIA when description is blank"() {
         given:
-        def category = Stub(Category) { getDescription() >> "SIN_CATEGORIA" }
-        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false, null, null)
+        def category = Stub(Category) { getDescription() >> "SIN CATEGORIA" }
+        def categoryRecord = new CategoryRecord(1L, "SIN CATEGORIA", true, false, null, null)
 
-        categoryRepository.findByDescription("SIN_CATEGORIA") >> Optional.of(category)
+        categoryRepository.findByDescription("SIN CATEGORIA") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
 
         when:
         def result = service.resolveDefaultCategory("  ")
 
         then:
-        result.description() == "SIN_CATEGORIA"
+        result.description() == "SIN CATEGORIA"
     }
 
     def "resolveDefaultCategory - should return STREAMING for Netflix"() {
@@ -175,16 +175,16 @@ class CategoryAddServiceTest extends Specification {
 
     def "resolveDefaultCategory - should return SIN_CATEGORIA for unrecognized description"() {
         given:
-        def category = Stub(Category) { getDescription() >> "SIN_CATEGORIA" }
-        def categoryRecord = new CategoryRecord(1L, "SIN_CATEGORIA", true, false, null, null)
+        def category = Stub(Category) { getDescription() >> "SIN CATEGORIA" }
+        def categoryRecord = new CategoryRecord(1L, "SIN CATEGORIA", true, false, null, null)
 
-        categoryRepository.findByDescription("SIN_CATEGORIA") >> Optional.of(category)
+        categoryRepository.findByDescription("SIN CATEGORIA") >> Optional.of(category)
         categoryMapper.toRecord(category) >> categoryRecord
 
         when:
         def result = service.resolveDefaultCategory("Random purchase")
 
         then:
-        result.description() == "SIN_CATEGORIA"
+        result.description() == "SIN CATEGORIA"
     }
 }
