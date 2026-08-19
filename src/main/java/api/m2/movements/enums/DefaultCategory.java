@@ -9,7 +9,7 @@ import java.util.Arrays;
  */
 public enum DefaultCategory {
 
-    SIN_CATEGORIA("SIN_CATEGORIA", false),
+    SIN_CATEGORIA("SIN CATEGORIA", false),
     SERVICIOS("SERVICIOS", false),
     HOGAR("HOGAR", false),
     STREAMING("STREAMING", true),

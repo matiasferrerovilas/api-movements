@@ -17,7 +17,10 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         def request = [
                 userType       : "PERSONAL",
-                accountsToAdd  : ["Gastos personales", "Ahorros"],
+                workspacesToAdd: [
+                        [name: "Gastos personales", isDefault: false],
+                        [name: "Ahorros", isDefault: false]
+                ],
                 categoriesToAdd: ["COMIDA", "TRANSPORTE"],
                 banksToAdd     : [
                         [description: "GALICIA", isDefault: true],
@@ -56,7 +59,9 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         def request = [
                 userType       : "ENTERPRISE",
-                accountsToAdd  : ["Cuenta empresarial"],
+                workspacesToAdd: [
+                        [name: "Cuenta empresarial", isDefault: false]
+                ],
                 categoriesToAdd: [],
                 banksToAdd     : [
                         [description: "SANTANDER", isDefault: true]
@@ -84,7 +89,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         def request = [
                 userType       : null, // Required field
-                accountsToAdd  : null, // Required field
+                workspacesToAdd: null, // Required field
                 categoriesToAdd: null, // Required field
                 banksToAdd     : null  // Required field
         ]
@@ -105,7 +110,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         def request = [
                 userType       : "",
-                accountsToAdd  : [],
+                workspacesToAdd: [],
                 categoriesToAdd: [],
                 banksToAdd     : []
         ]
@@ -124,7 +129,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
         given:
         def request = [
                 userType       : "PERSONAL",
-                accountsToAdd  : [],
+                workspacesToAdd: [],
                 categoriesToAdd: [],
                 banksToAdd     : []
         ]
@@ -144,7 +149,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
 
         def request = [
                 userType       : "PERSONAL",
-                accountsToAdd  : [],
+                workspacesToAdd: [],
                 categoriesToAdd: [],
                 banksToAdd     : [],
                 currenciesToAdd: [],

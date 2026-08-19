@@ -13,6 +13,7 @@ import api.m2.movements.records.income.IncomeToAdd
 import api.m2.movements.records.onboarding.BankToAdd
 import api.m2.movements.records.onboarding.OnBoardingAmount
 import api.m2.movements.records.onboarding.OnBoardingForm
+import api.m2.movements.records.onboarding.WorkspaceToAdd
 import api.m2.movements.services.banks.BankAddService
 import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.currencies.CurrencyAddService
@@ -54,7 +55,8 @@ class OnboardingServiceTest extends Specification {
         def banks = [new BankToAdd("GALICIA", true), new BankToAdd("SANTANDER", false)]
         def categories = ["COMIDA", "TRANSPORTE"]
         def currencies = [new CurrencyToAdd("ARS", "Peso argentino")]
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Viajes", "Casa"], categories, banks, currencies)
+        def workspaces = [new WorkspaceToAdd("Viajes", false), new WorkspaceToAdd("Casa", false)]
+        def form = new OnBoardingForm(amount, "PERSONAL", workspaces, categories, banks, currencies)
         def loggedUser = user(42L)
         def galiciaBank = Stub(Bank) { getId() >> 10L }
         def santanderBank = Stub(Bank) { getId() >> 11L }
@@ -92,6 +94,31 @@ class OnboardingServiceTest extends Specification {
             assert income.amount() == new BigDecimal("1500.00")
         }
         1 * userAddService.changeUserFirstLoginStatus(42L)
+    }
+
+    def "finish - should use the workspace marked isDefault instead of the DEFAULT-named one"() {
+        given:
+        def amount = new OnBoardingAmount(null, null, null, null)
+        def workspaces = [new WorkspaceToAdd("Ahorros", false), new WorkspaceToAdd("Principal", true)]
+        def form = new OnBoardingForm(amount, "PERSONAL", workspaces, [], [], [])
+        def loggedUser = user(1L)
+        def usd = Stub(Currency) { getId() >> 1L }
+
+        userAddService.createLogInUser("PERSONAL") >> loggedUser
+        currencyAddService.findBySymbol("USD") >> usd
+        workspaceCurrencyService.ensureCurrencyInWorkspace(201L, usd) >> Stub(WorkspaceCurrency) { getId() >> 900L }
+
+        when:
+        service.finish(form)
+
+        then:
+        1 * workspaceAddService.createWorkspaces({ List addWorkspaceRecords ->
+            addWorkspaceRecords*.description() == ["Ahorros", "Principal"]
+        }) >> [
+                new WorkspaceAdded(200L, "Ahorros"),
+                new WorkspaceAdded(201L, "Principal"),
+        ]
+        1 * userSettingService.upsertForUser(1L, UserSettingKey.DEFAULT_WORKSPACE, 201L)
     }
 
     def "finish - should set first bank as default when no bank has isDefault true"() {
@@ -231,7 +258,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when bank is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", null, "ARS")
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Hogar"], [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [new WorkspaceToAdd("Hogar", false)], [], [], [])
         def loggedUser = user(1L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -252,7 +279,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when currency is null"() {
         given:
         def amount = new OnBoardingAmount(new BigDecimal("1000.00"), "DEFAULT", "GALICIA", null)
-        def form = new OnBoardingForm(amount, "ENTERPRISE", ["Gastos"], [], [], [])
+        def form = new OnBoardingForm(amount, "ENTERPRISE", [new WorkspaceToAdd("Gastos", false)], [], [], [])
         def loggedUser = user(2L)
         def usd = Stub(Currency) { getId() >> 1L }
 
@@ -273,7 +300,7 @@ class OnboardingServiceTest extends Specification {
     def "finish - should skip income when amount is null"() {
         given:
         def amount = new OnBoardingAmount(null, "DEFAULT", "GALICIA", "ARS")
-        def form = new OnBoardingForm(amount, "PERSONAL", ["Personal"], [], [], [])
+        def form = new OnBoardingForm(amount, "PERSONAL", [new WorkspaceToAdd("Personal", false)], [], [], [])
         def loggedUser = user(3L)
         def usd = Stub(Currency) { getId() >> 1L }
 

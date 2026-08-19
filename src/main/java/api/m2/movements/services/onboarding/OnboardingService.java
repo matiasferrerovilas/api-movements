@@ -7,6 +7,7 @@ import api.m2.movements.records.currencies.CurrencyToAdd;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
+import api.m2.movements.records.onboarding.WorkspaceToAdd;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.services.banks.BankAddService;
 import api.m2.movements.services.category.WorkspaceCategoryService;
@@ -44,10 +45,11 @@ public class OnboardingService {
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
         var user = userAddService.createLogInUser(onBoardingForm.userType());
-        var workspacesToAdd = this.buildWorkspacesToAdd(onBoardingForm.accountsToAdd());
+        var workspacesToAdd = this.buildWorkspacesToAdd(onBoardingForm.workspacesToAdd());
+        var defaultWorkspaceName = this.resolveDefaultWorkspaceName(onBoardingForm.workspacesToAdd());
 
         var defaultWorkspace = workspaceAddService.createWorkspaces(workspacesToAdd)
-                .stream().filter(workspaceAdded -> DEFAULT_WORKSPACE_NAME.equals(workspaceAdded.description()))
+                .stream().filter(workspaceAdded -> defaultWorkspaceName.equals(workspaceAdded.description()))
                 .findFirst()
                 .orElseThrow();
 
@@ -64,17 +66,26 @@ public class OnboardingService {
         userAddService.changeUserFirstLoginStatus(user.id());
     }
 
-    private List<AddWorkspaceRecord> buildWorkspacesToAdd(List<String> accountsToAdd) {
-        var workspacesToAdd = accountsToAdd.stream()
+    private List<AddWorkspaceRecord> buildWorkspacesToAdd(List<WorkspaceToAdd> workspacesToAdd) {
+        var addWorkspaceRecords = workspacesToAdd.stream()
+                .map(WorkspaceToAdd::name)
                 .map(AddWorkspaceRecord::new)
                 .collect(Collectors.toList());
 
-        boolean hasDefault = accountsToAdd.stream().anyMatch(DEFAULT_WORKSPACE_NAME::equals);
+        boolean hasDefault = workspacesToAdd.stream().anyMatch(WorkspaceToAdd::isDefault);
         if (!hasDefault) {
-            workspacesToAdd.add(new AddWorkspaceRecord(DEFAULT_WORKSPACE_NAME));
+            addWorkspaceRecords.add(new AddWorkspaceRecord(DEFAULT_WORKSPACE_NAME));
         }
 
-        return workspacesToAdd;
+        return addWorkspaceRecords;
+    }
+
+    private String resolveDefaultWorkspaceName(List<WorkspaceToAdd> workspacesToAdd) {
+        return workspacesToAdd.stream()
+                .filter(WorkspaceToAdd::isDefault)
+                .map(WorkspaceToAdd::name)
+                .findFirst()
+                .orElse(DEFAULT_WORKSPACE_NAME);
     }
 
     private void addBanks(OnBoardingForm onBoardingForm, Long userId) {

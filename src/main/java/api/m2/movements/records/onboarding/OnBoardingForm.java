@@ -8,7 +8,7 @@ import java.util.List;
 
 public record OnBoardingForm(OnBoardingAmount onBoardingAmount,
                              @NotBlank String userType,
-                             @NotNull List<String> accountsToAdd,
+                             @NotNull List<WorkspaceToAdd> workspacesToAdd,
                              @NotNull List<String> categoriesToAdd,
                              @NotNull List<BankToAdd> banksToAdd,
                              @NotNull List<CurrencyToAdd> currenciesToAdd) {
