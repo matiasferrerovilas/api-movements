@@ -9,6 +9,7 @@ import api.m2.movements.records.onboarding.BankToAdd;
 import api.m2.movements.records.onboarding.OnBoardingForm;
 import api.m2.movements.records.onboarding.WorkspaceToAdd;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
+import api.m2.movements.clients.identity.requests.OnboardingStartRequest;
 import api.m2.movements.services.banks.BankAddService;
 import api.m2.movements.services.category.WorkspaceCategoryService;
 import api.m2.movements.services.currencies.CurrencyAddService;
@@ -16,7 +17,6 @@ import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.income.IncomeAddService;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserAddService;
-import api.m2.movements.services.workspaces.WorkspaceAddService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,6 @@ public class OnboardingService {
 
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
-    private final WorkspaceAddService workspaceAddService;
     private final BankAddService bankAddService;
     private final WorkspaceCategoryService workspaceCategoryService;
     private final UserSettingService userSettingService;
@@ -43,12 +42,18 @@ public class OnboardingService {
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
-        var user = userAddService.createLogInUser(onBoardingForm.userType());
+        var userToAdd = userAddService.buildUserToAdd(onBoardingForm.userType());
         var workspacesToAdd = this.buildWorkspacesToAdd(onBoardingForm.workspacesToAdd());
         var defaultWorkspaceName = this.resolveDefaultWorkspaceName(onBoardingForm.workspacesToAdd());
 
-        var defaultWorkspace = workspaceAddService.createWorkspaces(workspacesToAdd)
-                .stream().filter(workspaceAdded -> defaultWorkspaceName.equals(workspaceAdded.description()))
+        // Alta de usuario + workspaces iniciales en una sola llamada atómica a identity — si la
+        // creación de los workspaces falla del lado de identity, el usuario recién creado también
+        // se revierte allá, en vez de quedar huérfano como pasaba con dos POST separados.
+        var onboardingResult = identityClient.startOnboarding(new OnboardingStartRequest(userToAdd, workspacesToAdd));
+        var user = onboardingResult.user();
+
+        var defaultWorkspace = onboardingResult.workspaces().stream()
+                .filter(workspaceAdded -> defaultWorkspaceName.equals(workspaceAdded.description()))
                 .findFirst()
                 .orElseThrow();
 

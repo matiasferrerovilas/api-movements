@@ -1,7 +1,9 @@
 package api.m2.movements.services.publishing.websockets;
 
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
+import api.m2.movements.enums.InvitationStatus;
 import api.m2.movements.events.InvitationAcceptedReceivedEvent;
 import api.m2.movements.events.InvitationReceivedEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +31,18 @@ public class InvitationPublishServiceWebSocket extends WebSocketMessageService {
     @RabbitListener(queues = QUEUE_INVITATION_RECEIVED)
     public void onInvitationReceived(InvitationReceivedEvent event) {
         log.debug("Invitación recibida desde api-identity para {}", event.invitedUserEmail());
-        this.publish(event, WebSocketTopics.invitationsNew(event.invitedUserEmail()), EventType.INVITATION_ADDED);
+        // El frontend cachea esto igual que la respuesta de GET /v1/workspace/invitations
+        // (WorkspaceInvitationDTO: id/workspaceId/workspaceName/invitedByEmail/status/createdAt),
+        // así que el payload debe tener esa misma forma en vez del RabbitMQ event crudo — de
+        // lo contrario "id" llega undefined y el PATCH de aceptar/rechazar rompe en el backend.
+        var invitationDTO = new WorkspaceInvitationDTO(
+                event.invitationId(),
+                event.workspaceId(),
+                event.workspaceName(),
+                event.invitedByEmail(),
+                InvitationStatus.PENDING,
+                event.createdAt());
+        this.publish(invitationDTO, WebSocketTopics.invitationsNew(event.invitedUserEmail()), EventType.INVITATION_ADDED);
     }
 
     /**

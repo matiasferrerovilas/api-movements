@@ -222,6 +222,15 @@ class UserSettingServiceTest extends Specification {
         1 * userSettingRepository.deleteByUserIdAndSettingKey(1L, UserSettingKey.DEFAULT_BANK)
     }
 
+    def "deleteByKeyForUser - should delete setting for the given user, not the authenticated one"() {
+        when:
+        service.deleteByKeyForUser(9L, UserSettingKey.DEFAULT_WORKSPACE)
+
+        then:
+        1 * userSettingRepository.deleteByUserIdAndSettingKey(9L, UserSettingKey.DEFAULT_WORKSPACE)
+        0 * userService.getMe()
+    }
+
     def "getUsersWithAutoIncomeEnabled - should delegate to repository"() {
         given:
         userSettingRepository.findUserIdsWithSettingEnabled(UserSettingKey.AUTO_INCOME_ENABLED) >> [1L]

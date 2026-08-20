@@ -4,8 +4,6 @@ package api.m2.movements.unit.services
 import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.enums.UserType
 import api.m2.movements.exceptions.PermissionDeniedException
-import api.m2.movements.clients.identity.requests.UserToAdd
-import api.m2.movements.clients.identity.response.UserMe
 
 import api.m2.movements.services.user.UserAddService
 import org.springframework.security.core.Authentication
@@ -29,71 +27,54 @@ class UserAddServiceTest extends Specification {
         SecurityContextHolder.clearContext()
     }
 
-    def "createLogInUser - should create user with email, givenName and familyName from JWT"() {
+    def "buildUserToAdd - should build the payload with email, givenName and familyName from JWT"() {
         given:
         def email = "newuser@test.com"
         def givenName = "John"
         def familyName = "Doe"
-        def userType = "PERSONAL"
         setupJwtSecurityContext(email, givenName, familyName)
 
-        def savedUser = new UserMe(1L, email, givenName, familyName, "PERSONAL", new UserMe.Metadata(true, false, []))
-        identityClient.createLogInUser(_ as UserToAdd) >> savedUser
-
         when:
-        def result = service.createLogInUser(userType)
+        def result = service.buildUserToAdd("PERSONAL")
 
         then:
-        1 * identityClient.createLogInUser({ UserToAdd u ->
-            u.email() == email &&
-            u.givenName() == givenName &&
-            u.familyName() == familyName &&
-            u.isFirstLogin() == true &&
-            u.userType() == UserType.PERSONAL
-        }) >> savedUser
-        result.id() == 1L
         result.email() == email
         result.givenName() == givenName
         result.familyName() == familyName
+        result.isFirstLogin() == true
+        result.userType() == UserType.PERSONAL
+        0 * identityClient._
     }
 
-    def "createLogInUser - should create user with null givenName and familyName when not in JWT"() {
+    def "buildUserToAdd - should build the payload with null givenName and familyName when not in JWT"() {
         given:
         def email = "newuser@test.com"
-        def userType = "ENTERPRISE"
         setupJwtSecurityContext(email, null, null)
 
-        def savedUser = new UserMe(1L, email, null, null, "ENTERPRISE", new UserMe.Metadata(true, false, []))
-        identityClient.createLogInUser(_ as UserToAdd) >> savedUser
-
         when:
-        def result = service.createLogInUser(userType)
+        def result = service.buildUserToAdd("ENTERPRISE")
 
         then:
-        1 * identityClient.createLogInUser({ UserToAdd u ->
-            u.email() == email &&
-            u.givenName() == null &&
-            u.familyName() == null &&
-            u.userType() == UserType.ENTERPRISE
-        }) >> savedUser
+        result.email() == email
         result.givenName() == null
         result.familyName() == null
+        result.userType() == UserType.ENTERPRISE
     }
 
-    def "createLogInUser - should throw PermissionDeniedException when not authenticated"() {
+    def "buildUserToAdd - should throw PermissionDeniedException when not authenticated"() {
         given:
         def securityContext = Mock(SecurityContext)
         securityContext.getAuthentication() >> null
         SecurityContextHolder.setContext(securityContext)
 
         when:
-        service.createLogInUser("PERSONAL")
+        service.buildUserToAdd("PERSONAL")
 
         then:
         thrown(PermissionDeniedException)
     }
 
-    def "createLogInUser - should throw PermissionDeniedException when authentication is not JwtAuthenticationToken"() {
+    def "buildUserToAdd - should throw PermissionDeniedException when authentication is not JwtAuthenticationToken"() {
         given:
         def auth = Mock(Authentication)
         auth.isAuthenticated() >> true
@@ -103,7 +84,7 @@ class UserAddServiceTest extends Specification {
         SecurityContextHolder.setContext(securityContext)
 
         when:
-        service.createLogInUser("PERSONAL")
+        service.buildUserToAdd("PERSONAL")
 
         then:
         thrown(PermissionDeniedException)

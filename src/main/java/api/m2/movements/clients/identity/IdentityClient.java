@@ -3,10 +3,11 @@ package api.m2.movements.clients.identity;
 import api.m2.movements.clients.identity.requests.AcceptRejectInvitationDTO;
 import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
+import api.m2.movements.clients.identity.requests.OnboardingStartRequest;
+import api.m2.movements.clients.identity.response.OnboardingStartResponse;
 import api.m2.movements.clients.identity.response.WorkspaceAdded;
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
-import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.clients.identity.response.UserMe;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,8 +24,8 @@ import java.util.List;
 @HttpExchange
 public interface IdentityClient {
 
-    @PostExchange("/v1/users")
-    UserMe createLogInUser(@RequestBody UserToAdd user);
+    @PostExchange("/v1/onboarding/start")
+    OnboardingStartResponse startOnboarding(@RequestBody OnboardingStartRequest request);
 
     @PatchExchange("/v1/onboarding/{userId}/first-login")
     void changeUserFirstLoginStatus(@PathVariable Long userId);
@@ -49,6 +50,9 @@ public interface IdentityClient {
 
     @DeleteExchange("/v1/workspaces/{workspaceId}")
     void leaveWorkspace(@PathVariable Long workspaceId);
+
+    @DeleteExchange("/v1/workspaces/{workspaceId}/members/{userId}")
+    void removeMember(@PathVariable Long workspaceId, @PathVariable Long userId);
 
     @PutExchange("/v1/onboarding/tour")
     void markTourAsSeen();

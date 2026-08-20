@@ -1,7 +1,6 @@
 package api.m2.movements.services.workspaces;
 
 import api.m2.movements.clients.identity.IdentityClient;
-import api.m2.movements.clients.identity.response.WorkspaceAdded;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
@@ -44,7 +43,15 @@ public class WorkspaceAddService {
         log.info("Workspace {} has been removed", workspaceId);
     }
 
-    public List<WorkspaceAdded> createWorkspaces(List<AddWorkspaceRecord> workspacesToAdd) {
-        return identityClient.createWorkspaces(workspacesToAdd);
+    public void removeMember(Long workspaceId, Long targetUserId) {
+        identityClient.removeMember(workspaceId, targetUserId);
+
+        // Igual que leaveWorkspace: si el workspace del que se lo echó era el default del
+        // usuario removido, no lo dejamos apuntando a un workspace al que ya no pertenece.
+        userSettingService.getDefaultWorkspaceId(targetUserId)
+                .filter(workspaceId::equals)
+                .ifPresent(id -> userSettingService.deleteByKeyForUser(targetUserId, UserSettingKey.DEFAULT_WORKSPACE));
+
+        log.info("Member {} removed from workspace {}", targetUserId, workspaceId);
     }
 }

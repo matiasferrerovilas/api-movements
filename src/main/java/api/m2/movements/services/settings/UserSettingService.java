@@ -66,6 +66,11 @@ public class UserSettingService {
         userSettingRepository.deleteByUserIdAndSettingKey(userId, key);
     }
 
+    @Transactional
+    public void deleteByKeyForUser(Long userId, UserSettingKey key) {
+        userSettingRepository.deleteByUserIdAndSettingKey(userId, key);
+    }
+
     public Optional<Bank> getDefaultBank(Long userId) {
         return userSettingRepository.findByUserIdAndSettingKey(userId, UserSettingKey.DEFAULT_BANK)
                 .flatMap(s -> bankRepository.findById(s.getSettingValue()));

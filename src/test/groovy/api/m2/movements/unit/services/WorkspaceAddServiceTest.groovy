@@ -5,7 +5,6 @@ import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord
-import api.m2.movements.clients.identity.response.WorkspaceAdded
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceAddService
@@ -114,19 +113,52 @@ class WorkspaceAddServiceTest extends Specification {
         0 * userSettingService.deleteByKey(_)
     }
 
-    // --- createWorkspaces ---
+    // --- removeMember ---
 
-    def "createWorkspaces - should delegate to IdentityClient"() {
+    def "removeMember - should delegate to IdentityClient"() {
         given:
-        def workspacesToAdd = [new AddWorkspaceRecord("DEFAULT")]
-        def expected = [new WorkspaceAdded(100L, "DEFAULT")]
-
-        identityClient.createWorkspaces(workspacesToAdd) >> expected
+        userSettingService.getDefaultWorkspaceId(7L) >> Optional.empty()
 
         when:
-        def result = service.createWorkspaces(workspacesToAdd)
+        service.removeMember(10L, 7L)
 
         then:
-        result == expected
+        1 * identityClient.removeMember(10L, 7L)
     }
+
+    def "removeMember - should clear the removed user's DEFAULT_WORKSPACE setting when it points to that workspace"() {
+        given:
+        userSettingService.getDefaultWorkspaceId(7L) >> Optional.of(10L)
+
+        when:
+        service.removeMember(10L, 7L)
+
+        then:
+        1 * userSettingService.deleteByKeyForUser(7L, UserSettingKey.DEFAULT_WORKSPACE)
+    }
+
+    def "removeMember - should not touch DEFAULT_WORKSPACE setting when it points elsewhere"() {
+        given:
+        userSettingService.getDefaultWorkspaceId(7L) >> Optional.of(20L)
+
+        when:
+        service.removeMember(10L, 7L)
+
+        then:
+        0 * userSettingService.deleteByKeyForUser(_, _)
+    }
+
+    def "removeMember - should propagate IdentityClient failure (e.g. actor not authorized)"() {
+        given:
+        identityClient.removeMember(10L, 7L) >> {
+            throw HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null)
+        }
+
+        when:
+        service.removeMember(10L, 7L)
+
+        then:
+        thrown(HttpClientErrorException)
+    }
+
 }

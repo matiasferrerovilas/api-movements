@@ -51,7 +51,7 @@ class SubscriptionQueryServiceTest extends Specification {
         )
 
         workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
-                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
+                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], [], WorkspaceRole.OWNER, null, false))
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> [subscription]
         userService.getUserNamesByIds([1L] as List<Long>) >> [1L: "Matias"]
 
@@ -72,7 +72,7 @@ class SubscriptionQueryServiceTest extends Specification {
         def lastPayment = LocalDate.of(2026, 3, 1)
 
         workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
-                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
+                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], [], WorkspaceRole.OWNER, null, false))
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> []
 
         when:

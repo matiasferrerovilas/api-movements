@@ -2,7 +2,6 @@ package api.m2.movements.services.user;
 
 import api.m2.movements.clients.identity.IdentityClient;
 import api.m2.movements.clients.identity.requests.UserToAdd;
-import api.m2.movements.clients.identity.response.UserMe;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +22,12 @@ public class UserAddService {
 
     private final IdentityClient identityClient;
 
-    @Transactional
-    public UserMe createLogInUser(String userType) {
+    /**
+     * Arma el payload de alta de usuario a partir del JWT autenticado, sin llamar todavía a
+     * identity — lo usa {@code OnboardingService.finish()} para combinarlo con la creación de
+     * workspaces en una sola llamada atómica ({@link IdentityClient#startOnboarding}).
+     */
+    public UserToAdd buildUserToAdd(String userType) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
@@ -36,15 +39,13 @@ public class UserAddService {
         String givenName = jwt.getClaimAsString(GIVEN_NAME_CLAIM);
         String familyName = jwt.getClaimAsString(FAMILY_NAME_CLAIM);
 
-        var user = UserToAdd.builder()
+        return UserToAdd.builder()
                 .email(email)
                 .givenName(givenName)
                 .familyName(familyName)
                 .isFirstLogin(true)
                 .userType(UserType.valueOf(userType))
                 .build();
-
-        return identityClient.createLogInUser(user);
     }
 
     @Transactional

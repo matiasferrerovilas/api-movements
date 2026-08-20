@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Onboarding now calls api-identity's new `POST /v1/onboarding/start` instead of two separate
+  requests (`POST /v1/users` then `POST /v1/workspaces`), so a failure between the two calls can no
+  longer leave a user with no workspace. `IdentityClient.createLogInUser(UserToAdd)` removed
+  (dead — no remaining callers); `UserAddService.createLogInUser` renamed to `buildUserToAdd` and is
+  now a pure builder with no HTTP call. `WorkspaceAddService.createWorkspaces` (batch) removed, only
+  reachable from the old onboarding path.
+- Gateway support for kicking a workspace member: `DELETE /v1/workspace/{workspaceId}/members/{userId}`
+  forwards to api-identity via a new `IdentityClient.removeMember`, and clears the removed user's
+  `DEFAULT_WORKSPACE` setting if it pointed to that workspace (same cleanup `leaveWorkspace` already
+  did for a self-initiated departure). Mirrored `WorkspaceMemberDTO.Metadata.memberDetails` so the
+  frontend has each member's userId, not just their email.
 - Consume two new RabbitMQ events from api-identity: `identity.invitation.accepted` (pushes
   `MEMBERSHIP_UPDATED` to `/topic/workspace/{id}/members/update` so open clients refresh the member
   list when someone joins) and `identity.member.removed` (pushes `WORKSPACE_LEFT` to

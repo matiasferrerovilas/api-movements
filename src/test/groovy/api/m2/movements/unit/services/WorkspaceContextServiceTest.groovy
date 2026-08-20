@@ -53,9 +53,9 @@ class WorkspaceContextServiceTest extends Specification {
         userSettingService.getDefaultWorkspaceId(1L) >> Optional.of(10L)
         identityClient.getWorkspaces() >> [
                 new WorkspaceMemberDTO(1L, 20L, "Otro",
-                        new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false)),
+                        new WorkspaceMemberDTO.Metadata([], [], WorkspaceRole.OWNER, null, false)),
                 new WorkspaceMemberDTO(2L, 10L, "Familia",
-                        new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, true))
+                        new WorkspaceMemberDTO.Metadata([], [], WorkspaceRole.OWNER, null, true))
         ]
 
         when:

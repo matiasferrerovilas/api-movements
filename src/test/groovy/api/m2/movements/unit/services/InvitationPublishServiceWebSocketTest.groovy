@@ -1,6 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
+import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.events.InvitationAcceptedReceivedEvent
 import api.m2.movements.events.InvitationReceivedEvent
 import api.m2.movements.services.publishing.websockets.InvitationPublishServiceWebSocket
@@ -29,9 +30,10 @@ class InvitationPublishServiceWebSocketTest extends Specification {
         1 * messagingTemplate.convertAndSend("/topic/invitations/invited@example.com/new", _)
     }
 
-    def "onInvitationReceived - wraps the event with INVITATION_ADDED eventType"() {
+    def "onInvitationReceived - wraps a WorkspaceInvitationDTO (matching the REST shape) with INVITATION_ADDED eventType"() {
         given:
-        def event = new InvitationReceivedEvent(2L, 11L, "Oficina", "boss@example.com", "worker@example.com", LocalDateTime.now())
+        def createdAt = LocalDateTime.now()
+        def event = new InvitationReceivedEvent(2L, 11L, "Oficina", "boss@example.com", "worker@example.com", createdAt)
 
         when:
         service.onInvitationReceived(event)
@@ -39,7 +41,12 @@ class InvitationPublishServiceWebSocketTest extends Specification {
         then:
         1 * messagingTemplate.convertAndSend(_, { wrapper ->
             wrapper.eventType() == EventType.INVITATION_ADDED &&
-            wrapper.message() == event
+            wrapper.message().id() == event.invitationId() &&
+            wrapper.message().workspaceId() == event.workspaceId() &&
+            wrapper.message().workspaceName() == event.workspaceName() &&
+            wrapper.message().invitedByEmail() == event.invitedByEmail() &&
+            wrapper.message().status() == InvitationStatus.PENDING &&
+            wrapper.message().createdAt() == createdAt
         })
     }
 
