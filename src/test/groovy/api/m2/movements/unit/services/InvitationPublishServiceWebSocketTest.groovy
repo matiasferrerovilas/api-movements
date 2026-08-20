@@ -1,6 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
+import api.m2.movements.events.InvitationAcceptedReceivedEvent
 import api.m2.movements.events.InvitationReceivedEvent
 import api.m2.movements.services.publishing.websockets.InvitationPublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -38,6 +39,31 @@ class InvitationPublishServiceWebSocketTest extends Specification {
         then:
         1 * messagingTemplate.convertAndSend(_, { wrapper ->
             wrapper.eventType() == EventType.INVITATION_ADDED &&
+            wrapper.message() == event
+        })
+    }
+
+    def "onInvitationAccepted - publishes to the workspace's members topic"() {
+        given:
+        def event = new InvitationAcceptedReceivedEvent(1L, 10L, "Casa", "invited@example.com", LocalDateTime.now())
+
+        when:
+        service.onInvitationAccepted(event)
+
+        then:
+        1 * messagingTemplate.convertAndSend("/topic/workspace/10/members/update", _)
+    }
+
+    def "onInvitationAccepted - wraps the event with MEMBERSHIP_UPDATED eventType"() {
+        given:
+        def event = new InvitationAcceptedReceivedEvent(2L, 11L, "Oficina", "worker@example.com", LocalDateTime.now())
+
+        when:
+        service.onInvitationAccepted(event)
+
+        then:
+        1 * messagingTemplate.convertAndSend(_, { wrapper ->
+            wrapper.eventType() == EventType.MEMBERSHIP_UPDATED &&
             wrapper.message() == event
         })
     }

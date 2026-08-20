@@ -2,12 +2,14 @@ package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
+import api.m2.movements.events.InvitationAcceptedReceivedEvent;
 import api.m2.movements.events.InvitationReceivedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import static api.m2.movements.configuration.RabbitConfig.QUEUE_INVITATION_ACCEPTED;
 import static api.m2.movements.configuration.RabbitConfig.QUEUE_INVITATION_RECEIVED;
 
 /**
@@ -28,5 +30,17 @@ public class InvitationPublishServiceWebSocket extends WebSocketMessageService {
     public void onInvitationReceived(InvitationReceivedEvent event) {
         log.debug("Invitación recibida desde api-identity para {}", event.invitedUserEmail());
         this.publish(event, WebSocketTopics.invitationsNew(event.invitedUserEmail()), EventType.INVITATION_ADDED);
+    }
+
+    /**
+     * Alguien aceptó una invitación y se sumó a un workspace compartido — avisamos a quien tenga
+     * ese workspace abierto para que refresque la lista de miembros, en vez de mostrar datos
+     * desactualizados hasta el próximo refetch.
+     */
+    @RabbitListener(queues = QUEUE_INVITATION_ACCEPTED)
+    public void onInvitationAccepted(InvitationAcceptedReceivedEvent event) {
+        log.debug("Invitación {} aceptada por {} en workspace {}",
+                event.invitationId(), event.acceptedByEmail(), event.workspaceId());
+        this.publish(event, WebSocketTopics.workspaceMembersUpdate(event.workspaceId()), EventType.MEMBERSHIP_UPDATED);
     }
 }

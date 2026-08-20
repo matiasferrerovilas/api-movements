@@ -13,6 +13,7 @@ public final class WebSocketTopics {
     public static final String CATEGORIES = "/topic/categories";
     public static final String NOTIFICATIONS = "/topic/notifications";
     public static final String INVITATIONS = "/topic/invitations";
+    public static final String MEMBERSHIP = "/topic/membership";
 
     // Suffixes
     public static final String NEW = "/new";
@@ -89,5 +90,21 @@ public final class WebSocketTopics {
      */
     public static String invitationsNew(String invitedUserEmail) {
         return INVITATIONS + "/" + invitedUserEmail + NEW;
+    }
+
+    /**
+     * Construye el topic de "me sacaron de un workspace", direccionado por email igual que
+     * {@link #invitationsNew}.
+     */
+    public static String membershipRemoved(String removedUserEmail) {
+        return MEMBERSHIP + "/" + removedUserEmail + REMOVE;
+    }
+
+    /**
+     * Construye el topic de "cambió la membresía de este workspace" (alguien se sumó), para que
+     * todos los que lo tienen abierto refresquen la lista de miembros.
+     */
+    public static String workspaceMembersUpdate(Long workspaceId) {
+        return WORKSPACES + "/" + workspaceId + "/members" + UPDATE;
     }
 }

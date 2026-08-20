@@ -22,7 +22,11 @@ public class RabbitConfig {
     // below works regardless of which service starts first, and bind our own durable queue to it.
     public static final String IDENTITY_TOPIC_EXCHANGE = "identity.topic";
     public static final String QUEUE_INVITATION_RECEIVED = "movements.invitation.received";
+    public static final String QUEUE_INVITATION_ACCEPTED = "movements.invitation.accepted";
+    public static final String QUEUE_MEMBER_REMOVED = "movements.member.removed";
     private static final String ROUTING_KEY_INVITATION_SENT = "identity.invitation.sent";
+    private static final String ROUTING_KEY_INVITATION_ACCEPTED = "identity.invitation.accepted";
+    private static final String ROUTING_KEY_MEMBER_REMOVED = "identity.member.removed";
 
     @Bean
     public JacksonJsonMessageConverter jackson2JsonMessageConverter(JsonMapper jsonMapper) {
@@ -73,6 +77,28 @@ public class RabbitConfig {
                 .bind(invitationReceivedQueue())
                 .to(identityTopicExchange())
                 .with(ROUTING_KEY_INVITATION_SENT);
+    }
+    @Bean
+    Queue invitationAcceptedQueue() {
+        return QueueBuilder.durable(QUEUE_INVITATION_ACCEPTED).build();
+    }
+    @Bean
+    Binding invitationAcceptedBinding() {
+        return BindingBuilder
+                .bind(invitationAcceptedQueue())
+                .to(identityTopicExchange())
+                .with(ROUTING_KEY_INVITATION_ACCEPTED);
+    }
+    @Bean
+    Queue memberRemovedQueue() {
+        return QueueBuilder.durable(QUEUE_MEMBER_REMOVED).build();
+    }
+    @Bean
+    Binding memberRemovedBinding() {
+        return BindingBuilder
+                .bind(memberRemovedQueue())
+                .to(identityTopicExchange())
+                .with(ROUTING_KEY_MEMBER_REMOVED);
     }
     @Bean
     RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {

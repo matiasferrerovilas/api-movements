@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Consume two new RabbitMQ events from api-identity: `identity.invitation.accepted` (pushes
+  `MEMBERSHIP_UPDATED` to `/topic/workspace/{id}/members/update` so open clients refresh the member
+  list when someone joins) and `identity.member.removed` (pushes `WORKSPACE_LEFT` to
+  `/topic/membership/{email}/remove` so a kicked user's client reacts live). Previously only
+  invitation-sent existed on this exchange.
 - Goals and Insights now publish real-time notifications via the existing `NotificationService`,
   the same mechanism budgets/subscriptions already use. `GoalAddService.contribute()` notifies
   (`SUCCESS`) the first time a contribution makes `currentAmount` reach `targetAmount`. New
