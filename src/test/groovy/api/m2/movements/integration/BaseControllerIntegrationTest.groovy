@@ -199,6 +199,21 @@ abstract class BaseControllerIntegrationTest extends Specification {
         stubFor(post(urlPathEqualTo("/v1/workspaces"))
                 .willReturn(okJson(JsonOutput.toJson([[id: testWorkspaceId, description: "DEFAULT"]]))))
 
+        // POST /v1/onboarding/start reemplaza el par POST /v1/users + POST /v1/workspaces para el
+        // flujo de onboarding (OnboardingService.finish llama a este único endpoint atómico).
+        stubFor(post(urlPathEqualTo("/v1/onboarding/start"))
+                .willReturn(okJson(JsonOutput.toJson([
+                        user      : [
+                                id        : testUserId,
+                                email     : TEST_USER_EMAIL,
+                                givenName : "Integration",
+                                familyName: "Test",
+                                userType  : "PERSONAL",
+                                metadata  : [isFirstLogin: true, hasSeenTour: false, userRole: []]
+                        ],
+                        workspaces: [[id: testWorkspaceId, description: "DEFAULT"]]
+                ]))))
+
         stubFor(get(urlPathEqualTo("/v1/workspaces/members"))
                 .willReturn(okJson(JsonOutput.toJson([[
                         id           : testWorkspaceId,

@@ -47,9 +47,8 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
         then:
         result.andExpect(status().isNoContent())
 
-        and: "Onboarding should have created the user, its workspaces and flipped first-login via IdentityClient"
-        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users")))
-        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/workspaces")))
+        and: "Onboarding should have created the user+workspaces atomically and flipped first-login via IdentityClient"
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/onboarding/start")))
         identityMock.verify(patchRequestedFor(urlPathEqualTo("/v1/onboarding/${testUserId}/first-login")))
     }
 
@@ -80,7 +79,7 @@ class OnboardingControllerIntegrationTest extends BaseControllerIntegrationTest 
         result.andExpect(status().isNoContent())
 
         and: "Onboarding should have created the user via IdentityClient"
-        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/users")))
+        identityMock.verify(postRequestedFor(urlPathEqualTo("/v1/onboarding/start")))
     }
 
     def "POST /v1/onboarding - should return 400 for invalid request"() {
