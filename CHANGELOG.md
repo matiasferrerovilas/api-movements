@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `InvitationPublishServiceWebSocket.onInvitationReceived` was publishing the raw RabbitMQ
+  `InvitationReceivedEvent` (field `invitationId`) straight over STOMP, but the frontend caches it
+  as the same shape `GET /v1/workspace/invitations` returns (`WorkspaceInvitationDTO`, field `id`).
+  A live-pushed invitation therefore had `id: undefined` in the frontend cache, and accepting it
+  sent `PATCH /workspace/invitations/undefined`, which api-movements' `@PathVariable Long
+  invitationId` rejected with `MethodArgumentTypeMismatchException`. Now maps the event into a
+  `WorkspaceInvitationDTO` (status `PENDING`) before publishing, matching the REST shape exactly.
+  Also updated `BaseControllerIntegrationTest`'s WireMock stubs and
+  `OnboardingControllerIntegrationTest`'s assertions, which still mocked/verified the old two-call
+  `POST /v1/users` + `POST /v1/workspaces` pattern instead of the new `POST /v1/onboarding/start` —
+  a gap from the atomic-onboarding change above that the integration suite (not run at the time)
+  would have caught.
+
 ### Added
 - Onboarding now calls api-identity's new `POST /v1/onboarding/start` instead of two separate
   requests (`POST /v1/users` then `POST /v1/workspaces`), so a failure between the two calls can no
