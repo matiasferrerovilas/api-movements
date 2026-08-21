@@ -1,5 +1,6 @@
 package api.m2.movements;
 import api.m2.movements.configuration.WebBindingRuntimeHints;
+import api.m2.movements.configuration.properties.CorsProperties;
 import api.m2.movements.configuration.properties.JwtProperties;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,7 +15,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
-@EnableConfigurationProperties({JwtProperties.class})
+@EnableConfigurationProperties({CorsProperties.class,JwtProperties.class})
 @ImportRuntimeHints(WebBindingRuntimeHints.class)
 public class MovementsApplication {
     static void main(String[] args) {

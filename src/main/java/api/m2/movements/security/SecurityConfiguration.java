@@ -1,5 +1,6 @@
 package api.m2.movements.security;
 
+import api.m2.movements.configuration.properties.CorsProperties;
 import api.m2.movements.configuration.properties.JwtProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +30,7 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
     private final JwtProperties jwtProperties;
-
+    private final CorsProperties corsProperties;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
@@ -56,6 +57,7 @@ public class SecurityConfiguration {
 
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(corsProperties.allowedOrigins());
         configuration.setAllowedOrigins(List.of(
                 "https://movement.eva-core.com",
                 "http://localhost:5173",

@@ -10,6 +10,7 @@ jwt:
       principle-attribute: email
       resource-id: admin-m2
 
+
 spring:
   threads:
     virtual:
