@@ -55,7 +55,10 @@ public class GamificationController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Listado de badges",
-                            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BadgeRecord.class)))
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(schema = @Schema(implementation = BadgeRecord.class))
+                            )
                     )
             }
     )
