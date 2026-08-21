@@ -58,11 +58,6 @@ public class SecurityConfiguration {
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsProperties.allowedOrigins());
-        configuration.setAllowedOrigins(List.of(
-                "https://movement.eva-core.com",
-                "http://localhost:5173",
-                "http://localhost:8081"
-        ));
 
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of(
