@@ -167,3 +167,6 @@ databaseChangeLog:
   - include:
       file: 056_alter_table_currency_add_is_default.sql
       relativeToChangelogFile: true
+  - include:
+      file: 057_create_table_gamification.sql
+      relativeToChangelogFile: true

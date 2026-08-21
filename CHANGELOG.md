@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Lightweight gamification: registration streaks + "budget met" badges, no points system.
+  `GET /v1/gamification/streak` reports the authenticated user's consecutive-days streak in the
+  active workspace, fed in real time by a new `StreakEventHandler` listening on the same
+  `MovementRecord` creation event `BudgetThresholdEventHandler` already uses (so only genuine new
+  movements count, never edits). A broken streak (no activity yesterday or today) is detected lazily
+  on read — no scheduled job needed for that part. `GET /v1/gamification/badges` lists
+  `BUDGET_MET` badges (workspace + category + period), awarded by a new `BudgetBadgeJob`
+  (`@Scheduled`, same cron as `MonthlySummaryJob`, last day of month 23:00) once a month's spend is
+  final — a budget can't be "cumplido" mid-period. Yearly running-total budgets (year set, month
+  null) are intentionally excluded from monthly badge evaluation to avoid a redundant badge every
+  month the running total stays low; "always active" (year/month both null) and specific-month
+  budgets are the ones this rewards. New `user_streaks`/`badges` tables (migration 057). No frontend
+  wired up yet.
+
 ### Fixed
 - `InvitationPublishServiceWebSocket.onInvitationReceived` was publishing the raw RabbitMQ
   `InvitationReceivedEvent` (field `invitationId`) straight over STOMP, but the frontend caches it
