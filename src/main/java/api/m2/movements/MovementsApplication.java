@@ -15,7 +15,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableCaching
 @EnableScheduling
-@EnableConfigurationProperties({CorsProperties.class,JwtProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, JwtProperties.class})
 @ImportRuntimeHints(WebBindingRuntimeHints.class)
 public class MovementsApplication {
     static void main(String[] args) {
