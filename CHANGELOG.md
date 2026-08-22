@@ -23,6 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wired up yet.
 
 ### Fixed
+- `GoalAddService.update`/`.contribute` and `BudgetAddService.update` crashed with a
+  `ClassCastException` on every call (`PATCH /v1/goals/{id}`, `PATCH /v1/goals/{id}/contribute`,
+  `PATCH /v1/budgets/{id}`) — `MembershipCheckAspect` casts `args[idParamIndex()]` to `Long` to
+  resolve the workspace before the method runs, but `@RequiresMembership` defaults `idParamIndex`
+  to 0, and all three methods take the DTO first and the `Long id` second (`update(dto, id)`,
+  `contribute(dto, id)`). Fixed by adding `idParamIndex = 1` to all three, matching the same
+  `(dto, id)` shape `MovementAddService.updateMovement` already annotates correctly. Invisible to
+  the existing unit-test suite: `GoalAddServiceTest`/`BudgetAddServiceTest` instantiate the service
+  directly (bypassing the Spring AOP proxy, so the aspect never runs), and
+  `MembershipCheckAspectTest` fabricates the annotation with whatever `idParamIndex` the test
+  chooses, so a mismatch between a method's real parameter order and its own annotation can't
+  surface in either suite — only a real Spring-context call does.
 - `InvitationPublishServiceWebSocket.onInvitationReceived` was publishing the raw RabbitMQ
   `InvitationReceivedEvent` (field `invitationId`) straight over STOMP, but the frontend caches it
   as the same shape `GET /v1/workspace/invitations` returns (`WorkspaceInvitationDTO`, field `id`).

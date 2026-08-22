@@ -41,7 +41,7 @@ public class BudgetAddService {
     }
 
     @Transactional
-    @RequiresMembership(domain = MembershipDomain.BUDGET)
+    @RequiresMembership(domain = MembershipDomain.BUDGET, idParamIndex = 1)
     public void update(@Valid BudgetToUpdate dto, Long id) {
         var budget = budgetRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Presupuesto no encontrado: " + id));

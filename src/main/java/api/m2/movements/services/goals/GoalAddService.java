@@ -53,7 +53,7 @@ public class GoalAddService {
     }
 
     @Transactional
-    @RequiresMembership(domain = MembershipDomain.GOAL)
+    @RequiresMembership(domain = MembershipDomain.GOAL, idParamIndex = 1)
     public GoalRecord update(@Valid GoalToUpdate dto, Long id) {
         var goal = this.findOrThrow(id);
 
@@ -72,7 +72,7 @@ public class GoalAddService {
     }
 
     @Transactional
-    @RequiresMembership(domain = MembershipDomain.GOAL)
+    @RequiresMembership(domain = MembershipDomain.GOAL, idParamIndex = 1)
     public GoalRecord contribute(@Valid GoalContribution dto, Long id) {
         var goal = this.findOrThrow(id);
         var amountBefore = goal.getCurrentAmount();
