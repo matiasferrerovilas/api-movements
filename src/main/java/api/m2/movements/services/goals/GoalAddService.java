@@ -63,9 +63,9 @@ public class GoalAddService {
         if (dto.targetAmount() != null) {
             goal.setTargetAmount(dto.targetAmount());
         }
-        if (dto.targetDate() != null) {
-            goal.setTargetDate(dto.targetDate());
-        }
+        // A diferencia de name/targetAmount, targetDate SIEMPRE se pisa con lo que venga —
+        // null es la forma documentada de borrarla (sin fecha objetivo), no "no tocar el campo".
+        goal.setTargetDate(dto.targetDate());
 
         var saved = goalRepository.save(goal);
         return goalMapper.toRecord(saved);

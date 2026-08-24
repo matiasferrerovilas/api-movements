@@ -1,10 +1,13 @@
 package api.m2.movements.services.insights;
 
 import api.m2.movements.enums.InsightDirection;
+import api.m2.movements.mappers.CurrencyMapper;
 import api.m2.movements.records.balance.CategoryAmountRecord;
 import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
+import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.insights.CategoryInsightRecord;
+import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.services.balance.MonthlySummaryService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
@@ -42,6 +45,8 @@ public class InsightService {
     private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
     private final Clock clock;
+    private final CurrencyRepository currencyRepository;
+    private final CurrencyMapper currencyMapper;
 
     public List<CategoryInsightRecord> getInsights(Long workspaceId) {
         return this.getInsights(workspaceId, DEFAULT_TRAILING_MONTHS);
@@ -129,7 +134,17 @@ public class InsightService {
         InsightDirection direction = percentDeviation.signum() >= 0 ? InsightDirection.ABOVE : InsightDirection.BELOW;
 
         return Optional.of(new CategoryInsightRecord(
-                category, currency, current, average, percentDeviation.abs(), direction));
+                category, this.resolveCurrency(currency), current, average, percentDeviation.abs(), direction));
+    }
+
+    // El resto de la app (metas, presupuestos, movimientos) siempre muestra moneda como un
+    // CurrencyRecord {symbol, id} resuelto, nunca como el string suelto — acá se hacía distinto
+    // solo porque MonthlySummaryByCurrencyRecord ya trae el símbolo como string y era más cómodo
+    // pasarlo tal cual. Se resuelve para que Insights sea consistente con el resto de las cards.
+    private CurrencyRecord resolveCurrency(String symbol) {
+        return currencyRepository.findBySymbol(symbol)
+                .map(currencyMapper::toRecord)
+                .orElse(new CurrencyRecord(symbol, null));
     }
 
     private BigDecimal findCategoryAmount(MonthlySummaryResponse summary, String currency, String category) {

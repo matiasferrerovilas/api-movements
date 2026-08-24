@@ -1,6 +1,7 @@
 package api.m2.movements.records.insights;
 
 import api.m2.movements.enums.InsightDirection;
+import api.m2.movements.records.currencies.CurrencyRecord;
 
 import java.math.BigDecimal;
 
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
  */
 public record CategoryInsightRecord(
         String category,
-        String currency,
+        CurrencyRecord currency,
         BigDecimal currentAmount,
         BigDecimal averageAmount,
         BigDecimal percentDeviation,

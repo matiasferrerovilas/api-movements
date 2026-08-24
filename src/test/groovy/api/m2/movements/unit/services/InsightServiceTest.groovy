@@ -1,11 +1,15 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.clients.identity.response.UserMe
+import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.InsightDirection
+import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.records.balance.CategoryAmountRecord
 import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord
 import api.m2.movements.records.balance.MonthlySummaryResponse
+import api.m2.movements.records.currencies.CurrencyRecord
+import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.balance.MonthlySummaryService
 import api.m2.movements.services.insights.InsightService
 import api.m2.movements.services.user.UserService
@@ -21,6 +25,8 @@ class InsightServiceTest extends Specification {
     MonthlySummaryService monthlySummaryService = Mock()
     WorkspaceQueryService workspaceQueryService = Mock()
     UserService userService = Mock()
+    CurrencyRepository currencyRepository = Mock()
+    CurrencyMapper currencyMapper = Mock()
 
     // "Ahora" fijo en 2025-06-15 → mes actual = 2025-06, historial = 2025-05 .. 2024-12
     Clock clock = Clock.fixed(Instant.parse("2025-06-15T12:00:00Z"), ZoneOffset.UTC)
@@ -31,8 +37,12 @@ class InsightServiceTest extends Specification {
     def workspaceId = 10L
 
     def setup() {
-        service = new InsightService(monthlySummaryService, workspaceQueryService, userService, clock)
+        service = new InsightService(monthlySummaryService, workspaceQueryService, userService, clock,
+                currencyRepository, currencyMapper)
         userService.getMe() >> user
+        def ars = Currency.builder().id(3L).symbol("ARS").description("Peso").enabled(true).build()
+        currencyRepository.findBySymbol("ARS") >> Optional.of(ars)
+        currencyMapper.toRecord(ars) >> new CurrencyRecord("ARS", 3L)
     }
 
     private static MonthlySummaryComparisonRecord emptyComparison() {
@@ -94,7 +104,7 @@ class InsightServiceTest extends Specification {
         then:
         result.size() == 1
         result[0].category() == "Supermercado"
-        result[0].currency() == "ARS"
+        result[0].currency() == new CurrencyRecord("ARS", 3L)
         result[0].currentAmount() == new BigDecimal("2000.00")
         result[0].averageAmount() == new BigDecimal("1000.00")
         result[0].percentDeviation() == new BigDecimal("100.00")
@@ -120,6 +130,26 @@ class InsightServiceTest extends Specification {
         result[0].category() == "Ocio"
         result[0].percentDeviation() == new BigDecimal("60.00")
         result[0].direction() == InsightDirection.BELOW
+    }
+
+    def "getInsights - falls back to a bare CurrencyRecord when the symbol doesn't resolve to a Currency"() {
+        given:
+        currencyRepository.findBySymbol("XYZ") >> Optional.empty()
+        monthlySummaryService.getSummary(workspaceId, 2025, 6) >>
+                summaryWith(2025, 6, "XYZ", [new CategoryAmountRecord("Supermercado", new BigDecimal("2000.00"))])
+        (1..6).each { monthsAgo ->
+            def ym = java.time.YearMonth.of(2025, 6).minusMonths(monthsAgo)
+            monthlySummaryService.getSummary(workspaceId, ym.year, ym.monthValue) >>
+                    summaryWith(ym.year, ym.monthValue, "XYZ",
+                            [new CategoryAmountRecord("Supermercado", new BigDecimal("1000.00"))])
+        }
+
+        when:
+        def result = service.getInsights(workspaceId)
+
+        then:
+        result.size() == 1
+        result[0].currency() == new CurrencyRecord("XYZ", null)
     }
 
     def "getInsights - should not flag category within the normal deviation range"() {

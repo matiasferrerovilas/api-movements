@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `GoalAddService.update` silently ignored an explicit `targetDate: null` — it only overwrote the
+  field when non-null, so "clear the target date" (the documented way to remove it, used by both
+  web's `EditGoalModal` and mobile's `goal-sheet.tsx`) was indistinguishable from omitting the field
+  and did nothing. `targetDate` is now always applied as sent, unlike `name`/`targetAmount` which
+  stay partial-update (null = leave unchanged).
+
+### Changed
+- `CategoryInsightRecord.currency` (`GET /v1/insights`) is now a resolved `CurrencyRecord {symbol,
+  id}`, matching `GoalRecord`/`BudgetRecord`/`MovementRecord`, instead of a bare currency-symbol
+  `String` — the only money-bearing response in the API that didn't already do this. The rendered
+  value was already identical either way (the string was `Currency.symbol` all along), but the
+  inconsistent shape meant Insights couldn't carry a currency id the way every other card can.
+  `InsightService` resolves it via the existing `CurrencyRepository`/`CurrencyMapper`, falling back
+  to `CurrencyRecord(symbol, null)` if the symbol doesn't match a stored `Currency` (shouldn't
+  happen in practice — the symbol always originates from a resolved `WorkspaceCurrency`). fe-movements
+  (`InsightsPanel.tsx`) and movements-mobile (`insights-panel.tsx`) updated to read
+  `insight.currency.symbol`.
+
 ### Added
 - Lightweight gamification: registration streaks + "budget met" badges, no points system.
   `GET /v1/gamification/streak` reports the authenticated user's consecutive-days streak in the

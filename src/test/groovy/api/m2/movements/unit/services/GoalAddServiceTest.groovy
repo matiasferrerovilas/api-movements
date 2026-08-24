@@ -107,6 +107,27 @@ class GoalAddServiceTest extends Specification {
         0 * goalRepository.save(_ as Goal)
     }
 
+    def "update - clears targetDate when the dto explicitly sends null"() {
+        given:
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+        def goal = new Goal(id: 10L, workspaceId: 5L, name: "Viaje", currency: currency,
+                targetAmount: new BigDecimal("1000.00"), targetDate: LocalDate.of(2027, 1, 1))
+        def dto = new GoalToUpdate(null, null, null)
+
+        goalRepository.findById(10L) >> Optional.of(goal)
+        goalMapper.toRecord(goal) >> new GoalRecord(10L, 5L, "Viaje", new BigDecimal("1000.00"),
+                BigDecimal.ZERO, null, null, BigDecimal.ZERO, null)
+
+        when:
+        service.update(dto, 10L)
+
+        then:
+        1 * goalRepository.save(goal)
+        goal.name == "Viaje"
+        goal.targetAmount == new BigDecimal("1000.00")
+        goal.targetDate == null
+    }
+
     // --- contribute ---
 
     def "contribute - should increment currentAmount by the given amount"() {

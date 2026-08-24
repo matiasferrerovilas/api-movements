@@ -47,7 +47,7 @@ class InsightThresholdEventHandlerTest extends Specification {
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 8) >> new BigDecimal("2000")
         insightService.evaluateCategory(1L, "Supermercado", "ARS", new BigDecimal("1500")) >> Optional.empty()
         insightService.evaluateCategory(1L, "Supermercado", "ARS", new BigDecimal("2000")) >>
-                Optional.of(new CategoryInsightRecord("Supermercado", "ARS", new BigDecimal("2000"),
+                Optional.of(new CategoryInsightRecord("Supermercado", new CurrencyRecord("ARS", 1L), new BigDecimal("2000"),
                         new BigDecimal("1000"), new BigDecimal("100.00"), InsightDirection.ABOVE))
 
         when:
@@ -63,7 +63,7 @@ class InsightThresholdEventHandlerTest extends Specification {
         def record = buildMovementRecord(new BigDecimal("100"))
         budgetRepository.sumSpentByCategoryAndPeriod(1L, "Supermercado", "ARS", 2026, 8) >> new BigDecimal("2100")
         insightService.evaluateCategory(1L, "Supermercado", "ARS", new BigDecimal("2000")) >>
-                Optional.of(new CategoryInsightRecord("Supermercado", "ARS", new BigDecimal("2000"),
+                Optional.of(new CategoryInsightRecord("Supermercado", new CurrencyRecord("ARS", 1L), new BigDecimal("2000"),
                         new BigDecimal("1000"), new BigDecimal("100.00"), InsightDirection.ABOVE))
 
         when:
