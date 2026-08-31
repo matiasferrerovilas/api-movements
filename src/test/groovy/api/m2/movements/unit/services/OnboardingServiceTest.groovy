@@ -47,7 +47,7 @@ class OnboardingServiceTest extends Specification {
     }
 
     def user(Long id) {
-        return new UserMe(id, "test@test.com", null, null, "PERSONAL", new UserMe.Metadata(true, false, []))
+        return new UserMe(id, "test@test.com", null, null, "PERSONAL", new UserMe.Metadata(true, false, [], null))
     }
 
     def userToAdd(String userType = "PERSONAL") {

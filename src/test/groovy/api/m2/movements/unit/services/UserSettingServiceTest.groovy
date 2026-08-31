@@ -25,7 +25,7 @@ class UserSettingServiceTest extends Specification {
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
     def "getAll - should return all settings for authenticated user"() {

@@ -22,8 +22,6 @@ class StreakServiceTest extends Specification {
         service = new StreakService(userStreakRepository, userService, workspaceContextService)
     }
 
-    // --- recordActivity ---
-
     def "recordActivity - starts a new streak at 1 when the user has never registered anything"() {
         given:
         userStreakRepository.findByUserIdAndWorkspaceId(1L, 10L) >> Optional.empty()
@@ -90,8 +88,6 @@ class StreakServiceTest extends Specification {
         then:
         1 * userStreakRepository.save({ UserStreak s -> s.currentStreak == 1 && s.longestStreak == 10 })
     }
-
-    // --- getStreak ---
 
     def "getStreak - returns zeros when the user has no streak record yet"() {
         given:

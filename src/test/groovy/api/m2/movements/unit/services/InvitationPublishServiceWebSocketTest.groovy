@@ -2,6 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
 import api.m2.movements.enums.InvitationStatus
+import api.m2.movements.enums.WorkspaceRole
 import api.m2.movements.events.InvitationAcceptedReceivedEvent
 import api.m2.movements.events.InvitationReceivedEvent
 import api.m2.movements.services.publishing.websockets.InvitationPublishServiceWebSocket
@@ -21,7 +22,7 @@ class InvitationPublishServiceWebSocketTest extends Specification {
 
     def "onInvitationReceived - publishes to the invited user's email-scoped topic"() {
         given:
-        def event = new InvitationReceivedEvent(1L, 10L, "Casa", "owner@example.com", "invited@example.com", LocalDateTime.now())
+        def event = new InvitationReceivedEvent(1L, 10L, "Casa", "owner@example.com", "invited@example.com", WorkspaceRole.COLLABORATOR, LocalDateTime.now())
 
         when:
         service.onInvitationReceived(event)
@@ -33,7 +34,7 @@ class InvitationPublishServiceWebSocketTest extends Specification {
     def "onInvitationReceived - wraps a WorkspaceInvitationDTO (matching the REST shape) with INVITATION_ADDED eventType"() {
         given:
         def createdAt = LocalDateTime.now()
-        def event = new InvitationReceivedEvent(2L, 11L, "Oficina", "boss@example.com", "worker@example.com", createdAt)
+        def event = new InvitationReceivedEvent(2L, 11L, "Oficina", "boss@example.com", "worker@example.com", WorkspaceRole.READ_ONLY, createdAt)
 
         when:
         service.onInvitationReceived(event)
@@ -46,6 +47,7 @@ class InvitationPublishServiceWebSocketTest extends Specification {
             wrapper.message().workspaceName() == event.workspaceName() &&
             wrapper.message().invitedByEmail() == event.invitedByEmail() &&
             wrapper.message().status() == InvitationStatus.PENDING &&
+            wrapper.message().role() == WorkspaceRole.READ_ONLY &&
             wrapper.message().createdAt() == createdAt
         })
     }

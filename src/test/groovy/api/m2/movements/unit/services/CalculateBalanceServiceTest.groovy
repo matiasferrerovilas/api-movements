@@ -38,16 +38,13 @@ class CalculateBalanceServiceTest extends Specification {
                 balanceEvolutionMapper,
                 workspaceContextService
         )
-        // stub de usuario en todos los tests
         userService.getMe() >> userMe(1L)
         workspaceContextService.getActiveWorkspaceId() >> 1L
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
-
-    // ── getBalance ─────────────────────────────────────────────────────────────
 
     def "getBalance - should return ingreso and gasto correctly"() {
         given:
@@ -111,7 +108,6 @@ class CalculateBalanceServiceTest extends Specification {
         service.getBalance(filter)
 
         then:
-        // verifica que el userId correcto se pasa al repositorio
         2 * movementRepository.getBalanceByFilters(
                 _ as LocalDate, _ as LocalDate,
                 1L,
@@ -144,8 +140,6 @@ class CalculateBalanceServiceTest extends Specification {
         ["EUR", "USD", "CHF"] | _
         []                  | _
     }
-
-    // ── getBalanceWithCategoryByYear ───────────────────────────────────────────
 
     def "getBalanceWithCategoryByYear - should delegate to repository with correct params"() {
         given:
@@ -200,8 +194,6 @@ class CalculateBalanceServiceTest extends Specification {
         then:
         result.isEmpty()
     }
-
-    // ── getMonthlyEvolution ────────────────────────────────────────────────────
 
     def "getMonthlyEvolution - should return 12 months filled for each currency in results"() {
         given: "repository returns data for 2 months in EUR"
@@ -279,8 +271,6 @@ class CalculateBalanceServiceTest extends Specification {
         then:
         0 * userService.getMe()
     }
-
-    // ── calculateRecoveryTime ──────────────────────────────────────────────────
 
     def "calculateRecoveryTime - should compute months to recover from average savings"() {
         given:

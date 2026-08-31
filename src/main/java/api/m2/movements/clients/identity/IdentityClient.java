@@ -35,7 +35,7 @@ public interface IdentityClient {
     List<UserMe> getUsersByIds(@RequestParam List<Long> ids);
 
     @GetExchange("/v1/users/me")
-    UserMe getMe();
+    UserMe getMe(@RequestParam(required = false) Long workspaceId);
 
     @PostExchange("/v1/workspaces")
     List<WorkspaceAdded> createWorkspaces(@RequestBody List<AddWorkspaceRecord> workspaces);

@@ -13,6 +13,7 @@ import api.m2.movements.records.categories.CategoryUpdatedEvent;
 import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,6 +32,7 @@ public class WorkspaceCategoryService {
     private final CategoryAddService categoryAddService;
     private final WorkspaceCategoryMapper workspaceCategoryMapper;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final CategoryRepository categoryRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -43,6 +45,7 @@ public class WorkspaceCategoryService {
     @Transactional
     public CategoryRecord addCategory(String description) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var category = categoryAddService.addCategory(description);
         return workspaceCategoryMapper.toRecord(this.resolveWorkspaceCategory(workspaceId, category));
     }
@@ -70,6 +73,7 @@ public class WorkspaceCategoryService {
     @Transactional
     public void deleteCategory(Long workspaceCategoryId) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var workspaceCategory = workspaceCategoryRepository.findById(workspaceCategoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
@@ -86,18 +90,16 @@ public class WorkspaceCategoryService {
     @Transactional
     public CategoryRecord updateCategory(Long workspaceCategoryId, CategoryPatchRequest request) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
 
-        // Buscar la WorkspaceCategory por su ID directo
         var workspaceCategory = workspaceCategoryRepository
                 .findById(workspaceCategoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
-        // Verificar que pertenece al workspace activo
         if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
             throw new PermissionDeniedException("No tenés acceso a esta categoría");
         }
 
-        // Actualizar solo los campos proporcionados (null-safe)
         if (request.description() != null && !request.description().isBlank()) {
             // La descripción modifica la Category global
             var category = workspaceCategory.getCategory();

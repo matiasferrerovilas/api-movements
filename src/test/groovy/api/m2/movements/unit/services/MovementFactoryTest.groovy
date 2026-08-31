@@ -19,6 +19,7 @@ import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -30,6 +31,7 @@ class MovementFactoryTest extends Specification {
     UserService userService = Mock(UserService)
     MovementMapper movementMapper = Mock(MovementMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     BankRepository bankRepository = Mock(BankRepository)
     ExchangeRateResolver exchangeRateResolver = Mock(ExchangeRateResolver)
 
@@ -42,13 +44,14 @@ class MovementFactoryTest extends Specification {
                 userService,
                 movementMapper,
                 workspaceContextService,
+                workspaceQueryService,
                 bankRepository,
                 exchangeRateResolver
         )
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
     def "create - should build movement with all resolved dependencies"() {

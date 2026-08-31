@@ -11,6 +11,7 @@ import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,12 @@ public class BudgetAddService {
     private final CurrencyRepository currencyRepository;
     private final WorkspaceCurrencyService workspaceCurrencyService;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
 
     @Transactional
     public void save(@Valid BudgetToAdd dto) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var budget = budgetMapper.toEntity(dto, categoryRepository, currencyRepository);
         budget.setWorkspaceId(workspaceId);
         workspaceCurrencyService.ensureCurrencyInWorkspace(workspaceId, budget.getCurrency());

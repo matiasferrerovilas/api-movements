@@ -12,6 +12,7 @@ import api.m2.movements.services.category.CategoryResolver;
 import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,11 +30,17 @@ public class MovementFactory {
     private final UserService userService;
     private final MovementMapper movementMapper;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final BankRepository bankRepository;
     private final ExchangeRateResolver exchangeRateResolver;
 
+    /** Único de los 3 overloads alcanzable directamente desde un request de usuario (ver
+     * MovementAddService.saveMovement(dto)) — por eso es el único que valida rol de escritura.
+     * Los otros dos reciben el workspaceId ya resuelto por un caller interno de confianza
+     * (onboarding, jobs programados), nunca por un READ_ONLY intentando crear algo. */
     public Movement create(MovementToAdd dto) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         return this.create(dto, workspaceId);
     }
 

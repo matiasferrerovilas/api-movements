@@ -17,6 +17,7 @@ import api.m2.movements.repositories.IncomeRepository
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.CurrencyResolver
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.user.UserService
@@ -32,6 +33,7 @@ class IncomeAddServiceTest extends Specification {
     UserService userService = Mock(UserService)
     IncomeMapper incomeMapper
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     CurrencyResolver currencyResolver = Mock(CurrencyResolver)
     MovementAddService movementAddService = Mock(MovementAddService)
@@ -47,6 +49,7 @@ class IncomeAddServiceTest extends Specification {
                 userService,
                 incomeMapper,
                 workspaceContextService,
+                workspaceQueryService,
                 currencyAddService,
                 currencyResolver,
                 movementAddService,
@@ -55,7 +58,7 @@ class IncomeAddServiceTest extends Specification {
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
     def "loadIncome - should set bank on income before saving"() {
@@ -135,7 +138,6 @@ class IncomeAddServiceTest extends Specification {
         })
     }
 
-    // --- deleteIncome ---
     // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "deleteIncome - should delete income when called"() {
@@ -162,7 +164,6 @@ class IncomeAddServiceTest extends Specification {
         0 * incomeRepository.delete(_ as Income)
     }
 
-    // --- reloadIncome ---
     // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "reloadIncome - should save movement when called"() {
@@ -190,8 +191,6 @@ class IncomeAddServiceTest extends Specification {
         thrown(EntityNotFoundException)
         0 * movementAddService.saveMovement(_)
     }
-
-    // --- addIngreso ---
 
     def "addIngreso - should save movement with correct parameters"() {
         given:
@@ -241,8 +240,6 @@ class IncomeAddServiceTest extends Specification {
         then:
         1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now(ZoneOffset.UTC) })
     }
-
-    // --- generateRecurringIncomeForUser ---
 
     def "generateRecurringIncomeForUser - should generate movement for each income"() {
         given:

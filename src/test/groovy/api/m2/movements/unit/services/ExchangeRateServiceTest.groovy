@@ -18,8 +18,6 @@ class ExchangeRateServiceTest extends Specification {
         service = new ExchangeRateService(frankfurterClient)
     }
 
-    // --- getRates ---
-
     def "getRates - should delegate to client and return rates"() {
         given:
         def rate = new ExchangeRateRecord(LocalDate.now(), "USD", "ARS", new BigDecimal("990.00"))
@@ -31,8 +29,6 @@ class ExchangeRateServiceTest extends Specification {
         then:
         result == [rate]
     }
-
-    // --- getRatesOnDate ---
 
     def "getRatesOnDate - should call client with date as string from and to"() {
         given:
@@ -76,8 +72,6 @@ class ExchangeRateServiceTest extends Specification {
         then:
         result == []
     }
-
-    // --- convertToUsd ---
 
     def "convertToUsd - should return amount directly when fromSymbol is USD"() {
         given:

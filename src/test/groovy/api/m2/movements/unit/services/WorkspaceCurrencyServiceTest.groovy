@@ -9,6 +9,7 @@ import api.m2.movements.repositories.WorkspaceCurrencyRepository
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class WorkspaceCurrencyServiceTest extends Specification {
@@ -16,6 +17,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
     WorkspaceCurrencyRepository workspaceCurrencyRepository = Mock(WorkspaceCurrencyRepository)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
 
     WorkspaceCurrencyService service
 
@@ -23,7 +25,8 @@ class WorkspaceCurrencyServiceTest extends Specification {
         service = new WorkspaceCurrencyService(
                 workspaceCurrencyRepository,
                 currencyAddService,
-                workspaceContextService
+                workspaceContextService,
+                workspaceQueryService
         )
     }
 

@@ -29,10 +29,8 @@ class WorkspaceAddServiceTest extends Specification {
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
-
-    // --- createWorkspace ---
 
     def "createWorkspace - should delegate to IdentityClient"() {
         given:
@@ -70,8 +68,6 @@ class WorkspaceAddServiceTest extends Specification {
         then:
         thrown(HttpClientErrorException)
     }
-
-    // --- leaveWorkspace ---
 
     def "leaveWorkspace - should propagate IdentityClient failure"() {
         given:
@@ -112,8 +108,6 @@ class WorkspaceAddServiceTest extends Specification {
         1 * identityClient.leaveWorkspace(10L)
         0 * userSettingService.deleteByKey(_)
     }
-
-    // --- removeMember ---
 
     def "removeMember - should delegate to IdentityClient"() {
         given:

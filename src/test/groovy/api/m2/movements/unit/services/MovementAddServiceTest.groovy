@@ -72,8 +72,6 @@ class MovementAddServiceTest extends Specification {
         return movement
     }
 
-    // --- saveMovement ---
-
     def "saveMovement - should verify membership and save movement"() {
         given:
         def dto = new MovementToAdd(
@@ -133,8 +131,6 @@ class MovementAddServiceTest extends Specification {
         0 * movementRepository.save(_ as Movement)
     }
 
-    // --- saveSystemMovement ---
-
     def "saveSystemMovement - should save movement without calling identity"() {
         given:
         def dto = new MovementToAdd(
@@ -158,7 +154,6 @@ class MovementAddServiceTest extends Specification {
         result.metadata().owner().givenName() == null
     }
 
-    // --- updateMovement ---
     // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 
     def "updateMovement - should update movement when called"() {
@@ -186,8 +181,6 @@ class MovementAddServiceTest extends Specification {
         thrown(EntityNotFoundException)
         0 * movementRepository.save(_ as Movement)
     }
-
-    // --- deleteMovement ---
 
     def "deleteMovement - should delete and publish event when called"() {
         given:

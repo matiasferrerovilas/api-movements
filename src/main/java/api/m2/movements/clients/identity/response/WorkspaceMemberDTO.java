@@ -13,7 +13,6 @@ public record WorkspaceMemberDTO(
         Metadata metadata) implements Serializable {
 
     public record Metadata(
-            List<String> members,
             List<MemberDetail> memberDetails,
             WorkspaceRole role,
             LocalDateTime joinedAt,

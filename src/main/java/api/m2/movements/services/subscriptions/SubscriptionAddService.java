@@ -52,6 +52,7 @@ public class SubscriptionAddService {
     public void save(SubscriptionToAdd subscriptionToAdd) {
         var userId = userService.getMe().id();
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyAddService);
         subscription.setOwnerId(userId);
         subscription.setWorkspaceId(workspaceId);

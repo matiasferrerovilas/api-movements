@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-08-31
+
+### Added
+- `sendInvitation` now requires a `role` (`COLLABORATOR`/`READ_ONLY`) alongside the email list —
+  passed straight through to api-identity, which applies it to the membership when the invitee
+  accepts. `WorkspaceInvitationDTO`/`WorkspaceSentInvitationDTO` (REST responses) and the
+  WebSocket-pushed invitation payload now carry it too.
+
+## [2.8.0] - 2026-08-31
+
+### Security
+- `READ_ONLY` was enforced only in the fe-movements UI (hiding "crear movimiento"/"crear
+  servicio") — no backend endpoint validated the caller's role, only membership. Added
+  `WorkspaceQueryService.verifyCanWrite(workspaceId)`, which resolves the caller's role via the
+  already-cached `UserService.getMe(workspaceId)` and rejects with 403 when it's `READ_ONLY` (or
+  the caller isn't a member at all). Wired into every create/update/delete path across movements,
+  budgets, goals, subscriptions, income, categories and currencies — `MembershipCheckAspect`
+  (backing `@RequiresMembership`, used only by mutating methods) now calls it instead of the
+  plain membership check, and the handful of `save`/`create` methods that resolve their workspace
+  via `WorkspaceContextService.getActiveWorkspaceId()` (no existing entity to hang
+  `@RequiresMembership` off yet) call it explicitly. Bank management was deliberately left
+  untouched — it's a per-user list (`UserBank`), not workspace-scoped, so a workspace role
+  doesn't apply to it. Reads are unaffected: READ_ONLY members can still see everything, only
+  mutations are blocked.
+
+## [2.7.0] - 2026-08-31
+
+### Added
+- Cached the two api-identity calls that fired on almost every request (`UserService.getMe()`/
+  `getMe(workspaceId)`, `WorkspaceQueryService.verifyUserIsMemberOfWorkspace`) for 5 hours via a
+  new Redis `IDENTITY_CACHE`, keyed per-caller (and per-workspace where relevant) off the
+  authenticated principal's email. Previously every one of those calls was a synchronous,
+  uncached, timeout-less HTTP round-trip to api-identity — if it hung even briefly, this app
+  couldn't serve a single operation despite the caller's JWT still being valid. A revoked
+  membership is never masked by the cache: `verifyUserIsMemberOfWorkspace` only caches the
+  successful (granted) outcome, so a removal always re-checks against api-identity immediately.
+
+### Changed
+- `GET /v1/users/me` now enriches the response with `metadata.workspaceRole` — the caller's role
+  in their default workspace (`DEFAULT_WORKSPACE` setting), resolved server-side so the frontend
+  doesn't need a second call. Omitted (stays whatever api-identity returned, i.e. absent) when the
+  user has no default workspace configured.
+- `WorkspaceMemberDTO.Metadata` dropped `members: string[]` — it was fully redundant with
+  `memberDetails` (which already has email plus userId/role, everything `members` had and more).
+
 ### Security
 - `application-prod.yaml` hardcoded the RabbitMQ username/password in plain text
   (`api-movements`/`api-movements`) while `DB_USERNAME`/`DB_PASSWORD`/`REDIS_PASSWORD`/

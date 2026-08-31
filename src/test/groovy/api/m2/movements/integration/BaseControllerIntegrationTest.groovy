@@ -154,11 +154,12 @@ abstract class BaseControllerIntegrationTest extends Specification {
     @Autowired
     protected UserSettingRepository userSettingRepository
 
-    // ObjectMapper for JSON serialization in tests
+    @Autowired
+    protected org.springframework.cache.CacheManager cacheManager
+
     @Shared
     protected ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule())
 
-    // Test fixtures
     protected static final String TEST_USER_EMAIL = "integration-test@test.com"
     protected Long testUserId = 1L
     protected Long testWorkspaceId = 1L
@@ -166,6 +167,12 @@ abstract class BaseControllerIntegrationTest extends Specification {
 
     def setup() {
         identityMock.resetAll()
+
+        // Redis (a diferencia de MySQL) no se envuelve en el rollback transaccional por test —
+        // sin esto, un @Cacheable con TTL de horas (ver IDENTITY_CACHE) deja entradas calientes
+        // de un test anterior contaminando el siguiente, ya que testUserId/testWorkspaceId son
+        // los mismos (1L) en toda la suite.
+        cacheManager.cacheNames.each { cacheManager.getCache(it)?.clear() }
 
         // User/Workspace/membresía ahora se resuelven vía IdentityClient (api-identity),
         // stubeado acá con WireMock. Tests concretos pueden registrar un stubFor(...)
@@ -178,6 +185,23 @@ abstract class BaseControllerIntegrationTest extends Specification {
                         familyName: "Test",
                         userType  : "PERSONAL",
                         metadata  : [isFirstLogin: false, hasSeenTour: true, userRole: []]
+                ]))))
+
+        // Variante con ?workspaceId= — la usa WorkspaceQueryService.verifyCanWrite en cada
+        // endpoint de creación/edición para resolver el rol del caller en ese workspace (ver
+        // CacheConfiguration.IDENTITY_CACHE). Default OWNER, igual que el stub de members de
+        // abajo, así que todo endpoint de escritura sigue funcionando sin que cada test
+        // individual tenga que conocer este chequeo. Un test que sí necesite probar el bloqueo
+        // de READ_ONLY pisa esto con su propio stubFor en su "given:".
+        stubFor(get(urlPathEqualTo("/v1/users/me"))
+                .withQueryParam("workspaceId", matching("\\d+"))
+                .willReturn(okJson(JsonOutput.toJson([
+                        id        : testUserId,
+                        email     : TEST_USER_EMAIL,
+                        givenName : "Integration",
+                        familyName: "Test",
+                        userType  : "PERSONAL",
+                        metadata  : [isFirstLogin: false, hasSeenTour: true, userRole: [], workspaceRole: "OWNER"]
                 ]))))
 
         stubFor(get(urlPathMatching("/v1/workspaces/\\d+/members/\\d+"))
@@ -242,7 +266,6 @@ abstract class BaseControllerIntegrationTest extends Specification {
                 .settingValue(testWorkspaceId)
                 .build())
 
-        // Get or create test currency
         testCurrency = currencyRepository.findBySymbol("ARS")
                 .orElseGet { currencyRepository.save(Currency.builder()
                         .description("Peso Argentino")

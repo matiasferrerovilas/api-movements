@@ -12,8 +12,12 @@ import org.aspectj.lang.annotation.Before;
 import org.springframework.stereotype.Component;
 
 /**
- * Aspecto que verifica la membresia del usuario antes de ejecutar
- * metodos anotados con @RequiresMembership.
+ * Aspecto que verifica, antes de ejecutar métodos anotados con @RequiresMembership, que el
+ * usuario autenticado tenga acceso de escritura al workspace dueño del recurso — no solo
+ * membership. Las 11 usos actuales de @RequiresMembership son, sin excepción, update/delete/
+ * contribute/pay (nunca una lectura), así que exigir rol >= COLLABORATOR acá es seguro: no hay
+ * ningún método de solo-lectura que dependa de este aspecto y que un miembro READ_ONLY deba
+ * poder seguir usando.
  */
 @Aspect
 @Component
@@ -31,11 +35,10 @@ public class MembershipCheckAspect {
         Long entityId = (Long) args[requiresMembership.idParamIndex()];
 
         Long workspaceId = resolverRegistry.resolve(requiresMembership.domain(), entityId);
-        Long userId = userService.getMe().id();
 
-        log.debug("Verificando membresía: domain={}, entityId={}, workspaceId={}, userId={}",
-                requiresMembership.domain(), entityId, workspaceId, userId);
+        log.debug("Verificando acceso de escritura: domain={}, entityId={}, workspaceId={}, userId={}",
+                requiresMembership.domain(), entityId, workspaceId, userService.getMe().id());
 
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);
+        workspaceQueryService.verifyCanWrite(workspaceId);
     }
 }

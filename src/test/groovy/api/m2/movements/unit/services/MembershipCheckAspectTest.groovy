@@ -32,7 +32,7 @@ class MembershipCheckAspectTest extends Specification {
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
     /**
@@ -57,9 +57,7 @@ class MembershipCheckAspectTest extends Specification {
         return Stub(JoinPoint) { getArgs() >> args }
     }
 
-    // --- MOVEMENT domain ---
-
-    def "checkMembership - should verify membership for MOVEMENT domain"() {
+    def "checkMembership - should verify write access for MOVEMENT domain"() {
         given:
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
@@ -71,7 +69,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect.checkMembership(joinPoint, ann)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 42L)
+        1 * workspaceQueryService.verifyCanWrite(1L)
     }
 
     def "checkMembership - should use idParamIndex=1 to extract entity id"() {
@@ -86,7 +84,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect.checkMembership(joinPoint, ann)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(5L, 7L)
+        1 * workspaceQueryService.verifyCanWrite(5L)
     }
 
     def "checkMembership - should throw EntityNotFoundException when MOVEMENT does not exist"() {
@@ -103,18 +101,18 @@ class MembershipCheckAspectTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
-        0 * workspaceQueryService.verifyUserIsMemberOfWorkspace(_ as Long, _ as Long)
+        0 * workspaceQueryService.verifyCanWrite(_ as Long)
     }
 
-    def "checkMembership - should throw PermissionDeniedException when user is not member (MOVEMENT)"() {
+    def "checkMembership - should throw PermissionDeniedException when user is READ_ONLY (MOVEMENT)"() {
         given:
         def ann = annotation(MembershipDomain.MOVEMENT)
         def joinPoint = buildJoinPoint(10L)
 
         resolverRegistry.resolve(MembershipDomain.MOVEMENT, 10L) >> 1L
         userService.getMe() >> userMe(99L)
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(1L, 99L) >> {
-            throw new PermissionDeniedException("No tienes permiso")
+        workspaceQueryService.verifyCanWrite(1L) >> {
+            throw new PermissionDeniedException("Los miembros de solo lectura no pueden crear ni modificar recursos")
         }
 
         when:
@@ -124,9 +122,7 @@ class MembershipCheckAspectTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    // --- INCOME domain ---
-
-    def "checkMembership - should verify membership for INCOME domain"() {
+    def "checkMembership - should verify write access for INCOME domain"() {
         given:
         def ann = annotation(MembershipDomain.INCOME)
         def joinPoint = buildJoinPoint(20L)
@@ -138,7 +134,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect.checkMembership(joinPoint, ann)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(2L, 42L)
+        1 * workspaceQueryService.verifyCanWrite(2L)
     }
 
     def "checkMembership - should throw EntityNotFoundException when INCOME does not exist"() {
@@ -155,12 +151,10 @@ class MembershipCheckAspectTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
-        0 * workspaceQueryService.verifyUserIsMemberOfWorkspace(_ as Long, _ as Long)
+        0 * workspaceQueryService.verifyCanWrite(_ as Long)
     }
 
-    // --- SUBSCRIPTION domain ---
-
-    def "checkMembership - should verify membership for SUBSCRIPTION domain"() {
+    def "checkMembership - should verify write access for SUBSCRIPTION domain"() {
         given:
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
@@ -172,7 +166,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect.checkMembership(joinPoint, ann)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(3L, 42L)
+        1 * workspaceQueryService.verifyCanWrite(3L)
     }
 
     def "checkMembership - should throw EntityNotFoundException when SUBSCRIPTION does not exist"() {
@@ -189,18 +183,18 @@ class MembershipCheckAspectTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
-        0 * workspaceQueryService.verifyUserIsMemberOfWorkspace(_ as Long, _ as Long)
+        0 * workspaceQueryService.verifyCanWrite(_ as Long)
     }
 
-    def "checkMembership - should throw PermissionDeniedException when user is not member (SUBSCRIPTION)"() {
+    def "checkMembership - should throw PermissionDeniedException when user is READ_ONLY (SUBSCRIPTION)"() {
         given:
         def ann = annotation(MembershipDomain.SUBSCRIPTION)
         def joinPoint = buildJoinPoint(30L)
 
         resolverRegistry.resolve(MembershipDomain.SUBSCRIPTION, 30L) >> 3L
         userService.getMe() >> userMe(99L)
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(3L, 99L) >> {
-            throw new PermissionDeniedException("No tienes permiso")
+        workspaceQueryService.verifyCanWrite(3L) >> {
+            throw new PermissionDeniedException("Los miembros de solo lectura no pueden crear ni modificar recursos")
         }
 
         when:
@@ -210,9 +204,7 @@ class MembershipCheckAspectTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    // --- BUDGET domain ---
-
-    def "checkMembership - should verify membership for BUDGET domain"() {
+    def "checkMembership - should verify write access for BUDGET domain"() {
         given:
         def ann = annotation(MembershipDomain.BUDGET)
         def joinPoint = buildJoinPoint(40L)
@@ -224,7 +216,7 @@ class MembershipCheckAspectTest extends Specification {
         aspect.checkMembership(joinPoint, ann)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(4L, 42L)
+        1 * workspaceQueryService.verifyCanWrite(4L)
     }
 
     def "checkMembership - should throw EntityNotFoundException when BUDGET does not exist"() {
@@ -241,6 +233,6 @@ class MembershipCheckAspectTest extends Specification {
 
         then:
         thrown(EntityNotFoundException)
-        0 * workspaceQueryService.verifyUserIsMemberOfWorkspace(_ as Long, _ as Long)
+        0 * workspaceQueryService.verifyCanWrite(_ as Long)
     }
 }

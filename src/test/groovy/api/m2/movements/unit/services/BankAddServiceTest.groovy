@@ -30,7 +30,7 @@ class BankAddServiceTest extends Specification {
     }
 
     def userMe(Long id) {
-        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+        return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
     def "addBankToUser - should find existing bank and associate it to user"() {

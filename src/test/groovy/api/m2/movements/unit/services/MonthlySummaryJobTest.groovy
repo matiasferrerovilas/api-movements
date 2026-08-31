@@ -20,8 +20,6 @@ class MonthlySummaryJobTest extends Specification {
         job = new MonthlySummaryJob(movementRepository, monthlySummaryService, snapshotService)
     }
 
-    // ── lista vacía: no se invoca ningún servicio de cálculo ──────────────────
-
     def "generateMonthlySnapshots - should not call computeSummary or save when workspace list is empty"() {
         given:
         movementRepository.findDistinctWorkspaceIds() >> []
@@ -33,8 +31,6 @@ class MonthlySummaryJobTest extends Specification {
         0 * monthlySummaryService.computeSummary(*_)
         0 * snapshotService.save(*_)
     }
-
-    // ── un workspace: se llama computeSummary y save exactamente una vez ──────
 
     def "generateMonthlySnapshots - should call computeSummary and save once for a single workspace"() {
         given:
@@ -50,8 +46,6 @@ class MonthlySummaryJobTest extends Specification {
         1 * monthlySummaryService.computeSummary(workspaceId, _ as Integer, _ as Integer) >> summary
         1 * snapshotService.save(workspaceId, _ as Integer, _ as Integer, summary)
     }
-
-    // ── varios workspaces: se llama una vez por cada uno ──────────────────────
 
     def "generateMonthlySnapshots - should call computeSummary and save once per workspace"() {
         given:
@@ -69,8 +63,6 @@ class MonthlySummaryJobTest extends Specification {
         }
     }
 
-    // ── movementRepository solo se llama una vez ─────────────────────────────
-
     def "generateMonthlySnapshots - should call findDistinctWorkspaceIds exactly once"() {
         given:
         def workspaceId = 1L
@@ -83,8 +75,6 @@ class MonthlySummaryJobTest extends Specification {
         then:
         1 * movementRepository.findDistinctWorkspaceIds() >> [workspaceId]
     }
-
-    // ── el año y mes pasados a computeSummary y save son consistentes ─────────
 
     def "generateMonthlySnapshots - should pass the same year and month to computeSummary and save"() {
         given:

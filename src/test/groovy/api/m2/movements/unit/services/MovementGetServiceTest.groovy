@@ -212,7 +212,6 @@ class MovementGetServiceTest extends Specification {
         def result = service.getExpensesBy(filter, pageable)
 
         then:
-        // Debería llamar al mapper con workspaceCategory = null para usar defaults
         1 * categoryMapper.toRecordWithIcons(category, null) >> enrichedCategoryWithDefaults
         result.content.size() == 1
         result.content[0].categories() == [enrichedCategoryWithDefaults]

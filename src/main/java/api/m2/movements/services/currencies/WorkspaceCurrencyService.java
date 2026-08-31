@@ -8,6 +8,7 @@ import api.m2.movements.records.currencies.CurrencyToAdd;
 import api.m2.movements.records.currencies.WorkspaceCurrencyRecord;
 import api.m2.movements.repositories.WorkspaceCurrencyRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class WorkspaceCurrencyService {
     private final WorkspaceCurrencyRepository workspaceCurrencyRepository;
     private final CurrencyAddService currencyAddService;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
 
     public List<WorkspaceCurrencyRecord> getWorkspaceCurrencies() {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
@@ -34,6 +36,7 @@ public class WorkspaceCurrencyService {
     @Transactional
     public WorkspaceCurrencyRecord addCurrency(CurrencyToAdd dto) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var currency = currencyAddService.addCurrency(dto.symbol(), dto.description());
         var workspaceCurrency = this.resolveWorkspaceCurrency(workspaceId, currency);
         return this.toRecord(workspaceCurrency);
@@ -57,6 +60,7 @@ public class WorkspaceCurrencyService {
     @Transactional
     public void deleteCurrency(Long workspaceCurrencyId) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         var workspaceCurrency = workspaceCurrencyRepository.findById(workspaceCurrencyId)
                 .orElseThrow(() -> new EntityNotFoundException("Moneda no encontrada"));
 

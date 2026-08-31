@@ -4,6 +4,7 @@ import api.m2.movements.entities.Budget
 import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.exceptions.EntityNotFoundException
+import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.mappers.BudgetMapper
 import api.m2.movements.records.BudgetToAdd
 import api.m2.movements.records.budgets.BudgetToUpdate
@@ -13,6 +14,7 @@ import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.budgets.BudgetAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class BudgetAddServiceTest extends Specification {
@@ -23,6 +25,7 @@ class BudgetAddServiceTest extends Specification {
     CurrencyRepository currencyRepository = Mock()
     WorkspaceCurrencyService workspaceCurrencyService = Mock()
     WorkspaceContextService workspaceContextService = Mock()
+    WorkspaceQueryService workspaceQueryService = Mock()
 
     BudgetAddService service
 
@@ -33,11 +36,10 @@ class BudgetAddServiceTest extends Specification {
                 categoryRepository,
                 currencyRepository,
                 workspaceCurrencyService,
-                workspaceContextService
+                workspaceContextService,
+                workspaceQueryService
         )
     }
-
-    // --- save ---
 
     def "save - should create budget for the resolved workspace"() {
         given:
@@ -51,8 +53,26 @@ class BudgetAddServiceTest extends Specification {
         service.save(dto)
 
         then:
+        1 * workspaceQueryService.verifyCanWrite(1L)
         1 * budget.setWorkspaceId(1L)
         1 * budgetRepository.save(budget)
+    }
+
+    def "save - should propagate PermissionDeniedException without persisting when caller cannot write"() {
+        given:
+        def dto = new BudgetToAdd("Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
+
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceQueryService.verifyCanWrite(1L) >> {
+            throw new PermissionDeniedException("Los miembros de solo lectura no pueden crear ni modificar recursos")
+        }
+
+        when:
+        service.save(dto)
+
+        then:
+        thrown(PermissionDeniedException)
+        0 * budgetRepository.save(_ as Budget)
     }
 
     def "save - should delegate workspace resolution to WorkspaceContextService"() {
@@ -68,8 +88,6 @@ class BudgetAddServiceTest extends Specification {
         then:
         1 * workspaceContextService.getActiveWorkspaceId() >> 99L
     }
-
-    // --- update ---
 
     def "update - should update amount when budget exists"() {
         given:
@@ -100,8 +118,6 @@ class BudgetAddServiceTest extends Specification {
         thrown(EntityNotFoundException)
         0 * budgetRepository.save(_ as Budget)
     }
-
-    // --- delete ---
 
     def "delete - should remove budget when it exists"() {
         given:

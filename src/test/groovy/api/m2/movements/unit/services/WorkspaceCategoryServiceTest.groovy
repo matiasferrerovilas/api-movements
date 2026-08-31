@@ -15,6 +15,7 @@ import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
@@ -24,6 +25,7 @@ class WorkspaceCategoryServiceTest extends Specification {
     CategoryAddService categoryAddService = Mock(CategoryAddService)
     WorkspaceCategoryMapper workspaceCategoryMapper = Mock(WorkspaceCategoryMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     CategoryRepository categoryRepository = Mock(CategoryRepository)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
@@ -35,6 +37,7 @@ class WorkspaceCategoryServiceTest extends Specification {
                 categoryAddService,
                 workspaceCategoryMapper,
                 workspaceContextService,
+                workspaceQueryService,
                 categoryRepository,
                 eventPublisher
         )

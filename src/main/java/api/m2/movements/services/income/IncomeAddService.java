@@ -16,6 +16,7 @@ import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class IncomeAddService {
     private final UserService userService;
     private final IncomeMapper incomeMapper;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final CurrencyAddService currencyAddService;
     private final CurrencyResolver currencyResolver;
     private final MovementAddService movementAddService;
@@ -43,6 +45,7 @@ public class IncomeAddService {
     @Transactional
     public void loadIncome(IncomeToAdd incomeToAdd) {
         var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        workspaceQueryService.verifyCanWrite(workspaceId);
         this.loadIncome(incomeToAdd, workspaceId);
     }
 

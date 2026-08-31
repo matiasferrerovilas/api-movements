@@ -6,7 +6,6 @@ package api.m2.movements.constants;
  */
 public final class WebSocketTopics {
 
-    // Base paths
     public static final String MOVEMENTS = "/topic/movimientos";
     public static final String SERVICES = "/topic/servicios";
     public static final String WORKSPACES = "/topic/workspace";
@@ -15,7 +14,6 @@ public final class WebSocketTopics {
     public static final String INVITATIONS = "/topic/invitations";
     public static final String MEMBERSHIP = "/topic/membership";
 
-    // Suffixes
     public static final String NEW = "/new";
     public static final String UPDATE = "/update";
     public static final String DELETE = "/delete";
@@ -23,7 +21,6 @@ public final class WebSocketTopics {
     public static final String DEFAULT = "/default";
 
     private WebSocketTopics() {
-        // Utility class
     }
 
     /**

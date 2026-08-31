@@ -49,8 +49,6 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         return new MonthlySummaryResponse(year, month, unified, [currency])
     }
 
-    // ── save: crea snapshot cuando no existe ──────────────────────────────────
-
     def "save - should create new snapshot when none exists"() {
         given:
         def summary = buildSummary(2025, 4)
@@ -69,8 +67,6 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         }
     }
 
-    // ── save: upsert actualiza el payload si ya existe ────────────────────────
-
     def "save - should update existing snapshot payload on upsert"() {
         given:
         def existing = Mock(MonthlySummarySnapshot) {
@@ -87,8 +83,6 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         1 * existing.setPayload(_ as String)
     }
 
-    // ── find: devuelve empty cuando no existe ─────────────────────────────────
-
     def "find - should return empty when snapshot does not exist"() {
         given:
         snapshotRepository.findByWorkspaceIdAndYearAndMonth(workspaceId, 2025, 4) >> Optional.empty()
@@ -99,8 +93,6 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         then:
         result.isEmpty()
     }
-
-    // ── find: deserializa correctamente el payload ────────────────────────────
 
     def "find - should deserialize payload and return correct response"() {
         given:
@@ -124,8 +116,6 @@ class MonthlySummarySnapshotServiceTest extends Specification {
         result.get().porMoneda().first().currency() == "ARS"
         result.get().porMoneda().first().categoriaConMayorGasto() == "HOGAR"
     }
-
-    // ── find: round-trip serialización/deserialización ────────────────────────
 
     def "save and find - should round-trip serialize and deserialize correctly"() {
         given:

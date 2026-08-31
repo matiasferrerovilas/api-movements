@@ -64,8 +64,6 @@ class SubscriptionAddServiceTest extends Specification {
                 lastPayment: lastPayment, workspaceId: workspaceId, currency: currency, ownerId: 1L)
     }
 
-    // --- save ---
-
     def "save - should ensure currency is associated to the workspace"() {
         given:
         def currency = Stub(Currency) { getSymbol() >> "ARS"; getId() >> 1L }
@@ -73,7 +71,7 @@ class SubscriptionAddServiceTest extends Specification {
                 new CurrencyRecord("ARS", null), null, false)
 
         userService.getMe() >> new UserMe(1L, "user@test.com", "User", null, "PERSONAL",
-                new UserMe.Metadata(false, true, []))
+                new UserMe.Metadata(false, true, [], null))
         workspaceContextService.getActiveWorkspaceId() >> 7L
         currencyAddService.findBySymbol("ARS") >> currency
         subscriptionRepository.save(_ as Subscription) >> { args -> args[0] as Subscription }
@@ -82,10 +80,9 @@ class SubscriptionAddServiceTest extends Specification {
         service.save(dto)
 
         then:
+        1 * workspaceQueryService.verifyCanWrite(7L)
         1 * workspaceCurrencyService.ensureCurrencyInWorkspace(7L, currency)
     }
-
-    // --- paySubscriptionById ---
 
     def "paySubscriptionById - should publish SubscriptionPaidEvent and save"() {
         given:
@@ -147,8 +144,6 @@ class SubscriptionAddServiceTest extends Specification {
             assert event.paymentDate() == LocalDate.now(ZoneOffset.UTC)
         }
     }
-
-    // --- updateSubscription ---
 
     def "updateSubscription - should save subscription when called"() {
         given:
@@ -214,8 +209,6 @@ class SubscriptionAddServiceTest extends Specification {
         then:
         0 * eventPublisher.publishEvent(_ as SubscriptionMovementSyncEvent)
     }
-
-    // --- deleteSubscription ---
 
     def "deleteSubscription - should delete and publish websocket event"() {
         given:

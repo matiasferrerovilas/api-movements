@@ -32,7 +32,7 @@ public class InvitationPublishServiceWebSocket extends WebSocketMessageService {
     public void onInvitationReceived(InvitationReceivedEvent event) {
         log.debug("Invitación recibida desde api-identity para {}", event.invitedUserEmail());
         // El frontend cachea esto igual que la respuesta de GET /v1/workspace/invitations
-        // (WorkspaceInvitationDTO: id/workspaceId/workspaceName/invitedByEmail/status/createdAt),
+        // (WorkspaceInvitationDTO: id/workspaceId/workspaceName/invitedByEmail/status/role/createdAt),
         // así que el payload debe tener esa misma forma en vez del RabbitMQ event crudo — de
         // lo contrario "id" llega undefined y el PATCH de aceptar/rechazar rompe en el backend.
         var invitationDTO = new WorkspaceInvitationDTO(
@@ -41,6 +41,7 @@ public class InvitationPublishServiceWebSocket extends WebSocketMessageService {
                 event.workspaceName(),
                 event.invitedByEmail(),
                 InvitationStatus.PENDING,
+                event.role(),
                 event.createdAt());
         this.publish(invitationDTO, WebSocketTopics.invitationsNew(event.invitedUserEmail()), EventType.INVITATION_ADDED);
     }

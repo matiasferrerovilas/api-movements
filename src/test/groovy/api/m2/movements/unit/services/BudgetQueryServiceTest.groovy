@@ -42,8 +42,6 @@ class BudgetQueryServiceTest extends Specification {
         }
     }
 
-    // --- getByAccount ---
-
     def "getByAccount - should return budgets with spent calculated"() {
         given:
         def budget = buildBudget("Supermercado", "ARS", new BigDecimal("5000.00"))

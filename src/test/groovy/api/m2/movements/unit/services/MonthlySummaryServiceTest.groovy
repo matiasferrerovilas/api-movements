@@ -25,7 +25,7 @@ class MonthlySummaryServiceTest extends Specification {
 
     MonthlySummaryService service
 
-    def user = new UserMe(1L, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, []))
+    def user = new UserMe(1L, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
 
     def workspaceId = 10L
 
@@ -34,8 +34,6 @@ class MonthlySummaryServiceTest extends Specification {
                 movementRepository, workspaceCurrencyRepository, userService, snapshotService, workspaceQueryService)
         userService.getMe() >> user
     }
-
-    // ── helpers ────────────────────────────────────────────────────────────────
 
     private void stubCurrencies(Long forWorkspaceId, List<String> symbols) {
         def workspaceCurrencies = symbols.collect { symbol ->
@@ -58,8 +56,6 @@ class MonthlySummaryServiceTest extends Specification {
         movementRepository.getTotalInUsdByTypesAndMonth(
                 1L, year, month, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> value
     }
-
-    // ── cache-first: snapshot hit ──────────────────────────────────────────────
 
     def "getSummary - should return snapshot from cache when it exists"() {
         given:
@@ -98,8 +94,6 @@ class MonthlySummaryServiceTest extends Specification {
         1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, 1L)
     }
 
-    // ── cache-first: snapshot miss → calcula on-demand ────────────────────────
-
     def "getSummary - should compute on-demand when snapshot is absent"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
@@ -115,8 +109,6 @@ class MonthlySummaryServiceTest extends Specification {
         result.year() == 2025
         result.month() == 4
     }
-
-    // ── computeSummary: estructura general ────────────────────────────────────
 
     def "computeSummary - should return year and month in response"() {
         given:
@@ -144,8 +136,6 @@ class MonthlySummaryServiceTest extends Specification {
         then:
         result.porMoneda().isEmpty()
     }
-
-    // ── computeSummary: porMoneda ─────────────────────────────────────────────
 
     def "computeSummary - should return one entry per currency configured in the workspace"() {
         given:
@@ -259,8 +249,6 @@ class MonthlySummaryServiceTest extends Specification {
         result.porMoneda().first().diferencia() == new BigDecimal("-3000.00")
     }
 
-    // ── computeSummary: comparacionVsMesAnterior ──────────────────────────────
-
     def "computeSummary - should calculate comparacion vs mes anterior correctly"() {
         given:
         this.stubCurrencies(1L, ["ARS"])
@@ -281,8 +269,6 @@ class MonthlySummaryServiceTest extends Specification {
         comparacion.diferenciaGasto() == new BigDecimal("-7500.00")
         comparacion.diferenciaIngreso() == new BigDecimal("10000.00")
     }
-
-    // ── computeSummary: totalUnificadoUSD ─────────────────────────────────────
 
     def "computeSummary - should return totalUnificadoUSD with converted amounts"() {
         given:
@@ -305,8 +291,6 @@ class MonthlySummaryServiceTest extends Specification {
         usd.comparacionVsMesAnterior().diferenciaGasto() == new BigDecimal("20.20")
     }
 
-    // ── enero: mes anterior es diciembre del año previo ────────────────────────
-
     def "computeSummary - should use December of previous year when month is January"() {
         given:
         this.stubCurrencies(1L, [])
@@ -321,8 +305,6 @@ class MonthlySummaryServiceTest extends Specification {
         1 * movementRepository.getTotalInUsdByTypesAndMonth(
                 1L, 2024, 12, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> BigDecimal.ZERO
     }
-
-    // ── moneda sin movimientos en mes actual aparece igual, si sigue configurada ──
 
     def "computeSummary - should include configured currency with zeros when it has no movements this month"() {
         given: "USD solo tuvo movimientos en marzo, no en abril, pero sigue configurada en el workspace"
@@ -346,8 +328,6 @@ class MonthlySummaryServiceTest extends Specification {
         usd.comparacionVsMesAnterior().totalIngresadoMesAnterior() == new BigDecimal("200.00")
     }
 
-    // ── getSummary: userService solo se llama una vez ──────────────────────────
-
     def "getSummary - should call userService exactly once regardless of currency count"() {
         given:
         snapshotService.find(_ as Long, *_) >> Optional.empty()
@@ -364,8 +344,6 @@ class MonthlySummaryServiceTest extends Specification {
         then:
         1 * userService.getMe() >> user
     }
-
-    // ── @Unroll ────────────────────────────────────────────────────────────────
 
     @Unroll
     def "computeSummary - should return non-null response for year=#year month=#month"() {

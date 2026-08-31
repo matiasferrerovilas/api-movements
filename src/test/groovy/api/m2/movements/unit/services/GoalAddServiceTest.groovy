@@ -1,6 +1,5 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.entities.Goal
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.NotificationSeverity
@@ -15,7 +14,6 @@ import api.m2.movements.repositories.GoalRepository
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.goals.GoalAddService
 import api.m2.movements.services.notifications.NotificationService
-import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
@@ -28,7 +26,6 @@ class GoalAddServiceTest extends Specification {
     CurrencyRepository currencyRepository = Mock()
     WorkspaceCurrencyService workspaceCurrencyService = Mock()
     WorkspaceQueryService workspaceQueryService = Mock()
-    UserService userService = Mock()
     NotificationService notificationService = Mock()
 
     GoalAddService service
@@ -40,14 +37,11 @@ class GoalAddServiceTest extends Specification {
                 currencyRepository,
                 workspaceCurrencyService,
                 workspaceQueryService,
-                userService,
                 notificationService
         )
     }
 
-    // --- save ---
-
-    def "save - should verify membership, zero out currentAmount and persist the goal"() {
+    def "save - should verify write access, zero out currentAmount and persist the goal"() {
         given:
         def dto = new GoalToAdd(5L, "Viaje a Bariloche", new BigDecimal("500000.00"), "ARS", null)
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
@@ -56,7 +50,6 @@ class GoalAddServiceTest extends Specification {
         def record = new GoalRecord(1L, 5L, "Viaje a Bariloche", new BigDecimal("500000.00"),
                 BigDecimal.ZERO, null, null, BigDecimal.ZERO, null)
 
-        userService.getMe() >> new UserMe(9L, "a@b.com", "A", "B", "PERSONAL", null)
         goalMapper.toEntity(dto, currencyRepository) >> goal
         goalRepository.save(goal) >> savedGoal
         goalMapper.toRecord(savedGoal) >> record
@@ -65,14 +58,12 @@ class GoalAddServiceTest extends Specification {
         def result = service.save(dto)
 
         then:
-        1 * workspaceQueryService.verifyUserIsMemberOfWorkspace(5L, 9L)
+        1 * workspaceQueryService.verifyCanWrite(5L)
         1 * workspaceCurrencyService.ensureCurrencyInWorkspace(5L, currency)
         goal.workspaceId == 5L
         goal.currentAmount == BigDecimal.ZERO
         result == record
     }
-
-    // --- update ---
 
     def "update - should update only the provided fields"() {
         given:
@@ -127,8 +118,6 @@ class GoalAddServiceTest extends Specification {
         goal.targetAmount == new BigDecimal("1000.00")
         goal.targetDate == null
     }
-
-    // --- contribute ---
 
     def "contribute - should increment currentAmount by the given amount"() {
         given:
@@ -198,8 +187,6 @@ class GoalAddServiceTest extends Specification {
         thrown(EntityNotFoundException)
         0 * goalRepository.save(_ as Goal)
     }
-
-    // --- delete ---
 
     def "delete - should remove goal when it exists"() {
         given:

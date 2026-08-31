@@ -14,7 +14,6 @@ import api.m2.movements.repositories.CurrencyRepository;
 import api.m2.movements.repositories.GoalRepository;
 import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.notifications.NotificationService;
-import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +33,11 @@ public class GoalAddService {
     private final CurrencyRepository currencyRepository;
     private final WorkspaceCurrencyService workspaceCurrencyService;
     private final WorkspaceQueryService workspaceQueryService;
-    private final UserService userService;
     private final NotificationService notificationService;
 
     @Transactional
     public GoalRecord save(@Valid GoalToAdd dto) {
-        Long userId = userService.getMe().id();
-        workspaceQueryService.verifyUserIsMemberOfWorkspace(dto.workspaceId(), userId);
+        workspaceQueryService.verifyCanWrite(dto.workspaceId());
 
         var goal = goalMapper.toEntity(dto, currencyRepository);
         goal.setWorkspaceId(dto.workspaceId());

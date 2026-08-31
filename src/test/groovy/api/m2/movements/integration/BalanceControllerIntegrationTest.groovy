@@ -20,7 +20,6 @@ class BalanceControllerIntegrationTest extends BaseControllerIntegrationTest {
         def category = getOrCreateCategory("SIN_CATEGORIA")
         def today = LocalDate.now()
 
-        // Create INGRESO movement
         movementRepository.save(Movement.builder()
                 .amount(new BigDecimal("1000.00"))
                 .description("Salary")
@@ -34,7 +33,6 @@ class BalanceControllerIntegrationTest extends BaseControllerIntegrationTest {
                 .cuotasTotales(0)
                 .build())
 
-        // Create DEBITO movement
         movementRepository.save(Movement.builder()
                 .amount(new BigDecimal("300.00"))
                 .description("Grocery shopping")
