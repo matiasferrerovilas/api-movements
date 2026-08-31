@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- `application-prod.yaml` hardcoded the RabbitMQ username/password in plain text
+  (`api-movements`/`api-movements`) while `DB_USERNAME`/`DB_PASSWORD`/`REDIS_PASSWORD`/
+  `CORS_ALLOWED_ORIGINS` right next to it were already env vars — same pattern already fixed in
+  api-identity this round. Now `${RABBIT_USERNAME}`/`${RABBIT_PASSWORD}`, no default.
+
 ## [2.5.0] - 2026-08-30
 
 ### Fixed
