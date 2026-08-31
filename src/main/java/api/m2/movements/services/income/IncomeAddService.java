@@ -101,7 +101,7 @@ public class IncomeAddService {
         log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), userId);
 
         for (var income : incomes) {
-            movementAddService.saveMovement(
+            movementAddService.saveSystemMovement(
                     this.buildIncomeMovement(income.getAmount(), income.getCurrency().getSymbol(),
                             income.getBank().getDescription(), "Ingreso recurrente"),
                     income.getWorkspaceId(),

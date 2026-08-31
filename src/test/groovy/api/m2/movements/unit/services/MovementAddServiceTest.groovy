@@ -133,6 +133,31 @@ class MovementAddServiceTest extends Specification {
         0 * movementRepository.save(_ as Movement)
     }
 
+    // --- saveSystemMovement ---
+
+    def "saveSystemMovement - should save movement without calling identity"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Ingreso recurrente",
+                ["HOGAR"], "INGRESO", "ARS", null, null, null
+        )
+        def movement = buildMovement(1L)
+
+        movementFactory.create(dto, 1L, 10L) >> movement
+        movementRepository.save(movement) >> movement
+
+        when:
+        def result = service.saveSystemMovement(dto, 1L, 10L)
+
+        then:
+        1 * eventPublisher.publishEvent(_ as MovementRecord)
+        0 * workspaceQueryService.findWorkspaceNameById(_ as Long)
+        0 * userService.getUserNamesByIds(_ as List<Long>)
+        result.metadata().workspace() == new WorkspaceBaseRecord(1L, null)
+        result.metadata().owner().id() == 10L
+        result.metadata().owner().givenName() == null
+    }
+
     // --- updateMovement ---
     // Note: membership check is handled by MembershipCheckAspect, not the service directly.
 

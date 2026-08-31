@@ -58,6 +58,23 @@ public class MovementAddService {
         return movementRecord;
     }
 
+    /**
+     * Variante para flujos internos (jobs programados) que no corren dentro de un request
+     * autenticado y por lo tanto no tienen un JWT de usuario disponible para llamar a
+     * api-identity. Omite el enriquecimiento con nombre de workspace/owner en vez de fallar
+     * con {@link api.m2.movements.exceptions.PermissionDeniedException}.
+     */
+    @Transactional
+    public MovementRecord saveSystemMovement(@Valid MovementToAdd dto, Long workspaceId, Long ownerId) {
+        var movement = movementFactory.create(dto, workspaceId, ownerId);
+        var movementRecord = this.enrichWithoutIdentity(movementRepository.save(movement));
+
+        eventPublisher.publishEvent(movementRecord);
+
+        log.info("Movimiento de sistema guardado: id={}, type={}", movementRecord.id(), dto.type());
+        return movementRecord;
+    }
+
     @Transactional
     @RequiresMembership(domain = MembershipDomain.MOVEMENT, idParamIndex = 1)
     public void updateMovement(@Valid ExpenseToUpdate dto, Long id) {
@@ -113,6 +130,11 @@ public class MovementAddService {
                 workspaceQueryService.findWorkspaceNameById(movement.getWorkspaceId()));
         var ownerNamesById = userService.getUserNamesByIds(List.of(movement.getOwnerId()));
         return this.buildRecord(movement, workspace, ownerNamesById);
+    }
+
+    private MovementRecord enrichWithoutIdentity(Movement movement) {
+        var workspace = new WorkspaceBaseRecord(movement.getWorkspaceId(), null);
+        return this.buildRecord(movement, workspace, Map.of());
     }
 
     private MovementRecord buildRecord(Movement movement, WorkspaceBaseRecord workspace, Map<Long, String> ownerNamesById) {

@@ -259,7 +259,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        2 * movementAddService.saveMovement(_ as MovementToAdd, 10L, 1L)
+        2 * movementAddService.saveSystemMovement(_ as MovementToAdd, 10L, 1L)
     }
 
     def "generateRecurringIncomeForUser - should return zero when user has no incomes"() {
@@ -271,7 +271,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 0
-        0 * movementAddService.saveMovement(_ as MovementToAdd, _ as Long, _ as Long)
+        0 * movementAddService.saveSystemMovement(_ as MovementToAdd, _ as Long, _ as Long)
     }
 
     def "generateRecurringIncomeForUser - should create movement with correct data"() {
@@ -286,7 +286,7 @@ class IncomeAddServiceTest extends Specification {
         service.generateRecurringIncomeForUser(1L)
 
         then:
-        1 * movementAddService.saveMovement(_ as MovementToAdd, 5L, 1L) >> { List args ->
+        1 * movementAddService.saveSystemMovement(_ as MovementToAdd, 5L, 1L) >> { List args ->
             def m = args[0] as MovementToAdd
             assert m.amount() == new BigDecimal("2500.00")
             assert m.date() == LocalDate.now(ZoneOffset.UTC)
@@ -313,7 +313,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, 10L, 1L)
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, 20L, 1L)
+        1 * movementAddService.saveSystemMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, 10L, 1L)
+        1 * movementAddService.saveSystemMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, 20L, 1L)
     }
 }
