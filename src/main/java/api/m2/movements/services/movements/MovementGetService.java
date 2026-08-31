@@ -48,6 +48,14 @@ public class MovementGetService {
             return movements.map(movementMapper::toRecord);
         }
 
+        // getExpenseBy ya trae currency/bank fetch-joined (son *-to-one); categories es
+        // @ManyToMany y no se puede fetch-joinear junto con Pageable sin que Hibernate pagine en
+        // memoria, así que se hidrata acá con una segunda consulta acotada a esta página — misma
+        // sesión, mismas instancias administradas, sin volver a tocar la DB por movimiento cuando
+        // el mapper después llame a movement.getCategories().
+        movementRepository.findByIdInFetchingCategories(
+                movements.getContent().stream().map(Movement::getId).toList());
+
         List<WorkspaceCategory> categories = workspaceCategoryRepository
                 .findByWorkspaceIdAndIsActiveTrue(workspaceId);
         Map<Long, WorkspaceCategory> iconMap = categories.stream()

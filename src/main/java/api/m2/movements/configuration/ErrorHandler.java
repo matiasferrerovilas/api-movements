@@ -6,6 +6,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.ErrorResponse;
 import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.exceptions.RateLimitExceededException;
 import api.m2.movements.exceptions.ServiceException;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
@@ -246,6 +247,21 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(RateLimitExceededException ex) {
+        log.warn("Rate limit excedido: {}", ex.getMessage());
+
+        var errorResponse = new ErrorResponse(
+                String.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()),
+                "Too Many Requests",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(errorResponse);
     }

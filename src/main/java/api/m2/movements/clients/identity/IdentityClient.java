@@ -7,6 +7,7 @@ import api.m2.movements.clients.identity.requests.OnboardingStartRequest;
 import api.m2.movements.clients.identity.response.OnboardingStartResponse;
 import api.m2.movements.clients.identity.response.WorkspaceAdded;
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.clients.identity.response.WorkspaceSentInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import api.m2.movements.clients.identity.response.UserMe;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,4 +63,10 @@ public interface IdentityClient {
 
     @PatchExchange("/v1/invitations")
     void acceptRejectInvitation(@RequestBody AcceptRejectInvitationDTO body);
+
+    @GetExchange("/v1/invitations/sent")
+    List<WorkspaceSentInvitationDTO> getSentInvitations();
+
+    @DeleteExchange("/v1/invitations/{invitationId}")
+    void cancelInvitation(@PathVariable Long invitationId);
 }

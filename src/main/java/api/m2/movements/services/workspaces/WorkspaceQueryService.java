@@ -6,6 +6,7 @@ import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.clients.identity.response.WorkspaceSentInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +52,13 @@ public class WorkspaceQueryService {
 
     public void acceptRejectInvitation(@Valid AcceptRejectInvitationDTO body) {
         identityClient.acceptRejectInvitation(body);
+    }
+
+    public List<WorkspaceSentInvitationDTO> getSentInvitations() {
+        return identityClient.getSentInvitations();
+    }
+
+    public void cancelInvitation(Long invitationId) {
+        identityClient.cancelInvitation(invitationId);
     }
 }

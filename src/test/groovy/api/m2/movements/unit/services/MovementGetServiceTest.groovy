@@ -127,6 +127,29 @@ class MovementGetServiceTest extends Specification {
         metadata.exchangeRate() == new BigDecimal("1.5")
     }
 
+    def "getExpensesBy - batches the categories fetch for the whole page instead of one query per movement"() {
+        given:
+        def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)
+        def pageable = PageRequest.of(0, 10)
+
+        def movement1 = Stub(Movement) { getId() >> 1L; getCategories() >> ([] as Set) }
+        def movement2 = Stub(Movement) { getId() >> 2L; getCategories() >> ([] as Set) }
+        def baseRecord1 = Stub(MovementRecord) { id() >> 1L }
+        def baseRecord2 = Stub(MovementRecord) { id() >> 2L }
+
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        movementRepository.getExpenseBy([1L], filter, pageable) >> new PageImpl([movement1, movement2])
+        workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> []
+        movementMapper.toRecord(movement1) >> baseRecord1
+        movementMapper.toRecord(movement2) >> baseRecord2
+
+        when:
+        service.getExpensesBy(filter, pageable)
+
+        then:
+        1 * movementRepository.findByIdInFetchingCategories([1L, 2L]) >> []
+    }
+
     def "getExpensesBy - should return empty page when user has no workspaces"() {
         given:
         def filter = new MovementSearchFilterRecord(null, null, null, null, null, null, null, null)

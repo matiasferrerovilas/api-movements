@@ -7,14 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-08-30
+
 ### Fixed
+- N+1 in `GET /v1/expenses`, the highest-traffic endpoint in the app: `categories`/`currency`/`bank`
+  on `Movement` are all `LAZY`, and `getExpenseBy`'s JPQL had no `JOIN FETCH`/`@EntityGraph`, so
+  mapping a page of results (`movementMapper.toRecord` touches `currency`/`bank`,
+  `enrichMovementWithIcons` touches `categories`) could run up to 3N+1 queries. `getExpenseBy` now
+  `LEFT JOIN FETCH`es `currency`/`bank` directly (safe with `Pageable` since both are *-to-one). The
+  `@ManyToMany categories` can't be fetch-joined the same way without Hibernate paginating in memory
+  ("firstResult/maxResults specified with collection fetch"), so it's hydrated instead by a second,
+  page-scoped query (`findByIdInFetchingCategories`) that populates it on the very same managed
+  entity instances via Hibernate's session identity map — 2 queries total per page, regardless of N.
 - `GoalAddService.update` silently ignored an explicit `targetDate: null` — it only overwrote the
   field when non-null, so "clear the target date" (the documented way to remove it, used by both
   web's `EditGoalModal` and mobile's `goal-sheet.tsx`) was indistinguishable from omitting the field
   and did nothing. `targetDate` is now always applied as sent, unlike `name`/`targetAmount` which
   stay partial-update (null = leave unchanged).
 
+### Security
+- No rate limiting anywhere in this backend, unlike api-identity — one of the home-lab's
+  internet-exposed services, with neither the bank-statement import endpoint nor the standard CRUD
+  under any abuse protection. New `RateLimiterService` (same Redis-backed fixed-window design as
+  api-identity's) backs two limits: a generous global one (`RateLimitInterceptor`, 200
+  req/min/user, applied to all of `/v1/**` via a `HandlerInterceptor` so it doesn't need touching
+  every controller individually) and a much stricter one specific to
+  `MovementImportFileService.importMovementsByFile` (10/hour/user) — that endpoint writes the
+  upload to disk and parses it entirely with PDFBox, not a light CRUD operation. New
+  `RateLimitExceededException` (429, same shape as api-identity's).
+- `/ws/**` was (and stays) `permitAll()` at the HTTP layer — required for SockJS's handshake/XHR
+  fallback requests, which aren't the STOMP CONNECT frame itself — but nothing validated the STOMP
+  frames flowing over the resulting session: no `ChannelInterceptor` checked CONNECT or SUBSCRIBE at
+  all. Topics are addressed by workspace id or by another user's email/Keycloak subject in plain
+  text (`/topic/movimientos/{workspaceId}/new`, `/topic/invitations/{email}/new`), so any client
+  that opened the SockJS connection — authenticated or not — could subscribe to any topic and
+  passively harvest movements, services, categories, notifications and invitations from any
+  workspace. New `StompAuthChannelInterceptor` on the client-inbound channel: CONNECT now requires a
+  valid Bearer JWT (same `JwtDecoder`/`JwtAuthenticationConverter` beans the HTTP filter chain
+  already uses — fe-movements and movements-mobile already send `Authorization: Bearer <token>` as
+  a STOMP connect header, so no client-side change was needed), and every SUBSCRIBE is checked
+  against the connected user before being allowed through — a workspace-scoped topic requires
+  membership (verified against api-identity), an email-scoped topic requires the destination email
+  to match the caller's own, and `/topic/workspace/default/{subject}` requires the destination's
+  Keycloak subject to match the caller's own JWT `sub` claim. A destination matching none of the
+  known topic shapes is rejected by default rather than let through.
+
 ### Changed
+- Removed the unused `spring-boot-starter-oauth2-authorization-server` and
+  `spring-boot-starter-security-oauth2-client` Gradle dependencies — this service only ever acts as
+  an OAuth2 resource server validating Keycloak JWTs, never issues tokens, and is never itself an
+  OAuth2 client. Both classes were dead classpath/native-image weight; the actual resource-server
+  classes in use (`JwtDecoder`, `NimbusJwtDecoder`, `.oauth2ResourceServer()`) were only reachable
+  as a transitive dependency of the authorization-server starter, which no longer holds — replaced
+  with the correct, minimal `spring-boot-starter-oauth2-resource-server` declared directly.
 - `CategoryInsightRecord.currency` (`GET /v1/insights`) is now a resolved `CurrencyRecord {symbol,
   id}`, matching `GoalRecord`/`BudgetRecord`/`MovementRecord`, instead of a bare currency-symbol
   `String` — the only money-bearing response in the API that didn't already do this. The rendered
@@ -27,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `insight.currency.symbol`.
 
 ### Added
+- `GET /v1/workspace/invitations/sent` and `DELETE /v1/workspace/invitations/{invitationId}` proxy
+  api-identity's new sent-invitations endpoints (`IdentityClient.getSentInvitations`/
+  `cancelInvitation`), so a workspace owner/collaborator can list invitations they sent and cancel a
+  still-pending one before the recipient responds.
 - Lightweight gamification: registration streaks + "budget met" badges, no points system.
   `GET /v1/gamification/streak` reports the authenticated user's consecutive-days streak in the
   active workspace, fed in real time by a new `StreakEventHandler` listening on the same

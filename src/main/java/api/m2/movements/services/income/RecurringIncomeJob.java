@@ -22,7 +22,7 @@ public class RecurringIncomeJob {
     private final UserSettingService userSettingService;
     private final IncomeAddService incomeAddService;
 
-    @Scheduled(cron = "0 0 6 1 * *")
+    @Scheduled(cron = "0 * * * * *")
     public void generateRecurringIncomes() {
         List<Long> userIds = userSettingService.getUsersWithAutoIncomeEnabled();
         log.info("Generando ingresos recurrentes para {} usuarios", userIds.size());

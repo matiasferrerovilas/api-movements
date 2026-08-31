@@ -40,6 +40,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query("""
     SELECT g
     FROM Movement g
+    LEFT JOIN FETCH g.currency
+    LEFT JOIN FETCH g.bank
     WHERE
     (:#{#accountsId} IS NULL OR g.workspaceId IN :#{#accountsId})
       AND (:#{#filter.currency} IS NULL OR g.currency.symbol IN :#{#filter.currency})
@@ -272,4 +274,18 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
                                                     @Param("categoryId") Long categoryId);
 
     List<Movement> findAllByExchangeRateIsNull();
+
+    /**
+     * Hydrates {@code categories} for exactly the movements in {@code ids}, within the same
+     * persistence context as the caller — Hibernate's session identity map means the entities
+     * this returns are the very same managed instances the caller already has (from
+     * {@link #getExpenseBy}), just with {@code categories} now initialized on them. This is the
+     * standard way to fetch-join a {@code @ManyToMany} for a page of results without fetch-joining
+     * it directly in the paginated query, which would apply {@code Pageable} in memory instead of
+     * in SQL (Hibernate's well-known "firstResult/maxResults specified with collection fetch"
+     * problem) — {@code currency}/{@code bank} don't have this issue since they're *-to-one, so
+     * those stay fetch-joined directly in {@link #getExpenseBy}.
+     */
+    @Query("SELECT DISTINCT m FROM Movement m LEFT JOIN FETCH m.categories WHERE m.id IN :ids")
+    List<Movement> findByIdInFetchingCategories(@Param("ids") List<Long> ids);
 }

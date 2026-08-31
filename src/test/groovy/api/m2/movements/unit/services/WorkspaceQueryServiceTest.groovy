@@ -4,6 +4,7 @@ import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO
+import api.m2.movements.clients.identity.response.WorkspaceSentInvitationDTO
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
@@ -54,5 +55,26 @@ class WorkspaceQueryServiceTest extends Specification {
 
         then:
         result == expected
+    }
+
+    def "getSentInvitations - should delegate to IdentityClient"() {
+        given:
+        def now = java.time.LocalDateTime.now()
+        def expected = [new WorkspaceSentInvitationDTO(1L, 10L, "Hogar", "invited@test.com", InvitationStatus.PENDING, now)]
+        identityClient.getSentInvitations() >> expected
+
+        when:
+        def result = service.getSentInvitations()
+
+        then:
+        result == expected
+    }
+
+    def "cancelInvitation - should delegate to IdentityClient"() {
+        when:
+        service.cancelInvitation(5L)
+
+        then:
+        1 * identityClient.cancelInvitation(5L)
     }
 }
