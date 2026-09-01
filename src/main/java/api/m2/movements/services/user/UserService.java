@@ -23,16 +23,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
-    private static final String CALLER_EMAIL_SPEL =
-            "T(org.springframework.security.core.context.SecurityContextHolder).context.authentication.name";
-
     private final IdentityClient identityClient;
 
     // Cacheado por 5hs (ver CacheConfiguration.IDENTITY_CACHE) — antes esto disparaba un
     // round-trip HTTP a api-identity en casi cada endpoint de la app, sin cache, sin timeout y
     // sin circuit breaker. Cambios de nombre/tipo de usuario pueden tardar hasta ese tiempo en
     // reflejarse acá a cambio de sacar a api-identity del camino crítico de casi todo el tráfico.
-    @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + " + CALLER_EMAIL_SPEL)
+    //
+    // La key usa @userService.getAuthenticatedEmail() (referencia a este mismo bean) en vez de
+    // T(org.springframework.security.core.context.SecurityContextHolder)...: T(FQCN) resuelve el
+    // tipo vía Class.forName con el classloader que StandardTypeLocator tenga a mano, que en el
+    // hilo virtual que atiende el request (Tomcat con virtual threads) no es el mismo classloader
+    // que cargó el fat jar — tira "EL1005E: Type cannot be found" en runtime aunque compile y
+    // pase los tests (JVM de test con classpath plano, sin ese problema). @bean.metodo() resuelve
+    // por BeanFactoryResolver, no por Class.forName, así que no depende del classloader del hilo.
+    @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + @userService.getAuthenticatedEmail()")
     public UserMe getMe() {
         return identityClient.getMe(null);
     }
@@ -40,7 +45,7 @@ public class UserService {
     /** Same as {@link #getMe()}, but also resolves the caller's role in {@code workspaceId} — null
      * if the caller isn't a member. api-movements decides which workspace's role to ask for (its
      * own notion of "active workspace"); api-identity has no such notion itself. */
-    @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + " + CALLER_EMAIL_SPEL + " + ':' + #workspaceId")
+    @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + @userService.getAuthenticatedEmail() + ':' + #workspaceId")
     public UserMe getMe(Long workspaceId) {
         return identityClient.getMe(workspaceId);
     }

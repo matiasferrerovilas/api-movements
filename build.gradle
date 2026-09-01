@@ -16,7 +16,7 @@ plugins {
 }
 
 group = 'api.m2'
-version = '2.9.0'
+version = '2.9.1'
 
 java {
     sourceCompatibility = '25'
