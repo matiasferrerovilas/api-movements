@@ -2,6 +2,11 @@ package api.m2.movements.configuration;
 
 import api.m2.movements.constraints.CuotasValidator;
 import api.m2.movements.clients.identity.response.UserBaseRecord;
+import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
+import api.m2.movements.events.InvitationAcceptedReceivedEvent;
+import api.m2.movements.events.InvitationReceivedEvent;
+import api.m2.movements.events.MemberRemovedReceivedEvent;
+import api.m2.movements.records.notifications.NotificationRecord;
 import api.m2.movements.records.workspaces.WorkspaceDetail;
 import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.categories.CategoryRecord;
@@ -37,6 +42,16 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             WorkspaceBaseRecord.class,
             UserBaseRecord.class,
             WorkspaceDetail.class,
+            // Publicados solo por *PublishServiceWebSocket vía SimpMessagingTemplate.convertAndSend
+            // (Object genérico) o consumidos vía @RabbitListener — ninguno de los dos caminos pasa
+            // por el escaneo AOT de MVC, así que quedaban sin registrar hasta que efectivamente se
+            // disparaban en runtime (ver NotificationRecord: UnsupportedFeatureError en prod, nunca
+            // en tests porque ahí no corre como native image).
+            NotificationRecord.class,
+            MemberRemovedReceivedEvent.class,
+            InvitationReceivedEvent.class,
+            InvitationAcceptedReceivedEvent.class,
+            WorkspaceInvitationDTO.class,
     };
 
     @Override

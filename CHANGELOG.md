@@ -12,13 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `UserService.getMe()`/`getMe(Long)`'s `@Cacheable` key used
   `T(org.springframework.security.core.context.SecurityContextHolder)...` — a SpEL type
-  reference, resolved via `Class.forName` against whatever classloader `StandardTypeLocator` picks
-  up. In the packaged app (Tomcat handling requests on virtual threads), that resolution
-  intermittently threw `SpelEvaluationException: EL1005E: Type cannot be found` on every cached
-  call, 500ing endpoints as unrelated as `GET /v1/banks` — never reproduced under tests, whose flat
-  classpath doesn't hit the same classloader path. Replaced with a `@userService.getAuthenticatedEmail()`
-  bean-reference expression, which resolves through the `BeanFactoryResolver` instead of
-  `Class.forName` and isn't sensitive to which classloader the current thread happens to have.
+  reference, resolved via `Class.forName` at runtime. This app runs as a GraalVM native image, and
+  a type not explicitly registered in the native-image reflection config throws
+  `SpelEvaluationException: EL1005E: Type cannot be found` when looked up this way — even one
+  actively used elsewhere in the app (Spring Security's own filter chain, in this case), 500ing
+  endpoints as unrelated as `GET /v1/banks`. Never reproduced under tests, which run on a normal
+  JVM with no such closed-world reflection restriction. Replaced with a
+  `@userService.getAuthenticatedEmail()` bean-reference expression, which resolves through the
+  `BeanFactoryResolver` instead of `Class.forName` and needs no reflection registration at all.
+- Same native-image reflection gap, different mechanism: several record/event types are only ever
+  serialized via `SimpMessagingTemplate.convertAndSend(topic, Object)` (WebSocket) or deserialized
+  via `@RabbitListener` — neither path is visible to Spring's AOT MVC-controller scanning, so
+  `NotificationRecord`, `MemberRemovedReceivedEvent`, `InvitationReceivedEvent`,
+  `InvitationAcceptedReceivedEvent` and `WorkspaceInvitationDTO` were never registered for
+  reflection either — confirmed live: `NotificationRecord` threw
+  `UnsupportedFeatureError: Record components not available` the first time a subscription
+  payment triggered a notification push. Added to the existing `WebBindingRuntimeHints`
+  registrar (already covered `MovementRecord`/`SubscriptionRecord`/etc. for exactly this reason;
+  these five were the gap).
 
 ## [2.9.0] - 2026-08-31
 
