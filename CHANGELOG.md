@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2026-09-01
+
+### Added
+- New `AdminController` (`/v1/admin`) exposing one `POST` endpoint per scheduled job
+  (`/crons/recurring-income`, `/crons/credit-installments`, `/crons/subscription-overdue`,
+  `/crons/monthly-summary`, `/crons/budget-badges`) so an admin can trigger any cron manually
+  instead of waiting for its schedule — calls the exact same `@Scheduled` entry-point method the
+  cron itself invokes, no separate code path. Secured with `.requestMatchers("/v1/admin/**")
+  .hasRole("ADMIN")` in `SecurityConfiguration`, same pattern already used for `/actuator/**`.
+
 ## [2.10.0] - 2026-09-01
 
 ### Added
