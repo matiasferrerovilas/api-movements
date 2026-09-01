@@ -33,6 +33,9 @@ public interface MovementMapper {
     @Mapping(target = "workspaceId", ignore = true)
     @Mapping(target = "bank", ignore = true)
     @Mapping(target = "type", source = "type")
+    // Resuelto en MovementFactory (calculado o copiado según el caller) — mapearlo acá también
+    // sería redundante, ya que MovementFactory lo pisa siempre después.
+    @Mapping(target = "lastCreditPayment", ignore = true)
     Movement toEntity(MovementToAdd movementToAdd);
 
     List<MovementRecord> toRecord(List<Movement> movement);

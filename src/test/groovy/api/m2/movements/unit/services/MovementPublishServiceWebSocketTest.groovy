@@ -21,7 +21,7 @@ class MovementPublishServiceWebSocketTest extends Specification {
         given:
         def metadata = new MovementRecord.Metadata(null, new WorkspaceBaseRecord(1L, "Familia"), null, null)
         def movementRecord = new MovementRecord(
-                1L, null, null, null, null, null, null, null, null, null, null, null, metadata)
+                1L, null, null, null, null, null, null, null, null, null, null, null, null, metadata)
 
         when:
         service.publishMovementAdded(movementRecord)
@@ -45,7 +45,7 @@ class MovementPublishServiceWebSocketTest extends Specification {
         given:
         def metadata = new MovementRecord.Metadata(null, new WorkspaceBaseRecord(5L, "Familia"), null, null)
         def movementRecord = new MovementRecord(
-                1L, null, null, null, null, null, null, null, null, null, null, null, metadata)
+                1L, null, null, null, null, null, null, null, null, null, null, null, null, metadata)
 
         when:
         service.publishMovementAdded(movementRecord)

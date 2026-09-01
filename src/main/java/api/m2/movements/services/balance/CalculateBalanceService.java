@@ -61,7 +61,11 @@ public class CalculateBalanceService {
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 userId,
-                List.of(MovementType.DEBITO.toString()),
+                // Antes solo contaba DEBITO acá — el resto de esta clase (getMonthlyEvolution,
+                // calculateRecoveryTime) y MonthlySummaryService ya incluían CREDITO como gasto;
+                // esta era la única cuenta que no, dando un total de "gasto" distinto según qué
+                // pantalla mirabas para el mismo período.
+                GASTO_TYPES,
                 List.of(workspaceId.intValue()),
                 currencies);
 

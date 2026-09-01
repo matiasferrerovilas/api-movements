@@ -28,7 +28,7 @@ class StreakEventHandlerTest extends Specification {
         def metadata = new MovementRecord.Metadata(
                 new UserBaseRecord("Mati", 2L), new WorkspaceBaseRecord(1L, "Familia"), null, null)
         return new MovementRecord(1L, new BigDecimal("1000"), "Super", LocalDate.of(2026, 8, 20),
-                createdAt, null, [category], currency, null, "DEBITO", null, null, metadata)
+                createdAt, null, [category], currency, null, "DEBITO", null, null, null, metadata)
     }
 
     def "onMovementAdded - forwards the owner, workspace and created-at date to the streak service"() {

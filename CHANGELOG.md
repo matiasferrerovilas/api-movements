@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-09-01
+
+### Added
+- Credit-card installment purchases (`CREDITO`) now auto-generate their remaining cuotas month by
+  month instead of only ever showing up as a gasto in the month they were charged. New
+  `CreditInstallmentJob` (`@Scheduled`, same 1st-of-month pattern as `RecurringIncomeJob`) queries
+  the previous month's `CREDITO` movements still short of `cuotasTotales` and clones each one with
+  `cuotaActual + 1` and this month's date — no purchase-grouping id needed, since each row already
+  carries its own state and the previous-month window is what makes the next cuota unambiguous.
+  Reuses `MovementAddService.saveSystemMovement` (same internal path `IncomeAddService` already
+  uses for recurring income), so the generated cuota gets the same enrichment/event-publishing/
+  WebSocket push as a normal one.
+- `Movement` gained `lastCreditPayment` — the date of a `CREDITO` purchase's final cuota, computed
+  once (`date + (cuotasTotales - cuotaActual)` months) the first time a cuota of that purchase is
+  entered, and copied verbatim (never recalculated) by `CreditInstallmentJob` on every subsequent
+  cuota it generates — recalculating per-clone from that clone's own date would still land on the
+  correct value in practice (the math is invariant month-to-month), but copying is more robust
+  against a manually-edited date ever throwing it off. Backfilled for all pre-existing `CREDITO`
+  rows in the same migration, using each row's own `cuotaActual` rather than assuming 1.
+
+### Fixed
+- `CalculateBalanceService.getBalance()` (the home page's ingreso/gasto cards) only counted
+  `DEBITO` as gasto — `getMonthlyEvolution`, `calculateRecoveryTime`, the category breakdown, and
+  `MonthlySummaryService` all already included `CREDITO`, so the same period showed a different
+  total gasto depending on which screen you looked at. Now uses the same `GASTO_TYPES` as the rest
+  of this class.
+
 ## [2.9.1] - 2026-09-01
 
 ### Fixed

@@ -21,6 +21,7 @@ import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.user.UserService
+import api.m2.movements.entities.commons.Bank
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import org.springframework.context.ApplicationEventPublisher
@@ -28,6 +29,7 @@ import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
 
 import java.time.LocalDate
+import java.time.YearMonth
 
 class MovementAddServiceTest extends Specification {
 
@@ -76,7 +78,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -94,7 +96,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -116,7 +118,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null
         )
 
         movementFactory.create(_ as MovementToAdd) >> {
@@ -135,7 +137,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Ingreso recurrente",
-                ["HOGAR"], "INGRESO", "ARS", null, null, null
+                ["HOGAR"], "INGRESO", "ARS", null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -205,6 +207,94 @@ class MovementAddServiceTest extends Specification {
         then:
         thrown(EntityNotFoundException)
         0 * movementRepository.deleteById(_ as Long)
+    }
+
+    def buildCreditoMovement(Integer cuotaActual, Integer cuotasTotales, LocalDate lastCreditPayment) {
+        return Movement.builder()
+                .id(7L)
+                .amount(new BigDecimal("1000.00"))
+                .description("TV en cuotas")
+                .date(LocalDate.of(2026, 3, 15))
+                .type(MovementType.CREDITO)
+                .workspaceId(5L)
+                .ownerId(10L)
+                .categories([Category.builder().id(1L).description("HOGAR").build()] as Set)
+                .currency(Currency.builder().id(1L).symbol("ARS").build())
+                .bank(Bank.builder().id(1L).description("GALICIA").build())
+                .cuotaActual(cuotaActual)
+                .cuotasTotales(cuotasTotales)
+                .lastCreditPayment(lastCreditPayment)
+                .build()
+    }
+
+    def "generateNextCreditInstallments - should generate the next cuota for each pending CREDITO movement from the given month"() {
+        given:
+        def previous = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [previous]
+        movementRepository.save(_ as Movement) >> { args -> args[0] }
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        count == 1
+        // El stub y el chequeo van en la misma interacción: separarlos en un given: aparte y un
+        // 1 * ... en then: hace que la interacción de then: (sin >>) le gane al stub de given:,
+        // devolviendo null en vez del movement esperado.
+        1 * movementFactory.create({ MovementToAdd dto ->
+            dto.cuotaActual() == 2 &&
+            dto.cuotasTotales() == 3 &&
+            dto.amount() == new BigDecimal("1000.00") &&
+            dto.description() == "TV en cuotas" &&
+            dto.type() == MovementType.CREDITO.name() &&
+            dto.currency() == "ARS" &&
+            dto.bank() == "GALICIA" &&
+            dto.categories() == [new CategoryUpdateRecord(null, "HOGAR")] &&
+            // La fecha de la última cuota se copia tal cual de la cuota anterior, nunca se
+            // recalcula acá — es MovementFactory el único lugar que decide entre copiar o calcular.
+            dto.lastCreditPayment() == LocalDate.of(2026, 5, 15)
+        }, 5L, 10L) >> buildMovement(5L)
+    }
+
+    def "generateNextCreditInstallments - should return zero and create nothing when there are no pending installments"() {
+        given:
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> []
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        count == 0
+        0 * movementFactory.create(_ as MovementToAdd, _ as Long, _ as Long)
+    }
+
+    def "generateNextCreditInstallments - should generate one movement per pending purchase, each with its own workspace and owner"() {
+        given:
+        def purchaseA = buildCreditoMovement(2, 6, LocalDate.of(2026, 7, 1))
+        def purchaseB = Movement.builder()
+                .id(8L)
+                .amount(new BigDecimal("500.00"))
+                .description("Celular")
+                .date(LocalDate.of(2026, 3, 20))
+                .type(MovementType.CREDITO)
+                .workspaceId(9L)
+                .ownerId(11L)
+                .categories([Category.builder().id(2L).description("TECNOLOGIA").build()] as Set)
+                .currency(Currency.builder().id(1L).symbol("ARS").build())
+                .cuotaActual(4)
+                .cuotasTotales(6)
+                .lastCreditPayment(LocalDate.of(2026, 6, 20))
+                .build()
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [purchaseA, purchaseB]
+        movementRepository.save(_ as Movement) >> { args -> args[0] }
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        count == 2
+        1 * movementFactory.create({ it.cuotaActual() == 3 }, 5L, 10L) >> buildMovement(5L)
+        1 * movementFactory.create({ it.cuotaActual() == 5 && it.bank() == null }, 9L, 11L) >> buildMovement(9L)
     }
 }
 

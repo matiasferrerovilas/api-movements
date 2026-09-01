@@ -65,7 +65,8 @@ class MovementFactoryTest extends Specification {
                 "USD",
                 null,
                 null,
-                "BBVA"
+                "BBVA",
+                null
         )
 
         def movement = new Movement()
@@ -104,6 +105,7 @@ class MovementFactoryTest extends Specification {
                 "EUR",
                 null,
                 null,
+                null,
                 null
         )
 
@@ -137,6 +139,7 @@ class MovementFactoryTest extends Specification {
                 "EUR",
                 null,
                 null,
+                null,
                 null
         )
 
@@ -160,6 +163,109 @@ class MovementFactoryTest extends Specification {
         result.exchangeRate == null
     }
 
+    def "create - should compute lastCreditPayment for CREDITO as date + (cuotasTotales - cuotaActual) months"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("300.00"),
+                LocalDate.of(2026, 1, 15),
+                "TV en cuotas",
+                [new CategoryUpdateRecord(null, "HOGAR")],
+                "CREDITO",
+                "ARS",
+                1,
+                3,
+                null,
+                null
+        )
+
+        def movement = new Movement()
+        def category = Stub(Category)
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+
+        movementMapper.toEntity(dto) >> movement
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
+        currencyResolver.resolve("ARS", 1L) >> currency
+        userService.getMe() >> userMe(10L)
+        exchangeRateResolver.resolveRate("ARS", dto.date()) >> new BigDecimal("1.0")
+
+        when:
+        def result = factory.create(dto)
+
+        then:
+        // enero (cuota 1 de 3) + 2 meses = marzo, la fecha de la última cuota
+        result.lastCreditPayment == LocalDate.of(2026, 3, 15)
+    }
+
+    def "create - should use the dto's lastCreditPayment as-is instead of recomputing it, when already provided"() {
+        given:
+        def alreadyComputed = LocalDate.of(2026, 6, 1)
+        def dto = new MovementToAdd(
+                new BigDecimal("300.00"),
+                LocalDate.of(2026, 4, 15),
+                "TV en cuotas",
+                [new CategoryUpdateRecord(null, "HOGAR")],
+                "CREDITO",
+                "ARS",
+                3,
+                3,
+                null,
+                alreadyComputed
+        )
+
+        def movement = new Movement()
+        def category = Stub(Category)
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+
+        movementMapper.toEntity(dto) >> movement
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
+        currencyResolver.resolve("ARS", 1L) >> currency
+        userService.getMe() >> userMe(10L)
+        exchangeRateResolver.resolveRate("ARS", dto.date()) >> new BigDecimal("1.0")
+
+        when:
+        def result = factory.create(dto)
+
+        then:
+        // Si recalculara desde esta cuota (abril + 0 meses) daría abril, no junio — confirma que
+        // se usa el valor ya provisto tal cual, como hace CreditInstallmentJob al clonar.
+        result.lastCreditPayment == alreadyComputed
+    }
+
+    def "create - should leave lastCreditPayment null for non-CREDITO movements even with cuota info"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("300.00"),
+                LocalDate.of(2026, 1, 15),
+                "Test",
+                [new CategoryUpdateRecord(null, "HOGAR")],
+                "GASTO",
+                "ARS",
+                1,
+                3,
+                null,
+                null
+        )
+
+        def movement = new Movement()
+        def category = Stub(Category)
+        def currency = Stub(Currency) { getSymbol() >> "ARS" }
+
+        movementMapper.toEntity(dto) >> movement
+        workspaceContextService.getActiveWorkspaceId() >> 1L
+        categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
+        currencyResolver.resolve("ARS", 1L) >> currency
+        userService.getMe() >> userMe(10L)
+        exchangeRateResolver.resolveRate("ARS", dto.date()) >> new BigDecimal("1.0")
+
+        when:
+        def result = factory.create(dto)
+
+        then:
+        result.lastCreditPayment == null
+    }
+
     def "create - should throw EntityNotFoundException when bank not found"() {
         given:
         def dto = new MovementToAdd(
@@ -171,7 +277,8 @@ class MovementFactoryTest extends Specification {
                 "USD",
                 null,
                 null,
-                "UNKNOWN_BANK"
+                "UNKNOWN_BANK",
+                null
         )
 
         def movement = new Movement()

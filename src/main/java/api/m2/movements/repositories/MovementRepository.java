@@ -288,4 +288,23 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
      */
     @Query("SELECT DISTINCT m FROM Movement m LEFT JOIN FETCH m.categories WHERE m.id IN :ids")
     List<Movement> findByIdInFetchingCategories(@Param("ids") List<Long> ids);
+
+    /**
+     * Compras en cuotas (CREDITO) del mes indicado a las que todavía les falta al menos una
+     * cuota — usado por {@link api.m2.movements.services.movements.MovementAddService
+     * #generateNextCreditInstallments} para clonar cada una con la próxima cuota. Sin paginación,
+     * así que fetch-joinear categories (ManyToMany) acá no choca con el problema de
+     * firstResult/maxResults que sí aplica en {@link #getExpenseBy}.
+     */
+    @Query("""
+    SELECT DISTINCT m FROM Movement m
+    LEFT JOIN FETCH m.categories
+    JOIN FETCH m.currency
+    LEFT JOIN FETCH m.bank
+    WHERE m.type = api.m2.movements.enums.MovementType.CREDITO
+      AND m.cuotaActual IS NOT NULL AND m.cuotasTotales IS NOT NULL
+      AND m.cuotaActual <> m.cuotasTotales
+      AND YEAR(m.date) = :year AND MONTH(m.date) = :month
+    """)
+    List<Movement> findCreditoMovementsWithPendingInstallments(@Param("year") int year, @Param("month") int month);
 }

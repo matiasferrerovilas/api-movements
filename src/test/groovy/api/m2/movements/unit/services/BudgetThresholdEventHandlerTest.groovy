@@ -31,7 +31,7 @@ class BudgetThresholdEventHandlerTest extends Specification {
         def currency = new CurrencyRecord("ARS", 1L)
         def metadata = new MovementRecord.Metadata(null, new WorkspaceBaseRecord(1L, "Familia"), null, null)
         return new MovementRecord(1L, amount, "Super", date, null, null,
-                [category], currency, null, type, null, null, metadata)
+                [category], currency, null, type, null, null, null, metadata)
     }
 
     def buildBudget(BigDecimal amount, Integer year = null, Integer month = null) {

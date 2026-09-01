@@ -63,7 +63,7 @@ class CalculateBalanceServiceTest extends Specification {
 
         movementRepository.getBalanceByFilters(
                 _ as LocalDate, _ as LocalDate, 1L,
-                [MovementType.DEBITO.toString()],
+                [MovementType.DEBITO.toString(), MovementType.CREDITO.toString()],
                 _ as List<Integer>, _ as List
         ) >> new BigDecimal("400")
 
@@ -74,6 +74,30 @@ class CalculateBalanceServiceTest extends Specification {
         result[BalanceEnum.INGRESO] == new BigDecimal("1000")
         result[BalanceEnum.GASTO] == new BigDecimal("400")
         result.size() == 2
+    }
+
+    def "getBalance - should count CREDITO as gasto too, not just DEBITO"() {
+        given:
+        def filter = new BalanceFilterRecord(
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 12, 31),
+                ["ARS"]
+        )
+        currencyRepository.findAllBySymbol(["ARS"]) >> []
+        movementRepository.getBalanceByFilters(*_) >> BigDecimal.ZERO
+
+        when:
+        service.getBalance(filter)
+
+        then:
+        // Antes solo pasaba [DEBITO] acá — una compra en cuotas de tarjeta no sumaba al gasto
+        // del balance principal, aunque sí sumaba en la evolución mensual y el desglose por
+        // categoría, dando totales inconsistentes según qué pantalla mirabas.
+        1 * movementRepository.getBalanceByFilters(
+                _ as LocalDate, _ as LocalDate, 1L,
+                { List types -> types.containsAll([MovementType.DEBITO.toString(), MovementType.CREDITO.toString()]) },
+                _ as List<Integer>, _ as List
+        )
     }
 
     def "getBalance - should handle zero values for both ingreso and gasto"() {

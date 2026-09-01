@@ -170,3 +170,6 @@ databaseChangeLog:
   - include:
       file: 057_create_table_gamification.sql
       relativeToChangelogFile: true
+  - include:
+      file: 058_alter_table_movements_add_last_credit_payment.sql
+      relativeToChangelogFile: true

@@ -46,7 +46,8 @@ public class SubscriptionMovementHandler {
                 event.currencySymbol(),
                 0,
                 0,
-                defaultBank);
+                defaultBank,
+                null);
 
         movementAddService.saveMovement(dto, event.workspaceId(), event.ownerId());
     }

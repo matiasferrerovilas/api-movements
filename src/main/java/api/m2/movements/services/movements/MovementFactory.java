@@ -1,6 +1,7 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.entities.movements.Movement;
+import api.m2.movements.enums.MovementType;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.ExchangeRateNotFoundException;
 import api.m2.movements.mappers.MovementMapper;
@@ -64,8 +65,26 @@ public class MovementFactory {
         }
 
         movement.setExchangeRate(this.resolveExchangeRateOrNull(currency.getSymbol(), dto.date()));
+        movement.setLastCreditPayment(this.resolveLastCreditPayment(dto));
 
         return movement;
+    }
+
+    /** Solo aplica a CREDITO. Si el caller ya trae el valor (el cron de cuotas, copiando el de la
+     * cuota anterior) se usa tal cual, sin recalcular — así el valor queda estable durante todo
+     * el plan de cuotas en vez de recomputarse cada mes desde una fecha distinta. Si no viene, se
+     * calcula desde esta cuota: fecha + (cuotasTotales - cuotaActual) meses, la fecha de la
+     * última cuota del plan — funciona tanto para la primera cuota (cuotaActual=1) como para un
+     * import de PDF que arranca a mitad de plan (cuotaActual=N), porque el resultado es el mismo
+     * sin importar desde qué cuota se calcule. */
+    private LocalDate resolveLastCreditPayment(MovementToAdd dto) {
+        if (dto.lastCreditPayment() != null) {
+            return dto.lastCreditPayment();
+        }
+        if (!MovementType.CREDITO.name().equals(dto.type()) || dto.cuotaActual() == null || dto.cuotasTotales() == null) {
+            return null;
+        }
+        return dto.date().plusMonths(dto.cuotasTotales() - dto.cuotaActual());
     }
 
     private BigDecimal resolveExchangeRateOrNull(String symbol, LocalDate date) {

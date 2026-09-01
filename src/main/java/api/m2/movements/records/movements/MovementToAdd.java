@@ -26,5 +26,9 @@ public record MovementToAdd(
         String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
-        String bank
+        String bank,
+        // Solo lo manda el cron de cuotas (CreditInstallmentJob), copiando el valor ya calculado
+        // de la cuota anterior — cualquier otro caller lo deja en null y MovementFactory lo
+        // calcula solo si type=CREDITO. Nunca lo completa el frontend.
+        LocalDate lastCreditPayment
 ) { }

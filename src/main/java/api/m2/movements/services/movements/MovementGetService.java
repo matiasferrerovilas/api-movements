@@ -80,7 +80,8 @@ public class MovementGetService {
         return new MovementRecord(
                 baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
                 baseRecord.createdAt(), baseRecord.updatedAt(), enrichedCategories, baseRecord.currency(),
-                baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(), metadata);
+                baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(),
+                baseRecord.lastCreditPayment(), metadata);
     }
 
     private MovementRecord.Metadata buildMetadata(Movement movement, WorkspaceBaseRecord workspace,

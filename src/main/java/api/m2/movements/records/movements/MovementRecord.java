@@ -22,6 +22,7 @@ public record MovementRecord(Long id,
                              String type,
                              Integer cuotaActual,
                              Integer cuotasTotales,
+                             LocalDate lastCreditPayment,
                              Metadata metadata) {
 
     public record Metadata(UserBaseRecord owner,

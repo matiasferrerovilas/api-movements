@@ -87,6 +87,13 @@ public class Movement {
     @Column
     private Integer cuotasTotales;
 
+    // Solo aplica a CREDITO: fecha de la última cuota del plan. Se calcula una única vez, al
+    // crear la primera cuota (fecha de esa cuota + cuotasTotales - cuotaActual meses) — el cron
+    // que genera cada cuota siguiente (ver CreditInstallmentJob) lo copia tal cual de la cuota
+    // anterior, nunca lo recalcula.
+    @Column(name = "last_credit_payment")
+    private LocalDate lastCreditPayment;
+
     @Enumerated(EnumType.STRING)
     private MovementType type;
 
