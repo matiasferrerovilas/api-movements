@@ -61,6 +61,28 @@ public class SubscriptionController {
     }
 
     @Operation(
+            summary = "Servicios sin pagar en un mes",
+            description = "Servicios del workspace activo que quedaron sin pagar en el mes indicado — "
+                    + "usado por el paso de conciliación del cierre de mes.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Lista de servicios impagos en ese mes",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    array = @ArraySchema(schema = @Schema(implementation = SubscriptionRecord.class))
+                            )
+                    )
+            }
+    )
+    @GetMapping("/unpaid")
+    public List<SubscriptionRecord> getUnpaidForMonth(
+            @Parameter(description = "Año del período") @RequestParam int year,
+            @Parameter(description = "Mes del período (1-12)") @RequestParam int month) {
+        return subscriptionQueryService.getUnpaidForMonth(year, month);
+    }
+
+    @Operation(
             summary = "Crear servicios",
             description = "Creo un servicio",
             responses = {

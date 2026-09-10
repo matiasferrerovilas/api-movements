@@ -5,7 +5,7 @@ import java.util.List;
 public record MonthlySummaryResponse(
         Integer year,
         Integer month,
-        MonthlySummaryUnifiedRecord totalUnificadoUSD,
-        List<MonthlySummaryByCurrencyRecord> porMoneda
+        MonthlySummaryUnifiedRecord totalUsd,
+        List<MonthlySummaryByCurrencyRecord> perCurrency
 ) {
 }

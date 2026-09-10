@@ -81,9 +81,9 @@ public class InsightService {
                 .toList();
 
         List<CategoryInsightRecord> insights = new ArrayList<>();
-        for (MonthlySummaryByCurrencyRecord currentByCurrency : currentSummary.porMoneda()) {
+        for (MonthlySummaryByCurrencyRecord currentByCurrency : currentSummary.perCurrency()) {
             String currency = currentByCurrency.currency();
-            List<CategoryAmountRecord> categorias = currentByCurrency.gastosPorCategoria();
+            List<CategoryAmountRecord> categorias = currentByCurrency.spendingByCategory();
             if (categorias == null) {
                 continue;
             }
@@ -148,13 +148,13 @@ public class InsightService {
     }
 
     private BigDecimal findCategoryAmount(MonthlySummaryResponse summary, String currency, String category) {
-        if (summary.porMoneda() == null) {
+        if (summary.perCurrency() == null) {
             return BigDecimal.ZERO;
         }
-        return summary.porMoneda().stream()
+        return summary.perCurrency().stream()
                 .filter(byCurrency -> currency.equals(byCurrency.currency()))
                 .findFirst()
-                .map(MonthlySummaryByCurrencyRecord::gastosPorCategoria)
+                .map(MonthlySummaryByCurrencyRecord::spendingByCategory)
                 .stream()
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)

@@ -10,8 +10,8 @@ import java.time.YearMonth;
 import java.util.List;
 
 /**
- * Evaluates "budget met" badges once a month's period closes — mirrors {@code MonthlySummaryJob}'s
- * timing, since both need the month's spending to be final before computing anything.
+ * Evaluates "budget met" badges once a month's period closes — runs on the last day of the month,
+ * since it needs the month's spending to be final before computing anything.
  */
 @Component
 @Slf4j

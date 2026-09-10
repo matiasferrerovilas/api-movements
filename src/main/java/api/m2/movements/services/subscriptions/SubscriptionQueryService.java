@@ -29,6 +29,21 @@ public class SubscriptionQueryService {
         var subscriptions = subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(
                 activeWorkspace.workspaceId(), currencySymbol, lastPayment);
 
+        return this.toRecords(subscriptions, activeWorkspace.workspaceName());
+    }
+
+    /** Servicios del workspace activo que quedaron sin pagar en un mes puntual — el paso de
+     * conciliación del cierre de mes los muestra primero, antes de los números del recap. */
+    @Transactional(readOnly = true)
+    public List<SubscriptionRecord> getUnpaidForMonth(int year, int month) {
+        var activeWorkspace = workspaceContextService.getActiveWorkspace();
+        var subscriptions = subscriptionRepository.findUnpaidByWorkspaceAndMonth(
+                activeWorkspace.workspaceId(), year, month);
+
+        return this.toRecords(subscriptions, activeWorkspace.workspaceName());
+    }
+
+    private List<SubscriptionRecord> toRecords(List<Subscription> subscriptions, String workspaceName) {
         if (subscriptions.isEmpty()) {
             return List.of();
         }
@@ -38,7 +53,7 @@ public class SubscriptionQueryService {
 
         return subscriptions.stream()
                 .map(subscription -> this.enrich(
-                        subscriptionMapper.toRecord(subscription), activeWorkspace.workspaceName(),
+                        subscriptionMapper.toRecord(subscription), workspaceName,
                         ownerNamesById.get(subscription.getOwnerId())))
                 .toList();
     }

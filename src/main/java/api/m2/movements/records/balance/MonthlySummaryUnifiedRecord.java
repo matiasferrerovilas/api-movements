@@ -3,9 +3,11 @@ package api.m2.movements.records.balance;
 import java.math.BigDecimal;
 
 public record MonthlySummaryUnifiedRecord(
-        BigDecimal totalIngresado,
-        BigDecimal totalGastado,
-        BigDecimal diferencia,
-        MonthlySummaryComparisonRecord comparacionVsMesAnterior
+        BigDecimal totalIncome,
+        BigDecimal totalSpent,
+        BigDecimal totalSpentDebit,
+        BigDecimal totalSpentCredit,
+        BigDecimal net,
+        MonthlySummaryComparisonRecord vsPreviousMonth
 ) {
 }

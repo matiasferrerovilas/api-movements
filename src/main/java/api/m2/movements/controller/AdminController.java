@@ -1,6 +1,5 @@
 package api.m2.movements.controller;
 
-import api.m2.movements.services.balance.MonthlySummaryJob;
 import api.m2.movements.services.gamification.BudgetBadgeJob;
 import api.m2.movements.services.income.RecurringIncomeJob;
 import api.m2.movements.services.movements.CreditInstallmentJob;
@@ -29,7 +28,6 @@ public class AdminController {
     private final RecurringIncomeJob recurringIncomeJob;
     private final CreditInstallmentJob creditInstallmentJob;
     private final SubscriptionOverdueJob subscriptionOverdueJob;
-    private final MonthlySummaryJob monthlySummaryJob;
     private final BudgetBadgeJob budgetBadgeJob;
 
     @Operation(
@@ -63,17 +61,6 @@ public class AdminController {
     @ResponseStatus(HttpStatus.OK)
     public void runSubscriptionOverdueJob() {
         subscriptionOverdueJob.notifyOverdueSubscriptions();
-    }
-
-    @Operation(
-            summary = "Ejecutar job de resumen mensual",
-            description = "Corre manualmente MonthlySummaryJob (normalmente el último día del mes a las 23:00).",
-            responses = @ApiResponse(responseCode = "200", description = "Job ejecutado")
-    )
-    @PostMapping("/crons/monthly-summary")
-    @ResponseStatus(HttpStatus.OK)
-    public void runMonthlySummaryJob() {
-        monthlySummaryJob.generateMonthlySnapshots();
     }
 
     @Operation(

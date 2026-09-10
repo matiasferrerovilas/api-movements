@@ -9,25 +9,31 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Marca que un usuario puntual ya vio (y descartó) el cierre de un mes en un workspace. El cierre
+ * de mes se calcula on-demand y es igual para todos los miembros, así que el "visto" tiene que ser
+ * por (workspace, usuario, año, mes) — no un flag global del período.
+ */
 @Entity
 @Table(
-        name = "monthly_summary_snapshot",
+        name = "monthly_summary_seen",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"workspace_id", "year", "month"})
+                @UniqueConstraint(columnNames = {"workspace_id", "user_id", "year", "month"})
         }
 )
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MonthlySummarySnapshot {
+public class MonthlySummarySeen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,18 +42,15 @@ public class MonthlySummarySnapshot {
     @Column(name = "workspace_id", nullable = false)
     private Long workspaceId;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(nullable = false)
     private Integer year;
 
     @Column(nullable = false)
     private Integer month;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String payload;
-
     @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private LocalDateTime seenAt;
 }

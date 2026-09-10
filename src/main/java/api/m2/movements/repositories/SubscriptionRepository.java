@@ -48,5 +48,20 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
             @Param("year") int year,
             @Param("month") int month
     );
+
+    @Query(value = """
+    SELECT s
+    FROM Subscription s
+    JOIN FETCH s.currency c
+    WHERE s.workspaceId = :workspaceId
+      AND (s.lastPayment IS NULL
+            OR YEAR(s.lastPayment) != :year
+            OR MONTH(s.lastPayment) != :month)
+""")
+    List<Subscription> findUnpaidByWorkspaceAndMonth(
+            @Param("workspaceId") Long workspaceId,
+            @Param("year") int year,
+            @Param("month") int month
+    );
 }
 

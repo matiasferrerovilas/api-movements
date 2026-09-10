@@ -8,6 +8,7 @@ A RESTful API for managing personal finances, built with Spring Boot and designe
 - **Bank statement import**: PDF parsing for BBVA and Galicia (Argentina), via a pluggable Strategy per bank
 - **Recurring income & subscriptions**: fixed monthly income and recurring bills with payment tracking
 - **Budgets**: per-category, per-currency budgets (monthly, annual, or one-time) with threshold-crossing alerts
+- **Month close**: the previous month's recap (spent/saved, debit vs credit, top category) surfaced once per month via `metadata.pendingMonthlySummary` on `/v1/users/me`, with an unpaid-subscriptions reconciliation step and a per-user "seen" marker
 - **Shared workspaces**: invite members with role-based access (`OWNER`/`COLLABORATOR`/`READ_ONLY`), delegated to api-identity
 - **Real-time updates**: WebSocket (STOMP/SockJS) push for movements, subscriptions, budgets, invitations, and workspace events
 - **User authentication**: Keycloak OAuth2 / JWT (RS256) resource server
@@ -135,6 +136,8 @@ Key tables:
 - `category`, `workspace_categories`: category catalog and per-workspace associations
 - `currency`, `workspace_currencies`: currency catalog and per-workspace associations
 - `monthly_summary_snapshot`: precomputed monthly aggregates used for reporting
+- `monthly_summary_seen`: per (workspace, user, year, month) marker that a user dismissed that
+  month's close screen — backs `GET /v1/users/me` → `metadata.pendingMonthlySummary`
 
 ## Testing
 
