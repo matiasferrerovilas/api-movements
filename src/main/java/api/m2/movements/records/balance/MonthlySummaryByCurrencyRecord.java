@@ -5,6 +5,7 @@ import java.util.List;
 
 public record MonthlySummaryByCurrencyRecord(
         String currency,
+        long movementCount,
         BigDecimal totalIncome,
         BigDecimal totalSpent,
         BigDecimal totalSpentDebit,

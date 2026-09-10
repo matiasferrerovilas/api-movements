@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     el usuario autenticado (idempotente); a partir de ahí `/me` deja de devolverlo.
   - `GET /v1/subscriptions/unpaid?year=&month=` lista los servicios del workspace activo que
     quedaron sin pagar en ese mes — el paso de conciliación los muestra antes de los números.
+  - `GET /v1/workspaces/{id}/summary/monthly/by-user?year=&month=` — por cada miembro con al menos
+    un movimiento ese mes: cuántos cargó y cuánto de gasto suman, por moneda. Los miembros sin
+    movimientos no aparecen. Endpoint aparte de `/summary/monthly` para no meter la llamada a
+    api-identity (resolución de nombres) en el camino de `getSummary`, que también usa
+    `InsightService`.
 - Nueva tabla `monthly_summary_seen` (`workspace_id`, `user_id`, `year`, `month`, único por los
   cuatro) + entidad, repositorio y `MonthCloseService`.
 
@@ -28,14 +33,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`GET /v1/workspaces/{id}/summary/monthly`: campos del JSON renombrados a inglés** (contrato
   breaking) y sumado el desglose débito/crédito. `totalUnificadoUSD`→`totalUsd`,
   `porMoneda`→`perCurrency`, `totalIngresado`→`totalIncome`, `totalGastado`→`totalSpent`
-  (+`totalSpentDebit`/`totalSpentCredit` nuevos, `totalSpent` = suma de los dos),
-  `diferencia`→`net`, `categoriaConMayorGasto`→`topSpendingCategory`,
+  (+`totalSpentDebit`/`totalSpentCredit` nuevos, `totalSpent` = suma de los dos, +`movementCount`
+  por moneda), `diferencia`→`net`, `categoriaConMayorGasto`→`topSpendingCategory`,
   `comparacionVsMesAnterior`→`vsPreviousMonth` (`previousMonthIncome`, `previousMonthSpent`,
   `spentDelta`, `incomeDelta`), `gastosPorCategoria`→`spendingByCategory`.
-- `MonthlySummarySnapshot` es un cache puro: los payloads viejos (claves anteriores / sin
-  desglose) ya no rompen `getSummary` — `MonthlySummarySnapshotService.find` los trata como miss
-  (log + `Optional.empty`) y `getSummary` recalcula (y re-guarda si el mes ya cerró). Además el
-  changeset `060` vacía la tabla para regenerar todo de una.
+
+### Removed
+- **Todo el subsistema de snapshot del resumen mensual.** `MonthlySummaryService.getSummary`
+  ahora siempre calcula con SUM contra `movements` en el momento de la consulta — el snapshot
+  quedaba desactualizado apenas se cargaba un movimiento después de generarlo, y el volumen es
+  chico. Eliminados `MonthlySummaryJob`, `MonthlySummarySnapshotService`, la entidad
+  `MonthlySummarySnapshot` + su repositorio, el endpoint `POST /v1/admin/crons/monthly-summary`,
+  y la tabla `monthly_summary_snapshot` (changeset `060`, `DROP TABLE`).
 
 ## [2.11.0] - 2026-09-01
 

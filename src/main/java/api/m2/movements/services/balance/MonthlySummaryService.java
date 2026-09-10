@@ -1,11 +1,13 @@
 package api.m2.movements.services.balance;
 
 import api.m2.movements.enums.MovementType;
+import api.m2.movements.projections.MonthlyUserCurrencyProjection;
 import api.m2.movements.records.balance.CategoryAmountRecord;
 import api.m2.movements.records.balance.MonthlySummaryByCurrencyRecord;
 import api.m2.movements.records.balance.MonthlySummaryComparisonRecord;
 import api.m2.movements.records.balance.MonthlySummaryResponse;
 import api.m2.movements.records.balance.MonthlySummaryUnifiedRecord;
+import api.m2.movements.records.balance.MonthlySummaryUserRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.WorkspaceCurrencyRepository;
 import api.m2.movements.services.user.UserService;
@@ -15,7 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,42 @@ public class MonthlySummaryService {
         Long userId = userService.getMe().id();
         workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId);
         return this.computeSummary(workspaceId, year, month);
+    }
+
+    /**
+     * Desglose "por usuario" del cierre de mes: cada miembro del workspace con al menos un
+     * movimiento ese mes, cuántos cargó y cuánto de gasto suman, por moneda. Endpoint aparte del
+     * resumen (lo consume solo la pestaña "Por usuario") para no meter una llamada a api-identity
+     * en el camino de {@code getSummary}, que también usa InsightService.
+     */
+    public List<MonthlySummaryUserRecord> getUserBreakdown(Long workspaceId, Integer year, Integer month) {
+        Long callerId = userService.getMe().id();
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, callerId);
+
+        List<MonthlyUserCurrencyProjection> rows =
+                movementRepository.getUserTotalsByMonth(workspaceId, year, month);
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> userIds = rows.stream().map(MonthlyUserCurrencyProjection::getUserId).distinct().toList();
+        Map<Long, String> namesById = userService.getUserDisplayNamesByIds(userIds);
+
+        Map<Long, List<MonthlySummaryUserRecord.PerCurrency>> byUser = rows.stream()
+                .collect(Collectors.groupingBy(
+                        MonthlyUserCurrencyProjection::getUserId,
+                        Collectors.mapping(row -> new MonthlySummaryUserRecord.PerCurrency(
+                                row.getCurrency(), row.getMovementCount(), row.getTotalSpent()), Collectors.toList())));
+
+        return byUser.entrySet().stream()
+                .map(entry -> new MonthlySummaryUserRecord(
+                        entry.getKey(),
+                        namesById.getOrDefault(entry.getKey(), "#" + entry.getKey()),
+                        entry.getValue().stream()
+                                .sorted(Comparator.comparing(MonthlySummaryUserRecord.PerCurrency::currency))
+                                .toList()))
+                .sorted(Comparator.comparing(MonthlySummaryUserRecord::name, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     public MonthlySummaryResponse computeSummary(Long workspaceId, Integer year, Integer month) {
@@ -59,6 +100,7 @@ public class MonthlySummaryService {
 
     private MonthlySummaryByCurrencyRecord buildCurrencySummary(Long workspaceId, int year, int month,
                                                                  int prevYear, int prevMonth, String currency) {
+        long movementCount = movementRepository.countByMonthAndCurrency(workspaceId, year, month, currency);
         BigDecimal income = this.getTotalByCurrency(workspaceId, year, month, MovementType.INGRESO, currency);
         // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo. Se pide
         // cada tipo por separado para poder mostrar el desglose en el cierre de mes; la suma es
@@ -76,6 +118,7 @@ public class MonthlySummaryService {
 
         return new MonthlySummaryByCurrencyRecord(
                 currency,
+                movementCount,
                 income,
                 spent,
                 spentDebit,

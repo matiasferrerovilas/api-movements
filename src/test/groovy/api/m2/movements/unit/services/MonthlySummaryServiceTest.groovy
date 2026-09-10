@@ -382,4 +382,58 @@ class MonthlySummaryServiceTest extends Specification {
         2025 | 12
         2026 | 3
     }
+
+    def "computeSummary - includes the movement count per currency"() {
+        given:
+        this.stubCurrencies(1L, ["ARS"])
+        movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
+        movementRepository.getTopCategoryByMonth(*_) >> Optional.empty()
+        movementRepository.getTotalInUsdByTypeAndMonth(*_) >> BigDecimal.ZERO
+        movementRepository.countByMonthAndCurrency(1L, 2025, 4, "ARS") >> 7L
+
+        when:
+        def ars = service.computeSummary(1L, 2025, 4).perCurrency().first()
+
+        then:
+        ars.movementCount() == 7L
+    }
+
+    def "getUserBreakdown - groups rows by user, resolves names, sorts by name"() {
+        given:
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, 1L) >> {}
+        def rowAna = Stub(api.m2.movements.projections.MonthlyUserCurrencyProjection) {
+            getUserId() >> 2L; getCurrency() >> "ARS"; getMovementCount() >> 3L; getTotalSpent() >> new BigDecimal("500.00")
+        }
+        def rowAnaEur = Stub(api.m2.movements.projections.MonthlyUserCurrencyProjection) {
+            getUserId() >> 2L; getCurrency() >> "EUR"; getMovementCount() >> 1L; getTotalSpent() >> new BigDecimal("20.00")
+        }
+        def rowBeto = Stub(api.m2.movements.projections.MonthlyUserCurrencyProjection) {
+            getUserId() >> 5L; getCurrency() >> "ARS"; getMovementCount() >> 2L; getTotalSpent() >> new BigDecimal("300.00")
+        }
+        movementRepository.getUserTotalsByMonth(workspaceId, 2025, 4) >> [rowBeto, rowAna, rowAnaEur]
+        userService.getUserDisplayNamesByIds({ it.toSet() == [2L, 5L].toSet() }) >> [2L: "Ana", 5L: "Beto"]
+
+        when:
+        def result = service.getUserBreakdown(workspaceId, 2025, 4)
+
+        then:
+        result*.name() == ["Ana", "Beto"]
+        result[0].perCurrency()*.currency() == ["ARS", "EUR"]
+        result[0].perCurrency()[0].movementCount() == 3L
+        result[0].perCurrency()[0].totalSpent() == new BigDecimal("500.00")
+        result[1].perCurrency()*.currency() == ["ARS"]
+    }
+
+    def "getUserBreakdown - returns empty when nobody loaded a movement"() {
+        given:
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, 1L) >> {}
+        movementRepository.getUserTotalsByMonth(workspaceId, 2025, 4) >> []
+
+        when:
+        def result = service.getUserBreakdown(workspaceId, 2025, 4)
+
+        then:
+        result.isEmpty()
+        0 * userService.getUserDisplayNamesByIds(_)
+    }
 }

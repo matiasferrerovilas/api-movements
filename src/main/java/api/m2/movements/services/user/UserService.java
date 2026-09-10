@@ -56,6 +56,20 @@ public class UserService {
                 .collect(Collectors.toMap(UserMe::id, UserMe::givenName));
     }
 
+    /** Nombre para mostrar: "Nombre Apellido" si hay, si no el email. Tolera givenName/familyName
+     * en null (a diferencia de {@link #getUserNamesByIds}, que rompe con un value null en toMap). */
+    public Map<Long, String> getUserDisplayNamesByIds(List<Long> ids) {
+        return identityClient.getUsersByIds(ids).stream()
+                .collect(Collectors.toMap(UserMe::id, UserService::displayName));
+    }
+
+    private static String displayName(UserMe user) {
+        String given = user.givenName() != null ? user.givenName() : "";
+        String family = user.familyName() != null ? user.familyName() : "";
+        String full = (given + " " + family).trim();
+        return full.isEmpty() ? user.email() : full;
+    }
+
     public String getAuthenticatedEmail() {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .filter(Authentication::isAuthenticated)

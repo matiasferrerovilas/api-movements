@@ -1,6 +1,7 @@
 package api.m2.movements.controller;
 
 import api.m2.movements.records.balance.MonthlySummaryResponse;
+import api.m2.movements.records.balance.MonthlySummaryUserRecord;
 import api.m2.movements.services.balance.MonthCloseService;
 import api.m2.movements.services.balance.MonthlySummaryService;
 import api.m2.movements.services.user.UserService;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.List;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +48,21 @@ public class WorkspaceSummaryController {
             @RequestParam @Min(2000) @Max(2100) Integer year,
             @RequestParam @Min(1) @Max(12) Integer month) {
         return monthlySummaryService.getSummary(id, year, month);
+    }
+
+    @Operation(
+            summary = "Resumen mensual por usuario",
+            description = "Por cada miembro del workspace con al menos un movimiento ese mes: cuántos "
+                    + "cargó y cuánto de gasto suman, desglosado por moneda. Los miembros sin "
+                    + "movimientos no aparecen."
+    )
+    @ApiResponse(responseCode = "200", description = "Desglose calculado correctamente")
+    @GetMapping("/{id}/summary/monthly/by-user")
+    public List<MonthlySummaryUserRecord> getMonthlySummaryByUser(
+            @Parameter(description = "ID del workspace") @PathVariable Long id,
+            @RequestParam @Min(2000) @Max(2100) Integer year,
+            @RequestParam @Min(1) @Max(12) Integer month) {
+        return monthlySummaryService.getUserBreakdown(id, year, month);
     }
 
     @Operation(

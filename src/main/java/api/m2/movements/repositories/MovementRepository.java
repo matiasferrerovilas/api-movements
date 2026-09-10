@@ -2,6 +2,7 @@ package api.m2.movements.repositories;
 
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.projections.MonthlyEvolutionProjection;
+import api.m2.movements.projections.MonthlyUserCurrencyProjection;
 import api.m2.movements.records.balance.BalanceByCategoryRecord;
 import api.m2.movements.records.balance.CategoryAmountRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
@@ -142,6 +143,38 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
               AND c.symbol = :currency
             """, nativeQuery = true)
     BigDecimal getTotalByTypeAndMonth(Long workspaceId, Integer year, Integer month, String type, String currency);
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND c.symbol = :currency
+            """, nativeQuery = true)
+    long countByMonthAndCurrency(Long workspaceId, Integer year, Integer month, String currency);
+
+    /**
+     * Por cada (usuario, moneda) del workspace en ese mes: cuántos movimientos cargó y cuánto
+     * suman los de gasto (DEBITO + CREDITO). Solo movimientos con user_id — los generados por el
+     * sistema (ingresos recurrentes, cuotas de crédito) no se le atribuyen a nadie.
+     */
+    @Query(value = """
+            SELECT m.user_id                                                             AS userId,
+                   c.symbol                                                              AS currency,
+                   COUNT(*)                                                              AS movementCount,
+                   COALESCE(SUM(CASE WHEN m.type IN ('DEBITO', 'CREDITO')
+                                     THEN m.amount ELSE 0 END), 0)                        AS totalSpent
+            FROM movements m
+            INNER JOIN currency c ON m.currency_id = c.id
+            WHERE m.workspace_id = :workspaceId
+              AND YEAR(m.date) = :year
+              AND MONTH(m.date) = :month
+              AND m.user_id IS NOT NULL
+            GROUP BY m.user_id, c.symbol
+            """, nativeQuery = true)
+    List<MonthlyUserCurrencyProjection> getUserTotalsByMonth(Long workspaceId, Integer year, Integer month);
 
     @Query(value = """
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)

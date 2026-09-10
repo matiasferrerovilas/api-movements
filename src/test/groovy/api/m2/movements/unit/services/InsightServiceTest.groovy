@@ -52,7 +52,7 @@ class InsightServiceTest extends Specification {
     private static MonthlySummaryResponse summaryWith(int year, int month, String currency,
                                                         List<CategoryAmountRecord> categories) {
         def byCurrency = new MonthlySummaryByCurrencyRecord(
-                currency, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                currency, 0L, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 null, emptyComparison(), categories
         )
         new MonthlySummaryResponse(year, month, null, [byCurrency])
