@@ -88,10 +88,12 @@ class ProjectionServiceTest extends Specification {
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("20000.00")
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("15000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
                 new BigDecimal("3000.00")
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
                 new BigDecimal("2000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -113,10 +115,12 @@ class ProjectionServiceTest extends Specification {
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("1000.00")
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
                 new BigDecimal("1000.00")
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
                 new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -126,15 +130,34 @@ class ProjectionServiceTest extends Specification {
         result.averageMonthlyNet() == BigDecimal.ZERO
     }
 
+    def "getProjection - REINTEGRO reduces gasto, so it counts toward savings"() {
+        given: "1000 ingresado, 1000 gastado en DEBITO, 400 reintegrado — el gasto real es 600"
+        userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("1000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.REINTEGRO.name()]) >> new BigDecimal("400.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
+
+        when:
+        def result = service.getProjection(workspaceId, 6)
+
+        then:
+        result.currentBalance() == new BigDecimal("400.00")
+    }
+
     def "getProjection - should project a decreasing balance on a negative net trend"() {
         given: "gasta 500 USD más de lo que ingresa por mes, balance acumulado de 2000"
         userSettingService.getByKey(UserSettingKey.DEFAULT_CURRENCY) >> { throw new EntityNotFoundException("no default currency") }
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.INGRESO.name()]) >> new BigDecimal("10000.00")
         movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >> new BigDecimal("8000.00")
+        movementRepository.getTotalInUsdByTypes(workspaceId, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.INGRESO.name()]) >>
                 new BigDecimal("1000.00")
         movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()]) >>
                 new BigDecimal("1500.00")
+        movementRepository.getTotalInUsdByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()]) >> BigDecimal.ZERO
 
         when:
         def result = service.getProjection(workspaceId, 6)
@@ -186,6 +209,7 @@ class ProjectionServiceTest extends Specification {
 
         movementRepository.getTotalByTypes(workspaceId, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("20000.00")
         movementRepository.getTotalByTypes(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> new BigDecimal("15000.00")
+        movementRepository.getTotalByTypes(workspaceId, [MovementType.REINTEGRO.name()], "EUR") >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, _ as List, "EUR") >> BigDecimal.ZERO
 
         movementRepository.getTotalByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> new BigDecimal("1000.00")
@@ -209,6 +233,7 @@ class ProjectionServiceTest extends Specification {
         movementRepository.getTotalByTypesAndMonth(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("1000.00")
         movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> BigDecimal.ZERO
+        movementRepository.getTotalInUsdByTypesExcludingCurrency(workspaceId, [MovementType.REINTEGRO.name()], "EUR") >> BigDecimal.ZERO
         movementRepository.getTotalInUsdByTypesAndMonthExcludingCurrency(workspaceId, _ as Integer, _ as Integer, _ as List, "EUR") >> BigDecimal.ZERO
 
         when:

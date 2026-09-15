@@ -67,12 +67,18 @@ class CalculateBalanceServiceTest extends Specification {
                 _ as List<Integer>, _ as List
         ) >> new BigDecimal("400")
 
+        movementRepository.getBalanceByFilters(
+                _ as LocalDate, _ as LocalDate, 1L,
+                [MovementType.REINTEGRO.toString()],
+                _ as List<Integer>, _ as List
+        ) >> new BigDecimal("150")
+
         when:
         def result = service.getBalance(filter)
 
-        then:
+        then: "el gasto neto es 400 - 150 de reintegro = 250"
         result[BalanceEnum.INGRESO] == new BigDecimal("1000")
-        result[BalanceEnum.GASTO] == new BigDecimal("400")
+        result[BalanceEnum.GASTO] == new BigDecimal("250")
         result.size() == 2
     }
 
@@ -97,7 +103,7 @@ class CalculateBalanceServiceTest extends Specification {
                 _ as LocalDate, _ as LocalDate, 1L,
                 { List types -> types.containsAll([MovementType.DEBITO.toString(), MovementType.CREDITO.toString()]) },
                 _ as List<Integer>, _ as List
-        )
+        ) >> BigDecimal.ZERO
     }
 
     def "getBalance - should handle zero values for both ingreso and gasto"() {
@@ -131,12 +137,12 @@ class CalculateBalanceServiceTest extends Specification {
         when:
         service.getBalance(filter)
 
-        then:
-        2 * movementRepository.getBalanceByFilters(
+        then: "ingreso + gasto + reintegro"
+        3 * movementRepository.getBalanceByFilters(
                 _ as LocalDate, _ as LocalDate,
                 1L,
                 _ as List, _ as List, _ as List
-        )
+        ) >> BigDecimal.ZERO
     }
 
     @Unroll
@@ -299,10 +305,12 @@ class CalculateBalanceServiceTest extends Specification {
     def "calculateRecoveryTime - should compute months to recover from average savings"() {
         given:
         currencyRepository.findBySymbol("ARS") >> Optional.of(Stub(Currency))
-        movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "ARS") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.INGRESO.name()], "ARS") >> new BigDecimal("1000")
         movementRepository.getTotalByTypesAndMonth(
                 1L, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "ARS") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()], "ARS") >> BigDecimal.ZERO
 
         when:
         def result = service.calculateRecoveryTime(new BigDecimal("3000"), "ars", 3)
@@ -318,10 +326,12 @@ class CalculateBalanceServiceTest extends Specification {
     def "calculateRecoveryTime - should mark as not recoverable when average savings is not positive"() {
         given:
         currencyRepository.findBySymbol("USD") >> Optional.of(Stub(Currency))
-        movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "USD") >> BigDecimal.ZERO
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.INGRESO.name()], "USD") >> BigDecimal.ZERO
         movementRepository.getTotalByTypesAndMonth(
                 1L, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "USD") >> new BigDecimal("100")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()], "USD") >> BigDecimal.ZERO
 
         when:
         def result = service.calculateRecoveryTime(new BigDecimal("500"), "USD", 3)
@@ -346,26 +356,29 @@ class CalculateBalanceServiceTest extends Specification {
     def "calculateRecoveryTime - should query exactly the requested number of past months"() {
         given:
         currencyRepository.findBySymbol("EUR") >> Optional.of(Stub(Currency))
-        movementRepository.getTotalByTypeAndMonth(*_) >> BigDecimal.ZERO
         movementRepository.getTotalByTypesAndMonth(*_) >> BigDecimal.ZERO
 
         when:
         service.calculateRecoveryTime(new BigDecimal("100"), "EUR", 6)
 
         then:
-        6 * movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "EUR") >> BigDecimal.ZERO
+        6 * movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.INGRESO.name()], "EUR") >> BigDecimal.ZERO
         6 * movementRepository.getTotalByTypesAndMonth(
                 1L, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> BigDecimal.ZERO
+        6 * movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()], "EUR") >> BigDecimal.ZERO
     }
 
     def "calculateRecoveryTime - CREDITO movements count as gasto, not just DEBITO"() {
         given: "1000 ingresado y 1000 en compras con tarjeta de crédito (CREDITO); sin DEBITO"
         currencyRepository.findBySymbol("EUR") >> Optional.of(Stub(Currency))
-        movementRepository.getTotalByTypeAndMonth(
-                1L, _ as Integer, _ as Integer, MovementType.INGRESO.name(), "EUR") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("1000")
         movementRepository.getTotalByTypesAndMonth(
                 1L, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()], "EUR") >> BigDecimal.ZERO
 
         when:
         def result = service.calculateRecoveryTime(new BigDecimal("100"), "EUR", 3)
@@ -373,5 +386,23 @@ class CalculateBalanceServiceTest extends Specification {
         then: "el gasto en CREDITO cancela el ingreso — el ahorro real es cero, no recuperable"
         !result.recuperable()
         result.ahorroPromedioMensual() == BigDecimal.ZERO
+    }
+
+    def "calculateRecoveryTime - REINTEGRO reduces gasto, so it increases the average savings"() {
+        given: "1000 ingresado, 1000 gastado en DEBITO, 400 reintegrado — el gasto real es 600"
+        currencyRepository.findBySymbol("EUR") >> Optional.of(Stub(Currency))
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.INGRESO.name()], "EUR") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.DEBITO.name(), MovementType.CREDITO.name()], "EUR") >> new BigDecimal("1000")
+        movementRepository.getTotalByTypesAndMonth(
+                1L, _ as Integer, _ as Integer, [MovementType.REINTEGRO.name()], "EUR") >> new BigDecimal("400")
+
+        when:
+        def result = service.calculateRecoveryTime(new BigDecimal("100"), "EUR", 3)
+
+        then:
+        result.ahorroPromedioMensual() == new BigDecimal("400")
+        result.recuperable()
     }
 }

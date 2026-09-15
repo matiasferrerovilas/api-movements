@@ -36,6 +36,10 @@ public class CalculateBalanceService {
     // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — igual
     // que el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
     private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
+    private static final List<String> INGRESO_TYPES = List.of(MovementType.INGRESO.name());
+    // Un REINTEGRO resta del gasto (no suma al ingreso): un reembolso reduce lo que realmente
+    // gastaste, no es plata nueva entrando. Ver también MovementRepository.getCategoryTotalsByMonth.
+    private static final List<String> REINTEGRO_TYPES = List.of(MovementType.REINTEGRO.name());
 
     private final MovementRepository movementRepository;
     private final UserService userService;
@@ -53,11 +57,11 @@ public class CalculateBalanceService {
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 userId,
-                List.of(MovementType.INGRESO.toString()),
+                INGRESO_TYPES,
                 List.of(workspaceId.intValue()),
                 currencies);
 
-        var movements = movementRepository.getBalanceByFilters(
+        var gastoBruto = movementRepository.getBalanceByFilters(
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 userId,
@@ -69,9 +73,17 @@ public class CalculateBalanceService {
                 List.of(workspaceId.intValue()),
                 currencies);
 
+        var reintegros = movementRepository.getBalanceByFilters(
+                balanceFilterRecord.startDate(),
+                balanceFilterRecord.endDate(),
+                userId,
+                REINTEGRO_TYPES,
+                List.of(workspaceId.intValue()),
+                currencies);
+
         Map<BalanceEnum, BigDecimal> result = new EnumMap<>(BalanceEnum.class);
         result.put(BalanceEnum.INGRESO, ingresos);
-        result.put(BalanceEnum.GASTO, movements);
+        result.put(BalanceEnum.GASTO, gastoBruto.subtract(reintegros));
 
         return result;
     }
@@ -110,13 +122,16 @@ public class CalculateBalanceService {
         var totalSavings = BigDecimal.ZERO;
         for (int i = 0; i < months; i++) {
             var yearMonth = lastClosedMonth.minusMonths(i);
-            var ingresado = movementRepository.getTotalByTypeAndMonth(
+            var ingresado = movementRepository.getTotalByTypesAndMonth(
                     workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
-                    MovementType.INGRESO.name(), normalizedSymbol);
-            var gastado = movementRepository.getTotalByTypesAndMonth(
+                    INGRESO_TYPES, normalizedSymbol);
+            var gastadoBruto = movementRepository.getTotalByTypesAndMonth(
                     workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
                     GASTO_TYPES, normalizedSymbol);
-            totalSavings = totalSavings.add(ingresado.subtract(gastado));
+            var reintegrado = movementRepository.getTotalByTypesAndMonth(
+                    workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
+                    REINTEGRO_TYPES, normalizedSymbol);
+            totalSavings = totalSavings.add(ingresado.subtract(gastadoBruto.subtract(reintegrado)));
         }
 
         var averageMonthlySavings = totalSavings.divide(BigDecimal.valueOf(months), SCALE, RoundingMode.HALF_UP);

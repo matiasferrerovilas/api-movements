@@ -72,13 +72,15 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     );
 
 
+    // Un REINTEGRO resta del total de su categoría (ver getCategoryTotalsByMonth) en vez de
+    // sumar aparte — por eso el SUM le da signo negativo en vez de excluirlo del todo.
     @Query(value = """
         SELECT
                     ca.description AS category,
                     CAST(YEAR(g.`date`) AS SIGNED) as year,
                     CAST(MONTH(g.`date`) AS SIGNED) as month,
                     c.symbol AS currencySymbol,
-                    SUM(g.amount) AS total
+                    SUM(CASE WHEN g.type = "REINTEGRO" THEN -g.amount ELSE g.amount END) AS total
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
                         INNER JOIN movement_categories mc ON mc.movement_id = g.id
@@ -116,7 +118,9 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
            SUM(CASE WHEN m.type IN (
                 api.m2.movements.enums.MovementType.DEBITO,
                 api.m2.movements.enums.MovementType.CREDITO
-              ) THEN m.amount ELSE 0 END) AS spent,
+              ) THEN m.amount
+              WHEN m.type = api.m2.movements.enums.MovementType.REINTEGRO THEN -m.amount
+              ELSE 0 END) AS spent,
            SUM(CASE WHEN m.type = api.m2.movements.enums.MovementType.INGRESO
               THEN m.amount ELSE 0 END)   AS income
     FROM Movement m
@@ -157,15 +161,17 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     /**
      * Por cada (usuario, moneda) del workspace en ese mes: cuántos movimientos cargó y cuánto
-     * suman los de gasto (DEBITO + CREDITO). Solo movimientos con user_id — los generados por el
-     * sistema (ingresos recurrentes, cuotas de crédito) no se le atribuyen a nadie.
+     * suman los de gasto (DEBITO + CREDITO, netos de sus REINTEGRO). Solo movimientos con
+     * user_id — los generados por el sistema (ingresos recurrentes, cuotas de crédito) no se le
+     * atribuyen a nadie.
      */
     @Query(value = """
             SELECT m.user_id                                                             AS userId,
                    c.symbol                                                              AS currency,
                    COUNT(*)                                                              AS movementCount,
-                   COALESCE(SUM(CASE WHEN m.type IN ('DEBITO', 'CREDITO')
-                                     THEN m.amount ELSE 0 END), 0)                        AS totalSpent
+                   COALESCE(SUM(CASE WHEN m.type IN ('DEBITO', 'CREDITO') THEN m.amount
+                                     WHEN m.type = 'REINTEGRO' THEN -m.amount
+                                     ELSE 0 END), 0)                                      AS totalSpent
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
@@ -260,6 +266,9 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             """, nativeQuery = true)
     BigDecimal getTotalInUsdByTypesExcludingCurrency(Long workspaceId, List<String> types, String currency);
 
+    // Un REINTEGRO categorizado igual que el gasto que reembolsa resta de ese gasto en vez de
+    // sumar aparte — por eso entra al WHERE junto con DEBITO/CREDITO pero con signo negativo en
+    // el SUM. Servicio con $100 en DEBITO y un reintegro de $60 en la misma categoría → $40 neto.
     @Query(value = """
             SELECT ca.description
             FROM movements m
@@ -269,16 +278,17 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
-              AND m.type IN ('DEBITO', 'CREDITO')
+              AND m.type IN ('DEBITO', 'CREDITO', 'REINTEGRO')
               AND c.symbol = :currency
             GROUP BY ca.description
-            ORDER BY SUM(m.amount) DESC
+            ORDER BY SUM(CASE WHEN m.type = 'REINTEGRO' THEN -m.amount ELSE m.amount END) DESC
             LIMIT 1
             """, nativeQuery = true)
     Optional<String> getTopCategoryByMonth(Long workspaceId, Integer year, Integer month, String currency);
 
     @Query(value = """
-            SELECT ca.description AS category, COALESCE(SUM(m.amount), 0) AS amount
+            SELECT ca.description AS category,
+                   COALESCE(SUM(CASE WHEN m.type = 'REINTEGRO' THEN -m.amount ELSE m.amount END), 0) AS amount
             FROM movements m
             INNER JOIN movement_categories mc ON mc.movement_id = m.id
             INNER JOIN category ca ON mc.category_id = ca.id
@@ -286,7 +296,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             WHERE m.workspace_id = :workspaceId
               AND YEAR(m.date) = :year
               AND MONTH(m.date) = :month
-              AND m.type IN ('DEBITO', 'CREDITO')
+              AND m.type IN ('DEBITO', 'CREDITO', 'REINTEGRO')
               AND c.symbol = :currency
             GROUP BY ca.description
             ORDER BY amount DESC

@@ -55,8 +55,10 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             @Param("month") int month
     );
 
+    // Un REINTEGRO en la misma categoría resta del gasto en vez de quedar afuera — un presupuesto
+    // de "Servicios" con $100 de DEBITO y un reintegro de $60 muestra $40 gastados, no $100.
     @Query(value = """
-            SELECT COALESCE(SUM(m.amount), 0)
+            SELECT COALESCE(SUM(CASE WHEN m.type = 'REINTEGRO' THEN -m.amount ELSE m.amount END), 0)
             FROM movements m
             INNER JOIN movement_categories mc ON mc.movement_id = m.id
             INNER JOIN category ca ON mc.category_id = ca.id
@@ -77,7 +79,7 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     );
 
     @Query(value = """
-            SELECT COALESCE(SUM(m.amount), 0)
+            SELECT COALESCE(SUM(CASE WHEN m.type = 'REINTEGRO' THEN -m.amount ELSE m.amount END), 0)
             FROM movements m
             INNER JOIN movement_categories mc ON mc.movement_id = m.id
             INNER JOIN category ca ON mc.category_id = ca.id

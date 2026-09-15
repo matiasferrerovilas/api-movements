@@ -30,7 +30,10 @@ public class BudgetThresholdEventHandler {
     @EventListener
     @Transactional
     public void onMovementAdded(MovementRecord record) {
-        if (MovementType.INGRESO.name().equals(record.type())) {
+        // INGRESO y REINTEGRO son plata que entra, nunca gasto — ninguno de los dos cuenta contra
+        // un presupuesto. sumSpentByCategoryAndPeriod ya los excluye; saltear acá además evita
+        // recalcular spentBefore restando un monto que esa consulta nunca sumó.
+        if (MovementType.INGRESO.name().equals(record.type()) || MovementType.REINTEGRO.name().equals(record.type())) {
             return;
         }
         var workspaceId = record.metadata().workspace().id();

@@ -48,6 +48,8 @@ public class ProjectionService {
     // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — así
     // se calcula también en el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
     private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
+    // Un REINTEGRO resta del gasto (no suma al ingreso) — ver CalculateBalanceService.
+    private static final List<String> REINTEGRO_TYPES = List.of(MovementType.REINTEGRO.name());
 
     private final MovementRepository movementRepository;
     private final WorkspaceQueryService workspaceQueryService;
@@ -131,9 +133,14 @@ public class ProjectionService {
     private BigDecimal computeCurrentBalance(Long workspaceId, String targetCurrency, BigDecimal conversionRate) {
         BigDecimal totalIngresado = this.getTotalInTargetCurrency(
                 workspaceId, INGRESO_TYPES, targetCurrency, conversionRate);
-        BigDecimal totalGastado = this.getTotalInTargetCurrency(
-                workspaceId, GASTO_TYPES, targetCurrency, conversionRate);
-        return totalIngresado.subtract(totalGastado).setScale(SCALE, RoundingMode.HALF_UP);
+        BigDecimal totalGastadoNeto = this.getGastoNeto(workspaceId, targetCurrency, conversionRate);
+        return totalIngresado.subtract(totalGastadoNeto).setScale(SCALE, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal getGastoNeto(Long workspaceId, String targetCurrency, BigDecimal conversionRate) {
+        BigDecimal gastoBruto = this.getTotalInTargetCurrency(workspaceId, GASTO_TYPES, targetCurrency, conversionRate);
+        BigDecimal reintegrado = this.getTotalInTargetCurrency(workspaceId, REINTEGRO_TYPES, targetCurrency, conversionRate);
+        return gastoBruto.subtract(reintegrado);
     }
 
     private BigDecimal computeAverageMonthlyNet(Long workspaceId, int trailingMonths,
@@ -145,9 +152,11 @@ public class ProjectionService {
             YearMonth yearMonth = lastClosedMonth.minusMonths(i);
             BigDecimal ingresado = this.getTotalInTargetCurrencyByMonth(
                     workspaceId, yearMonth, INGRESO_TYPES, targetCurrency, conversionRate);
-            BigDecimal gastado = this.getTotalInTargetCurrencyByMonth(
+            BigDecimal gastadoBruto = this.getTotalInTargetCurrencyByMonth(
                     workspaceId, yearMonth, GASTO_TYPES, targetCurrency, conversionRate);
-            totalNet = totalNet.add(ingresado.subtract(gastado));
+            BigDecimal reintegrado = this.getTotalInTargetCurrencyByMonth(
+                    workspaceId, yearMonth, REINTEGRO_TYPES, targetCurrency, conversionRate);
+            totalNet = totalNet.add(ingresado.subtract(gastadoBruto.subtract(reintegrado)));
         }
 
         return totalNet.divide(BigDecimal.valueOf(trailingMonths), SCALE, RoundingMode.HALF_UP);

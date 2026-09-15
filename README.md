@@ -128,7 +128,7 @@ The database schema is managed using Liquibase (`ddl-auto: none`). All migration
 This service only owns financial domain data — workspaces, membership, and invitations live in api-identity's own database and are reached here through `IdentityClient`, not local tables.
 
 Key tables:
-- `movements`: expense/income/credit records, including installments
+- `movements`: expense/income/credit/refund records, including installments
 - `ingreso`: recurring fixed income
 - `services`: recurring subscriptions/bills
 - `budget`: per-category, per-currency budgets

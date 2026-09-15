@@ -99,6 +99,19 @@ class InsightThresholdEventHandlerTest extends Specification {
         0 * notificationService.publish(_ as Long, _ as String, _ as String, _ as NotificationSeverity)
     }
 
+    def "onMovementAdded - should ignore REINTEGRO movements"() {
+        given: "un reintegro resta del gasto, nunca lo cruza hacia arriba — spentAfter ya lo tenía"
+        // restado, así que restarlo de nuevo (como al resto de los movimientos) inventaría un spentBefore
+        def record = buildMovementRecord(new BigDecimal("500"), "REINTEGRO")
+
+        when:
+        handler.onMovementAdded(record)
+
+        then:
+        0 * budgetRepository.sumSpentByCategoryAndPeriod(_ as Long, _ as String, _ as String, _ as int, _ as int)
+        0 * notificationService.publish(_ as Long, _ as String, _ as String, _ as NotificationSeverity)
+    }
+
     def "onMovementAdded - should ignore movements backdated outside the current month"() {
         given:
         def record = buildMovementRecord(new BigDecimal("500"), "DEBITO", LocalDate.of(2026, 3, 1))

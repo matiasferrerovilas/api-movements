@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.0] - 2026-09-15
+
+### Added
+- New movement type **`REINTEGRO`** (refund/cashback — money that comes back). Nets against
+  **gasto**, not against ingreso: a $100 DEBITO expense with a $60 REINTEGRO in the same category
+  and currency shows as $40 spent, not $100 spent + $60 separate income. `GASTO_TYPES` (the
+  `[DEBITO, CREDITO]` constant) stays untouched everywhere — the netting is applied as a
+  subtraction on top of it, not by adding REINTEGRO into the gasto type-list itself:
+  - `CalculateBalanceService`/`ProjectionService`: gasto = `GASTO_TYPES` sum − `REINTEGRO` sum
+    (computed in Java, two repo calls subtracted).
+  - `MonthlySummaryService`: same, plus `totalSpentDebit`/`totalSpentCredit` stay as gross
+    (pre-refund) figures — only `totalSpent`/`net` are netted.
+  - Per-category and per-user breakdowns net REINTEGRO at the SQL level (`MovementRepository`:
+    `getTopCategoryByMonth`, `getCategoryTotalsByMonth`, `getBalanceWithCategoryByYear`,
+    `findMonthlyEvolution`, `getUserTotalsByMonth`; `BudgetRepository`:
+    `sumSpentByCategoryAndPeriod`/`AndYear`) — `SUM(CASE WHEN type = 'REINTEGRO' THEN -amount
+    ELSE amount END)`, so a reintegro only offsets spend in the same category/currency/period,
+    not spend anywhere else.
+  - `BudgetThresholdEventHandler`/`InsightThresholdEventHandler` still skip REINTEGRO movements
+    entirely: a reintegro only ever *decreases* spend, so it can't trigger a new
+    threshold-crossing notification, and their before/after math (`spentBefore = spentAfter -
+    record.amount()`) would be wrong for a movement whose contribution to `spentAfter` was
+    negative.
+
 ## [2.12.0] - 2026-09-10
 
 ### Added

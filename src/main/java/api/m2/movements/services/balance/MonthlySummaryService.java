@@ -107,7 +107,11 @@ public class MonthlySummaryService {
         // el mismo total que antes daba getTotalByTypesAndMonth([DEBITO, CREDITO]).
         BigDecimal spentDebit = this.getTotalByCurrency(workspaceId, year, month, MovementType.DEBITO, currency);
         BigDecimal spentCredit = this.getTotalByCurrency(workspaceId, year, month, MovementType.CREDITO, currency);
-        BigDecimal spent = spentDebit.add(spentCredit);
+        // Un REINTEGRO resta del gasto, no suma al ingreso — igual que en el desglose por
+        // categoría (MovementRepository.getCategoryTotalsByMonth/getTopCategoryByMonth), que ya
+        // lo neteaba a nivel SQL.
+        BigDecimal reintegro = this.getTotalByCurrency(workspaceId, year, month, MovementType.REINTEGRO, currency);
+        BigDecimal spent = spentDebit.add(spentCredit).subtract(reintegro);
         String topCategory = movementRepository.getTopCategoryByMonth(workspaceId, year, month, currency).orElse(null);
         List<CategoryAmountRecord> spendingByCategory =
                 movementRepository.getCategoryTotalsByMonth(workspaceId, year, month, currency);
@@ -140,7 +144,8 @@ public class MonthlySummaryService {
         BigDecimal income = this.getTotalInUsd(workspaceId, year, month, MovementType.INGRESO);
         BigDecimal spentDebit = this.getTotalInUsd(workspaceId, year, month, MovementType.DEBITO);
         BigDecimal spentCredit = this.getTotalInUsd(workspaceId, year, month, MovementType.CREDITO);
-        BigDecimal spent = spentDebit.add(spentCredit);
+        BigDecimal reintegro = this.getTotalInUsd(workspaceId, year, month, MovementType.REINTEGRO);
+        BigDecimal spent = spentDebit.add(spentCredit).subtract(reintegro);
 
         BigDecimal prevIncome = this.getTotalInUsd(workspaceId, prevYear, prevMonth, MovementType.INGRESO);
         BigDecimal prevSpent = this.getSpentInUsd(workspaceId, prevYear, prevMonth);
@@ -170,11 +175,13 @@ public class MonthlySummaryService {
 
     private BigDecimal getSpentByCurrency(Long workspaceId, int year, int month, String currency) {
         return this.getTotalByCurrency(workspaceId, year, month, MovementType.DEBITO, currency)
-                .add(this.getTotalByCurrency(workspaceId, year, month, MovementType.CREDITO, currency));
+                .add(this.getTotalByCurrency(workspaceId, year, month, MovementType.CREDITO, currency))
+                .subtract(this.getTotalByCurrency(workspaceId, year, month, MovementType.REINTEGRO, currency));
     }
 
     private BigDecimal getSpentInUsd(Long workspaceId, int year, int month) {
         return this.getTotalInUsd(workspaceId, year, month, MovementType.DEBITO)
-                .add(this.getTotalInUsd(workspaceId, year, month, MovementType.CREDITO));
+                .add(this.getTotalInUsd(workspaceId, year, month, MovementType.CREDITO))
+                .subtract(this.getTotalInUsd(workspaceId, year, month, MovementType.REINTEGRO));
     }
 }
