@@ -311,6 +311,7 @@ class MovementFactoryTest extends Specification {
                 "ARS",
                 null,
                 null,
+                null,
                 null
         )
         def movement = new Movement()
@@ -337,6 +338,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 null,
+                null,
                 null
         )
         def movement = new Movement()
@@ -354,7 +356,7 @@ class MovementFactoryTest extends Specification {
         given:
         def existingCurrency = Stub(Currency) { getSymbol() >> "USD" }
         def existingCategory = Stub(Category) { getDescription() >> "HOGAR" }
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
         def movement = new Movement()
         movement.setCurrency(existingCurrency)
         movement.setCategories([existingCategory] as Set)
@@ -368,4 +370,5 @@ class MovementFactoryTest extends Specification {
         0 * currencyResolver.resolve(_ as String, _ as Long)
         0 * categoryResolver.resolveAll(_ as List)
     }
+
 }

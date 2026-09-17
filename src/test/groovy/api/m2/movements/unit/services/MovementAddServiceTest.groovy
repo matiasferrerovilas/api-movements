@@ -160,7 +160,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement - should update movement when called"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
         def movement = buildMovement(1L)
         movementRepository.findById(10L) >> Optional.of(movement)
 
@@ -173,7 +173,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement - should throw EntityNotFoundException when movement does not exist"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
         movementRepository.findById(999L) >> Optional.empty()
 
         when:
@@ -182,6 +182,95 @@ class MovementAddServiceTest extends Specification {
         then:
         thrown(EntityNotFoundException)
         0 * movementRepository.save(_ as Movement)
+    }
+
+    // El type-change side effect vive en MovementMapper (updateMovement), no en MovementFactory
+    // — se prueba acá directo contra el mapper real (no mockeado) que usa este test.
+
+    def "updateMovement mapper - should not touch type when not provided"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def movement = new Movement()
+        movement.setType(MovementType.DEBITO)
+
+        when:
+        movementMapper.updateMovement(dto, movement)
+
+        then:
+        movement.type == MovementType.DEBITO
+    }
+
+    def "updateMovement mapper - should change type between non-CREDITO types without touching cuotas"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "INGRESO")
+        def movement = new Movement()
+        movement.setType(MovementType.DEBITO)
+
+        when:
+        movementMapper.updateMovement(dto, movement)
+
+        then:
+        movement.type == MovementType.INGRESO
+        movement.cuotaActual == null
+        movement.cuotasTotales == null
+        movement.lastCreditPayment == null
+    }
+
+    def "updateMovement mapper - moving out of CREDITO clears cuotaActual, cuotasTotales and lastCreditPayment"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "DEBITO")
+        def movement = new Movement()
+        movement.setType(MovementType.CREDITO)
+        movement.setCuotaActual(2)
+        movement.setCuotasTotales(6)
+        movement.setLastCreditPayment(LocalDate.of(2026, 6, 1))
+
+        when:
+        movementMapper.updateMovement(dto, movement)
+
+        then:
+        movement.type == MovementType.DEBITO
+        movement.cuotaActual == null
+        movement.cuotasTotales == null
+        movement.lastCreditPayment == null
+    }
+
+    def "updateMovement mapper - moving into CREDITO paints cuotaActual/cuotasTotales from dto and leaves lastCreditPayment untouched"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, null, null, 2, 6, null, "CREDITO")
+        def movement = new Movement()
+        movement.setType(MovementType.DEBITO)
+        // Valor previo cualquiera: no se debe recalcular acá, queda tal cual estaba.
+        movement.setLastCreditPayment(LocalDate.of(2099, 1, 1))
+
+        when:
+        movementMapper.updateMovement(dto, movement)
+
+        then:
+        movement.type == MovementType.CREDITO
+        movement.cuotaActual == 2
+        movement.cuotasTotales == 6
+        movement.lastCreditPayment == LocalDate.of(2099, 1, 1)
+    }
+
+    def "updateMovement mapper - nulls cuotaActual/cuotasTotales when dto sends them null even without a type change"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def movement = new Movement()
+        movement.setType(MovementType.CREDITO)
+        movement.setCuotaActual(2)
+        movement.setCuotasTotales(6)
+        movement.setLastCreditPayment(LocalDate.of(2026, 6, 1))
+
+        when:
+        movementMapper.updateMovement(dto, movement)
+
+        then:
+        movement.type == MovementType.CREDITO
+        movement.cuotaActual == null
+        movement.cuotasTotales == null
+        // No se toca porque el type no vino en el dto (sin señal explícita de cambio).
+        movement.lastCreditPayment == LocalDate.of(2026, 6, 1)
     }
 
     def "deleteMovement - should delete and publish event when called"() {

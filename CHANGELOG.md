@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.1] - 2026-09-17
+
+### Fixed
+- Editing a movement's **type** (e.g. INGRESO → DEBITO) via `PATCH /v1/movements/{id}` silently did
+  nothing: `ExpenseToUpdate` had no `type` field, so Spring's default lenient Jackson config (extra
+  request fields are dropped, not rejected) let the request "succeed" with a 204 while leaving the
+  movement untouched. Added `type` to `ExpenseToUpdate`. `MovementMapper.updateMovement` now maps
+  `type` directly (implicit String→Enum). Unlike the rest of the PATCH's fields, `cuotaActual`/
+  `cuotasTotales` are always painted from the request as-is (null included) instead of being
+  ignored when absent, since the frontend always submits the full form — so leaving CREDITO
+  naturally sends them as null and clears them. `lastCreditPayment` isn't part of the DTO, so a
+  small `@AfterMapping` hook clears it whenever the type changes away from CREDITO; it's left
+  untouched otherwise (including when moving into CREDITO — the caller is expected to know it).
+
 ## [2.13.0] - 2026-09-15
 
 ### Added

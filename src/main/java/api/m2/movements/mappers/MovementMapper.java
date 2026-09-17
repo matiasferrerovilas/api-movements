@@ -1,9 +1,11 @@
 package api.m2.movements.mappers;
 
 import api.m2.movements.entities.movements.Movement;
+import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementToAdd;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -22,7 +24,16 @@ public interface MovementMapper {
     @Mapping(target = "categories", ignore = true)
     @Mapping(target = "workspaceId", ignore = true)
     @Mapping(target = "bank", ignore = true)
+    @Mapping(target = "cuotaActual", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    @Mapping(target = "cuotasTotales", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateMovement(ExpenseToUpdate changesToMovement, @MappingTarget Movement movement);
+
+    @AfterMapping
+    default void clearLastCreditPaymentWhenLeavingCredito(ExpenseToUpdate dto, @MappingTarget Movement movement) {
+        if (dto.type() != null && movement.getType() != MovementType.CREDITO) {
+            movement.setLastCreditPayment(null);
+        }
+    }
 
     @Mapping(target = "bank", source = "movement.bank.description")
     @Mapping(target = "metadata", ignore = true)

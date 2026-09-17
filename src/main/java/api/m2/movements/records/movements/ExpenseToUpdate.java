@@ -16,5 +16,6 @@ public record ExpenseToUpdate(
         String currency,
         Integer cuotaActual,
         Integer cuotasTotales,
-        String bank
+        String bank,
+        String type
 ) { }
