@@ -1,8 +1,7 @@
 package api.m2.movements;
-import api.m2.movements.configuration.WebBindingRuntimeHints;
 import api.m2.movements.configuration.properties.CorsProperties;
 import api.m2.movements.configuration.properties.JwtProperties;
-import org.springframework.context.annotation.ImportRuntimeHints;
+import dev.nativehint.NativeHint;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 
@@ -16,7 +15,7 @@ import java.util.TimeZone;
 @EnableCaching
 @EnableScheduling
 @EnableConfigurationProperties({CorsProperties.class, JwtProperties.class})
-@ImportRuntimeHints(WebBindingRuntimeHints.class)
+@NativeHint
 public class MovementsApplication {
     static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));

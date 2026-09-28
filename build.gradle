@@ -1,6 +1,16 @@
 buildscript {
+    repositories {
+        // native-hint no está en el Gradle Plugin Portal (requiere aprobación manual) — se
+        // consume vía JitPack directo del tag de GitHub. JitPack no genera el "marker" que
+        // necesita `plugins { id '...' }` para repos sin dominio propio, así que se aplica a la
+        // manera clásica: classpath acá + `apply plugin:` después del bloque plugins{}.
+        maven { url = 'https://jitpack.io' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
     dependencies {
         classpath("org.liquibase:liquibase-core:5.0.1")
+        classpath("com.github.matiasferrerovilas:native-hint:v1.0.8")
     }
 }
 plugins {
@@ -14,6 +24,7 @@ plugins {
     id 'jacoco'
     id 'groovy'
 }
+apply plugin: 'io.github.matiasferrerovilas.nativehint'
 
 group = 'api.m2'
 version = '2.13.1'
@@ -33,6 +44,8 @@ configurations {
 }
 
 repositories {
+    // JitPack — resuelve com.github.matiasferrerovilas:native-hint directo del tag de GitHub.
+    maven { url = 'https://jitpack.io' }
     mavenCentral()
 }
 
@@ -52,6 +65,8 @@ ext {
 
 
 dependencies {
+    compileOnly 'com.github.matiasferrerovilas:native-hint:v1.0.8'
+
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
