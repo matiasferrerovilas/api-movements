@@ -5,6 +5,7 @@ import api.m2.movements.entities.WorkspaceCategory;
 import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.mappers.MovementMapper;
 import api.m2.movements.records.categories.CategoryRecord;
+import api.m2.movements.records.movements.MovementItemDto;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.clients.identity.response.UserBaseRecord;
@@ -37,6 +38,7 @@ public class MovementGetService {
     private final WorkspaceCategoryRepository workspaceCategoryRepository;
     private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
+    private final MovementItemService movementItemService;
 
     @Transactional(readOnly = true)
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
@@ -64,12 +66,16 @@ public class MovementGetService {
         var workspace = new WorkspaceBaseRecord(workspaceId, workspaceQueryService.findWorkspaceNameById(workspaceId));
         var ownerIds = movements.getContent().stream().map(Movement::getOwnerId).distinct().toList();
         var ownerNamesById = userService.getUserNamesByIds(ownerIds);
+        var itemsByMovement = movementItemService.getItemsByMovementIds(
+                movements.getContent().stream().map(Movement::getId).toList());
 
-        return movements.map(movement -> this.enrichMovementWithIcons(movement, iconMap, workspace, ownerNamesById));
+        return movements.map(movement -> this.enrichMovementWithIcons(movement, iconMap, workspace,
+                ownerNamesById, itemsByMovement.getOrDefault(movement.getId(), List.of())));
     }
 
     private MovementRecord enrichMovementWithIcons(Movement movement, Map<Long, WorkspaceCategory> iconMap,
-                                                     WorkspaceBaseRecord workspace, Map<Long, String> ownerNamesById) {
+                                                     WorkspaceBaseRecord workspace, Map<Long, String> ownerNamesById,
+                                                     List<MovementItemDto> items) {
         MovementRecord baseRecord = movementMapper.toRecord(movement);
         var metadata = this.buildMetadata(movement, workspace, ownerNamesById);
 
@@ -81,7 +87,7 @@ public class MovementGetService {
                 baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
                 baseRecord.createdAt(), baseRecord.updatedAt(), enrichedCategories, baseRecord.currency(),
                 baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(),
-                baseRecord.lastCreditPayment(), metadata);
+                baseRecord.lastCreditPayment(), metadata, items);
     }
 
     private MovementRecord.Metadata buildMetadata(Movement movement, WorkspaceBaseRecord workspace,

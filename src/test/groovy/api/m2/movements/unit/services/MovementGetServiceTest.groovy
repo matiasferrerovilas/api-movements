@@ -11,6 +11,7 @@ import api.m2.movements.records.movements.MovementSearchFilterRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.services.movements.MovementGetService
+import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
@@ -28,6 +29,7 @@ class MovementGetServiceTest extends Specification {
     WorkspaceCategoryRepository workspaceCategoryRepository = Mock(WorkspaceCategoryRepository)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
+    MovementItemService movementItemService = Mock(MovementItemService)
 
     MovementGetService service
 
@@ -39,10 +41,12 @@ class MovementGetServiceTest extends Specification {
                 workspaceContextService,
                 workspaceCategoryRepository,
                 workspaceQueryService,
-                userService
+                userService,
+                movementItemService
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]
+        movementItemService.getItemsByMovementIds(_ as List<Long>) >> [:]
     }
 
     def "getExpensesBy - should enrich movements with icons from workspace categories"() {

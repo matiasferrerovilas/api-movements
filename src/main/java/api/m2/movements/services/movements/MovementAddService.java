@@ -10,6 +10,7 @@ import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.clients.identity.response.UserBaseRecord;
 import api.m2.movements.records.categories.CategoryUpdateRecord;
+import api.m2.movements.records.movements.MovementItemDto;
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.exceptions.EntityNotFoundException;
@@ -36,6 +37,7 @@ public class MovementAddService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
     private final MovementFactory movementFactory;
+    private final MovementItemService movementItemService;
     private final ApplicationEventPublisher eventPublisher;
     private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
@@ -43,7 +45,9 @@ public class MovementAddService {
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
         var movement = movementFactory.create(dto);
-        var movementRecord = this.enrich(movementRepository.save(movement));
+        var saved = movementRepository.save(movement);
+        movementItemService.replaceItems(saved.getId(), dto.items());
+        var movementRecord = this.enrich(saved, movementItemService.getItems(saved.getId()));
 
         eventPublisher.publishEvent(movementRecord);
 
@@ -54,7 +58,9 @@ public class MovementAddService {
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto, Long workspaceId, Long ownerId) {
         var movement = movementFactory.create(dto, workspaceId, ownerId);
-        var movementRecord = this.enrich(movementRepository.save(movement));
+        var saved = movementRepository.save(movement);
+        movementItemService.replaceItems(saved.getId(), dto.items());
+        var movementRecord = this.enrich(saved, movementItemService.getItems(saved.getId()));
 
         eventPublisher.publishEvent(movementRecord);
 
@@ -71,7 +77,9 @@ public class MovementAddService {
     @Transactional
     public MovementRecord saveSystemMovement(@Valid MovementToAdd dto, Long workspaceId, Long ownerId) {
         var movement = movementFactory.create(dto, workspaceId, ownerId);
-        var movementRecord = this.enrichWithoutIdentity(movementRepository.save(movement));
+        var saved = movementRepository.save(movement);
+        movementItemService.replaceItems(saved.getId(), dto.items());
+        var movementRecord = this.enrichWithoutIdentity(saved, movementItemService.getItems(saved.getId()));
 
         eventPublisher.publishEvent(movementRecord);
 
@@ -88,6 +96,9 @@ public class MovementAddService {
         movementMapper.updateMovement(dto, movement);
         movementFactory.applyUpdates(dto, movement);
         movementRepository.save(movement);
+        if (dto.items() != null) {
+            movementItemService.replaceItems(id, dto.items());
+        }
 
         log.info("Movimiento actualizado: id={}", id);
     }
@@ -111,7 +122,7 @@ public class MovementAddService {
         var ownerNamesById = userService.getUserNamesByIds(ownerIds);
 
         saved.forEach(movement ->
-                eventPublisher.publishEvent(this.buildRecord(movement, workspace, ownerNamesById)));
+                eventPublisher.publishEvent(this.buildRecord(movement, workspace, ownerNamesById, List.of())));
 
         log.info("Movimientos guardados en batch: total={}", saved.size());
     }
@@ -123,25 +134,27 @@ public class MovementAddService {
                 .orElseThrow(() -> new EntityNotFoundException("Movimiento con Id" + id + " no existe"));
 
         Long workspaceId = movement.getWorkspaceId();
+        movementItemService.replaceItems(id, null);
         movementRepository.deleteById(id);
         eventPublisher.publishEvent(new MovementDeletedEvent(id, workspaceId));
 
         log.info("Movimiento eliminado correctamente: id={}", id);
     }
 
-    private MovementRecord enrich(Movement movement) {
+    private MovementRecord enrich(Movement movement, List<MovementItemDto> items) {
         var workspace = new WorkspaceBaseRecord(movement.getWorkspaceId(),
                 workspaceQueryService.findWorkspaceNameById(movement.getWorkspaceId()));
         var ownerNamesById = userService.getUserNamesByIds(List.of(movement.getOwnerId()));
-        return this.buildRecord(movement, workspace, ownerNamesById);
+        return this.buildRecord(movement, workspace, ownerNamesById, items);
     }
 
-    private MovementRecord enrichWithoutIdentity(Movement movement) {
+    private MovementRecord enrichWithoutIdentity(Movement movement, List<MovementItemDto> items) {
         var workspace = new WorkspaceBaseRecord(movement.getWorkspaceId(), null);
-        return this.buildRecord(movement, workspace, Map.of());
+        return this.buildRecord(movement, workspace, Map.of(), items);
     }
 
-    private MovementRecord buildRecord(Movement movement, WorkspaceBaseRecord workspace, Map<Long, String> ownerNamesById) {
+    private MovementRecord buildRecord(Movement movement, WorkspaceBaseRecord workspace,
+                                        Map<Long, String> ownerNamesById, List<MovementItemDto> items) {
         var baseRecord = movementMapper.toRecord(movement);
         var metadata = new MovementRecord.Metadata(
                 new UserBaseRecord(ownerNamesById.get(movement.getOwnerId()), movement.getOwnerId()),
@@ -150,7 +163,7 @@ public class MovementAddService {
                 baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
                 baseRecord.createdAt(), baseRecord.updatedAt(), baseRecord.categories(), baseRecord.currency(),
                 baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(),
-                baseRecord.lastCreditPayment(), metadata);
+                baseRecord.lastCreditPayment(), metadata, items);
     }
 
     /**
@@ -190,6 +203,7 @@ public class MovementAddService {
                 previous.getCuotaActual() + 1,
                 previous.getCuotasTotales(),
                 previous.getBank() != null ? previous.getBank().getDescription() : null,
-                previous.getLastCreditPayment());
+                previous.getLastCreditPayment(),
+                null);
     }
 }

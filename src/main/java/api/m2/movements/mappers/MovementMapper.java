@@ -37,6 +37,7 @@ public interface MovementMapper {
 
     @Mapping(target = "bank", source = "movement.bank.description")
     @Mapping(target = "metadata", ignore = true)
+    @Mapping(target = "items", ignore = true)
     MovementRecord toRecord(Movement movement);
 
     @Mapping(target = "currency", ignore = true)

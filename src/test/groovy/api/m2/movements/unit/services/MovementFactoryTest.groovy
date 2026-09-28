@@ -66,6 +66,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 "BBVA",
+                null,
                 null
         )
 
@@ -106,6 +107,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 null,
+                null,
                 null
         )
 
@@ -137,6 +139,7 @@ class MovementFactoryTest extends Specification {
                 [new CategoryUpdateRecord(null, "HOGAR")],
                 "GASTO",
                 "EUR",
+                null,
                 null,
                 null,
                 null,
@@ -175,6 +178,7 @@ class MovementFactoryTest extends Specification {
                 1,
                 3,
                 null,
+                null,
                 null
         )
 
@@ -210,7 +214,8 @@ class MovementFactoryTest extends Specification {
                 3,
                 3,
                 null,
-                alreadyComputed
+                alreadyComputed,
+                null
         )
 
         def movement = new Movement()
@@ -245,6 +250,7 @@ class MovementFactoryTest extends Specification {
                 1,
                 3,
                 null,
+                null,
                 null
         )
 
@@ -278,6 +284,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 "UNKNOWN_BANK",
+                null,
                 null
         )
 
@@ -312,6 +319,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 null,
+                null,
                 null
         )
         def movement = new Movement()
@@ -339,6 +347,7 @@ class MovementFactoryTest extends Specification {
                 null,
                 null,
                 null,
+                null,
                 null
         )
         def movement = new Movement()
@@ -356,7 +365,7 @@ class MovementFactoryTest extends Specification {
         given:
         def existingCurrency = Stub(Currency) { getSymbol() >> "USD" }
         def existingCategory = Stub(Category) { getDescription() >> "HOGAR" }
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
         def movement = new Movement()
         movement.setCurrency(existingCurrency)
         movement.setCategories([existingCategory] as Set)

@@ -30,5 +30,8 @@ public record MovementToAdd(
         // Solo lo manda el cron de cuotas (CreditInstallmentJob), copiando el valor ya calculado
         // de la cuota anterior — cualquier otro caller lo deja en null y MovementFactory lo
         // calcula solo si type=CREDITO. Nunca lo completa el frontend.
-        LocalDate lastCreditPayment
+        LocalDate lastCreditPayment,
+        // Desglose opcional del movimiento (ej: "1kg papa", "2 tomates"). Null o vacío si el
+        // usuario no lo usa — no se valida contra `amount`.
+        List<MovementItemDto> items
 ) { }

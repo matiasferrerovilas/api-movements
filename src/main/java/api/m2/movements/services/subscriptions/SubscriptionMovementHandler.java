@@ -47,6 +47,7 @@ public class SubscriptionMovementHandler {
                 0,
                 0,
                 defaultBank,
+                null,
                 null);
 
         movementAddService.saveMovement(dto, event.workspaceId(), event.ownerId());

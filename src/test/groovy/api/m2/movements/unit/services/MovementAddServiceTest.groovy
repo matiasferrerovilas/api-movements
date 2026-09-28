@@ -20,6 +20,7 @@ import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementFactory
+import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.entities.commons.Bank
 import api.m2.movements.services.workspaces.WorkspaceQueryService
@@ -36,6 +37,7 @@ class MovementAddServiceTest extends Specification {
     MovementRepository movementRepository = Mock(MovementRepository)
     MovementMapper movementMapper
     MovementFactory movementFactory = Mock(MovementFactory)
+    MovementItemService movementItemService = Mock(MovementItemService)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
@@ -51,12 +53,14 @@ class MovementAddServiceTest extends Specification {
                 movementRepository,
                 movementMapper,
                 movementFactory,
+                movementItemService,
                 eventPublisher,
                 workspaceQueryService,
                 userService
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]
+        movementItemService.getItems(_ as Long) >> []
     }
 
     def buildMovement(Long workspaceId) {
@@ -78,7 +82,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -96,7 +100,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -118,7 +122,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
-                ["HOGAR"], "GASTO", "ARS", null, null, null, null
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null
         )
 
         movementFactory.create(_ as MovementToAdd) >> {
@@ -137,7 +141,7 @@ class MovementAddServiceTest extends Specification {
         given:
         def dto = new MovementToAdd(
                 new BigDecimal("500.00"), LocalDate.now(), "Ingreso recurrente",
-                ["HOGAR"], "INGRESO", "ARS", null, null, null, null
+                ["HOGAR"], "INGRESO", "ARS", null, null, null, null, null
         )
         def movement = buildMovement(1L)
 
@@ -160,7 +164,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement - should update movement when called"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
         def movement = buildMovement(1L)
         movementRepository.findById(10L) >> Optional.of(movement)
 
@@ -173,7 +177,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement - should throw EntityNotFoundException when movement does not exist"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
         movementRepository.findById(999L) >> Optional.empty()
 
         when:
@@ -189,7 +193,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement mapper - should not touch type when not provided"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
         def movement = new Movement()
         movement.setType(MovementType.DEBITO)
 
@@ -202,7 +206,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement mapper - should change type between non-CREDITO types without touching cuotas"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "INGRESO")
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "INGRESO", null)
         def movement = new Movement()
         movement.setType(MovementType.DEBITO)
 
@@ -218,7 +222,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement mapper - moving out of CREDITO clears cuotaActual, cuotasTotales and lastCreditPayment"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "DEBITO")
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "DEBITO", null)
         def movement = new Movement()
         movement.setType(MovementType.CREDITO)
         movement.setCuotaActual(2)
@@ -237,7 +241,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement mapper - moving into CREDITO paints cuotaActual/cuotasTotales from dto and leaves lastCreditPayment untouched"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, 2, 6, null, "CREDITO")
+        def dto = new ExpenseToUpdate(null, null, null, null, null, 2, 6, null, "CREDITO", null)
         def movement = new Movement()
         movement.setType(MovementType.DEBITO)
         // Valor previo cualquiera: no se debe recalcular acá, queda tal cual estaba.
@@ -255,7 +259,7 @@ class MovementAddServiceTest extends Specification {
 
     def "updateMovement mapper - nulls cuotaActual/cuotasTotales when dto sends them null even without a type change"() {
         given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null)
+        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
         def movement = new Movement()
         movement.setType(MovementType.CREDITO)
         movement.setCuotaActual(2)

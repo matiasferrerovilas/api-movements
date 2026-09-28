@@ -23,7 +23,9 @@ public record MovementRecord(Long id,
                              Integer cuotaActual,
                              Integer cuotasTotales,
                              LocalDate lastCreditPayment,
-                             Metadata metadata) {
+                             Metadata metadata,
+                             // Desglose opcional del movimiento. Nunca null: [] si no tiene items.
+                             List<MovementItemDto> items) {
 
     public record Metadata(UserBaseRecord owner,
                             WorkspaceBaseRecord workspace,

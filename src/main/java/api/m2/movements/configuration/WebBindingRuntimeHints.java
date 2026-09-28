@@ -12,6 +12,7 @@ import api.m2.movements.records.balance.BalanceFilterRecord;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.events.EventWrapper;
+import api.m2.movements.records.movements.MovementItemDto;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.records.services.SubscriptionRecord;
@@ -36,6 +37,10 @@ public class WebBindingRuntimeHints implements RuntimeHintsRegistrar {
             EventWrapper.class,
             MovementRecord.class,
             MovementRecord.Metadata.class,
+            // Nested dentro de MovementRecord.items, que se publica vía *PublishServiceWebSocket
+            // (convertAndSend con Object genérico) — igual que NotificationRecord más abajo, no
+            // alcanza con que también viaje por @RequestBody/@ResponseBody normal.
+            MovementItemDto.class,
             SubscriptionRecord.class,
             CategoryRecord.class,
             CurrencyRecord.class,

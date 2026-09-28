@@ -57,6 +57,7 @@ public abstract class ExpenseFileStrategy {
                 cuotaActual,
                 cuotaTotales,
                 getBank(),
+                null,
                 null
         );
 

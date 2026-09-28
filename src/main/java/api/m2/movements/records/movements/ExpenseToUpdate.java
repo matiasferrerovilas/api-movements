@@ -17,5 +17,7 @@ public record ExpenseToUpdate(
         Integer cuotaActual,
         Integer cuotasTotales,
         String bank,
-        String type
+        String type,
+        // Null: no tocar el desglose existente. Lista (incluso vacía): reemplazarlo por completo.
+        List<MovementItemDto> items
 ) { }

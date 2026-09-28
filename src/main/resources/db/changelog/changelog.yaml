@@ -179,3 +179,6 @@ databaseChangeLog:
   - include:
       file: 060_drop_table_monthly_summary_snapshot.sql
       relativeToChangelogFile: true
+  - include:
+      file: 061_create_table_movement_items.sql
+      relativeToChangelogFile: true
