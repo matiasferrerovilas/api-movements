@@ -36,7 +36,6 @@ class SantanderPdfExtractorHelperTest extends Specification {
         then:
         result.size() == 8
         result.every { it.currency() == eur }
-        result.every { it.installment() == null }
     }
 
     def "parse - should map account amount sign to DEBITO or INGRESO"() {
@@ -45,13 +44,13 @@ class SantanderPdfExtractorHelperTest extends Specification {
 
         then:
         result[0].type() == MovementType.DEBITO
-        result[0].amountPesos() == new BigDecimal("2.50")
+        result[0].amount() == new BigDecimal("2.50")
         result[0].date() == LocalDate.of(2026, 10, 8)
 
         and:
         def bizum = result.find { it.reference().startsWith("Bizum De") }
         bizum.type() == MovementType.INGRESO
-        bizum.amountPesos() == new BigDecimal("111.72")
+        bizum.amount() == new BigDecimal("111.72")
     }
 
     def "parse - should parse thousands separator in account amounts"() {
@@ -59,7 +58,7 @@ class SantanderPdfExtractorHelperTest extends Specification {
         def result = parser.parse(fixture("cuenta.txt"))
 
         then:
-        result.find { it.reference().startsWith("Eroski") }.amountPesos() == new BigDecimal("1235.01")
+        result.find { it.reference().startsWith("Eroski") }.amount() == new BigDecimal("1235.01")
     }
 
     def "parse - should clean card prefixes and suffixes from account concepts"() {
@@ -102,7 +101,7 @@ class SantanderPdfExtractorHelperTest extends Specification {
         then:
         first.date() == LocalDate.of(2026, 9, 24)
         first.type() == MovementType.CREDITO
-        first.amountPesos() == new BigDecimal("14.80")
+        first.amount() == new BigDecimal("14.80")
     }
 
     def "parse - should map negative card amounts to REINTEGRO and parse thousands"() {
@@ -111,8 +110,8 @@ class SantanderPdfExtractorHelperTest extends Specification {
 
         then:
         result.find { it.reference() == "VENPAY IVS" }.type() == MovementType.REINTEGRO
-        result.find { it.reference() == "VENPAY IVS" }.amountPesos() == new BigDecimal("3.00")
-        result.find { it.reference() == "CAFFETTERIA ANTONELLI." }.amountPesos() == new BigDecimal("1007.00")
+        result.find { it.reference() == "VENPAY IVS" }.amount() == new BigDecimal("3.00")
+        result.find { it.reference() == "CAFFETTERIA ANTONELLI." }.amount() == new BigDecimal("1007.00")
     }
 
     def "parse - should throw BusinessException when document is not from Santander"() {

@@ -14,9 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   la tarjeta "CREDITO SANTANDER" (solo sección B; importe negativo → REINTEGRO). Las cuotas de
   compras fraccionadas entran como CREDITO sin cuotaActual/cuotasTotales para que
   `CreditInstallmentJob` no genere la siguiente cuota que el próximo extracto ya trae.
-- `ParsedExpense.type` opcional: los parsers de cuenta informan el tipo por línea y
-  `ExpenseFileStrategy` lo usa antes que el tipo fijo de la estrategia.
 - Banco `SANTANDER` (changeset 062), distinto de `SANTANDER RIO`.
+
+### Removed
+- Parsers e import de BBVA y Galicia (`BBVAPdfExtractorHelper`, `GaliciaPdfExtractorHelper`,
+  `BBVACreditImportService`, `GaliciaCreditImportService`, `AmountInfo`): sus formatos de
+  resumen ya no coincidían y no se usaban. `import-file` con esos bancos ahora responde
+  "Invalid bank method".
+
+### Changed
+- `ParsedExpense` queda en `(date, reference, currency, amount, type)`: el parser resuelve el tipo
+  por línea y el monto siempre es positivo. `ExpenseFileStrategy` ya no tiene
+  `getBankMethod()`/`resolveAmount()` ni parsea cuotas.
 
 ## [2.13.1] - 2026-09-17
 

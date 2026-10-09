@@ -131,11 +131,8 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
         return Optional.of(new ParsedExpense(
                 date,
                 this.cleanAccountConcept(rawConcept),
-                null,
-                null,
                 currency,
                 amount.get().abs(),
-                null,
                 type));
     }
 
@@ -160,11 +157,8 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
         return Optional.of(new ParsedExpense(
                 LocalDate.parse(matcher.group(CREDIT_DATE_POSITION), CREDIT_DATE_FORMAT),
                 this.cleanCreditConcept(matcher.group(CREDIT_CONCEPT_POSITION)),
-                null,
-                null,
                 currency,
                 amount.get().abs(),
-                null,
                 type));
     }
 

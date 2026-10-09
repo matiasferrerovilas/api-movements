@@ -38,12 +38,12 @@ class SantanderImportServiceTest extends Specification {
         !service.match("BBVA")
     }
 
-    def "process - should keep the per-line type informed by the parser"() {
+    def "process - should map parsed lines to movements keeping the per-line type"() {
         given:
         parser.parse("texto") >> [
-                new ParsedExpense(LocalDate.of(2026, 10, 8), "Mercadona", null, null, eur, new BigDecimal("2.50"), null, MovementType.DEBITO),
-                new ParsedExpense(LocalDate.of(2026, 10, 7), "Bizum De Ana", null, null, eur, new BigDecimal("111.72"), null, MovementType.INGRESO),
-                new ParsedExpense(LocalDate.of(2026, 9, 26), "VENPAY IVS", null, null, eur, new BigDecimal("3.00"), null, MovementType.REINTEGRO)
+                new ParsedExpense(LocalDate.of(2026, 10, 8), "Mercadona", eur, new BigDecimal("2.50"), MovementType.DEBITO),
+                new ParsedExpense(LocalDate.of(2026, 10, 7), "Bizum De Ana", eur, new BigDecimal("111.72"), MovementType.INGRESO),
+                new ParsedExpense(LocalDate.of(2026, 9, 26), "VENPAY IVS", eur, new BigDecimal("3.00"), MovementType.REINTEGRO)
         ]
 
         when:
@@ -56,21 +56,6 @@ class SantanderImportServiceTest extends Specification {
             assert movements*.amount() == [new BigDecimal("2.50"), new BigDecimal("111.72"), new BigDecimal("3.00")]
             assert movements.every { it.currency() == "EUR" && it.bank() == "SANTANDER" }
             assert movements.every { it.cuotaActual() == 0 && it.cuotasTotales() == 0 }
-        }
-    }
-
-    def "process - should fall back to the strategy type when the parser leaves it empty"() {
-        given:
-        parser.parse("texto") >> [
-                new ParsedExpense(LocalDate.of(2026, 10, 8), "Algo", null, null, eur, new BigDecimal("1.00"), null)
-        ]
-
-        when:
-        service.process(new MovementFileToAdd("texto", 1L))
-
-        then:
-        1 * movementAddService.saveExpenseAll(_ as List<MovementToAdd>) >> { List args ->
-            assert (args[0] as List<MovementToAdd>)*.type() == ["DEBITO"]
         }
     }
 }
