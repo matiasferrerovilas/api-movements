@@ -123,6 +123,19 @@ public class MovementController {
     }
 
     @Operation(
+            summary = "Eliminar todos los movimientos",
+            description = "Elimina todos los movimientos cargados por el usuario autenticado.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Eliminados correctamente")
+            }
+    )
+    @DeleteMapping(value = "/all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAllMovements() {
+        movementAddService.deleteAllMovementsOfCurrentUser();
+    }
+
+    @Operation(
             summary = "Eliminar un movimiento",
             description = "Elimina un gasto existente por ID.",
             responses = {

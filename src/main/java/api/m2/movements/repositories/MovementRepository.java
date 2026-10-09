@@ -362,4 +362,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     @Query("SELECT DISTINCT m FROM Movement m LEFT JOIN FETCH m.categories WHERE m.workspaceId = :workspaceId")
     List<Movement> findByWorkspaceIdWithCategories(@Param("workspaceId") Long workspaceId);
+
+    List<Movement> findAllByOwnerId(Long ownerId);
 }

@@ -158,6 +158,27 @@ public class MovementAddService {
         log.info("Movimiento eliminado correctamente: id={}", id);
     }
 
+    /**
+     * Borra todos los movimientos cuyo owner es el usuario autenticado, en cualquier workspace.
+     * Los movimientos que otros miembros cargaron en un workspace compartido no se tocan.
+     */
+    @Transactional
+    public int deleteAllMovementsOfCurrentUser() {
+        var ownerId = userService.getMe().id();
+        var movements = movementRepository.findAllByOwnerId(ownerId);
+        if (movements.isEmpty()) {
+            return 0;
+        }
+
+        movementItemService.deleteItemsOf(movements.stream().map(Movement::getId).toList());
+        movementRepository.deleteAll(movements);
+        movements.forEach(movement ->
+                eventPublisher.publishEvent(new MovementDeletedEvent(movement.getId(), movement.getWorkspaceId())));
+
+        log.info("Movimientos eliminados del usuario: ownerId={}, total={}", ownerId, movements.size());
+        return movements.size();
+    }
+
     private MovementRecord enrich(Movement movement, List<MovementItemDto> items) {
         var workspace = new WorkspaceBaseRecord(movement.getWorkspaceId(),
                 workspaceQueryService.findWorkspaceNameById(movement.getWorkspaceId()));
