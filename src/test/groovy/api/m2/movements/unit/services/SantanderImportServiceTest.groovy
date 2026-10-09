@@ -58,4 +58,24 @@ class SantanderImportServiceTest extends Specification {
             assert movements.every { it.cuotaActual() == 0 && it.cuotasTotales() == 0 }
         }
     }
+
+    def "process - should truncate descriptions longer than the movements column"() {
+        given:
+        def longConcept = "Transferencia Inmediata A Favor De Fulano De Tal Concepto Alquiler Octubre"
+        parser.parse("texto") >> [
+                new ParsedExpense(LocalDate.of(2026, 10, 8), longConcept, eur, new BigDecimal("700.00"), MovementType.DEBITO),
+                new ParsedExpense(LocalDate.of(2026, 10, 8), "Mercadona", eur, new BigDecimal("2.50"), MovementType.DEBITO)
+        ]
+
+        when:
+        service.process(new MovementFileToAdd("texto", 1L))
+
+        then:
+        1 * movementAddService.saveExpenseAll(_ as List<MovementToAdd>) >> { List args ->
+            def movements = args[0] as List<MovementToAdd>
+            assert movements[0].description().length() <= 60
+            assert longConcept.startsWith(movements[0].description())
+            assert movements[1].description() == "Mercadona"
+        }
+    }
 }

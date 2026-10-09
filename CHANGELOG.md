@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CreditInstallmentJob` no genere la siguiente cuota que el próximo extracto ya trae.
 - Banco `SANTANDER` (changeset 062), distinto de `SANTANDER RIO`.
 
+### Fixed
+- El import de PDF recorta la descripción a 60 caracteres (largo de `movements.description`):
+  conceptos largos de transferencias o recibos hacían fallar todo el import con "Data too long".
+
 ### Removed
 - Parsers e import de BBVA y Galicia (`BBVAPdfExtractorHelper`, `GaliciaPdfExtractorHelper`,
   `BBVACreditImportService`, `GaliciaCreditImportService`, `AmountInfo`): sus formatos de

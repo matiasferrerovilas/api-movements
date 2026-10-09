@@ -16,6 +16,9 @@ public abstract class ExpenseFileStrategy {
     // Los movimientos importados no llevan plan de cuotas: el extracto ya trae cada cuota como su
     // propia línea, y si se informaran CreditInstallmentJob generaría la siguiente por duplicado.
     private static final int NO_INSTALLMENTS = 0;
+    // Largo de movements.description en la base. Los conceptos de transferencias y recibos pueden
+    // superarlo y una sola fila larga haría fallar todo el import (saveExpenseAll es transaccional).
+    private static final int MAX_DESCRIPTION_LENGTH = 60;
 
     protected final MovementAddService movementAddService;
     protected final ParserRegistry parserRegistry;
@@ -38,7 +41,7 @@ public abstract class ExpenseFileStrategy {
         return new MovementToAdd(
                 e.amount(),
                 e.date(),
-                e.reference(),
+                this.truncateDescription(e.reference()),
                 List.of(new CategoryUpdateRecord(null, categoryDefault.description())),
                 e.type().name(),
                 e.currency().getSymbol(),
@@ -48,5 +51,12 @@ public abstract class ExpenseFileStrategy {
                 null,
                 null
         );
+    }
+
+    private String truncateDescription(String description) {
+        if (description.length() <= MAX_DESCRIPTION_LENGTH) {
+            return description;
+        }
+        return description.substring(0, MAX_DESCRIPTION_LENGTH).trim();
     }
 }
