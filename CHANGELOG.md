@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Import de extractos de **Santander España** (EUR) vía `POST /v1/expenses/import-file` con
+  `bank=SANTANDER`. `SantanderPdfExtractorHelper` detecta el documento por el encabezado: el export
+  "Últimos movimientos de cuenta" (importe negativo → DEBITO, positivo → INGRESO) y el extracto de
+  la tarjeta "CREDITO SANTANDER" (solo sección B; importe negativo → REINTEGRO). Las cuotas de
+  compras fraccionadas entran como CREDITO sin cuotaActual/cuotasTotales para que
+  `CreditInstallmentJob` no genere la siguiente cuota que el próximo extracto ya trae.
+- Banco `SANTANDER` (changeset 062), distinto de `SANTANDER RIO`.
+
+- El import de PDF no duplica movimientos: antes de guardar saltea los que ya existen en el
+  workspace con la misma fecha, importe, tipo, banco y moneda (sin mirar la descripción, así
+  cuenta también los editados o cargados a mano). `POST /v1/expenses/import-file` ahora devuelve
+  `{ imported, duplicated }`.
+
+- Categorías que aprenden: al cambiar la categoría de un movimiento se guarda una regla
+  "comercio → categoría" por workspace (tabla `category_rule`, changeset 063) y los demás
+  movimientos de ese comercio que seguían en "Sin categoría" se recategorizan. El import de PDF usa
+  esas reglas antes del default fijo. La primera vez que se importa en un workspace sin reglas, se
+  arman desde los movimientos que ya tienen categoría. `MerchantKeyNormalizer` reduce la
+  descripción a una clave estable (ej. "Mercadona Valencia 1234" → `MERCADONA VALENCIA`).
+
+### Fixed
+- El import de PDF recorta la descripción a 60 caracteres (largo de `movements.description`):
+  conceptos largos de transferencias o recibos hacían fallar todo el import con "Data too long".
+
+### Removed
+- Parsers e import de BBVA y Galicia (`BBVAPdfExtractorHelper`, `GaliciaPdfExtractorHelper`,
+  `BBVACreditImportService`, `GaliciaCreditImportService`, `AmountInfo`): sus formatos de
+  resumen ya no coincidían y no se usaban. `import-file` con esos bancos ahora responde
+  "Invalid bank method".
+
+### Changed
+- `ParsedExpense` queda en `(date, reference, currency, amount, type)`: el parser resuelve el tipo
+  por línea y el monto siempre es positivo. `ExpenseFileStrategy` ya no tiene
+  `getBankMethod()`/`resolveAmount()` ni parsea cuotas.
+
 ## [2.13.1] - 2026-09-17
 
 ### Fixed

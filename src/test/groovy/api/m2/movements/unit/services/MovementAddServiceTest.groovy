@@ -1,5 +1,6 @@
 package api.m2.movements.unit.services
 
+import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Movement
@@ -11,6 +12,7 @@ import api.m2.movements.mappers.CategoryMapper
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.mappers.MovementMapperImpl
+import api.m2.movements.records.categories.CategoryCorrectedEvent
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
@@ -18,7 +20,9 @@ import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.records.movements.ImportResultRecord
 import api.m2.movements.services.movements.MovementAddService
+import api.m2.movements.services.movements.MovementDuplicateFilter
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.user.UserService
@@ -41,6 +45,7 @@ class MovementAddServiceTest extends Specification {
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
+    MovementDuplicateFilter movementDuplicateFilter = Mock(MovementDuplicateFilter)
 
     MovementAddService service
 
@@ -56,7 +61,8 @@ class MovementAddServiceTest extends Specification {
                 movementItemService,
                 eventPublisher,
                 workspaceQueryService,
-                userService
+                userService,
+                movementDuplicateFilter
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]
@@ -173,6 +179,64 @@ class MovementAddServiceTest extends Specification {
 
         then:
         1 * movementRepository.save(_ as Movement)
+    }
+
+    def "updateMovement - should publish a category correction when the category changed"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "SUPERMERCADO")], null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(5L).description("SUPERMERCADO").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        1 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent) >> { List args ->
+            def event = args[0] as CategoryCorrectedEvent
+            assert event.workspaceId() == 1L
+            assert event.movementDescription() == "Supermercado"
+            assert event.categoryId() == 5L
+        }
+    }
+
+    def "updateMovement - should not publish a category correction when categories did not change"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR")], null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
+    }
+
+    def "updateMovement - should not publish a category correction when the movement ends with several categories"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR"), new CategoryUpdateRecord(null, "SALUD")],
+                null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(2L).description("HOGAR").build(),
+                                   Category.builder().id(3L).description("SALUD").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
     }
 
     def "updateMovement - should throw EntityNotFoundException when movement does not exist"() {
@@ -302,6 +366,38 @@ class MovementAddServiceTest extends Specification {
         0 * movementRepository.deleteById(_ as Long)
     }
 
+    def "deleteAllMovementsOfCurrentUser - should delete only the caller's movements and publish one event each"() {
+        given:
+        userService.getMe() >> new UserMe(5L, null, null, null, null, null)
+        def first = Movement.builder().id(1L).workspaceId(2L).ownerId(5L).build()
+        def second = Movement.builder().id(2L).workspaceId(3L).ownerId(5L).build()
+        movementRepository.findAllByOwnerId(5L) >> [first, second]
+
+        when:
+        def deleted = service.deleteAllMovementsOfCurrentUser()
+
+        then:
+        deleted == 2
+        1 * movementItemService.deleteItemsOf([1L, 2L])
+        1 * movementRepository.deleteAll([first, second])
+        1 * eventPublisher.publishEvent(new MovementDeletedEvent(1L, 2L))
+        1 * eventPublisher.publishEvent(new MovementDeletedEvent(2L, 3L))
+    }
+
+    def "deleteAllMovementsOfCurrentUser - should do nothing when the caller has no movements"() {
+        given:
+        userService.getMe() >> new UserMe(5L, null, null, null, null, null)
+        movementRepository.findAllByOwnerId(5L) >> []
+
+        when:
+        def deleted = service.deleteAllMovementsOfCurrentUser()
+
+        then:
+        deleted == 0
+        0 * movementRepository.deleteAll(_)
+        0 * eventPublisher.publishEvent(_)
+    }
+
     def buildCreditoMovement(Integer cuotaActual, Integer cuotasTotales, LocalDate lastCreditPayment) {
         return Movement.builder()
                 .id(7L)
@@ -389,5 +485,43 @@ class MovementAddServiceTest extends Specification {
         1 * movementFactory.create({ it.cuotaActual() == 3 }, 5L, 10L) >> buildMovement(5L)
         1 * movementFactory.create({ it.cuotaActual() == 5 && it.bank() == null }, 9L, 11L) >> buildMovement(9L)
     }
-}
 
+    def "saveExpenseAll - should save only new movements and report duplicates"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                [], "DEBITO", "EUR", 0, 0, "SANTANDER", null, null
+        )
+        def existing = buildMovement(1L)
+        def fresh = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >>> [existing, fresh]
+        movementDuplicateFilter.filterNew([existing, fresh], 1L) >> [fresh]
+
+        when:
+        def result = service.saveExpenseAll([dto, dto])
+
+        then:
+        1 * movementRepository.saveAll({ it.size() == 1 && it[0].is(fresh) }) >> [fresh]
+        1 * eventPublisher.publishEvent(_ as MovementRecord)
+        result == new ImportResultRecord(1, 1)
+    }
+
+    def "saveExpenseAll - should not save anything when every movement is a duplicate"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                [], "DEBITO", "EUR", 0, 0, "SANTANDER", null, null
+        )
+        def existing = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >> existing
+        movementDuplicateFilter.filterNew([existing], 1L) >> []
+
+        when:
+        def result = service.saveExpenseAll([dto])
+
+        then:
+        0 * movementRepository.saveAll(_ as List<Movement>)
+        0 * eventPublisher.publishEvent(_ as MovementRecord)
+        result == new ImportResultRecord(0, 1)
+    }
+}

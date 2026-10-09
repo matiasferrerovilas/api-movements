@@ -176,6 +176,38 @@ class MovementControllerIntegrationTest extends BaseControllerIntegrationTest {
         !movementRepository.findById(movement.id).isPresent()
     }
 
+    def "DELETE /v1/expenses/all - should delete the caller's movements and keep other users' ones"() {
+        given:
+        def category = getOrCreateCategory("SIN_CATEGORIA")
+        def buildMovement = { Long ownerId ->
+            movementRepository.save(Movement.builder()
+                    .amount(new BigDecimal("100.00"))
+                    .description("Bulk delete")
+                    .type(MovementType.DEBITO)
+                    .date(LocalDate.now())
+                    .ownerId(ownerId)
+                    .workspaceId(testWorkspaceId)
+                    .currency(testCurrency)
+                    .categories([category] as Set)
+                    .cuotaActual(0)
+                    .cuotasTotales(0)
+                    .build())
+        }
+        def mine = [buildMovement(testUserId), buildMovement(testUserId)]
+        def othersMovement = buildMovement(testUserId + 1000)
+
+        when:
+        def result = mockMvc.perform(delete("/v1/expenses/all")
+                .with(jwtAuth()))
+
+        then:
+        result.andExpect(status().isNoContent())
+
+        and:
+        mine.every { !movementRepository.findById(it.id).isPresent() }
+        movementRepository.findById(othersMovement.id).isPresent()
+    }
+
     def "DELETE /v1/expenses/{id} - should return 404 for non-existent movement"() {
         when:
         def result = mockMvc.perform(delete("/v1/expenses/{id}", 999999L)

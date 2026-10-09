@@ -182,3 +182,9 @@ databaseChangeLog:
   - include:
       file: 061_create_table_movement_items.sql
       relativeToChangelogFile: true
+  - include:
+      file: 062_insert_bank_santander.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 063_create_table_category_rule.sql
+      relativeToChangelogFile: true
