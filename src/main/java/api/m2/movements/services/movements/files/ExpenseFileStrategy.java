@@ -36,6 +36,10 @@ public abstract class ExpenseFileStrategy {
                 .toList());
     }
 
+    private MovementType resolveType(ParsedExpense e) {
+        return e.type() != null ? e.type() : this.getBankMethod();
+    }
+
     private MovementToAdd processExpense(ParsedExpense e, MovementFileToAdd movementFileToAdd) {
         int cuotaActual = 0;
         int cuotaTotales = 0;
@@ -52,7 +56,7 @@ public abstract class ExpenseFileStrategy {
                 e.date(),
                 e.reference(),
                 List.of(new CategoryUpdateRecord(null, categoryDefault.description())),
-                this.getBankMethod().name(),
+                this.resolveType(e).name(),
                 e.currency().getSymbol(),
                 cuotaActual,
                 cuotaTotales,
