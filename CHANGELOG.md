@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Import de extractos de **Santander España** (EUR) vía `POST /v1/expenses/import-file` con
+  `bank=SANTANDER`. `SantanderPdfExtractorHelper` detecta el documento por el encabezado: el export
+  "Últimos movimientos de cuenta" (importe negativo → DEBITO, positivo → INGRESO) y el extracto de
+  la tarjeta "CREDITO SANTANDER" (solo sección B; importe negativo → REINTEGRO). Las cuotas de
+  compras fraccionadas entran como CREDITO sin cuotaActual/cuotasTotales para que
+  `CreditInstallmentJob` no genere la siguiente cuota que el próximo extracto ya trae.
+- `ParsedExpense.type` opcional: los parsers de cuenta informan el tipo por línea y
+  `ExpenseFileStrategy` lo usa antes que el tipo fijo de la estrategia.
+- Banco `SANTANDER` (changeset 062), distinto de `SANTANDER RIO`.
+
 ## [2.13.1] - 2026-09-17
 
 ### Fixed
