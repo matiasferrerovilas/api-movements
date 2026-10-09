@@ -4,6 +4,7 @@ import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.mappers.MovementMapper;
+import api.m2.movements.records.movements.ImportResultRecord;
 import api.m2.movements.records.movements.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.movements.ExpenseToUpdate;
@@ -41,6 +42,7 @@ public class MovementAddService {
     private final ApplicationEventPublisher eventPublisher;
     private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
+    private final MovementDuplicateFilter movementDuplicateFilter;
 
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
@@ -104,19 +106,26 @@ public class MovementAddService {
     }
 
     @Transactional
-    public void saveExpenseAll(List<@Valid MovementToAdd> list) {
+    public ImportResultRecord saveExpenseAll(List<@Valid MovementToAdd> list) {
         if (list == null || list.isEmpty()) {
             log.warn("Intento de guardar lista vacía de movimientos");
-            return;
+            return new ImportResultRecord(0, 0);
         }
 
         var entities = list.stream()
                 .map(movementFactory::create)
                 .toList();
 
-        var saved = movementRepository.saveAll(entities);
+        var workspaceId = entities.getFirst().getWorkspaceId();
+        var newEntities = movementDuplicateFilter.filterNew(entities, workspaceId);
+        var duplicated = entities.size() - newEntities.size();
+        if (newEntities.isEmpty()) {
+            log.info("Import sin movimientos nuevos: duplicados={}", duplicated);
+            return new ImportResultRecord(0, duplicated);
+        }
 
-        var workspaceId = saved.getFirst().getWorkspaceId();
+        var saved = movementRepository.saveAll(newEntities);
+
         var workspace = new WorkspaceBaseRecord(workspaceId, workspaceQueryService.findWorkspaceNameById(workspaceId));
         var ownerIds = saved.stream().map(Movement::getOwnerId).distinct().toList();
         var ownerNamesById = userService.getUserNamesByIds(ownerIds);
@@ -124,7 +133,8 @@ public class MovementAddService {
         saved.forEach(movement ->
                 eventPublisher.publishEvent(this.buildRecord(movement, workspace, ownerNamesById, List.of())));
 
-        log.info("Movimientos guardados en batch: total={}", saved.size());
+        log.info("Movimientos guardados en batch: total={}, duplicados={}", saved.size(), duplicated);
+        return new ImportResultRecord(saved.size(), duplicated);
     }
 
     @Transactional

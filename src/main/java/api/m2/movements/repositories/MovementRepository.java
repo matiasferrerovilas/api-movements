@@ -350,4 +350,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
       AND YEAR(m.date) = :year AND MONTH(m.date) = :month
     """)
     List<Movement> findCreditoMovementsWithPendingInstallments(@Param("year") int year, @Param("month") int month);
+
+    List<Movement> findByWorkspaceIdAndDateBetween(Long workspaceId, LocalDate from, LocalDate to);
 }

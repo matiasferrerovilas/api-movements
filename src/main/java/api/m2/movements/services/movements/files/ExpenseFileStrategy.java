@@ -2,6 +2,7 @@ package api.m2.movements.services.movements.files;
 
 import api.m2.movements.helpers.ParserRegistry;
 import api.m2.movements.records.categories.CategoryUpdateRecord;
+import api.m2.movements.records.movements.ImportResultRecord;
 import api.m2.movements.records.movements.MovementFileToAdd;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.records.pdf.ParsedExpense;
@@ -28,12 +29,12 @@ public abstract class ExpenseFileStrategy {
 
     public abstract String getBank();
 
-    public void process(MovementFileToAdd movementFileToAdd) {
+    public ImportResultRecord process(MovementFileToAdd movementFileToAdd) {
         var parser = parserRegistry.getParser(this.getBank());
 
         List<ParsedExpense> expenses = parser.parse(movementFileToAdd.file());
 
-        movementAddService.saveExpenseAll(expenses.stream().map(this::processExpense).toList());
+        return movementAddService.saveExpenseAll(expenses.stream().map(this::processExpense).toList());
     }
 
     private MovementToAdd processExpense(ParsedExpense e) {

@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CreditInstallmentJob` no genere la siguiente cuota que el próximo extracto ya trae.
 - Banco `SANTANDER` (changeset 062), distinto de `SANTANDER RIO`.
 
+- El import de PDF no duplica movimientos: antes de guardar saltea los que ya existen en el
+  workspace con la misma fecha, importe, tipo, banco y moneda (sin mirar la descripción, así
+  cuenta también los editados o cargados a mano). `POST /v1/expenses/import-file` ahora devuelve
+  `{ imported, duplicated }`.
+
 ### Fixed
 - El import de PDF recorta la descripción a 60 caracteres (largo de `movements.description`):
   conceptos largos de transferencias o recibos hacían fallar todo el import con "Data too long".

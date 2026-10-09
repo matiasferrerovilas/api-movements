@@ -18,7 +18,9 @@ import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.records.movements.ImportResultRecord
 import api.m2.movements.services.movements.MovementAddService
+import api.m2.movements.services.movements.MovementDuplicateFilter
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.user.UserService
@@ -41,6 +43,7 @@ class MovementAddServiceTest extends Specification {
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
+    MovementDuplicateFilter movementDuplicateFilter = Mock(MovementDuplicateFilter)
 
     MovementAddService service
 
@@ -56,7 +59,8 @@ class MovementAddServiceTest extends Specification {
                 movementItemService,
                 eventPublisher,
                 workspaceQueryService,
-                userService
+                userService,
+                movementDuplicateFilter
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]
@@ -389,5 +393,43 @@ class MovementAddServiceTest extends Specification {
         1 * movementFactory.create({ it.cuotaActual() == 3 }, 5L, 10L) >> buildMovement(5L)
         1 * movementFactory.create({ it.cuotaActual() == 5 && it.bank() == null }, 9L, 11L) >> buildMovement(9L)
     }
-}
 
+    def "saveExpenseAll - should save only new movements and report duplicates"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                [], "DEBITO", "EUR", 0, 0, "SANTANDER", null, null
+        )
+        def existing = buildMovement(1L)
+        def fresh = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >>> [existing, fresh]
+        movementDuplicateFilter.filterNew([existing, fresh], 1L) >> [fresh]
+
+        when:
+        def result = service.saveExpenseAll([dto, dto])
+
+        then:
+        1 * movementRepository.saveAll({ it.size() == 1 && it[0].is(fresh) }) >> [fresh]
+        1 * eventPublisher.publishEvent(_ as MovementRecord)
+        result == new ImportResultRecord(1, 1)
+    }
+
+    def "saveExpenseAll - should not save anything when every movement is a duplicate"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                [], "DEBITO", "EUR", 0, 0, "SANTANDER", null, null
+        )
+        def existing = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >> existing
+        movementDuplicateFilter.filterNew([existing], 1L) >> []
+
+        when:
+        def result = service.saveExpenseAll([dto])
+
+        then:
+        0 * movementRepository.saveAll(_ as List<Movement>)
+        0 * eventPublisher.publishEvent(_ as MovementRecord)
+        result == new ImportResultRecord(0, 1)
+    }
+}
