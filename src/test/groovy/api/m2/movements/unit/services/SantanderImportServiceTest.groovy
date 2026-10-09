@@ -9,6 +9,9 @@ import api.m2.movements.records.movements.MovementFileToAdd
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.records.pdf.ParsedExpense
 import api.m2.movements.services.category.CategoryAddService
+import api.m2.movements.services.category.rules.CategoryMatcher
+import api.m2.movements.services.category.rules.CategoryRuleService
+import api.m2.movements.services.category.rules.MerchantKeyNormalizer
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.files.strategies.SantanderImportService
 import spock.lang.Specification
@@ -21,13 +24,15 @@ class SantanderImportServiceTest extends Specification {
     ParserRegistry parserRegistry = Stub(ParserRegistry)
     CategoryAddService categoryAddService = Stub(CategoryAddService)
     PdfExtractorHelper parser = Stub(PdfExtractorHelper)
+    CategoryRuleService categoryRuleService = Stub(CategoryRuleService)
     SantanderImportService service
 
     Currency eur = new Currency(symbol: "EUR", description: "Euro")
 
     def setup() {
-        service = new SantanderImportService(movementAddService, parserRegistry, categoryAddService)
+        service = new SantanderImportService(movementAddService, parserRegistry, categoryAddService, categoryRuleService)
         parserRegistry.getParser("SANTANDER") >> parser
+        categoryRuleService.matcherFor(1L) >> new CategoryMatcher(new MerchantKeyNormalizer(), ["MERCADONA": "SUPERMERCADO"], [:])
         categoryAddService.resolveDefaultCategory(_ as String) >> new CategoryRecord(1L, "SIN_CATEGORIA", true, false, null, null)
     }
 
@@ -76,6 +81,24 @@ class SantanderImportServiceTest extends Specification {
             assert movements[0].description().length() <= 60
             assert longConcept.startsWith(movements[0].description())
             assert movements[1].description() == "Mercadona"
+        }
+    }
+
+    def "process - should use the learned rule category and fall back to the default one"() {
+        given:
+        parser.parse("texto") >> [
+                new ParsedExpense(LocalDate.of(2026, 10, 8), "Mercadona", eur, new BigDecimal("2.50"), MovementType.DEBITO),
+                new ParsedExpense(LocalDate.of(2026, 10, 8), "Kiosko Nuevo", eur, new BigDecimal("1.00"), MovementType.DEBITO)
+        ]
+
+        when:
+        service.process(new MovementFileToAdd("texto", 1L))
+
+        then:
+        1 * movementAddService.saveExpenseAll(_ as List<MovementToAdd>) >> { List args ->
+            def movements = args[0] as List<MovementToAdd>
+            assert movements[0].categories()*.description() == ["SUPERMERCADO"]
+            assert movements[1].categories()*.description() == ["SIN_CATEGORIA"]
         }
     }
 }

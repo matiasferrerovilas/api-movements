@@ -2,6 +2,7 @@ package api.m2.movements.services.movements.files.strategies;
 
 import api.m2.movements.helpers.ParserRegistry;
 import api.m2.movements.services.category.CategoryAddService;
+import api.m2.movements.services.category.rules.CategoryRuleService;
 import api.m2.movements.services.movements.MovementAddService;
 import api.m2.movements.services.movements.files.ExpenseFileStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
 public class SantanderImportService extends ExpenseFileStrategy {
 
     public SantanderImportService(MovementAddService movementAddService, ParserRegistry parserRegistry,
-                                  CategoryAddService categoryAddService) {
-        super(movementAddService, parserRegistry, categoryAddService);
+                                  CategoryAddService categoryAddService, CategoryRuleService categoryRuleService) {
+        super(movementAddService, parserRegistry, categoryAddService, categoryRuleService);
     }
 
     @Override

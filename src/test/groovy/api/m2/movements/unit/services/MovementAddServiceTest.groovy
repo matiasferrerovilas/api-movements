@@ -11,6 +11,7 @@ import api.m2.movements.mappers.CategoryMapper
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.mappers.MovementMapperImpl
+import api.m2.movements.records.categories.CategoryCorrectedEvent
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
 import api.m2.movements.records.movements.MovementDeletedEvent
@@ -177,6 +178,64 @@ class MovementAddServiceTest extends Specification {
 
         then:
         1 * movementRepository.save(_ as Movement)
+    }
+
+    def "updateMovement - should publish a category correction when the category changed"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "SUPERMERCADO")], null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(5L).description("SUPERMERCADO").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        1 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent) >> { List args ->
+            def event = args[0] as CategoryCorrectedEvent
+            assert event.workspaceId() == 1L
+            assert event.movementDescription() == "Supermercado"
+            assert event.categoryId() == 5L
+        }
+    }
+
+    def "updateMovement - should not publish a category correction when categories did not change"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR")], null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
+    }
+
+    def "updateMovement - should not publish a category correction when the movement ends with several categories"() {
+        given:
+        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR"), new CategoryUpdateRecord(null, "SALUD")],
+                null, null, null, null, null, null)
+        def movement = buildMovement(1L)
+        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
+        movementRepository.findById(10L) >> Optional.of(movement)
+        movementFactory.applyUpdates(dto, movement) >> {
+            movement.categories = [Category.builder().id(2L).description("HOGAR").build(),
+                                   Category.builder().id(3L).description("SALUD").build()] as Set
+        }
+
+        when:
+        service.updateMovement(dto, 10L)
+
+        then:
+        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
     }
 
     def "updateMovement - should throw EntityNotFoundException when movement does not exist"() {

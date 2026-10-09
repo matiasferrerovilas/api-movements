@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cuenta también los editados o cargados a mano). `POST /v1/expenses/import-file` ahora devuelve
   `{ imported, duplicated }`.
 
+- Categorías que aprenden: al cambiar la categoría de un movimiento se guarda una regla
+  "comercio → categoría" por workspace (tabla `category_rule`, changeset 063) y los demás
+  movimientos de ese comercio que seguían en "Sin categoría" se recategorizan. El import de PDF usa
+  esas reglas antes del default fijo. La primera vez que se importa en un workspace sin reglas, se
+  arman desde los movimientos que ya tienen categoría. `MerchantKeyNormalizer` reduce la
+  descripción a una clave estable (ej. "Mercadona Valencia 1234" → `MERCADONA VALENCIA`).
+
 ### Fixed
 - El import de PDF recorta la descripción a 60 caracteres (largo de `movements.description`):
   conceptos largos de transferencias o recibos hacían fallar todo el import con "Data too long".
