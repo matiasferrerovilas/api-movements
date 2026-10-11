@@ -1,4 +1,4 @@
-package api.m2.movements.records.categories;
+package api.m2.movements.events;
 
 /**
  * El usuario le cambió la categoría a un movimiento. Lo escucha {@code CategoryRuleLearningHandler}

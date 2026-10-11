@@ -1,8 +1,6 @@
 package api.m2.movements.helpers;
 
 import api.m2.movements.records.pdf.ParsedExpense;
-import api.m2.movements.repositories.CurrencyRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,10 +10,8 @@ import java.util.Optional;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public abstract class PdfExtractorHelper {
 
-    protected final CurrencyRepository currencyRepository;
     protected BigDecimal parseMoney(String amount) {
         if (amount == null || amount.trim().isEmpty()) {
             return null;

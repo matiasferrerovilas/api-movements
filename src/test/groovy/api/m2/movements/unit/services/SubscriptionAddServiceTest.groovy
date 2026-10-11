@@ -7,11 +7,11 @@ import api.m2.movements.entities.movements.Subscription
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.SubscriptionMapper
 import api.m2.movements.records.currencies.CurrencyRecord
-import api.m2.movements.records.services.ServiceDeletedEvent
+import api.m2.movements.events.ServiceDeletedEvent
 import api.m2.movements.records.services.SubscriptionToAdd
 import api.m2.movements.records.services.UpdateSubscriptionRecord
-import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent
-import api.m2.movements.records.subscriptions.SubscriptionPaidEvent
+import api.m2.movements.events.SubscriptionMovementSyncEvent
+import api.m2.movements.events.SubscriptionPaidEvent
 import api.m2.movements.enums.NotificationSeverity
 import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.currencies.CurrencyAddService

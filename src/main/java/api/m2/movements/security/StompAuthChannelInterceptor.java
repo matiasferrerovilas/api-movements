@@ -106,7 +106,8 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         try {
             jwt = jwtDecoder.decode(authHeader.substring(BEARER_PREFIX.length()));
         } catch (JwtException e) {
-            log.warn("Conexión WebSocket rechazada: token inválido");
+            // El mensaje de JwtException describe el motivo (vencido, firma, issuer) sin incluir el token.
+            log.warn("Conexión WebSocket rechazada: token inválido ({})", e.getMessage());
             throw new MessagingException("Token inválido", e);
         }
 

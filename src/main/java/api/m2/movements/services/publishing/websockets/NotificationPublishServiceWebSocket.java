@@ -2,7 +2,7 @@ package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
-import api.m2.movements.records.notifications.NotificationEvent;
+import api.m2.movements.events.NotificationEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

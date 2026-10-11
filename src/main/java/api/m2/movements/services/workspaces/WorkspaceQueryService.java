@@ -34,10 +34,11 @@ public class WorkspaceQueryService {
     }
 
     // Cacheado por 5hs (ver CacheConfiguration.IDENTITY_CACHE). @Cacheable en un método void solo
-    // cachea la ejecución exitosa (Spring no cachea si el método tira excepción) — una membership
-    // confirmada se recuerda por la ventana completa, pero un rechazo siempre se re-verifica
-    // contra api-identity, así que sacar a alguien de un workspace corta su acceso de inmediato,
-    // no recién cuando expire el cache.
+    // cachea la ejecución exitosa (Spring no cachea si el método tira excepción): una membership
+    // confirmada se recuerda por la ventana completa, y un rechazo se re-verifica siempre contra
+    // api-identity (por eso sumar a alguien a un workspace le da acceso de inmediato). El caso
+    // contrario NO se cubre solo: sacar a alguien no borra la membership que ya se recordó, así
+    // que IdentityCacheInvalidator la invalida cuando alguien sale o lo sacan de un workspace.
     @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'membership:' + #workspaceId + ':' + #userId")
     public void verifyUserIsMemberOfWorkspace(Long workspaceId, Long userId) {
         try {

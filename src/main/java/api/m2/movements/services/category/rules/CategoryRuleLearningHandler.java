@@ -1,6 +1,6 @@
 package api.m2.movements.services.category.rules;
 
-import api.m2.movements.records.categories.CategoryCorrectedEvent;
+import api.m2.movements.events.CategoryCorrectedEvent;
 import api.m2.movements.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

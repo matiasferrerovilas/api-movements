@@ -51,7 +51,7 @@ public abstract class ExpenseFileStrategy {
                 this.truncateDescription(e.reference()),
                 List.of(new CategoryUpdateRecord(null, category)),
                 e.type().name(),
-                e.currency().getSymbol(),
+                e.currencySymbol(),
                 NO_INSTALLMENTS,
                 NO_INSTALLMENTS,
                 this.getBank(),

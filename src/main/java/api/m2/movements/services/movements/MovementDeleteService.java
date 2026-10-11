@@ -4,7 +4,7 @@ import api.m2.movements.annotations.RequiresMembership;
 import api.m2.movements.entities.movements.Movement;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.records.movements.MovementDeletedEvent;
+import api.m2.movements.events.MovementDeletedEvent;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.services.user.UserService;
 import lombok.RequiredArgsConstructor;

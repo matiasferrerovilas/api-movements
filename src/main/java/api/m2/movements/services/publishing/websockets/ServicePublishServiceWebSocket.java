@@ -2,10 +2,10 @@ package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
-import api.m2.movements.records.services.ServiceAddedEvent;
-import api.m2.movements.records.services.ServiceDeletedEvent;
-import api.m2.movements.records.services.ServicePaidEvent;
-import api.m2.movements.records.services.ServiceUpdatedEvent;
+import api.m2.movements.events.ServiceAddedEvent;
+import api.m2.movements.events.ServiceDeletedEvent;
+import api.m2.movements.events.ServicePaidEvent;
+import api.m2.movements.events.ServiceUpdatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

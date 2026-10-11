@@ -1,7 +1,7 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.exceptions.EntityNotFoundException;
-import api.m2.movements.records.subscriptions.SubscriptionMovementSyncEvent;
+import api.m2.movements.events.SubscriptionMovementSyncEvent;
 import api.m2.movements.repositories.MovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,5 @@
 package api.m2.movements.records.pdf;
 
-import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.enums.MovementType;
 
 import java.math.BigDecimal;
@@ -14,7 +13,7 @@ import java.time.LocalDate;
 public record ParsedExpense(
         LocalDate date,
         String reference,
-        Currency currency,
+        String currencySymbol,
         BigDecimal amount,
         MovementType type
 ) { }

@@ -7,7 +7,7 @@ import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.mappers.WorkspaceCategoryMapper;
 import api.m2.movements.records.categories.CategoryPatchRequest;
 import api.m2.movements.records.categories.CategoryRecord;
-import api.m2.movements.records.categories.CategoryUpdatedEvent;
+import api.m2.movements.events.CategoryUpdatedEvent;
 import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;

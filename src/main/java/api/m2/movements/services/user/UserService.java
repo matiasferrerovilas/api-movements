@@ -55,7 +55,7 @@ public class UserService {
     /** Same as {@link #getMe()}, but also resolves the caller's role in {@code workspaceId} — null
      * if the caller isn't a member. api-movements decides which workspace's role to ask for (its
      * own notion of "active workspace"); api-identity has no such notion itself. */
-    @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + @userService.getAuthenticatedEmail() + ':' + #workspaceId")
+    @Cacheable(cacheNames = CacheConfiguration.WORKSPACE_ROLE_CACHE, key = "'me:' + @userService.getAuthenticatedEmail() + ':' + #workspaceId")
     public UserMe getMe(Long workspaceId) {
         return identityClient.getMe(workspaceId);
     }

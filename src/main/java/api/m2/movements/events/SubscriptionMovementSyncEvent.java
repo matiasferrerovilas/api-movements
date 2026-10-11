@@ -1,4 +1,4 @@
-package api.m2.movements.records.subscriptions;
+package api.m2.movements.events;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

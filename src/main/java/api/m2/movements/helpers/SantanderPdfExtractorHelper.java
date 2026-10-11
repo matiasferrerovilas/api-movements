@@ -1,11 +1,8 @@
 package api.m2.movements.helpers;
 
-import api.m2.movements.entities.commons.Currency;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.exceptions.BusinessException;
-import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.records.pdf.ParsedExpense;
-import api.m2.movements.repositories.CurrencyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -67,10 +64,6 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
             "^(TRANSACCION CONTACTLESS|COMPRA PAISES UME|COMPRA INTERNET|COMPRA)\\s+");
     private static final Pattern MULTIPLE_SPACES = Pattern.compile("\\s+");
 
-    public SantanderPdfExtractorHelper(CurrencyRepository currencyRepository) {
-        super(currencyRepository);
-    }
-
     @Override
     public String getBank() {
         return BANK;
@@ -88,7 +81,6 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
     }
 
     private List<ParsedExpense> parseAccountMovements(String pdfText) {
-        var currency = this.resolveCurrency();
         var result = new ArrayList<ParsedExpense>();
 
         LocalDate currentDate = null;
@@ -113,7 +105,7 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
             }
 
             concept.append(line, 0, amountMatcher.start());
-            this.buildAccountExpense(currentDate, concept.toString(), amountMatcher.group(1), currency)
+            this.buildAccountExpense(currentDate, concept.toString(), amountMatcher.group(1))
                     .ifPresent(result::add);
             currentDate = null;
             concept.setLength(0);
@@ -121,7 +113,7 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
         return result;
     }
 
-    private Optional<ParsedExpense> buildAccountExpense(LocalDate date, String rawConcept, String rawAmount, Currency currency) {
+    private Optional<ParsedExpense> buildAccountExpense(LocalDate date, String rawConcept, String rawAmount) {
         var amount = parseAmount(rawAmount);
         if (amount.isEmpty() || amount.get().signum() == 0) {
             log.warn("Movimiento de cuenta Santander sin importe válido: '{}'", rawConcept);
@@ -131,23 +123,22 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
         return Optional.of(new ParsedExpense(
                 date,
                 this.cleanAccountConcept(rawConcept),
-                currency,
+                CURRENCY_SYMBOL,
                 amount.get().abs(),
                 type));
     }
 
     private List<ParsedExpense> parseCreditStatement(String pdfText) {
-        var currency = this.resolveCurrency();
         return pdfText.lines()
                 .map(String::trim)
                 .map(CREDIT_LINE::matcher)
                 .filter(Matcher::matches)
-                .map(matcher -> this.buildCreditExpense(matcher, currency))
+                .map(this::buildCreditExpense)
                 .flatMap(Optional::stream)
                 .toList();
     }
 
-    private Optional<ParsedExpense> buildCreditExpense(Matcher matcher, Currency currency) {
+    private Optional<ParsedExpense> buildCreditExpense(Matcher matcher) {
         var amount = parseAmount(matcher.group(CREDIT_AMOUNT_POSITION));
         if (amount.isEmpty() || amount.get().signum() == 0) {
             log.warn("Línea de tarjeta Santander sin importe válido: '{}'", matcher.group(0));
@@ -157,7 +148,7 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
         return Optional.of(new ParsedExpense(
                 LocalDate.parse(matcher.group(CREDIT_DATE_POSITION), CREDIT_DATE_FORMAT),
                 this.cleanCreditConcept(matcher.group(CREDIT_CONCEPT_POSITION)),
-                currency,
+                CURRENCY_SYMBOL,
                 amount.get().abs(),
                 type));
     }
@@ -177,10 +168,5 @@ public class SantanderPdfExtractorHelper extends PdfExtractorHelper {
 
     private String stripTrailingSeparators(String value) {
         return value.replaceAll("[,\\s]+$", "").trim();
-    }
-
-    private Currency resolveCurrency() {
-        return currencyRepository.findBySymbol(CURRENCY_SYMBOL)
-                .orElseThrow(() -> new EntityNotFoundException("Currency not found: " + CURRENCY_SYMBOL));
     }
 }

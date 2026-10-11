@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
-import api.m2.movements.records.movements.MovementDeletedEvent
+import api.m2.movements.events.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.services.publishing.websockets.MovementPublishServiceWebSocket

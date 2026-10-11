@@ -7,6 +7,7 @@ import api.m2.movements.enums.UserSettingKey
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord
 import api.m2.movements.services.settings.UserSettingService
 import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.IdentityCacheInvalidator
 import api.m2.movements.services.workspaces.WorkspaceAddService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
@@ -17,6 +18,7 @@ class WorkspaceAddServiceTest extends Specification {
     UserService userService = Mock(UserService)
     UserSettingService userSettingService = Mock(UserSettingService)
     IdentityClient identityClient = Mock(IdentityClient)
+    IdentityCacheInvalidator identityCacheInvalidator = Mock(IdentityCacheInvalidator)
 
     WorkspaceAddService service
 
@@ -24,7 +26,8 @@ class WorkspaceAddServiceTest extends Specification {
         service = new WorkspaceAddService(
                 userService,
                 userSettingService,
-                identityClient
+                identityClient,
+                identityCacheInvalidator
         )
     }
 
@@ -81,6 +84,32 @@ class WorkspaceAddServiceTest extends Specification {
 
         then:
         thrown(HttpClientErrorException)
+        0 * identityCacheInvalidator.invalidateAuthorization()
+    }
+
+    def "leaveWorkspace - should invalidate the cached authorization once api-identity confirmed it"() {
+        given:
+        userService.getMe() >> userMe(5L)
+        userSettingService.getDefaultWorkspaceId(5L) >> Optional.empty()
+
+        when:
+        service.leaveWorkspace(99L)
+
+        then:
+        1 * identityClient.leaveWorkspace(99L)
+        1 * identityCacheInvalidator.invalidateAuthorization()
+    }
+
+    def "removeMember - should invalidate the cached authorization once api-identity confirmed it"() {
+        given:
+        userSettingService.getDefaultWorkspaceId(7L) >> Optional.empty()
+
+        when:
+        service.removeMember(10L, 7L)
+
+        then:
+        1 * identityClient.removeMember(10L, 7L)
+        1 * identityCacheInvalidator.invalidateAuthorization()
     }
 
     def "leaveWorkspace - should clear DEFAULT_WORKSPACE setting when it points to the workspace being left"() {
@@ -153,6 +182,7 @@ class WorkspaceAddServiceTest extends Specification {
 
         then:
         thrown(HttpClientErrorException)
+        0 * identityCacheInvalidator.invalidateAuthorization()
     }
 
 }

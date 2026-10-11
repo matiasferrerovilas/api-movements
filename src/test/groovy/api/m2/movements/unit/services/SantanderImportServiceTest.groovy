@@ -1,6 +1,5 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.MovementType
 import api.m2.movements.helpers.ParserRegistry
 import api.m2.movements.helpers.PdfExtractorHelper
@@ -27,7 +26,7 @@ class SantanderImportServiceTest extends Specification {
     CategoryRuleService categoryRuleService = Stub(CategoryRuleService)
     SantanderImportService service
 
-    Currency eur = new Currency(symbol: "EUR", description: "Euro")
+    String eur = "EUR"
 
     def setup() {
         service = new SantanderImportService(movementAddService, parserRegistry, categoryAddService, categoryRuleService)

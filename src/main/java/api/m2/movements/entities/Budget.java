@@ -14,7 +14,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -23,13 +26,17 @@ import java.math.BigDecimal;
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"workspace_id", "category_id", "currency_id"})
 })
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"category", "currency"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "workspace_id", nullable = false)

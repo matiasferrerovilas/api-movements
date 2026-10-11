@@ -1,10 +1,10 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
-import api.m2.movements.records.services.ServiceAddedEvent
-import api.m2.movements.records.services.ServiceDeletedEvent
-import api.m2.movements.records.services.ServicePaidEvent
-import api.m2.movements.records.services.ServiceUpdatedEvent
+import api.m2.movements.events.ServiceAddedEvent
+import api.m2.movements.events.ServiceDeletedEvent
+import api.m2.movements.events.ServicePaidEvent
+import api.m2.movements.events.ServiceUpdatedEvent
 import api.m2.movements.records.services.SubscriptionRecord
 import api.m2.movements.services.publishing.websockets.ServicePublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate

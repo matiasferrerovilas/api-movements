@@ -1,23 +1,18 @@
 package api.m2.movements.unit.helpers
 
-import api.m2.movements.entities.commons.Currency
 import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.helpers.SantanderPdfExtractorHelper
-import api.m2.movements.repositories.CurrencyRepository
 import spock.lang.Specification
 
 import java.time.LocalDate
 
 class SantanderPdfExtractorHelperTest extends Specification {
 
-    CurrencyRepository currencyRepository = Stub(CurrencyRepository)
-    Currency eur = new Currency(symbol: "EUR", description: "Euro")
     SantanderPdfExtractorHelper parser
 
     def setup() {
-        currencyRepository.findBySymbol("EUR") >> Optional.of(eur)
-        parser = new SantanderPdfExtractorHelper(currencyRepository)
+        parser = new SantanderPdfExtractorHelper()
     }
 
     private static String fixture(String name) {
@@ -35,7 +30,7 @@ class SantanderPdfExtractorHelperTest extends Specification {
 
         then:
         result.size() == 8
-        result.every { it.currency() == eur }
+        result.every { it.currencySymbol() == "EUR" }
     }
 
     def "parse - should map account amount sign to DEBITO or INGRESO"() {
@@ -91,7 +86,7 @@ class SantanderPdfExtractorHelperTest extends Specification {
                 "VENPAY IVS",
                 "CUOTA FRACCIONAR COMPRA VUELING AIRLINE"
         ]
-        result.every { it.currency() == eur }
+        result.every { it.currencySymbol() == "EUR" }
     }
 
     def "parse - should use operation date and CREDITO type for card purchases"() {

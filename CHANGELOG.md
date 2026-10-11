@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] - 2026-10-11
+
 ### Added
 - Import de extractos de **Santander España** (EUR) vía `POST /v1/expenses/import-file` con
   `bank=SANTANDER`. `SantanderPdfExtractorHelper` detecta el documento por el encabezado: el export
@@ -28,20 +30,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   arman desde los movimientos que ya tienen categoría. `MerchantKeyNormalizer` reduce la
   descripción a una clave estable (ej. "Mercadona Valencia 1234" → `MERCADONA VALENCIA`).
 
+- Timeouts explícitos en los clientes HTTP hacia api-identity (`identity.connect-timeout` 2 s,
+  `identity.read-timeout` 5 s) y hacia Frankfurter (`frankfurter.connect-timeout` 3 s,
+  `frankfurter.read-timeout` 10 s). Antes un servicio colgado dejaba el request esperando
+  indefinidamente. El cliente usa HTTP/1.1 (`HttpTimeouts`).
+- Cache `names` (10 min) para los nombres de workspace y de usuario que vienen de api-identity.
+  `WorkspaceQueryService.findWorkspaceNameById` y `UserService.getUserNamesByIds` son best-effort:
+  si api-identity no responde devuelven `null`/vacío con un warning en vez de hacer fallar (y
+  revertir) la operación que los pidió. La autorización (`getMe`, membresía y rol) sigue siendo
+  estricta.
+- `WorkspaceContextService.getActiveWritableWorkspaceId()`: workspace activo validando rol de
+  escritura. Reemplaza el par `getActiveWorkspaceId()` + `verifyCanWrite()` repetido en 9 lugares.
+- El log de "Conexión WebSocket rechazada: token inválido" ahora incluye el motivo (token vencido,
+  firma, issuer).
+
 ### Fixed
 - El import de PDF recorta la descripción a 60 caracteres (largo de `movements.description`):
   conceptos largos de transferencias o recibos hacían fallar todo el import con "Data too long".
+- El movimiento recién creado llegaba por WebSocket con las categorías sin `iconName`/`iconColor`
+  (el icono recién aparecía al refrescar). Ahora el evento se arma con los iconos del workspace.
+- `RecurringIncomeJob` y `CreditInstallmentJob` duplicaban movimientos si se ejecutaban dos veces
+  (por ejemplo desde `/v1/admin/crons/*`). Ahora descuentan lo ya generado en el período
+  (`GeneratedLedger`, contando ocurrencias para no perder ingresos o compras idénticas) y
+  `SingleExecution` evita dos corridas simultáneas. Devuelven cuántos generaron de verdad.
+- Si api-identity fallaba al resolver nombres de workspace o de usuario, se revertía el alta del
+  movimiento aunque esos datos solo sirvan para mostrar.
+- Un usuario expulsado de un workspace (o que lo dejaba) seguía pasando por la membership
+  cacheada hasta 5 horas: no había ninguna invalidación de cache. Ahora `IdentityCacheInvalidator`
+  vacía las cachés de autorización al expulsar o dejar un workspace desde `WorkspaceAddService` y al
+  recibir el evento `member-removed` de api-identity (remociones hechas directo ahí). El rol en el
+  workspace pasa a su propia caché de 2 minutos (`workspace-role`), porque api-identity no publica
+  evento al cambiar un rol o transferir el ownership.
+- El cache de Redis podía no ver un valor recién guardado: en Spring Data Redis 4.x el `put` es
+  asíncrono por defecto con Lettuce, así que una lectura inmediata repetía la consulta a
+  api-identity (y hacía intermitente `IdentityCacheIntegrationTest`). Ahora usa `immediateWrites()`.
 
 ### Removed
 - Parsers e import de BBVA y Galicia (`BBVAPdfExtractorHelper`, `GaliciaPdfExtractorHelper`,
   `BBVACreditImportService`, `GaliciaCreditImportService`, `AmountInfo`): sus formatos de
   resumen ya no coincidían y no se usaban. `import-file` con esos bancos ahora responde
   "Invalid bank method".
+- Código sin uso: bean `PasswordEncoder` (BCrypt), dependencia `commons-text`, `CurrencyEnum`,
+  `WorkspaceContextService.getActiveWorkspace()` y los restos de Yahoo Finance
+  (`YAHOO_PRICE_CACHE`, `yahoo-finance.base-url`) de la feature de inversiones ya eliminada.
 
 ### Changed
 - `ParsedExpense` queda en `(date, reference, currency, amount, type)`: el parser resuelve el tipo
   por línea y el monto siempre es positivo. `ExpenseFileStrategy` ya no tiene
   `getBankMethod()`/`resolveAmount()` ni parsea cuotas.
+- Alta de movimientos reorganizada detrás de `MovementSaver`: `MovementAddService` (request
+  autenticado), `SystemMovementAddService` (jobs sin JWT; antes `saveSystemMovement`, y se lleva
+  `generateNextCreditInstallments`), `MovementUpdateService` y `MovementDeleteService`. El flujo
+  común vive en `MovementPersister` y el armado del record en `MovementRecordAssembler`, que
+  resuelve workspace, owners e iconos una sola vez (lo usan también el listado y el import en lote).
+- `IncomeAddService` se divide en `IncomeAddService` (plantilla de ingreso) e
+  `IncomeMovementService` (movimientos generados a partir de ella); `WorkspaceCategoryService` en
+  `WorkspaceCategoryService` y `WorkspaceCategoryAssociationService` (workspace dado por parámetro).
+- `SubscriptionMapper.toRecord(...)` arma el `SubscriptionRecord` completo. `MovementType` expone
+  `INGRESO_TYPES`/`GASTO_TYPES`/`REINTEGRO_TYPES` e `isMoneyIn()`, y `NetSavings` unifica el
+  promedio mensual de ahorro de `calculateRecoveryTime` y `ProjectionService`.
+- Native image: `@RegisterReflectionForBinding` en cada record + `@ReflectiveScan` reemplazan a
+  `WebBindingRuntimeHints`; un record nuevo publicado por WebSocket/RabbitMQ ya no hay que
+  registrarlo a mano.
+- `Budget`, `Goal`, `WorkspaceCategory` y `WorkspaceCurrency` dejan de usar `@Data`: su
+  `equals`/`hashCode`/`toString` incluían la relación `LAZY`, así que loguear una entidad podía
+  disparar una consulta o un `LazyInitializationException`. Ahora igualan por `id` y excluyen la
+  relación del `toString`, igual que `Movement` y `Category`.
+- `ParsedExpense` lleva el símbolo de la moneda (`currencySymbol`) en vez de la entidad `Currency`, así
+  que `SantanderPdfExtractorHelper` ya no depende de `CurrencyRepository` (la moneda la resuelve
+  `MovementFactory`). `BankResolutionResult`, retorno interno de `BankAddService`, pasa de `records/banks`
+  a `services/banks` (de paquete).
+- Los eventos internos de Spring (`CategoryCorrectedEvent`, `CategoryUpdatedEvent`,
+  `MovementDeletedEvent`, `NotificationEvent`, `Service{Added,Updated,Deleted,Paid}Event`,
+  `SubscriptionMovementSyncEvent`, `SubscriptionPaidEvent`) se mueven de `records/` al paquete
+  `events/`, donde ya vivían los eventos de RabbitMQ.
 
 ## [2.13.1] - 2026-09-17
 

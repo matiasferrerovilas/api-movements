@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.enums.NotificationSeverity
-import api.m2.movements.records.notifications.NotificationEvent
+import api.m2.movements.events.NotificationEvent
 import api.m2.movements.services.notifications.NotificationService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification

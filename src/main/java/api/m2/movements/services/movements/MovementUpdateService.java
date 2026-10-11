@@ -7,7 +7,7 @@ import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.enums.MembershipDomain;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.mappers.MovementMapper;
-import api.m2.movements.records.categories.CategoryCorrectedEvent;
+import api.m2.movements.events.CategoryCorrectedEvent;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.repositories.MovementRepository;
 import jakarta.validation.Valid;

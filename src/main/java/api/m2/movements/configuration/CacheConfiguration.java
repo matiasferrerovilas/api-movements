@@ -21,18 +21,21 @@ public class CacheConfiguration {
     // Nombres de workspaces y usuarios, que solo se muestran: TTL corto porque un rename tiene que
     // verse pronto, y lo suficiente para que casi ningún request tenga que ir a api-identity.
     public static final String NAMES_CACHE = "names";
-    // Cachea las dos llamadas a api-identity que se disparan en casi cada request (resolver el
-    // usuario autenticado, verificar membership de un workspace) — antes cada operación hacía un
-    // round-trip HTTP síncrono sin cache, sin timeout y sin circuit breaker: si api-identity se
-    // colgaba un momento, ninguna operación de esta app podía completarse aunque el JWT del
-    // caller siguiera siendo válido. 5hs es deliberadamente generoso: cambios de membership o de
-    // rol pueden tardar hasta ese tiempo en reflejarse acá, a cambio de sacar a api-identity del
-    // camino crítico de casi todo el tráfico.
+    // Cachea las llamadas a api-identity que se disparan en casi cada request (resolver el usuario
+    // autenticado, verificar membership de un workspace) para sacarla del camino crítico. 5hs es
+    // generoso a propósito, así que la membership tiene que invalidarse explícitamente cuando
+    // alguien sale o lo sacan de un workspace (IdentityCacheInvalidator); si no, un expulsado
+    // seguiría pasando por la membership recordada hasta que venza el TTL.
     public static final String IDENTITY_CACHE = "identity";
+    // El rol del usuario en un workspace (decide si puede escribir) tiene su propio TTL corto:
+    // api-identity no publica ningún evento cuando cambia un rol o se transfiere el ownership, así
+    // que no hay forma de invalidarlo; acotar el TTL limita cuánto puede tardar en reflejarse.
+    public static final String WORKSPACE_ROLE_CACHE = "workspace-role";
 
     private static final String KEY_PREFIX = "api-movements:";
     private static final Duration CURRENCY_TTL = Duration.ofHours(5);
     private static final Duration IDENTITY_TTL = Duration.ofHours(5);
+    private static final Duration WORKSPACE_ROLE_TTL = Duration.ofMinutes(2);
     private static final Duration NAMES_TTL = Duration.ofMinutes(10);
 
     @Bean
@@ -58,6 +61,7 @@ public class CacheConfiguration {
                 .cacheDefaults(defaultConfig)
                 .withCacheConfiguration(CURRENCY_CACHE, defaultConfig.entryTtl(CURRENCY_TTL))
                 .withCacheConfiguration(IDENTITY_CACHE, identityConfig.entryTtl(IDENTITY_TTL))
+                .withCacheConfiguration(WORKSPACE_ROLE_CACHE, defaultConfig.entryTtl(WORKSPACE_ROLE_TTL))
                 .withCacheConfiguration(NAMES_CACHE, defaultConfig.entryTtl(NAMES_TTL))
                 .build();
     }

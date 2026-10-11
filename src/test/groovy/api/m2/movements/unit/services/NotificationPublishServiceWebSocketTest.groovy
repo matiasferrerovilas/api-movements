@@ -2,7 +2,7 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.enums.EventType
 import api.m2.movements.enums.NotificationSeverity
-import api.m2.movements.records.notifications.NotificationEvent
+import api.m2.movements.events.NotificationEvent
 import api.m2.movements.records.notifications.NotificationRecord
 import api.m2.movements.services.publishing.websockets.NotificationPublishServiceWebSocket
 import org.springframework.messaging.simp.SimpMessagingTemplate

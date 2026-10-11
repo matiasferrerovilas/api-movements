@@ -1,5 +1,7 @@
 package api.m2.movements.integration
 
+import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.services.workspaces.IdentityCacheInvalidator
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -8,6 +10,10 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 
 import java.time.Instant
+import java.util.concurrent.ThreadLocalRandom
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -26,6 +32,9 @@ class IdentityCacheIntegrationTest extends BaseControllerIntegrationTest {
 
     @Autowired
     WorkspaceQueryService workspaceQueryService
+
+    @Autowired
+    IdentityCacheInvalidator identityCacheInvalidator
 
     def "GET /v1/users/me - only hits api-identity once across repeated calls"() {
         when:
@@ -62,6 +71,39 @@ class IdentityCacheIntegrationTest extends BaseControllerIntegrationTest {
 
         then:
         verify(1, getRequestedFor(urlPathMatching("/v1/workspaces/${testWorkspaceId}/members/${testUserId}")))
+
+        cleanup:
+        SecurityContextHolder.clearContext()
+    }
+
+    def "invalidateAuthorization - a removed member is re-verified and rejected instead of passing on the cached membership"() {
+        given:
+        def jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "RS256")
+                .subject("550e8400-e29b-41d4-a716-446655440000")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .claim("email", TEST_USER_EMAIL)
+                .claim("realm_access", [roles: ["ROLE_ADMIN"]])
+                .build()
+        SecurityContextHolder.getContext().setAuthentication(
+                new JwtAuthenticationToken(jwt, [new SimpleGrantedAuthority("ROLE_ADMIN")], TEST_USER_EMAIL))
+        // Ids altos y al azar para no chocar con claves que quedaron en el Redis reutilizado.
+        def workspaceId = ThreadLocalRandom.current().nextLong(1_000_000_000L, 9_000_000_000L)
+        def userId = ThreadLocalRandom.current().nextLong(1_000_000_000L, 9_000_000_000L)
+        def membershipPath = "/v1/workspaces/${workspaceId}/members/${userId}".toString()
+
+        when: "es miembro (el stub por defecto de la clase base responde 200) y queda cacheado"
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId)
+        // api-identity lo saca del workspace; la membership recordada todavía lo deja pasar
+        stubFor(com.github.tomakehurst.wiremock.client.WireMock.get(urlPathEqualTo(membershipPath)).willReturn(aResponse().withStatus(403)))
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId)
+        // llega la notificación de remoción
+        identityCacheInvalidator.invalidateAuthorization()
+        workspaceQueryService.verifyUserIsMemberOfWorkspace(workspaceId, userId)
+
+        then:
+        thrown(PermissionDeniedException)
 
         cleanup:
         SecurityContextHolder.clearContext()

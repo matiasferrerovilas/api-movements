@@ -13,10 +13,10 @@ import api.m2.movements.mappers.CategoryMapper
 import api.m2.movements.mappers.CurrencyMapper
 import api.m2.movements.mappers.MovementMapper
 import api.m2.movements.mappers.MovementMapperImpl
-import api.m2.movements.records.categories.CategoryCorrectedEvent
+import api.m2.movements.events.CategoryCorrectedEvent
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.movements.ExpenseToUpdate
-import api.m2.movements.records.movements.MovementDeletedEvent
+import api.m2.movements.events.MovementDeletedEvent
 import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord

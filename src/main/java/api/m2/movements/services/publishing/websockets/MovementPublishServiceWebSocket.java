@@ -2,7 +2,7 @@ package api.m2.movements.services.publishing.websockets;
 
 import api.m2.movements.constants.WebSocketTopics;
 import api.m2.movements.enums.EventType;
-import api.m2.movements.records.movements.MovementDeletedEvent;
+import api.m2.movements.events.MovementDeletedEvent;
 import api.m2.movements.records.movements.MovementRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;

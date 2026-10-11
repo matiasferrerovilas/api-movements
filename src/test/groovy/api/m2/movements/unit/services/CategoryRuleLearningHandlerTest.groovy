@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.entities.commons.Category
-import api.m2.movements.records.categories.CategoryCorrectedEvent
+import api.m2.movements.events.CategoryCorrectedEvent
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.services.category.rules.CategoryRuleLearningHandler
 import api.m2.movements.services.category.rules.CategoryRuleService

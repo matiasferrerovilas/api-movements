@@ -21,6 +21,7 @@ public class WorkspaceAddService {
     private final UserService userService;
     private final UserSettingService userSettingService;
     private final IdentityClient identityClient;
+    private final IdentityCacheInvalidator identityCacheInvalidator;
 
     @Transactional
     public void createWorkspace(AddWorkspaceRecord addWorkspaceRecord) {
@@ -35,6 +36,7 @@ public class WorkspaceAddService {
         Long userId = userService.getMe().id();
 
         identityClient.leaveWorkspace(workspaceId);
+        identityCacheInvalidator.invalidateAuthorization();
 
         userSettingService.getDefaultWorkspaceId(userId)
                 .filter(workspaceId::equals)
@@ -45,6 +47,7 @@ public class WorkspaceAddService {
 
     public void removeMember(Long workspaceId, Long targetUserId) {
         identityClient.removeMember(workspaceId, targetUserId);
+        identityCacheInvalidator.invalidateAuthorization();
 
         // Igual que leaveWorkspace: si el workspace del que se lo echó era el default del
         // usuario removido, no lo dejamos apuntando a un workspace al que ya no pertenece.
