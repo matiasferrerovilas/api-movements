@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryResolver {
     private final CategoryAddService categoryAddService;
-    private final WorkspaceCategoryService workspaceCategoryService;
+    private final WorkspaceCategoryAssociationService associationService;
 
     public List<Category> resolveAll(List<CategoryUpdateRecord> categories, Long workspaceId) {
         if (categories == null || categories.isEmpty()) {
@@ -37,7 +37,7 @@ public class CategoryResolver {
 
     private Category resolveAndEnsureInWorkspace(String description, Long workspaceId) {
         var category = categoryAddService.addCategory(description);
-        workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category);
+        associationService.ensureCategoryInWorkspace(workspaceId, category);
         return category;
     }
 }

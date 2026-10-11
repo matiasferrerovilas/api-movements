@@ -3,6 +3,7 @@ package api.m2.movements.controller;
 import api.m2.movements.records.income.IncomeRecord;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.services.income.IncomeAddService;
+import api.m2.movements.services.income.IncomeMovementService;
 import api.m2.movements.services.income.IncomeQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class IncomeController {
 
     private final IncomeAddService incomeAddService;
+    private final IncomeMovementService incomeMovementService;
     private final IncomeQueryService incomeQueryService;
 
     @Operation(
@@ -110,6 +112,6 @@ public class IncomeController {
     @PostMapping("{id}/reload")
     @ResponseStatus(HttpStatus.CREATED)
     public void reloadIncome(@PathVariable Long id) {
-        incomeAddService.reloadIncome(id);
+        incomeMovementService.reloadIncome(id);
     }
 }

@@ -75,11 +75,14 @@ management:
       prometheus:
         enabled: true
 
+# Timeouts de los clientes HTTP armados a mano (sin ellos una dependencia colgada deja el request
+# esperando indefinidamente).
 frankfurter:
   base-url: https://api.frankfurter.dev
-
-yahoo-finance:
-  base-url: https://query1.finance.yahoo.com
+  connect-timeout: 3s
+  read-timeout: 10s
 
 identity:
   base-url: ${IDENTITY_API_URL:http://localhost:8082}
+  connect-timeout: 3s
+  read-timeout: 6s

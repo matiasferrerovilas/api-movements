@@ -6,6 +6,7 @@ import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.configuration.CacheConfiguration;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
+import api.m2.movements.exceptions.ServiceException;
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceSentInvitationDTO;
 import api.m2.movements.clients.identity.response.WorkspaceMemberDTO;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
@@ -65,12 +67,25 @@ public class WorkspaceQueryService {
         return identityClient.getInvitations();
     }
 
+    /**
+     * Nombre del workspace, solo para mostrar. Cacheado (ver {@link CacheConfiguration#NAMES_CACHE})
+     * y best-effort: si api-identity no responde o devuelve un error de servidor devuelve
+     * {@code null} (con un warning, y sin cachear) en vez de hacer fallar la operación que lo
+     * pidió. Que el workspace no exista para el caller sigue siendo un error.
+     */
+    @Cacheable(cacheNames = CacheConfiguration.NAMES_CACHE, key = "'workspace:' + #workspaceId", unless = "#result == null")
     public String findWorkspaceNameById(Long workspaceId) {
-        return identityClient.getWorkspaces().stream()
-                .filter(workspace -> workspaceId.equals(workspace.workspaceId()))
-                .map(WorkspaceMemberDTO::workspaceName)
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
+        try {
+            return identityClient.getWorkspaces().stream()
+                    .filter(workspace -> workspaceId.equals(workspace.workspaceId()))
+                    .map(WorkspaceMemberDTO::workspaceName)
+                    .findFirst()
+                    .orElseThrow(() -> new EntityNotFoundException("Workspace no encontrado: " + workspaceId));
+        } catch (ResourceAccessException | ServiceException e) {
+            log.warn("No se pudo resolver el nombre del workspace {} contra api-identity: {}",
+                    workspaceId, e.getMessage());
+            return null;
+        }
     }
 
     public void sendInvitation(Long workspaceId, @Valid WorkspaceSendInvitationDTO body) {

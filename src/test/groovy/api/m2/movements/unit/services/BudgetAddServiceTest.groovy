@@ -14,7 +14,6 @@ import api.m2.movements.repositories.CurrencyRepository
 import api.m2.movements.services.budgets.BudgetAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class BudgetAddServiceTest extends Specification {
@@ -25,7 +24,6 @@ class BudgetAddServiceTest extends Specification {
     CurrencyRepository currencyRepository = Mock()
     WorkspaceCurrencyService workspaceCurrencyService = Mock()
     WorkspaceContextService workspaceContextService = Mock()
-    WorkspaceQueryService workspaceQueryService = Mock()
 
     BudgetAddService service
 
@@ -36,8 +34,7 @@ class BudgetAddServiceTest extends Specification {
                 categoryRepository,
                 currencyRepository,
                 workspaceCurrencyService,
-                workspaceContextService,
-                workspaceQueryService
+                workspaceContextService
         )
     }
 
@@ -46,14 +43,13 @@ class BudgetAddServiceTest extends Specification {
         def dto = new BudgetToAdd("Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
         def budget = Mock(Budget)
 
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         budgetMapper.toEntity(dto, categoryRepository, currencyRepository) >> budget
 
         when:
         service.save(dto)
 
         then:
-        1 * workspaceQueryService.verifyCanWrite(1L)
         1 * budget.setWorkspaceId(1L)
         1 * budgetRepository.save(budget)
     }
@@ -62,8 +58,7 @@ class BudgetAddServiceTest extends Specification {
         given:
         def dto = new BudgetToAdd("Supermercado", "ARS", new BigDecimal("5000.00"), null, null)
 
-        workspaceContextService.getActiveWorkspaceId() >> 1L
-        workspaceQueryService.verifyCanWrite(1L) >> {
+        workspaceContextService.getActiveWritableWorkspaceId() >> {
             throw new PermissionDeniedException("Los miembros de solo lectura no pueden crear ni modificar recursos")
         }
 
@@ -86,7 +81,7 @@ class BudgetAddServiceTest extends Specification {
         service.save(dto)
 
         then:
-        1 * workspaceContextService.getActiveWorkspaceId() >> 99L
+        1 * workspaceContextService.getActiveWritableWorkspaceId() >> 99L
     }
 
     def "update - should update amount when budget exists"() {

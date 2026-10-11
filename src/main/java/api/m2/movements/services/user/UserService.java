@@ -7,12 +7,18 @@ import api.m2.movements.exceptions.ServiceException;
 import api.m2.movements.clients.identity.response.UserMe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +29,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String USER_NAME_KEY_PREFIX = "user:";
+
     private final IdentityClient identityClient;
+    private final CacheManager cacheManager;
 
     // Cacheado por 5hs (ver CacheConfiguration.IDENTITY_CACHE) — antes esto disparaba un
     // round-trip HTTP a api-identity en casi cada endpoint de la app, sin cache, sin timeout y
@@ -51,9 +60,48 @@ public class UserService {
         return identityClient.getMe(workspaceId);
     }
 
+    /**
+     * Nombre de pila de cada usuario, solo para mostrar. Cacheado por usuario (ver
+     * {@link CacheConfiguration#NAMES_CACHE}) y best-effort: si api-identity no responde o
+     * devuelve un error de servidor, devuelve lo que haya en cache y omite el resto (con un
+     * warning) en vez de hacer fallar la operación que lo pidió.
+     */
     public Map<Long, String> getUserNamesByIds(List<Long> ids) {
-        return identityClient.getUsersByIds(ids).stream()
-                .collect(Collectors.toMap(UserMe::id, UserMe::givenName));
+        var cache = cacheManager.getCache(CacheConfiguration.NAMES_CACHE);
+        Map<Long, String> names = new HashMap<>();
+        List<Long> missing = new ArrayList<>();
+        for (Long id : new LinkedHashSet<>(ids)) {
+            var cached = cache == null ? null : cache.get(USER_NAME_KEY_PREFIX + id, String.class);
+            if (cached != null) {
+                names.put(id, cached);
+            } else {
+                missing.add(id);
+            }
+        }
+        if (!missing.isEmpty()) {
+            names.putAll(this.fetchUserNames(missing, cache));
+        }
+        return names;
+    }
+
+    private Map<Long, String> fetchUserNames(List<Long> ids, Cache cache) {
+        try {
+            Map<Long, String> fetched = new HashMap<>();
+            for (UserMe user : identityClient.getUsersByIds(ids)) {
+                if (user.givenName() == null) {
+                    continue;
+                }
+                fetched.put(user.id(), user.givenName());
+                if (cache != null) {
+                    cache.put(USER_NAME_KEY_PREFIX + user.id(), user.givenName());
+                }
+            }
+            return fetched;
+        } catch (ResourceAccessException | ServiceException e) {
+            log.warn("No se pudieron resolver los nombres de los usuarios {} contra api-identity: {}",
+                    ids, e.getMessage());
+            return Map.of();
+        }
     }
 
     /** Nombre para mostrar: "Nombre Apellido" si hay, si no el email. Tolera givenName/familyName

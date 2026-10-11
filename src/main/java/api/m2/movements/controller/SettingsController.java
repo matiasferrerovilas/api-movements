@@ -4,7 +4,7 @@ import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.records.income.IncomeToAdd;
 import api.m2.movements.records.settings.UserSettingRequest;
 import api.m2.movements.records.settings.UserSettingResponse;
-import api.m2.movements.services.income.IncomeAddService;
+import api.m2.movements.services.income.IncomeMovementService;
 import api.m2.movements.services.settings.UserSettingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,7 +28,7 @@ import java.util.List;
 @RequestMapping("/v1/settings")
 @Tag(name = "Settings", description = "API para la configuración")
 public class SettingsController {
-    private final IncomeAddService incomeAddService;
+    private final IncomeMovementService incomeMovementService;
     private final UserSettingService userSettingService;
 
     @Operation(
@@ -39,7 +39,7 @@ public class SettingsController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void addIngreso(@RequestBody @Valid IncomeToAdd incomeToAdd) {
-        incomeAddService.addIngreso(incomeToAdd);
+        incomeMovementService.addIngreso(incomeToAdd);
     }
 
     @Operation(

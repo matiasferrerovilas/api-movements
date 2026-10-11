@@ -10,6 +10,7 @@ import api.m2.movements.repositories.SubscriptionRepository
 import api.m2.movements.services.subscriptions.SubscriptionQueryService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
 
@@ -20,6 +21,7 @@ class SubscriptionQueryServiceTest extends Specification {
     SubscriptionMapper subscriptionMapper = Mappers.getMapper(SubscriptionMapper)
     SubscriptionRepository subscriptionRepository = Mock(SubscriptionRepository)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
 
     SubscriptionQueryService service
@@ -29,6 +31,7 @@ class SubscriptionQueryServiceTest extends Specification {
                 subscriptionMapper,
                 subscriptionRepository,
                 workspaceContextService,
+                workspaceQueryService,
                 userService
         )
     }
@@ -50,8 +53,8 @@ class SubscriptionQueryServiceTest extends Specification {
                 ownerId: 1L
         )
 
-        workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
-                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceQueryService.findWorkspaceNameById(workspaceId) >> "Familia"
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> [subscription]
         userService.getUserNamesByIds([1L] as List<Long>) >> [1L: "Matias"]
 
@@ -71,8 +74,8 @@ class SubscriptionQueryServiceTest extends Specification {
         def currencySymbols = ["EUR"]
         def lastPayment = LocalDate.of(2026, 3, 1)
 
-        workspaceContextService.getActiveWorkspace() >> new WorkspaceMemberDTO(
-                1L, workspaceId, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false))
+        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceQueryService.findWorkspaceNameById(workspaceId) >> "Familia"
         subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(workspaceId, currencySymbols, lastPayment) >> []
 
         when:

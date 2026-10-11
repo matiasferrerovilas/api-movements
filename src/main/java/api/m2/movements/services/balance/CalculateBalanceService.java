@@ -33,13 +33,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CalculateBalanceService {
     private static final int SCALE = 2;
-    // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — igual
-    // que el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
-    private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
-    private static final List<String> INGRESO_TYPES = List.of(MovementType.INGRESO.name());
-    // Un REINTEGRO resta del gasto (no suma al ingreso): un reembolso reduce lo que realmente
-    // gastaste, no es plata nueva entrando. Ver también MovementRepository.getCategoryTotalsByMonth.
-    private static final List<String> REINTEGRO_TYPES = List.of(MovementType.REINTEGRO.name());
 
     private final MovementRepository movementRepository;
     private final UserService userService;
@@ -57,7 +50,7 @@ public class CalculateBalanceService {
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 userId,
-                INGRESO_TYPES,
+                MovementType.INGRESO_TYPES,
                 List.of(workspaceId.intValue()),
                 currencies);
 
@@ -69,7 +62,7 @@ public class CalculateBalanceService {
                 // calculateRecoveryTime) y MonthlySummaryService ya incluían CREDITO como gasto;
                 // esta era la única cuenta que no, dando un total de "gasto" distinto según qué
                 // pantalla mirabas para el mismo período.
-                GASTO_TYPES,
+                MovementType.GASTO_TYPES,
                 List.of(workspaceId.intValue()),
                 currencies);
 
@@ -77,7 +70,7 @@ public class CalculateBalanceService {
                 balanceFilterRecord.startDate(),
                 balanceFilterRecord.endDate(),
                 userId,
-                REINTEGRO_TYPES,
+                MovementType.REINTEGRO_TYPES,
                 List.of(workspaceId.intValue()),
                 currencies);
 
@@ -119,22 +112,9 @@ public class CalculateBalanceService {
 
         var lastClosedMonth = YearMonth.from(LocalDate.now(ZoneOffset.UTC)).minusMonths(1);
 
-        var totalSavings = BigDecimal.ZERO;
-        for (int i = 0; i < months; i++) {
-            var yearMonth = lastClosedMonth.minusMonths(i);
-            var ingresado = movementRepository.getTotalByTypesAndMonth(
-                    workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
-                    INGRESO_TYPES, normalizedSymbol);
-            var gastadoBruto = movementRepository.getTotalByTypesAndMonth(
-                    workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
-                    GASTO_TYPES, normalizedSymbol);
-            var reintegrado = movementRepository.getTotalByTypesAndMonth(
-                    workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(),
-                    REINTEGRO_TYPES, normalizedSymbol);
-            totalSavings = totalSavings.add(ingresado.subtract(gastadoBruto.subtract(reintegrado)));
-        }
-
-        var averageMonthlySavings = totalSavings.divide(BigDecimal.valueOf(months), SCALE, RoundingMode.HALF_UP);
+        var averageMonthlySavings = NetSavings.averageMonthly(lastClosedMonth, months,
+                (yearMonth, types) -> movementRepository.getTotalByTypesAndMonth(
+                        workspaceId, yearMonth.getYear(), yearMonth.getMonthValue(), types, normalizedSymbol));
 
         if (averageMonthlySavings.compareTo(BigDecimal.ZERO) <= 0) {
             return new RecoveryTimeRecord(amount, normalizedSymbol, months, averageMonthlySavings, null, false);

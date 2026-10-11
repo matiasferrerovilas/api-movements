@@ -351,6 +351,36 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     """)
     List<Movement> findCreditoMovementsWithPendingInstallments(@Param("year") int year, @Param("month") int month);
 
+    /**
+     * Cuotas de crédito con fecha en {@code [from, to)} — lo que ya existe del mes que el cron de
+     * cuotas va a generar, para que volver a correrlo no duplique ({@code GeneratedLedger}).
+     */
+    @Query("""
+    SELECT m FROM Movement m
+    JOIN FETCH m.currency
+    WHERE m.type = api.m2.movements.enums.MovementType.CREDITO
+      AND m.cuotaActual IS NOT NULL AND m.cuotasTotales IS NOT NULL
+      AND m.date >= :from AND m.date < :to
+    """)
+    List<Movement> findCreditoInstallmentsBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    /**
+     * Ingresos de un usuario con esa descripción y fecha en {@code [from, to)} — los ya
+     * generados por el cron de ingresos recurrentes en el período.
+     */
+    @Query("""
+    SELECT m FROM Movement m
+    JOIN FETCH m.currency
+    LEFT JOIN FETCH m.bank
+    WHERE m.type = api.m2.movements.enums.MovementType.INGRESO
+      AND m.ownerId = :ownerId AND m.description = :description
+      AND m.date >= :from AND m.date < :to
+    """)
+    List<Movement> findIncomesByOwnerAndDescriptionBetween(@Param("ownerId") Long ownerId,
+                                                           @Param("description") String description,
+                                                           @Param("from") LocalDate from,
+                                                           @Param("to") LocalDate to);
+
     List<Movement> findByWorkspaceIdAndDateBetween(Long workspaceId, LocalDate from, LocalDate to);
 
     @Query("""

@@ -1,5 +1,6 @@
 package api.m2.movements.services.movements;
 
+import api.m2.movements.helpers.SingleExecution;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,10 +23,18 @@ import java.time.ZoneOffset;
 @RequiredArgsConstructor
 public class CreditInstallmentJob {
 
+    private final SingleExecution execution = new SingleExecution();
+
     private final SystemMovementAddService systemMovementAddService;
 
     @Scheduled(cron = "0 30 6 1 * *")
     public void generateNextInstallments() {
+        if (!execution.runIfIdle(this::generate)) {
+            log.warn("Cuotas de crédito: ya hay una ejecución en curso, se omite esta");
+        }
+    }
+
+    private void generate() {
         var previousMonth = YearMonth.now(ZoneOffset.UTC).minusMonths(1);
         int count = systemMovementAddService.generateNextCreditInstallments(previousMonth);
         log.info("Cuotas de crédito generadas: {} (a partir de movimientos de {})", count, previousMonth);

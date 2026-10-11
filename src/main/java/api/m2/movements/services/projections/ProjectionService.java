@@ -9,6 +9,7 @@ import api.m2.movements.records.projections.ProjectionResponse;
 import api.m2.movements.repositories.MovementRepository;
 import api.m2.movements.repositories.WorkspaceCurrencyRepository;
 import api.m2.movements.services.currencies.ExchangeRateResolver;
+import api.m2.movements.services.balance.NetSavings;
 import api.m2.movements.services.settings.UserSettingService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
@@ -44,12 +45,6 @@ public class ProjectionService {
     private static final int SCALE = 2;
     private static final String USD = "USD";
     private static final List<Integer> PROJECTION_HORIZONS_MONTHS = List.of(0, 3, 6, 12);
-    private static final List<String> INGRESO_TYPES = List.of(MovementType.INGRESO.name());
-    // El gasto incluye compras en cuotas de tarjeta (CREDITO), no solo débito directo — así
-    // se calcula también en el gráfico de evolución mensual (MovementRepository#findMonthlyEvolution).
-    private static final List<String> GASTO_TYPES = List.of(MovementType.DEBITO.name(), MovementType.CREDITO.name());
-    // Un REINTEGRO resta del gasto (no suma al ingreso) — ver CalculateBalanceService.
-    private static final List<String> REINTEGRO_TYPES = List.of(MovementType.REINTEGRO.name());
 
     private final MovementRepository movementRepository;
     private final WorkspaceQueryService workspaceQueryService;
@@ -132,34 +127,22 @@ public class ProjectionService {
      */
     private BigDecimal computeCurrentBalance(Long workspaceId, String targetCurrency, BigDecimal conversionRate) {
         BigDecimal totalIngresado = this.getTotalInTargetCurrency(
-                workspaceId, INGRESO_TYPES, targetCurrency, conversionRate);
+                workspaceId, MovementType.INGRESO_TYPES, targetCurrency, conversionRate);
         BigDecimal totalGastadoNeto = this.getGastoNeto(workspaceId, targetCurrency, conversionRate);
         return totalIngresado.subtract(totalGastadoNeto).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     private BigDecimal getGastoNeto(Long workspaceId, String targetCurrency, BigDecimal conversionRate) {
-        BigDecimal gastoBruto = this.getTotalInTargetCurrency(workspaceId, GASTO_TYPES, targetCurrency, conversionRate);
-        BigDecimal reintegrado = this.getTotalInTargetCurrency(workspaceId, REINTEGRO_TYPES, targetCurrency, conversionRate);
+        BigDecimal gastoBruto = this.getTotalInTargetCurrency(workspaceId, MovementType.GASTO_TYPES, targetCurrency, conversionRate);
+        BigDecimal reintegrado = this.getTotalInTargetCurrency(workspaceId, MovementType.REINTEGRO_TYPES, targetCurrency, conversionRate);
         return gastoBruto.subtract(reintegrado);
     }
 
     private BigDecimal computeAverageMonthlyNet(Long workspaceId, int trailingMonths,
                                                  String targetCurrency, BigDecimal conversionRate) {
         YearMonth lastClosedMonth = YearMonth.from(LocalDate.now(clock)).minusMonths(1);
-
-        BigDecimal totalNet = BigDecimal.ZERO;
-        for (int i = 0; i < trailingMonths; i++) {
-            YearMonth yearMonth = lastClosedMonth.minusMonths(i);
-            BigDecimal ingresado = this.getTotalInTargetCurrencyByMonth(
-                    workspaceId, yearMonth, INGRESO_TYPES, targetCurrency, conversionRate);
-            BigDecimal gastadoBruto = this.getTotalInTargetCurrencyByMonth(
-                    workspaceId, yearMonth, GASTO_TYPES, targetCurrency, conversionRate);
-            BigDecimal reintegrado = this.getTotalInTargetCurrencyByMonth(
-                    workspaceId, yearMonth, REINTEGRO_TYPES, targetCurrency, conversionRate);
-            totalNet = totalNet.add(ingresado.subtract(gastadoBruto.subtract(reintegrado)));
-        }
-
-        return totalNet.divide(BigDecimal.valueOf(trailingMonths), SCALE, RoundingMode.HALF_UP);
+        return NetSavings.averageMonthly(lastClosedMonth, trailingMonths, (yearMonth, types) ->
+                this.getTotalInTargetCurrencyByMonth(workspaceId, yearMonth, types, targetCurrency, conversionRate));
     }
 
     /**

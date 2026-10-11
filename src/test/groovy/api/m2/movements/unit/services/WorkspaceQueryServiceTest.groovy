@@ -4,13 +4,17 @@ import api.m2.movements.clients.identity.IdentityClient
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.enums.InvitationStatus
 import api.m2.movements.enums.WorkspaceRole
+import api.m2.movements.clients.identity.response.WorkspaceMemberDTO
+import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
+import api.m2.movements.exceptions.ServiceException
 import api.m2.movements.clients.identity.response.WorkspaceInvitationDTO
 import api.m2.movements.clients.identity.response.WorkspaceSentInvitationDTO
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.ResourceAccessException
 import spock.lang.Specification
 
 class WorkspaceQueryServiceTest extends Specification {
@@ -27,6 +31,44 @@ class WorkspaceQueryServiceTest extends Specification {
     def userMe(WorkspaceRole role) {
         return new UserMe(1L, "a@test.com", "A", "A", "PERSONAL",
                 new UserMe.Metadata(false, true, [], role))
+    }
+
+    def "findWorkspaceNameById - should return the name of the workspace"() {
+        given:
+        identityClient.getWorkspaces() >> [
+                new WorkspaceMemberDTO(1L, 20L, "Otro", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, false)),
+                new WorkspaceMemberDTO(2L, 10L, "Familia", new WorkspaceMemberDTO.Metadata([], WorkspaceRole.OWNER, null, true))
+        ]
+
+        expect:
+        service.findWorkspaceNameById(10L) == "Familia"
+    }
+
+    def "findWorkspaceNameById - should return null instead of failing when api-identity is unreachable"() {
+        given:
+        identityClient.getWorkspaces() >> { throw new ResourceAccessException("read timed out") }
+
+        expect:
+        service.findWorkspaceNameById(10L) == null
+    }
+
+    def "findWorkspaceNameById - should return null instead of failing on a server error from api-identity"() {
+        given:
+        identityClient.getWorkspaces() >> { throw new ServiceException("api-identity caido") }
+
+        expect:
+        service.findWorkspaceNameById(10L) == null
+    }
+
+    def "findWorkspaceNameById - should still fail when the workspace is not one of the caller's"() {
+        given:
+        identityClient.getWorkspaces() >> []
+
+        when:
+        service.findWorkspaceNameById(10L)
+
+        then:
+        thrown(EntityNotFoundException)
     }
 
     def "verifyCanWrite - should not throw when caller is at least COLLABORATOR"() {

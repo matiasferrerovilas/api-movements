@@ -2,7 +2,6 @@ package api.m2.movements.unit.services
 
 import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.WorkspaceCategory
-import api.m2.movements.enums.DefaultCategory
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.exceptions.PermissionDeniedException
@@ -12,20 +11,18 @@ import api.m2.movements.records.categories.CategoryRecord
 import api.m2.movements.records.categories.CategoryUpdatedEvent
 import api.m2.movements.repositories.CategoryRepository
 import api.m2.movements.repositories.WorkspaceCategoryRepository
-import api.m2.movements.services.category.CategoryAddService
+import api.m2.movements.services.category.WorkspaceCategoryAssociationService
 import api.m2.movements.services.category.WorkspaceCategoryService
 import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Specification
 
 class WorkspaceCategoryServiceTest extends Specification {
 
     WorkspaceCategoryRepository workspaceCategoryRepository = Mock(WorkspaceCategoryRepository)
-    CategoryAddService categoryAddService = Mock(CategoryAddService)
+    WorkspaceCategoryAssociationService associationService = Mock(WorkspaceCategoryAssociationService)
     WorkspaceCategoryMapper workspaceCategoryMapper = Mock(WorkspaceCategoryMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     CategoryRepository categoryRepository = Mock(CategoryRepository)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
 
@@ -34,10 +31,9 @@ class WorkspaceCategoryServiceTest extends Specification {
     def setup() {
         service = new WorkspaceCategoryService(
                 workspaceCategoryRepository,
-                categoryAddService,
+                associationService,
                 workspaceCategoryMapper,
                 workspaceContextService,
-                workspaceQueryService,
                 categoryRepository,
                 eventPublisher
         )
@@ -61,18 +57,14 @@ class WorkspaceCategoryServiceTest extends Specification {
         result[0].description() == "COMIDA"
     }
 
-    def "addCategory - should create category and associate to workspace"() {
+    def "addCategory - should associate the category to the active writable workspace and map the result"() {
         given:
-        def workspaceId = 1L
         def description = "NUEVA_CATEGORIA"
-        def category = Stub(Category) { getId() >> 5L }
         def workspaceCategory = Stub(WorkspaceCategory)
         def categoryRecord = new CategoryRecord(1L, description, true, true, null, null)
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
-        categoryAddService.addCategory(description) >> category
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(workspaceId, 5L) >> Optional.empty()
-        workspaceCategoryRepository.save(_ as WorkspaceCategory) >> workspaceCategory
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
+        associationService.addCategory(1L, description) >> workspaceCategory
         workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
 
         when:
@@ -80,81 +72,6 @@ class WorkspaceCategoryServiceTest extends Specification {
 
         then:
         result.description() == description
-    }
-
-    def "addCategory - should reactivate existing inactive category"() {
-        given:
-        def workspaceId = 1L
-        def description = "CATEGORIA_INACTIVA"
-        def category = Stub(Category) { getId() >> 5L }
-        def existingWsCategory = Mock(WorkspaceCategory) {
-            isActive() >> false
-        }
-        def categoryRecord = new CategoryRecord(1L, description, true, true, null, null)
-
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
-        categoryAddService.addCategory(description) >> category
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(workspaceId, 5L) >> Optional.of(existingWsCategory)
-        workspaceCategoryRepository.save(existingWsCategory) >> existingWsCategory
-        workspaceCategoryMapper.toRecord(existingWsCategory) >> categoryRecord
-
-        when:
-        def result = service.addCategory(description)
-
-        then:
-        1 * existingWsCategory.setActive(true)
-        result.description() == description
-    }
-
-    def "addDefaultCategories - should add every default category except SIN_CATEGORIA to the workspace"() {
-        given:
-        def expectedCount = DefaultCategory.values().length - 1 // todas menos SIN_CATEGORIA
-        def category = Stub(Category) { getId() >> 5L }
-
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
-
-        when:
-        service.addDefaultCategories(1L)
-
-        then:
-        // Stub + conteo de invocaciones en el mismo bloque then: — si el stub queda en given: y
-        // la interacción en then: sin valor de retorno, Spock prioriza la interacción de then:
-        // (que devuelve null) por sobre el stub de given:, rompiendo todo lo que dependa del
-        // valor devuelto. Ya nos pasó antes en esta misma suite con este mismo patrón.
-        expectedCount * categoryAddService.addCategory(_ as String) >> category
-        expectedCount * workspaceCategoryRepository.save(_ as WorkspaceCategory)
-    }
-
-    def "addDefaultCategories - should never add SIN_CATEGORIA up front"() {
-        given:
-        def category = Stub(Category) { getId() >> 5L }
-
-        categoryAddService.addCategory(_ as String) >> category
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
-
-        when:
-        service.addDefaultCategories(1L)
-
-        then:
-        0 * categoryAddService.addCategory(DefaultCategory.SIN_CATEGORIA.getDescription())
-    }
-
-    def "addCategories - should add multiple categories to workspace"() {
-        given:
-        def category1 = Stub(Category) { getId() >> 5L }
-        def category2 = Stub(Category) { getId() >> 6L }
-        def descriptions = ["CAT1", "CAT2"]
-
-        categoryAddService.addCategory("CAT1") >> category1
-        categoryAddService.addCategory("CAT2") >> category2
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 6L) >> Optional.empty()
-
-        when:
-        service.addCategories(1L, descriptions)
-
-        then:
-        2 * workspaceCategoryRepository.save(_ as WorkspaceCategory)
     }
 
     def "deleteCategory - should delete category from workspace"() {
@@ -167,7 +84,7 @@ class WorkspaceCategoryServiceTest extends Specification {
             getCategory() >> category
         }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(workspaceCategoryId) >> Optional.of(workspaceCategory)
 
         when:
@@ -182,7 +99,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         def workspaceId = 1L
         def workspaceCategoryId = 999L
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(workspaceCategoryId) >> Optional.empty()
 
         when:
@@ -200,7 +117,7 @@ class WorkspaceCategoryServiceTest extends Specification {
             getWorkspaceId() >> 999L
         }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(workspaceCategoryId) >> Optional.of(workspaceCategory)
 
         when:
@@ -220,7 +137,7 @@ class WorkspaceCategoryServiceTest extends Specification {
             getCategory() >> category
         }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(workspaceCategoryId) >> Optional.of(workspaceCategory)
 
         when:
@@ -228,33 +145,6 @@ class WorkspaceCategoryServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
-    }
-
-    def "ensureCategoryInWorkspace - should create association if not exists"() {
-        given:
-        def category = Stub(Category) { getId() >> 5L }
-
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.empty()
-
-        when:
-        service.ensureCategoryInWorkspace(1L, category)
-
-        then:
-        1 * workspaceCategoryRepository.save(_ as WorkspaceCategory)
-    }
-
-    def "ensureCategoryInWorkspace - should not duplicate if already exists"() {
-        given:
-        def category = Stub(Category) { getId() >> 5L }
-        def existingWsCategory = Stub(WorkspaceCategory) { isActive() >> true }
-
-        workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(1L, 5L) >> Optional.of(existingWsCategory)
-
-        when:
-        service.ensureCategoryInWorkspace(1L, category)
-
-        then:
-        0 * workspaceCategoryRepository.save(_ as WorkspaceCategory)
     }
 
     def "updateCategory - should update all fields successfully"() {
@@ -270,7 +160,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         }
         def categoryRecord = new CategoryRecord(categoryId, "Hogar Actualizado", true, true, "HomeOutlined", "#faad14")
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
         workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
         workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
@@ -300,7 +190,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         }
         def categoryRecord = new CategoryRecord(categoryId, "Transporte", true, true, "CarOutlined", "#1890ff")
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
         workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
         workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
@@ -327,7 +217,7 @@ class WorkspaceCategoryServiceTest extends Specification {
         }
         def categoryRecord = new CategoryRecord(categoryId, "Salud", true, true, "MedicineBoxOutlined", "#52c41a")
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
         workspaceCategoryRepository.save(workspaceCategory) >> workspaceCategory
         workspaceCategoryMapper.toRecord(workspaceCategory) >> categoryRecord
@@ -367,7 +257,7 @@ class WorkspaceCategoryServiceTest extends Specification {
             getWorkspaceId() >> 999L
         }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCategoryRepository.findById(categoryId) >> Optional.of(workspaceCategory)
 
         when:

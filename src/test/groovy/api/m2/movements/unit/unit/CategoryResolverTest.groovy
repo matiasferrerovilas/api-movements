@@ -4,20 +4,20 @@ import api.m2.movements.entities.commons.Category
 import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.services.category.CategoryAddService
 import api.m2.movements.services.category.CategoryResolver
-import api.m2.movements.services.category.WorkspaceCategoryService
+import api.m2.movements.services.category.WorkspaceCategoryAssociationService
 import spock.lang.Specification
 import spock.lang.Subject
 
 class CategoryResolverTest extends Specification {
 
     CategoryAddService categoryAddService = Mock(CategoryAddService)
-    WorkspaceCategoryService workspaceCategoryService = Mock(WorkspaceCategoryService)
+    WorkspaceCategoryAssociationService workspaceCategoryAssociationService = Mock(WorkspaceCategoryAssociationService)
 
     @Subject
     CategoryResolver service
 
     def setup() {
-        service = new CategoryResolver(categoryAddService, workspaceCategoryService)
+        service = new CategoryResolver(categoryAddService, workspaceCategoryAssociationService)
     }
 
     def "resolveAll(descriptions) - should resolve default category when descriptions is null"() {
@@ -33,7 +33,7 @@ class CategoryResolverTest extends Specification {
         def result = service.resolveAll(null, workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
+        1 * workspaceCategoryAssociationService.ensureCategoryInWorkspace(workspaceId, category)
         result == [category]
     }
 
@@ -50,7 +50,7 @@ class CategoryResolverTest extends Specification {
         def result = service.resolveAll([], workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, category)
+        1 * workspaceCategoryAssociationService.ensureCategoryInWorkspace(workspaceId, category)
         result == [category]
     }
 
@@ -70,8 +70,8 @@ class CategoryResolverTest extends Specification {
         ], workspaceId)
 
         then:
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, hogar)
-        1 * workspaceCategoryService.ensureCategoryInWorkspace(workspaceId, ocio)
+        1 * workspaceCategoryAssociationService.ensureCategoryInWorkspace(workspaceId, hogar)
+        1 * workspaceCategoryAssociationService.ensureCategoryInWorkspace(workspaceId, ocio)
         result == [hogar, ocio]
     }
 

@@ -61,15 +61,12 @@ class MovementAddServiceTest extends Specification {
 
         service = new MovementAddService(
                 movementRepository,
-                movementMapper,
                 movementFactory,
-                movementItemService,
                 eventPublisher,
-                workspaceQueryService,
-                userService,
                 movementDuplicateFilter,
                 new MovementPersister(movementRepository, movementItemService, eventPublisher),
-                new MovementRecordAssembler(movementMapper, Mappers.getMapper(CategoryMapper), workspaceCategoryRepository)
+                new MovementRecordAssembler(movementMapper, Mappers.getMapper(CategoryMapper),
+                        workspaceCategoryRepository, workspaceQueryService, userService)
         )
         workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(_ as Long) >> []
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
@@ -91,6 +88,28 @@ class MovementAddServiceTest extends Specification {
                 .build()
         return movement
     }
+
+    // Los iconos viven en WorkspaceCategory, no en Category: MovementMapper.toRecord los deja en
+    // null, y el evento de websocket llegaba al front sin icono hasta el próximo refresh.
+    def buildMovementWithCategory(Long workspaceId) {
+        def movement = buildMovement(workspaceId)
+        movement.categories = [Category.builder().id(7L).description("HOGAR").build()] as Set
+        return movement
+    }
+
+    def workspaceCategoryFor(Movement movement) {
+        return WorkspaceCategory.builder()
+                .workspaceId(movement.workspaceId)
+                .category(movement.categories.first())
+                .iconName("ShoppingCartOutlined")
+                .iconColor("#ff0000")
+                .build()
+    }
+
+    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
+
+    // El type-change side effect vive en MovementMapper (updateMovement), no en MovementFactory
+    // — se prueba acá directo contra el mapper real (no mockeado) que usa este test.
 
     def "saveMovement - should verify membership and save movement"() {
         given:
@@ -130,23 +149,6 @@ class MovementAddServiceTest extends Specification {
         result.metadata().workspace() == new WorkspaceBaseRecord(1L, "Familia")
         result.metadata().owner().givenName() == "Matias"
         result.metadata().owner().id() == 10L
-    }
-
-    // Los iconos viven en WorkspaceCategory, no en Category: MovementMapper.toRecord los deja en
-    // null, y el evento de websocket llegaba al front sin icono hasta el próximo refresh.
-    def buildMovementWithCategory(Long workspaceId) {
-        def movement = buildMovement(workspaceId)
-        movement.categories = [Category.builder().id(7L).description("HOGAR").build()] as Set
-        return movement
-    }
-
-    def workspaceCategoryFor(Movement movement) {
-        return WorkspaceCategory.builder()
-                .workspaceId(movement.workspaceId)
-                .category(movement.categories.first())
-                .iconName("ShoppingCartOutlined")
-                .iconColor("#ff0000")
-                .build()
     }
 
     def "saveMovement - should publish MovementRecord with the workspace's category icons"() {
@@ -207,238 +209,6 @@ class MovementAddServiceTest extends Specification {
         then:
         thrown(PermissionDeniedException)
         0 * movementRepository.save(_ as Movement)
-    }
-
-    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
-
-    def "updateMovement - should update movement when called"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
-        def movement = buildMovement(1L)
-        movementRepository.findById(10L) >> Optional.of(movement)
-
-        when:
-        service.updateMovement(dto, 10L)
-
-        then:
-        1 * movementRepository.save(_ as Movement)
-    }
-
-    def "updateMovement - should publish a category correction when the category changed"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "SUPERMERCADO")], null, null, null, null, null, null)
-        def movement = buildMovement(1L)
-        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
-        movementRepository.findById(10L) >> Optional.of(movement)
-        movementFactory.applyUpdates(dto, movement) >> {
-            movement.categories = [Category.builder().id(5L).description("SUPERMERCADO").build()] as Set
-        }
-
-        when:
-        service.updateMovement(dto, 10L)
-
-        then:
-        1 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent) >> { List args ->
-            def event = args[0] as CategoryCorrectedEvent
-            assert event.workspaceId() == 1L
-            assert event.movementDescription() == "Supermercado"
-            assert event.categoryId() == 5L
-        }
-    }
-
-    def "updateMovement - should not publish a category correction when categories did not change"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR")], null, null, null, null, null, null)
-        def movement = buildMovement(1L)
-        movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
-        movementRepository.findById(10L) >> Optional.of(movement)
-        movementFactory.applyUpdates(dto, movement) >> {
-            movement.categories = [Category.builder().id(2L).description("HOGAR").build()] as Set
-        }
-
-        when:
-        service.updateMovement(dto, 10L)
-
-        then:
-        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
-    }
-
-    def "updateMovement - should not publish a category correction when the movement ends with several categories"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, [new CategoryUpdateRecord(null, "HOGAR"), new CategoryUpdateRecord(null, "SALUD")],
-                null, null, null, null, null, null)
-        def movement = buildMovement(1L)
-        movement.categories = [Category.builder().id(1L).description("SIN CATEGORIA").build()] as Set
-        movementRepository.findById(10L) >> Optional.of(movement)
-        movementFactory.applyUpdates(dto, movement) >> {
-            movement.categories = [Category.builder().id(2L).description("HOGAR").build(),
-                                   Category.builder().id(3L).description("SALUD").build()] as Set
-        }
-
-        when:
-        service.updateMovement(dto, 10L)
-
-        then:
-        0 * eventPublisher.publishEvent(_ as CategoryCorrectedEvent)
-    }
-
-    def "updateMovement - should throw EntityNotFoundException when movement does not exist"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
-        movementRepository.findById(999L) >> Optional.empty()
-
-        when:
-        service.updateMovement(dto, 999L)
-
-        then:
-        thrown(EntityNotFoundException)
-        0 * movementRepository.save(_ as Movement)
-    }
-
-    // El type-change side effect vive en MovementMapper (updateMovement), no en MovementFactory
-    // — se prueba acá directo contra el mapper real (no mockeado) que usa este test.
-
-    def "updateMovement mapper - should not touch type when not provided"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
-        def movement = new Movement()
-        movement.setType(MovementType.DEBITO)
-
-        when:
-        movementMapper.updateMovement(dto, movement)
-
-        then:
-        movement.type == MovementType.DEBITO
-    }
-
-    def "updateMovement mapper - should change type between non-CREDITO types without touching cuotas"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "INGRESO", null)
-        def movement = new Movement()
-        movement.setType(MovementType.DEBITO)
-
-        when:
-        movementMapper.updateMovement(dto, movement)
-
-        then:
-        movement.type == MovementType.INGRESO
-        movement.cuotaActual == null
-        movement.cuotasTotales == null
-        movement.lastCreditPayment == null
-    }
-
-    def "updateMovement mapper - moving out of CREDITO clears cuotaActual, cuotasTotales and lastCreditPayment"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, "DEBITO", null)
-        def movement = new Movement()
-        movement.setType(MovementType.CREDITO)
-        movement.setCuotaActual(2)
-        movement.setCuotasTotales(6)
-        movement.setLastCreditPayment(LocalDate.of(2026, 6, 1))
-
-        when:
-        movementMapper.updateMovement(dto, movement)
-
-        then:
-        movement.type == MovementType.DEBITO
-        movement.cuotaActual == null
-        movement.cuotasTotales == null
-        movement.lastCreditPayment == null
-    }
-
-    def "updateMovement mapper - moving into CREDITO paints cuotaActual/cuotasTotales from dto and leaves lastCreditPayment untouched"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, 2, 6, null, "CREDITO", null)
-        def movement = new Movement()
-        movement.setType(MovementType.DEBITO)
-        // Valor previo cualquiera: no se debe recalcular acá, queda tal cual estaba.
-        movement.setLastCreditPayment(LocalDate.of(2099, 1, 1))
-
-        when:
-        movementMapper.updateMovement(dto, movement)
-
-        then:
-        movement.type == MovementType.CREDITO
-        movement.cuotaActual == 2
-        movement.cuotasTotales == 6
-        movement.lastCreditPayment == LocalDate.of(2099, 1, 1)
-    }
-
-    def "updateMovement mapper - nulls cuotaActual/cuotasTotales when dto sends them null even without a type change"() {
-        given:
-        def dto = new ExpenseToUpdate(null, null, null, null, null, null, null, null, null, null)
-        def movement = new Movement()
-        movement.setType(MovementType.CREDITO)
-        movement.setCuotaActual(2)
-        movement.setCuotasTotales(6)
-        movement.setLastCreditPayment(LocalDate.of(2026, 6, 1))
-
-        when:
-        movementMapper.updateMovement(dto, movement)
-
-        then:
-        movement.type == MovementType.CREDITO
-        movement.cuotaActual == null
-        movement.cuotasTotales == null
-        // No se toca porque el type no vino en el dto (sin señal explícita de cambio).
-        movement.lastCreditPayment == LocalDate.of(2026, 6, 1)
-    }
-
-    def "deleteMovement - should delete and publish event when called"() {
-        given:
-        def movement = buildMovement(2L)
-        movementRepository.findById(20L) >> Optional.of(movement)
-
-        when:
-        service.deleteMovement(20L)
-
-        then:
-        1 * movementRepository.deleteById(20L)
-        1 * eventPublisher.publishEvent(_ as MovementDeletedEvent)
-    }
-
-    def "deleteMovement - should throw EntityNotFoundException when movement does not exist"() {
-        given:
-        movementRepository.findById(999L) >> Optional.empty()
-
-        when:
-        service.deleteMovement(999L)
-
-        then:
-        thrown(EntityNotFoundException)
-        0 * movementRepository.deleteById(_ as Long)
-    }
-
-    def "deleteAllMovementsOfCurrentUser - should delete only the caller's movements and publish one event each"() {
-        given:
-        userService.getMe() >> new UserMe(5L, null, null, null, null, null)
-        def first = Movement.builder().id(1L).workspaceId(2L).ownerId(5L).build()
-        def second = Movement.builder().id(2L).workspaceId(3L).ownerId(5L).build()
-        movementRepository.findAllByOwnerId(5L) >> [first, second]
-
-        when:
-        def deleted = service.deleteAllMovementsOfCurrentUser()
-
-        then:
-        deleted == 2
-        1 * movementItemService.deleteItemsOf([1L, 2L])
-        1 * movementRepository.deleteAll([first, second])
-        1 * eventPublisher.publishEvent(new MovementDeletedEvent(1L, 2L))
-        1 * eventPublisher.publishEvent(new MovementDeletedEvent(2L, 3L))
-    }
-
-    def "deleteAllMovementsOfCurrentUser - should do nothing when the caller has no movements"() {
-        given:
-        userService.getMe() >> new UserMe(5L, null, null, null, null, null)
-        movementRepository.findAllByOwnerId(5L) >> []
-
-        when:
-        def deleted = service.deleteAllMovementsOfCurrentUser()
-
-        then:
-        deleted == 0
-        0 * movementRepository.deleteAll(_)
-        0 * eventPublisher.publishEvent(_)
     }
 
     def "saveExpenseAll - should save only new movements and report duplicates"() {

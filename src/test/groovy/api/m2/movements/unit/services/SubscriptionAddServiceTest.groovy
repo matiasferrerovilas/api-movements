@@ -72,7 +72,7 @@ class SubscriptionAddServiceTest extends Specification {
 
         userService.getMe() >> new UserMe(1L, "user@test.com", "User", null, "PERSONAL",
                 new UserMe.Metadata(false, true, [], null))
-        workspaceContextService.getActiveWorkspaceId() >> 7L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 7L
         currencyAddService.findBySymbol("ARS") >> currency
         subscriptionRepository.save(_ as Subscription) >> { args -> args[0] as Subscription }
 
@@ -80,7 +80,6 @@ class SubscriptionAddServiceTest extends Specification {
         service.save(dto)
 
         then:
-        1 * workspaceQueryService.verifyCanWrite(7L)
         1 * workspaceCurrencyService.ensureCurrencyInWorkspace(7L, currency)
     }
 

@@ -1,8 +1,6 @@
 package api.m2.movements.services.category;
 
-import api.m2.movements.entities.commons.Category;
 import api.m2.movements.entities.WorkspaceCategory;
-import api.m2.movements.enums.DefaultCategory;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.PermissionDeniedException;
@@ -13,26 +11,28 @@ import api.m2.movements.records.categories.CategoryUpdatedEvent;
 import api.m2.movements.repositories.CategoryRepository;
 import api.m2.movements.repositories.WorkspaceCategoryRepository;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Categorías del workspace activo del request. La asociación de categorías a un workspace dado
+ * por parámetro (onboarding, resolver de movimientos) vive en
+ * {@link WorkspaceCategoryAssociationService}.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceCategoryService {
 
     private final WorkspaceCategoryRepository workspaceCategoryRepository;
-    private final CategoryAddService categoryAddService;
+    private final WorkspaceCategoryAssociationService associationService;
     private final WorkspaceCategoryMapper workspaceCategoryMapper;
     private final WorkspaceContextService workspaceContextService;
-    private final WorkspaceQueryService workspaceQueryService;
     private final CategoryRepository categoryRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -44,42 +44,16 @@ public class WorkspaceCategoryService {
 
     @Transactional
     public CategoryRecord addCategory(String description) {
-        var workspaceId = workspaceContextService.getActiveWorkspaceId();
-        workspaceQueryService.verifyCanWrite(workspaceId);
-        var category = categoryAddService.addCategory(description);
-        return workspaceCategoryMapper.toRecord(this.resolveWorkspaceCategory(workspaceId, category));
-    }
-
-    @Transactional
-    public void addDefaultCategories(Long workspaceId) {
-        // SIN_CATEGORIA queda afuera a propósito: se autocrea en el workspace recién cuando
-        // aparece el primer movimiento sin categoría (CategoryResolver), no antes.
-        Arrays.stream(DefaultCategory.values())
-                .filter(defaultCategory -> defaultCategory != DefaultCategory.SIN_CATEGORIA)
-                .forEach(defaultCategory -> {
-                    var category = categoryAddService.addCategory(defaultCategory.getDescription());
-                    this.resolveWorkspaceCategory(workspaceId, category);
-                });
-    }
-
-    @Transactional
-    public void addCategories(Long workspaceId, List<String> descriptions) {
-        descriptions.forEach(description -> {
-            var category = categoryAddService.addCategory(description);
-            this.resolveWorkspaceCategory(workspaceId, category);
-        });
+        var workspaceId = workspaceContextService.getActiveWritableWorkspaceId();
+        return workspaceCategoryMapper.toRecord(associationService.addCategory(workspaceId, description));
     }
 
     @Transactional
     public void deleteCategory(Long workspaceCategoryId) {
-        var workspaceId = workspaceContextService.getActiveWorkspaceId();
-        workspaceQueryService.verifyCanWrite(workspaceId);
-        var workspaceCategory = workspaceCategoryRepository.findById(workspaceCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
+        var workspaceId = workspaceContextService.getActiveWritableWorkspaceId();
+        var workspaceCategory = this.findInWorkspace(
+                workspaceCategoryId, workspaceId, "No tenés permiso para eliminar esta categoría");
 
-        if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
-            throw new PermissionDeniedException("No tenés permiso para eliminar esta categoría");
-        }
         if (!workspaceCategory.getCategory().isDeletable()) {
             throw new BusinessException("No se puede eliminar esta categoría");
         }
@@ -89,16 +63,9 @@ public class WorkspaceCategoryService {
 
     @Transactional
     public CategoryRecord updateCategory(Long workspaceCategoryId, CategoryPatchRequest request) {
-        var workspaceId = workspaceContextService.getActiveWorkspaceId();
-        workspaceQueryService.verifyCanWrite(workspaceId);
-
-        var workspaceCategory = workspaceCategoryRepository
-                .findById(workspaceCategoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
-
-        if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
-            throw new PermissionDeniedException("No tenés acceso a esta categoría");
-        }
+        var workspaceId = workspaceContextService.getActiveWritableWorkspaceId();
+        var workspaceCategory = this.findInWorkspace(
+                workspaceCategoryId, workspaceId, "No tenés acceso a esta categoría");
 
         if (request.description() != null && !request.description().isBlank()) {
             // La descripción modifica la Category global
@@ -122,29 +89,13 @@ public class WorkspaceCategoryService {
         return categoryRecord;
     }
 
-    /**
-     * Asegura que una categoría esté asociada al workspace.
-     * Si no existe la asociación, la crea automáticamente.
-     * Usado por CategoryResolver para auto-agregar categorías.
-     */
-    @Transactional
-    public void ensureCategoryInWorkspace(Long workspaceId, Category category) {
-        this.resolveWorkspaceCategory(workspaceId, category);
-    }
+    private WorkspaceCategory findInWorkspace(Long workspaceCategoryId, Long workspaceId, String forbiddenMessage) {
+        var workspaceCategory = workspaceCategoryRepository.findById(workspaceCategoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
-    private WorkspaceCategory resolveWorkspaceCategory(Long workspaceId, Category category) {
-        return workspaceCategoryRepository.findByWorkspaceIdAndCategoryId(workspaceId, category.getId())
-                .map(existing -> {
-                    if (!existing.isActive()) {
-                        existing.setActive(true);
-                        return workspaceCategoryRepository.save(existing);
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> workspaceCategoryRepository.save(
-                        WorkspaceCategory.builder()
-                                .workspaceId(workspaceId)
-                                .category(category)
-                                .build()));
+        if (!workspaceCategory.getWorkspaceId().equals(workspaceId)) {
+            throw new PermissionDeniedException(forbiddenMessage);
+        }
+        return workspaceCategory;
     }
 }

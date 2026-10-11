@@ -11,7 +11,7 @@ import api.m2.movements.records.onboarding.WorkspaceToAdd;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
 import api.m2.movements.clients.identity.requests.OnboardingStartRequest;
 import api.m2.movements.services.banks.BankAddService;
-import api.m2.movements.services.category.WorkspaceCategoryService;
+import api.m2.movements.services.category.WorkspaceCategoryAssociationService;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.currencies.WorkspaceCurrencyService;
 import api.m2.movements.services.income.IncomeAddService;
@@ -34,7 +34,7 @@ public class OnboardingService {
     private final UserAddService userAddService;
     private final IncomeAddService incomeAddService;
     private final BankAddService bankAddService;
-    private final WorkspaceCategoryService workspaceCategoryService;
+    private final WorkspaceCategoryAssociationService workspaceCategoryAssociationService;
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
     private final WorkspaceCurrencyService workspaceCurrencyService;
@@ -134,8 +134,8 @@ public class OnboardingService {
     }
 
     private void addCategories(OnBoardingForm onBoardingForm, Long defaultWorkspaceId) {
-        workspaceCategoryService.addCategories(defaultWorkspaceId, onBoardingForm.categoriesToAdd());
-        workspaceCategoryService.addDefaultCategories(defaultWorkspaceId);
+        workspaceCategoryAssociationService.addCategories(defaultWorkspaceId, onBoardingForm.categoriesToAdd());
+        workspaceCategoryAssociationService.addDefaultCategories(defaultWorkspaceId);
     }
 
     private void addInitialIncome(OnBoardingForm onBoardingForm, Long defaultWorkspaceId) {

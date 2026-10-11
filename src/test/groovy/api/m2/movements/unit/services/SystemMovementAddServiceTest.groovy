@@ -20,6 +20,8 @@ import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.movements.MovementPersister
 import api.m2.movements.services.movements.MovementRecordAssembler
 import api.m2.movements.services.movements.SystemMovementAddService
+import api.m2.movements.services.user.UserService
+import api.m2.movements.services.workspaces.WorkspaceQueryService
 import org.mapstruct.factory.Mappers
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.test.util.ReflectionTestUtils
@@ -35,8 +37,13 @@ class SystemMovementAddServiceTest extends Specification {
     MovementItemService movementItemService = Mock(MovementItemService)
     ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
     WorkspaceCategoryRepository workspaceCategoryRepository = Mock(WorkspaceCategoryRepository)
+    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
+    UserService userService = Mock(UserService)
 
     SystemMovementAddService service
+
+    // Lo que el repositorio devuelve como "ya generado el mes siguiente"; el test de doble corrida lo va llenando.
+    def storedInstallments = []
 
     def setup() {
         def movementMapper = new MovementMapperImpl()
@@ -47,10 +54,12 @@ class SystemMovementAddServiceTest extends Specification {
                 movementRepository,
                 movementFactory,
                 new MovementPersister(movementRepository, movementItemService, eventPublisher),
-                new MovementRecordAssembler(movementMapper, Mappers.getMapper(CategoryMapper), workspaceCategoryRepository)
+                new MovementRecordAssembler(movementMapper, Mappers.getMapper(CategoryMapper),
+                        workspaceCategoryRepository, workspaceQueryService, userService)
         )
         workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(_ as Long) >> []
         movementItemService.getItems(_ as Long) >> []
+        movementRepository.findCreditoInstallmentsBetween(_ as LocalDate, _ as LocalDate) >> { storedInstallments }
     }
 
     def buildMovement(Long workspaceId) {
@@ -92,6 +101,8 @@ class SystemMovementAddServiceTest extends Specification {
 
         then:
         1 * eventPublisher.publishEvent(_ as MovementRecord)
+        0 * workspaceQueryService.findWorkspaceNameById(_ as Long)
+        0 * userService.getUserNamesByIds(_ as List<Long>)
         result.metadata().workspace() == new WorkspaceBaseRecord(1L, null)
         result.metadata().owner().id() == 10L
         result.metadata().owner().givenName() == null
@@ -163,6 +174,76 @@ class SystemMovementAddServiceTest extends Specification {
             // recalcula acá — es MovementFactory el único lugar que decide entre copiar o calcular.
             dto.lastCreditPayment() == LocalDate.of(2026, 5, 15)
         }, 5L, 10L) >> buildMovement(5L)
+    }
+
+    def existingInstallment(Integer cuotaActual) {
+        return buildCreditoMovement(cuotaActual, 3, LocalDate.of(2026, 5, 15))
+    }
+
+    def "generateNextCreditInstallments - should not duplicate an installment already generated for the next month"() {
+        given:
+        def previous = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [previous]
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        // abril: ya existe la cuota 2 de esa misma compra
+        1 * movementRepository.findCreditoInstallmentsBetween(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 5, 1)) >>
+                [existingInstallment(2)]
+        count == 0
+        0 * movementFactory.create(_ as MovementToAdd, _ as Long, _ as Long)
+    }
+
+    def "generateNextCreditInstallments - should generate only the purchases that are missing their next installment"() {
+        given:
+        def purchaseA = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        def purchaseB = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        purchaseB.description = "Celular"
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [purchaseA, purchaseB]
+        movementRepository.save(_ as Movement) >> { args -> args[0] }
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        1 * movementRepository.findCreditoInstallmentsBetween(_ as LocalDate, _ as LocalDate) >> [existingInstallment(2)]
+        count == 1
+        1 * movementFactory.create({ it.description() == "Celular" && it.cuotaActual() == 2 }, 5L, 10L) >> buildMovement(5L)
+    }
+
+    def "generateNextCreditInstallments - should keep identical purchases distinct when only one installment was generated"() {
+        given:
+        def first = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        def second = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [first, second]
+        movementRepository.save(_ as Movement) >> { args -> args[0] }
+
+        when:
+        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        1 * movementRepository.findCreditoInstallmentsBetween(_ as LocalDate, _ as LocalDate) >> [existingInstallment(2)]
+        count == 1
+        1 * movementFactory.create({ it.cuotaActual() == 2 }, 5L, 10L) >> buildMovement(5L)
+    }
+
+    def "generateNextCreditInstallments - running it twice generates each installment only once"() {
+        given:
+        def previous = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
+        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [previous]
+        movementRepository.save(_ as Movement) >> { args -> args[0] }
+        movementFactory.create(_ as MovementToAdd, 5L, 10L) >> buildMovement(5L)
+        eventPublisher.publishEvent(_ as MovementRecord) >> { storedInstallments << existingInstallment(2) }
+
+        when:
+        def first = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+        def second = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
+
+        then:
+        first == 1
+        second == 0
     }
 
     def "generateNextCreditInstallments - should return zero and create nothing when there are no pending installments"() {

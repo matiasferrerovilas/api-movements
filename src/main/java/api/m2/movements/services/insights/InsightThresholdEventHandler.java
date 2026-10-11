@@ -36,7 +36,7 @@ public class InsightThresholdEventHandler {
     public void onMovementAdded(MovementRecord record) {
         // Mismo motivo que BudgetThresholdEventHandler: INGRESO y REINTEGRO no son gasto, así que
         // no participan del gasto-por-categoría que evalúa InsightService.
-        if (MovementType.INGRESO.name().equals(record.type()) || MovementType.REINTEGRO.name().equals(record.type())) {
+        if (MovementType.isMoneyIn(record.type())) {
             return;
         }
         var workspaceId = record.metadata().workspace().id();

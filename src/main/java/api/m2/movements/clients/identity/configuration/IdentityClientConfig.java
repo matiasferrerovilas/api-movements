@@ -7,6 +7,7 @@ import api.m2.movements.exceptions.EntityNotFoundException;
 import api.m2.movements.exceptions.ErrorResponse;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.exceptions.ServiceException;
+import api.m2.movements.helpers.HttpTimeouts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.time.Duration;
 
 @Configuration
 public class IdentityClientConfig {
@@ -38,9 +40,13 @@ public class IdentityClientConfig {
     private static final int HTTP_CONFLICT = 409;
 
     @Bean
-    public IdentityClient identityClient(@Value("${identity.base-url}") String baseUrl, JsonMapper jsonMapper) {
+    public IdentityClient identityClient(@Value("${identity.base-url}") String baseUrl,
+                                         @Value("${identity.connect-timeout:2s}") Duration connectTimeout,
+                                         @Value("${identity.read-timeout:5s}") Duration readTimeout,
+                                         JsonMapper jsonMapper) {
         var restClient = RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestFactory(HttpTimeouts.requestFactory(connectTimeout, readTimeout))
                 .requestInterceptor((request, body, execution) -> {
                     request.getHeaders().add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + this.getCurrentToken());
                     return execution.execute(request, body);

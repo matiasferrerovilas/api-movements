@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -17,7 +18,9 @@ import java.time.Duration;
 public class CacheConfiguration {
 
     public static final String CURRENCY_CACHE = "currency";
-    public static final String YAHOO_PRICE_CACHE = "yahooPrice";
+    // Nombres de workspaces y usuarios, que solo se muestran: TTL corto porque un rename tiene que
+    // verse pronto, y lo suficiente para que casi ningún request tenga que ir a api-identity.
+    public static final String NAMES_CACHE = "names";
     // Cachea las dos llamadas a api-identity que se disparan en casi cada request (resolver el
     // usuario autenticado, verificar membership de un workspace) — antes cada operación hacía un
     // round-trip HTTP síncrono sin cache, sin timeout y sin circuit breaker: si api-identity se
@@ -29,8 +32,8 @@ public class CacheConfiguration {
 
     private static final String KEY_PREFIX = "api-movements:";
     private static final Duration CURRENCY_TTL = Duration.ofHours(5);
-    private static final Duration YAHOO_PRICE_TTL = Duration.ofHours(1);
     private static final Duration IDENTITY_TTL = Duration.ofHours(5);
+    private static final Duration NAMES_TTL = Duration.ofMinutes(10);
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -45,11 +48,17 @@ public class CacheConfiguration {
         // siempre devuelven un valor real.
         RedisCacheConfiguration identityConfig = baseCacheConfig();
 
-        return RedisCacheManager.builder(connectionFactory)
+        // Spring Data Redis 4.x escribe de forma asíncrona por defecto con Lettuce: put() vuelve
+        // antes de que el valor esté en Redis, así que un get inmediato puede no verlo y repetir la
+        // consulta a api-identity (en una prueba en loop falló ~70% de las veces). immediateWrites()
+        // hace que cada put termine antes de volver; cuesta un round-trip a Redis por escritura.
+        RedisCacheWriter cacheWriter = RedisCacheWriter.create(connectionFactory, RedisCacheWriter.RedisCacheWriterConfigurer::immediateWrites);
+
+        return RedisCacheManager.builder(cacheWriter)
                 .cacheDefaults(defaultConfig)
                 .withCacheConfiguration(CURRENCY_CACHE, defaultConfig.entryTtl(CURRENCY_TTL))
-                .withCacheConfiguration(YAHOO_PRICE_CACHE, defaultConfig.entryTtl(YAHOO_PRICE_TTL))
                 .withCacheConfiguration(IDENTITY_CACHE, identityConfig.entryTtl(IDENTITY_TTL))
+                .withCacheConfiguration(NAMES_CACHE, defaultConfig.entryTtl(NAMES_TTL))
                 .build();
     }
 

@@ -9,7 +9,6 @@ import api.m2.movements.repositories.WorkspaceCurrencyRepository
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 class WorkspaceCurrencyServiceTest extends Specification {
@@ -17,7 +16,6 @@ class WorkspaceCurrencyServiceTest extends Specification {
     WorkspaceCurrencyRepository workspaceCurrencyRepository = Mock(WorkspaceCurrencyRepository)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
 
     WorkspaceCurrencyService service
 
@@ -25,8 +23,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
         service = new WorkspaceCurrencyService(
                 workspaceCurrencyRepository,
                 currencyAddService,
-                workspaceContextService,
-                workspaceQueryService
+                workspaceContextService
         )
     }
 
@@ -57,7 +54,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
         def currency = Stub(Currency) { getId() >> 5L; getSymbol() >> "BTC"; getDescription() >> "Bitcoin" }
         def workspaceCurrency = Stub(WorkspaceCurrency) { getId() >> 20L; getCurrency() >> currency }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         currencyAddService.addCurrency("BTC", "Bitcoin") >> currency
         workspaceCurrencyRepository.findByWorkspaceIdAndCurrencyId(workspaceId, 5L) >> Optional.empty()
         workspaceCurrencyRepository.save(_ as WorkspaceCurrency) >> workspaceCurrency
@@ -77,7 +74,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
         def currency = Stub(Currency) { getId() >> 5L; getSymbol() >> "BTC"; getDescription() >> "Bitcoin" }
         def existing = Stub(WorkspaceCurrency) { getId() >> 20L; getCurrency() >> currency }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         currencyAddService.addCurrency("BTC", "Bitcoin") >> currency
         workspaceCurrencyRepository.findByWorkspaceIdAndCurrencyId(workspaceId, 5L) >> Optional.of(existing)
 
@@ -137,7 +134,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
             getCurrency() >> currency
         }
 
-        workspaceContextService.getActiveWorkspaceId() >> workspaceId
+        workspaceContextService.getActiveWritableWorkspaceId() >> workspaceId
         workspaceCurrencyRepository.findById(workspaceCurrencyId) >> Optional.of(workspaceCurrency)
 
         when:
@@ -149,7 +146,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
 
     def "deleteCurrency - should throw EntityNotFoundException when not found"() {
         given:
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         workspaceCurrencyRepository.findById(999L) >> Optional.empty()
 
         when:
@@ -163,7 +160,7 @@ class WorkspaceCurrencyServiceTest extends Specification {
         given:
         def workspaceCurrency = Stub(WorkspaceCurrency) { getWorkspaceId() >> 999L }
 
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         workspaceCurrencyRepository.findById(10L) >> Optional.of(workspaceCurrency)
 
         when:

@@ -5,28 +5,18 @@ import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Income
 
 import api.m2.movements.clients.identity.response.UserMe
-import api.m2.movements.enums.MovementType
 import api.m2.movements.exceptions.EntityNotFoundException
 import api.m2.movements.mappers.IncomeMapper
-import api.m2.movements.records.categories.CategoryUpdateRecord
 import api.m2.movements.records.currencies.CurrencyRecord
 import api.m2.movements.records.income.IncomeToAdd
-import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.repositories.BankRepository
 import api.m2.movements.repositories.IncomeRepository
-import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.CurrencyResolver
 import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.income.IncomeAddService
-import api.m2.movements.services.movements.MovementAddService
-import api.m2.movements.services.movements.SystemMovementAddService
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
-
-import java.time.LocalDate
-import java.time.ZoneOffset
 
 class IncomeAddServiceTest extends Specification {
 
@@ -34,11 +24,7 @@ class IncomeAddServiceTest extends Specification {
     UserService userService = Mock(UserService)
     IncomeMapper incomeMapper
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
-    CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     CurrencyResolver currencyResolver = Mock(CurrencyResolver)
-    MovementAddService movementAddService = Mock(MovementAddService)
-    SystemMovementAddService systemMovementAddService = Mock(SystemMovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
 
     IncomeAddService service
@@ -51,11 +37,7 @@ class IncomeAddServiceTest extends Specification {
                 userService,
                 incomeMapper,
                 workspaceContextService,
-                workspaceQueryService,
-                currencyAddService,
                 currencyResolver,
-                movementAddService,
-                systemMovementAddService,
                 bankRepository
         )
     }
@@ -71,7 +53,7 @@ class IncomeAddServiceTest extends Specification {
         def bank = Bank.builder().id(1L).description("GALICIA").build()
 
         userService.getMe() >> userMe(1L)
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         currencyResolver.resolve("ARS", 1L) >> currency
         bankRepository.findByDescription("GALICIA") >> Optional.of(bank)
 
@@ -90,7 +72,7 @@ class IncomeAddServiceTest extends Specification {
         def bank = Bank.builder().id(2L).description("BBVA").build()
 
         userService.getMe() >> userMe(1L)
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         currencyResolver.resolve("USD", 1L) >> Stub(Currency)
         bankRepository.findByDescription("BBVA") >> Optional.of(bank)
 
@@ -106,7 +88,7 @@ class IncomeAddServiceTest extends Specification {
         def incomeToAdd = new IncomeToAdd("BANCO_INEXISTENTE", new CurrencyRecord("ARS", null), new BigDecimal("100.00"))
 
         userService.getMe() >> userMe(1L)
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         currencyResolver.resolve("ARS", 1L) >> Stub(Currency)
         bankRepository.findByDescription("BANCO_INEXISTENTE") >> Optional.empty()
 
@@ -125,7 +107,7 @@ class IncomeAddServiceTest extends Specification {
         def bank = Bank.builder().id(3L).description("SANTANDER").build()
 
         userService.getMe() >> userMe(1L)
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         currencyResolver.resolve("ARS", 1L) >> currency
         bankRepository.findByDescription("SANTANDER") >> Optional.of(bank)
 
@@ -165,155 +147,5 @@ class IncomeAddServiceTest extends Specification {
         then:
         thrown(EntityNotFoundException)
         0 * incomeRepository.delete(_ as Income)
-    }
-
-    // Note: membership check is handled by MembershipCheckAspect, not the service directly.
-
-    def "reloadIncome - should save movement when called"() {
-        given:
-        def currency = Stub(Currency) { getSymbol() >> "ARS" }
-        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
-        def income = new Income(id: 20L, amount: new BigDecimal("100000.00"), workspaceId: 2L, currency: currency, bank: bank)
-        incomeRepository.findById(20L) >> Optional.of(income)
-
-        when:
-        service.reloadIncome(20L)
-
-        then:
-        1 * movementAddService.saveMovement(_)
-    }
-
-    def "reloadIncome - should throw EntityNotFoundException when income does not exist"() {
-        given:
-        incomeRepository.findById(999L) >> Optional.empty()
-
-        when:
-        service.reloadIncome(999L)
-
-        then:
-        thrown(EntityNotFoundException)
-        0 * movementAddService.saveMovement(_)
-    }
-
-    def "addIngreso - should save movement with correct parameters"() {
-        given:
-        def incomeToAdd = new IncomeToAdd("GALICIA", new CurrencyRecord("EUR", null), new BigDecimal("1000.00"))
-        def currency = Stub(Currency) { getSymbol() >> "EUR" }
-
-        currencyAddService.findBySymbol("EUR") >> currency
-
-        when:
-        service.addIngreso(incomeToAdd)
-
-        then:
-        1 * movementAddService.saveMovement(_ as MovementToAdd) >> { List args ->
-            def m = args[0] as MovementToAdd
-            assert m.amount()        == new BigDecimal("1000.00")
-            assert m.date()          == LocalDate.now(ZoneOffset.UTC)
-            assert m.description()   == "Sueldo Recibido"
-            assert m.categories() == [new CategoryUpdateRecord(null, "HOGAR")]
-            assert m.type()          == MovementType.INGRESO.name()
-            assert m.currency()      == "EUR"
-            assert m.cuotaActual()   == null
-            assert m.cuotasTotales() == null
-            assert m.bank()          == "GALICIA"
-        }
-    }
-
-    def "addIngreso - should always use HOGAR category"() {
-        given:
-        def incomeToAdd = new IncomeToAdd("BBVA", new CurrencyRecord("USD", null), new BigDecimal("500.00"))
-        currencyAddService.findBySymbol("USD") >> Stub(Currency) { getSymbol() >> "USD" }
-
-        when:
-        service.addIngreso(incomeToAdd)
-
-        then:
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.categories() == [new CategoryUpdateRecord(null, "HOGAR")] })
-    }
-
-    def "addIngreso - should use today date in UTC"() {
-        given:
-        def incomeToAdd = new IncomeToAdd("BANCO_CIUDAD", new CurrencyRecord("ARS", null), new BigDecimal("200.00"))
-        currencyAddService.findBySymbol(_) >> Stub(Currency) { getSymbol() >> "ARS" }
-
-        when:
-        service.addIngreso(incomeToAdd)
-
-        then:
-        1 * movementAddService.saveMovement({ MovementToAdd m -> m.date() == LocalDate.now(ZoneOffset.UTC) })
-    }
-
-    def "generateRecurringIncomeForUser - should generate movement for each income"() {
-        given:
-        def currency = Stub(Currency) { getSymbol() >> "ARS" }
-        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
-
-        def income1 = new Income(id: 1L, amount: new BigDecimal("100000.00"), workspaceId: 10L, currency: currency, bank: bank, userId: 1L)
-        def income2 = new Income(id: 2L, amount: new BigDecimal("50000.00"), workspaceId: 10L, currency: currency, bank: bank, userId: 1L)
-
-        incomeRepository.findAllByUserId(1L) >> [income1, income2]
-
-        when:
-        def count = service.generateRecurringIncomeForUser(1L)
-
-        then:
-        count == 2
-        2 * systemMovementAddService.saveMovement(_ as MovementToAdd, 10L, 1L)
-    }
-
-    def "generateRecurringIncomeForUser - should return zero when user has no incomes"() {
-        given:
-        incomeRepository.findAllByUserId(1L) >> []
-
-        when:
-        def count = service.generateRecurringIncomeForUser(1L)
-
-        then:
-        count == 0
-        0 * systemMovementAddService.saveMovement(_ as MovementToAdd, _ as Long, _ as Long)
-    }
-
-    def "generateRecurringIncomeForUser - should create movement with correct data"() {
-        given:
-        def currency = Stub(Currency) { getSymbol() >> "USD" }
-        def bank = Stub(Bank) { getDescription() >> "BBVA" }
-
-        def income = new Income(id: 1L, amount: new BigDecimal("2500.00"), workspaceId: 5L, currency: currency, bank: bank, userId: 1L)
-        incomeRepository.findAllByUserId(1L) >> [income]
-
-        when:
-        service.generateRecurringIncomeForUser(1L)
-
-        then:
-        1 * systemMovementAddService.saveMovement(_ as MovementToAdd, 5L, 1L) >> { List args ->
-            def m = args[0] as MovementToAdd
-            assert m.amount() == new BigDecimal("2500.00")
-            assert m.date() == LocalDate.now(ZoneOffset.UTC)
-            assert m.description() == "Ingreso recurrente"
-            assert m.categories() == [new CategoryUpdateRecord(null, "HOGAR")]
-            assert m.type() == MovementType.INGRESO.name()
-            assert m.currency() == "USD"
-            assert m.bank() == "BBVA"
-        }
-    }
-
-    def "generateRecurringIncomeForUser - should handle multiple incomes with different workspaces"() {
-        given:
-        def currency = Stub(Currency) { getSymbol() >> "ARS" }
-        def bank = Stub(Bank) { getDescription() >> "GALICIA" }
-
-        def income1 = new Income(id: 1L, amount: new BigDecimal("80000.00"), workspaceId: 10L, currency: currency, bank: bank, userId: 1L)
-        def income2 = new Income(id: 2L, amount: new BigDecimal("20000.00"), workspaceId: 20L, currency: currency, bank: bank, userId: 1L)
-
-        incomeRepository.findAllByUserId(1L) >> [income1, income2]
-
-        when:
-        def count = service.generateRecurringIncomeForUser(1L)
-
-        then:
-        count == 2
-        1 * systemMovementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, 10L, 1L)
-        1 * systemMovementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, 20L, 1L)
     }
 }

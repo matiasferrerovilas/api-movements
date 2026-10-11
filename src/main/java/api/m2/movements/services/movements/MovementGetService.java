@@ -1,20 +1,11 @@
 package api.m2.movements.services.movements;
 
 import api.m2.movements.entities.movements.Movement;
-import api.m2.movements.entities.WorkspaceCategory;
-import api.m2.movements.mappers.CategoryMapper;
 import api.m2.movements.mappers.MovementMapper;
-import api.m2.movements.records.categories.CategoryRecord;
-import api.m2.movements.records.movements.MovementItemDto;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
-import api.m2.movements.clients.identity.response.UserBaseRecord;
-import api.m2.movements.records.workspaces.WorkspaceBaseRecord;
 import api.m2.movements.repositories.MovementRepository;
-import api.m2.movements.repositories.WorkspaceCategoryRepository;
-import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
-import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -24,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +22,9 @@ import java.util.stream.Collectors;
 public class MovementGetService {
     private final MovementRepository movementRepository;
     private final MovementMapper movementMapper;
-    private final CategoryMapper categoryMapper;
     private final WorkspaceContextService workspaceContextService;
-    private final WorkspaceCategoryRepository workspaceCategoryRepository;
-    private final WorkspaceQueryService workspaceQueryService;
-    private final UserService userService;
     private final MovementItemService movementItemService;
+    private final MovementRecordAssembler assembler;
 
     @Transactional(readOnly = true)
     public Page<@NonNull MovementRecord> getExpensesBy(MovementSearchFilterRecord filter, Pageable page) {
@@ -54,46 +40,15 @@ public class MovementGetService {
         // @ManyToMany y no se puede fetch-joinear junto con Pageable sin que Hibernate pagine en
         // memoria, así que se hidrata acá con una segunda consulta acotada a esta página — misma
         // sesión, mismas instancias administradas, sin volver a tocar la DB por movimiento cuando
-        // el mapper después llame a movement.getCategories().
+        // el assembler después llame a movement.getCategories().
         movementRepository.findByIdInFetchingCategories(
                 movements.getContent().stream().map(Movement::getId).toList());
 
-        List<WorkspaceCategory> categories = workspaceCategoryRepository
-                .findByWorkspaceIdAndIsActiveTrue(workspaceId);
-        Map<Long, WorkspaceCategory> iconMap = categories.stream()
-                .collect(Collectors.toMap(wc -> wc.getCategory().getId(), wc -> wc));
-
-        var workspace = new WorkspaceBaseRecord(workspaceId, workspaceQueryService.findWorkspaceNameById(workspaceId));
-        var ownerIds = movements.getContent().stream().map(Movement::getOwnerId).distinct().toList();
-        var ownerNamesById = userService.getUserNamesByIds(ownerIds);
+        var context = assembler.contextFor(workspaceId, movements.getContent());
         var itemsByMovement = movementItemService.getItemsByMovementIds(
                 movements.getContent().stream().map(Movement::getId).toList());
 
-        return movements.map(movement -> this.enrichMovementWithIcons(movement, iconMap, workspace,
-                ownerNamesById, itemsByMovement.getOrDefault(movement.getId(), List.of())));
-    }
-
-    private MovementRecord enrichMovementWithIcons(Movement movement, Map<Long, WorkspaceCategory> iconMap,
-                                                     WorkspaceBaseRecord workspace, Map<Long, String> ownerNamesById,
-                                                     List<MovementItemDto> items) {
-        MovementRecord baseRecord = movementMapper.toRecord(movement);
-        var metadata = this.buildMetadata(movement, workspace, ownerNamesById);
-
-        List<CategoryRecord> enrichedCategories = movement.getCategories().stream()
-                .map(category -> categoryMapper.toRecordWithIcons(category, iconMap.get(category.getId())))
-                .toList();
-
-        return new MovementRecord(
-                baseRecord.id(), baseRecord.amount(), baseRecord.description(), baseRecord.date(),
-                baseRecord.createdAt(), baseRecord.updatedAt(), enrichedCategories, baseRecord.currency(),
-                baseRecord.bank(), baseRecord.type(), baseRecord.cuotaActual(), baseRecord.cuotasTotales(),
-                baseRecord.lastCreditPayment(), metadata, items);
-    }
-
-    private MovementRecord.Metadata buildMetadata(Movement movement, WorkspaceBaseRecord workspace,
-                                                    Map<Long, String> ownerNamesById) {
-        return new MovementRecord.Metadata(
-                new UserBaseRecord(ownerNamesById.get(movement.getOwnerId()), movement.getOwnerId()),
-                workspace, movement.getExchangeRate(), null);
+        return movements.map(movement -> assembler.assemble(
+                movement, context, itemsByMovement.getOrDefault(movement.getId(), List.of())));
     }
 }

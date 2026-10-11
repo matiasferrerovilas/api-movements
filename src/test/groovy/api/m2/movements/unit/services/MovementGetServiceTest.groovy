@@ -11,6 +11,7 @@ import api.m2.movements.records.movements.MovementSearchFilterRecord
 import api.m2.movements.repositories.MovementRepository
 import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.services.movements.MovementGetService
+import api.m2.movements.services.movements.MovementRecordAssembler
 import api.m2.movements.services.movements.MovementItemService
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
@@ -37,12 +38,10 @@ class MovementGetServiceTest extends Specification {
         service = new MovementGetService(
                 movementRepository,
                 movementMapper,
-                categoryMapper,
                 workspaceContextService,
-                workspaceCategoryRepository,
-                workspaceQueryService,
-                userService,
-                movementItemService
+                movementItemService,
+                new MovementRecordAssembler(movementMapper, categoryMapper, workspaceCategoryRepository,
+                        workspaceQueryService, userService)
         )
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]

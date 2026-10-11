@@ -18,7 +18,7 @@ import api.m2.movements.records.onboarding.OnBoardingAmount
 import api.m2.movements.records.onboarding.OnBoardingForm
 import api.m2.movements.records.onboarding.WorkspaceToAdd
 import api.m2.movements.services.banks.BankAddService
-import api.m2.movements.services.category.WorkspaceCategoryService
+import api.m2.movements.services.category.WorkspaceCategoryAssociationService
 import api.m2.movements.services.currencies.CurrencyAddService
 import api.m2.movements.services.currencies.WorkspaceCurrencyService
 import api.m2.movements.services.income.IncomeAddService
@@ -32,7 +32,7 @@ class OnboardingServiceTest extends Specification {
     UserAddService userAddService = Mock(UserAddService)
     IncomeAddService incomeAddService = Mock(IncomeAddService)
     BankAddService bankAddService = Mock(BankAddService)
-    WorkspaceCategoryService workspaceCategoryService = Mock(WorkspaceCategoryService)
+    WorkspaceCategoryAssociationService workspaceCategoryAssociationService = Mock(WorkspaceCategoryAssociationService)
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     WorkspaceCurrencyService workspaceCurrencyService = Mock(WorkspaceCurrencyService)
@@ -42,7 +42,7 @@ class OnboardingServiceTest extends Specification {
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, bankAddService,
-                workspaceCategoryService, userSettingService, currencyAddService,
+                workspaceCategoryAssociationService, userSettingService, currencyAddService,
                 workspaceCurrencyService, identityClient)
     }
 
@@ -95,8 +95,8 @@ class OnboardingServiceTest extends Specification {
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_WORKSPACE, 100L)
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_BANK, 10L)
         1 * userSettingService.upsertForUser(42L, UserSettingKey.DEFAULT_CURRENCY, 900L)
-        1 * workspaceCategoryService.addCategories(100L, categories)
-        1 * workspaceCategoryService.addDefaultCategories(100L)
+        1 * workspaceCategoryAssociationService.addCategories(100L, categories)
+        1 * workspaceCategoryAssociationService.addDefaultCategories(100L)
         1 * workspaceCurrencyService.addDefaultCurrencies(100L)
         1 * currencyAddService.addCurrency("ARS", "Peso argentino") >> ars
         1 * workspaceCurrencyService.ensureCurrencyInWorkspace(100L, ars)
@@ -238,8 +238,8 @@ class OnboardingServiceTest extends Specification {
         service.finish(form)
 
         then:
-        1 * workspaceCategoryService.addCategories(100L, ["HOGAR"])
-        1 * workspaceCategoryService.addDefaultCategories(100L)
+        1 * workspaceCategoryAssociationService.addCategories(100L, ["HOGAR"])
+        1 * workspaceCategoryAssociationService.addDefaultCategories(100L)
     }
 
     def "finish - should call addDefaultCategories even when categoriesToAdd is empty"() {
@@ -257,8 +257,8 @@ class OnboardingServiceTest extends Specification {
         service.finish(form)
 
         then:
-        1 * workspaceCategoryService.addCategories(100L, [])
-        1 * workspaceCategoryService.addDefaultCategories(100L)
+        1 * workspaceCategoryAssociationService.addCategories(100L, [])
+        1 * workspaceCategoryAssociationService.addDefaultCategories(100L)
     }
 
     def "finish - should skip income when bank is null"() {

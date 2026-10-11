@@ -19,7 +19,6 @@ import api.m2.movements.services.currencies.ExchangeRateResolver
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.user.UserService
 import api.m2.movements.services.workspaces.WorkspaceContextService
-import api.m2.movements.services.workspaces.WorkspaceQueryService
 import spock.lang.Specification
 
 import java.time.LocalDate
@@ -31,7 +30,6 @@ class MovementFactoryTest extends Specification {
     UserService userService = Mock(UserService)
     MovementMapper movementMapper = Mock(MovementMapper)
     WorkspaceContextService workspaceContextService = Mock(WorkspaceContextService)
-    WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     BankRepository bankRepository = Mock(BankRepository)
     ExchangeRateResolver exchangeRateResolver = Mock(ExchangeRateResolver)
 
@@ -44,7 +42,6 @@ class MovementFactoryTest extends Specification {
                 userService,
                 movementMapper,
                 workspaceContextService,
-                workspaceQueryService,
                 bankRepository,
                 exchangeRateResolver
         )
@@ -76,7 +73,7 @@ class MovementFactoryTest extends Specification {
         def bank = Stub(Bank) { getId() >> 5L }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -116,7 +113,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "EUR" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "OCIO")], 1L) >> [category]
         currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -151,7 +148,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "EUR" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("EUR", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -187,7 +184,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("ARS", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -223,7 +220,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("ARS", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -259,7 +256,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "ARS" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("ARS", 1L) >> currency
         userService.getMe() >> userMe(10L)
@@ -293,7 +290,7 @@ class MovementFactoryTest extends Specification {
         def currency = Stub(Currency) { getSymbol() >> "USD" }
 
         movementMapper.toEntity(dto) >> movement
-        workspaceContextService.getActiveWorkspaceId() >> 1L
+        workspaceContextService.getActiveWritableWorkspaceId() >> 1L
         categoryResolver.resolveAll([new CategoryUpdateRecord(null, "HOGAR")], 1L) >> [category]
         currencyResolver.resolve("USD", 1L) >> currency
         userService.getMe() >> userMe(10L)

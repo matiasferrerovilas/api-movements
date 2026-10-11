@@ -51,8 +51,7 @@ public class SubscriptionAddService {
     @Transactional
     public void save(SubscriptionToAdd subscriptionToAdd) {
         var userId = userService.getMe().id();
-        var workspaceId = workspaceContextService.getActiveWorkspaceId();
-        workspaceQueryService.verifyCanWrite(workspaceId);
+        var workspaceId = workspaceContextService.getActiveWritableWorkspaceId();
         var subscription = subscriptionMapper.toEntity(subscriptionToAdd, currencyAddService);
         subscription.setOwnerId(userId);
         subscription.setWorkspaceId(workspaceId);
@@ -134,12 +133,9 @@ public class SubscriptionAddService {
     }
 
     private SubscriptionRecord enrich(Subscription subscription) {
-        var record = subscriptionMapper.toRecord(subscription);
         var workspaceName = workspaceQueryService.findWorkspaceNameById(subscription.getWorkspaceId());
         var ownerName = userService.getUserNamesByIds(List.of(subscription.getOwnerId()))
                 .get(subscription.getOwnerId());
-        return new SubscriptionRecord(
-                record.id(), record.description(), record.amount(), record.currency(),
-                record.lastPayment(), record.isPaid(), workspaceName, record.workspaceId(), ownerName);
+        return subscriptionMapper.toRecord(subscription, workspaceName, ownerName);
     }
 }

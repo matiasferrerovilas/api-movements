@@ -6,6 +6,7 @@ import api.m2.movements.records.services.SubscriptionRecord;
 import api.m2.movements.repositories.SubscriptionRepository;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
+import api.m2.movements.services.workspaces.WorkspaceQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,46 +22,40 @@ public class SubscriptionQueryService {
     private final SubscriptionMapper subscriptionMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final WorkspaceContextService workspaceContextService;
+    private final WorkspaceQueryService workspaceQueryService;
     private final UserService userService;
 
     @Transactional(readOnly = true)
     public List<SubscriptionRecord> getSubscriptionsBy(List<String> currencySymbol, LocalDate lastPayment) {
-        var activeWorkspace = workspaceContextService.getActiveWorkspace();
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
         var subscriptions = subscriptionRepository.findByWorkspaceAndCurrencyAndLastPayment(
-                activeWorkspace.workspaceId(), currencySymbol, lastPayment);
+                workspaceId, currencySymbol, lastPayment);
 
-        return this.toRecords(subscriptions, activeWorkspace.workspaceName());
+        return this.toRecords(subscriptions, workspaceId);
     }
 
     /** Servicios del workspace activo que quedaron sin pagar en un mes puntual — el paso de
      * conciliación del cierre de mes los muestra primero, antes de los números del recap. */
     @Transactional(readOnly = true)
     public List<SubscriptionRecord> getUnpaidForMonth(int year, int month) {
-        var activeWorkspace = workspaceContextService.getActiveWorkspace();
-        var subscriptions = subscriptionRepository.findUnpaidByWorkspaceAndMonth(
-                activeWorkspace.workspaceId(), year, month);
+        var workspaceId = workspaceContextService.getActiveWorkspaceId();
+        var subscriptions = subscriptionRepository.findUnpaidByWorkspaceAndMonth(workspaceId, year, month);
 
-        return this.toRecords(subscriptions, activeWorkspace.workspaceName());
+        return this.toRecords(subscriptions, workspaceId);
     }
 
-    private List<SubscriptionRecord> toRecords(List<Subscription> subscriptions, String workspaceName) {
+    private List<SubscriptionRecord> toRecords(List<Subscription> subscriptions, Long workspaceId) {
         if (subscriptions.isEmpty()) {
             return List.of();
         }
 
+        var workspaceName = workspaceQueryService.findWorkspaceNameById(workspaceId);
         var ownerIds = subscriptions.stream().map(Subscription::getOwnerId).distinct().toList();
         var ownerNamesById = userService.getUserNamesByIds(ownerIds);
 
         return subscriptions.stream()
-                .map(subscription -> this.enrich(
-                        subscriptionMapper.toRecord(subscription), workspaceName,
-                        ownerNamesById.get(subscription.getOwnerId())))
+                .map(subscription -> subscriptionMapper.toRecord(
+                        subscription, workspaceName, ownerNamesById.get(subscription.getOwnerId())))
                 .toList();
-    }
-
-    private SubscriptionRecord enrich(SubscriptionRecord record, String workspaceName, String ownerName) {
-        return new SubscriptionRecord(
-                record.id(), record.description(), record.amount(), record.currency(),
-                record.lastPayment(), record.isPaid(), workspaceName, record.workspaceId(), ownerName);
     }
 }

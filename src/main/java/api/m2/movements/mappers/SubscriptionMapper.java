@@ -23,9 +23,9 @@ public interface SubscriptionMapper {
     Subscription toEntity(SubscriptionToAdd subscriptionToAdd, @Context CurrencyAddService currencyAddService);
 
     @Mapping(target = "isPaid", expression = "java(subscription.getIsPaid())")
-    @Mapping(target = "workspaceName", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    SubscriptionRecord toRecord(Subscription subscription);
+    @Mapping(target = "workspaceName", source = "workspaceName")
+    @Mapping(target = "user", source = "user")
+    SubscriptionRecord toRecord(Subscription subscription, String workspaceName, String user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "currency", ignore = true)

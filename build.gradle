@@ -72,9 +72,6 @@ dependencies {
     // OpenAPI/Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
-    //Logs
-    implementation 'org.apache.commons:commons-text:1.14.0'
-
     // Cache
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'

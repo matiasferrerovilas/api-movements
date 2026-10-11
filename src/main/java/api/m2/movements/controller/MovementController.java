@@ -7,7 +7,9 @@ import api.m2.movements.records.movements.MovementSearchFilterRecord;
 import api.m2.movements.records.movements.MovementToAdd;
 import api.m2.movements.services.movements.MigrateExchangeRateService;
 import api.m2.movements.services.movements.MovementAddService;
+import api.m2.movements.services.movements.MovementDeleteService;
 import api.m2.movements.services.movements.MovementGetService;
+import api.m2.movements.services.movements.MovementUpdateService;
 import api.m2.movements.services.movements.files.MovementImportFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,6 +47,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Movements", description = "API para la gestión de gastos personales")
 public class MovementController {
     private final MovementAddService movementAddService;
+    private final MovementUpdateService movementUpdateService;
+    private final MovementDeleteService movementDeleteService;
     private final MovementImportFileService movementImportFileService;
     private final MovementGetService movementGetService;
     private final MigrateExchangeRateService migrateExchangeRateService;
@@ -119,7 +123,7 @@ public class MovementController {
             @Parameter(description = "Archivo con los gastos a importar", required = true)
             @Valid @RequestBody ExpenseToUpdate expenseToUpdate,
             @PathVariable Long id) {
-        movementAddService.updateMovement(expenseToUpdate, id);
+        movementUpdateService.updateMovement(expenseToUpdate, id);
     }
 
     @Operation(
@@ -132,7 +136,7 @@ public class MovementController {
     @DeleteMapping(value = "/all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAllMovements() {
-        movementAddService.deleteAllMovementsOfCurrentUser();
+        movementDeleteService.deleteAllMovementsOfCurrentUser();
     }
 
     @Operation(
@@ -146,7 +150,7 @@ public class MovementController {
     @DeleteMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMovement(@PathVariable Long id) {
-        movementAddService.deleteMovement(id);
+        movementDeleteService.deleteMovement(id);
     }
 
     @Operation(

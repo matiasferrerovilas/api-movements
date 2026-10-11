@@ -1,5 +1,6 @@
 package api.m2.movements.services.income;
 
+import api.m2.movements.helpers.SingleExecution;
 import api.m2.movements.services.settings.UserSettingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,18 +20,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecurringIncomeJob {
 
+    private final SingleExecution execution = new SingleExecution();
+
     private final UserSettingService userSettingService;
-    private final IncomeAddService incomeAddService;
+    private final IncomeMovementService incomeMovementService;
 
     @Scheduled(cron = "0 0 6 1 * *")
     public void generateRecurringIncomes() {
+        if (!execution.runIfIdle(this::generate)) {
+            log.warn("Ingresos recurrentes: ya hay una ejecución en curso, se omite esta");
+        }
+    }
+
+    private void generate() {
         List<Long> userIds = userSettingService.getUsersWithAutoIncomeEnabled();
         log.info("Generando ingresos recurrentes para {} usuarios", userIds.size());
 
         int totalMovements = 0;
         for (Long userId : userIds) {
             try {
-                int count = incomeAddService.generateRecurringIncomeForUser(userId);
+                int count = incomeMovementService.generateRecurringIncomeForUser(userId);
                 totalMovements += count;
             } catch (Exception e) {
                 log.error("Error generando ingresos para usuario {}: {}",
