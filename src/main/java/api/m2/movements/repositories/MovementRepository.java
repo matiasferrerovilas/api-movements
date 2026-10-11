@@ -350,4 +350,18 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
       AND YEAR(m.date) = :year AND MONTH(m.date) = :month
     """)
     List<Movement> findCreditoMovementsWithPendingInstallments(@Param("year") int year, @Param("month") int month);
+
+    List<Movement> findByWorkspaceIdAndDateBetween(Long workspaceId, LocalDate from, LocalDate to);
+
+    @Query("""
+    SELECT DISTINCT m FROM Movement m JOIN m.categories c
+    WHERE m.workspaceId = :workspaceId AND c.description = :categoryDescription
+    """)
+    List<Movement> findByWorkspaceIdAndCategoryDescription(@Param("workspaceId") Long workspaceId,
+                                                          @Param("categoryDescription") String categoryDescription);
+
+    @Query("SELECT DISTINCT m FROM Movement m LEFT JOIN FETCH m.categories WHERE m.workspaceId = :workspaceId")
+    List<Movement> findByWorkspaceIdWithCategories(@Param("workspaceId") Long workspaceId);
+
+    List<Movement> findAllByOwnerId(Long ownerId);
 }

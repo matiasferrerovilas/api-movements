@@ -1,5 +1,6 @@
 package api.m2.movements.events;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import api.m2.movements.enums.WorkspaceRole;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
  * when someone is invited to a workspace, consumed here to push a live notification instead of
  * making the invited user poll GET /v1/workspace/invitations.
  */
+@RegisterReflectionForBinding
 public record InvitationReceivedEvent(
         Long invitationId,
         Long workspaceId,

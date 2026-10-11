@@ -68,6 +68,14 @@ public class MovementItemService {
         movementItemRepository.saveAll(entities);
     }
 
+    @Transactional
+    public void deleteItemsOf(List<Long> movementIds) {
+        if (movementIds.isEmpty()) {
+            return;
+        }
+        movementItemRepository.deleteByMovementIdIn(movementIds);
+    }
+
     private MovementItemDto toDto(MovementItem item) {
         return new MovementItemDto(item.getId(), item.getQuantity(), item.getUnit().name(),
                 item.getDescription(), item.getPrice());

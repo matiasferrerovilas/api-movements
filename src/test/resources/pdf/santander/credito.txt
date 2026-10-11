@@ -1,0 +1,26 @@
+CREDITO SANTANDER
+Extracto de movimientos
+Datos de la tarjeta
+Contrato número 0000 0000 000 0000000
+Periodo de liquidación 28/08/2026 A 29/09/2026
+JUAN PEREZ GOMEZ
+Importe a Pagar 505,44 €
+A - Movimientos del contrato
+Movimientos y deuda pendiente contrato
+Fecha operación Fecha valor Concepto Importe en euros
+28-08-2026 28-08-2026 SALDO ANTERIOR  512,07 €
+01-09-2026 01-09-2026 PAGO  -512,07 €
+B - Movimientos
+Crédito – TITULAR JUAN PEREZ GOMEZ **********000000 
+Fecha operación Fecha valor Concepto Importe en euros
+18-09-2026 18-09-2026 TRANSACCION CONTACTLESS O CABO  17,70
+24-09-2026 28-09-2026 COMPRA INTERNET WWW.GTT.TO.IT  14,80
+24-09-2026 28-09-2026 COMPRA PAISES UME HM IT0004  17,98
+25-09-2026 28-09-2026 COMPRA PAISES UME CAFFETTERIA ANTONELLI.  1.007,00
+26-09-2026 29-09-2026 COMPRA PAISES UME VENPAY IVS  -3,00
+Crédito – TITULAR JUAN PEREZ GOMEZ
+Fecha operación Fecha valor Concepto Importe euros
+29-09-2026 29-09-2026 CUOTA FRACCIONAR COMPRA VUELING AIRLINE  250,36
+C - Comisiones, Gastos e Intereses
+28/09/2026 VUELING
+AIRLINE

@@ -1,5 +1,6 @@
 package api.m2.movements.events;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import java.time.LocalDateTime;
 
 /**
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
  * when a member is kicked from a workspace, consumed here to push a live notification to the
  * removed user instead of them finding out on their next unrelated request.
  */
+@RegisterReflectionForBinding
 public record MemberRemovedReceivedEvent(
         Long workspaceId,
         String workspaceName,

@@ -1,5 +1,6 @@
 package api.m2.movements.records.movements;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import api.m2.movements.records.categories.CategoryRecord;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.clients.identity.response.UserBaseRecord;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@RegisterReflectionForBinding
 public record MovementRecord(Long id,
                              BigDecimal amount,
                              String description,
@@ -27,6 +29,7 @@ public record MovementRecord(Long id,
                              // Desglose opcional del movimiento. Nunca null: [] si no tiene items.
                              List<MovementItemDto> items) {
 
+    @RegisterReflectionForBinding
     public record Metadata(UserBaseRecord owner,
                             WorkspaceBaseRecord workspace,
                             BigDecimal exchangeRate,

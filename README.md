@@ -5,7 +5,7 @@ A RESTful API for managing personal finances, built with Spring Boot and designe
 ## Features
 
 - **Movement tracking**: expenses/income/credit with categories, installments, multi-bank and multi-currency support
-- **Bank statement import**: PDF parsing for BBVA and Galicia (Argentina), via a pluggable Strategy per bank
+- **Bank statement import**: PDF parsing for Santander España (account export and credit card statement), via a pluggable Strategy per bank
 - **Recurring income & subscriptions**: fixed monthly income and recurring bills with payment tracking
 - **Budgets**: per-category, per-currency budgets (monthly, annual, or one-time) with threshold-crossing alerts
 - **Month close**: the previous month's recap (spent/saved, debit vs credit, top category, movement count, plus a per-member "who logged how much" breakdown) surfaced once per month via `metadata.pendingMonthlySummary` on `/v1/users/me`, with an unpaid-subscriptions reconciliation step and a per-user "seen" marker

@@ -13,4 +13,6 @@ public interface MovementItemRepository extends JpaRepository<MovementItem, Long
     List<MovementItem> findByMovementIdInOrderByIdAsc(List<Long> movementIds);
 
     void deleteByMovementId(Long movementId);
+
+    void deleteByMovementIdIn(List<Long> movementIds);
 }

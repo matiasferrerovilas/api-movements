@@ -1,5 +1,6 @@
 package api.m2.movements.records.movements;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
  * Línea de desglose de un movimiento (ej: "1kg papa", "$500"). {@code price} es el precio total
  * de la línea, no un precio unitario — no se deriva de {@code quantity}.
  */
+@RegisterReflectionForBinding
 public record MovementItemDto(
         Long id,
         @NotNull(message = "La cantidad es requerida")

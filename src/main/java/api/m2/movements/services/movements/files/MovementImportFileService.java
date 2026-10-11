@@ -3,6 +3,7 @@ package api.m2.movements.services.movements.files;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.exceptions.RateLimitExceededException;
 import api.m2.movements.helpers.PdfReaderService;
+import api.m2.movements.records.movements.ImportResultRecord;
 import api.m2.movements.records.movements.MovementFileToAdd;
 import api.m2.movements.services.ratelimit.RateLimiterService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
@@ -33,7 +34,7 @@ public class MovementImportFileService {
     private final WorkspaceContextService workspaceContextService;
     private final RateLimiterService rateLimiterService;
 
-    public void importMovementsByFile(MultipartFile file, String bank) {
+    public ImportResultRecord importMovementsByFile(MultipartFile file, String bank) {
         enforceImportRateLimit();
 
         Path pdfFile = null;
@@ -48,11 +49,11 @@ public class MovementImportFileService {
 
             var workspaceId = workspaceContextService.getActiveWorkspaceId();
             var movementFile = new MovementFileToAdd(text, workspaceId);
-            switch (list.size()) {
+            return switch (list.size()) {
                 case 0 -> throw new BusinessException("Invalid bank method");
                 case 1 -> list.getFirst().process(movementFile);
                 default -> throw new BusinessException("Multiple strategies found for bank method");
-            }
+            };
         } catch (IOException _) {
             throw new BusinessException("No se pudo procesar");
         } finally {

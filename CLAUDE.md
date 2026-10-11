@@ -64,7 +64,7 @@ api.m2.movements
 ├── enums/              WorkspaceRole, CategoryEnum, EventType, MembershipDomain, MovementType, etc.
 ├── exceptions/         DomainException (sealed), BusinessException, EntityNotFoundException,
 │                       PermissionDeniedException, ServiceException, ExchangeRateNotFoundException
-├── helpers/            PdfExtractorHelper (interface), BBVA/Galicia impls, ParserRegistry, PdfReaderService
+├── helpers/            PdfExtractorHelper (abstract), SantanderPdfExtractorHelper, ParserRegistry, PdfReaderService
 ├── investment/         → Paquete separado (ver sección)
 ├── mappers/            MapStruct interfaces — organizados por dominio
 ├── projections/        JPA interface projections (read-only)
@@ -88,7 +88,7 @@ api.m2.movements
     ├── currencies/     CurrencyAddService, ExchangeRateResolver
     ├── income/         IncomeAddService, IncomeQueryService
     ├── movements/      MovementAddService, MovementGetService, MovementFactory, SyncMovementsService
-    │   ├── files/      MovementImportFileService, ExpenseFileStrategy (abstract), BBVA/Galicia impls
+    │   ├── files/      MovementImportFileService, ExpenseFileStrategy (abstract), SantanderImportService
     │   └── resolvers/  CategoryResolver
     ├── publishing/
     │   └── websockets/ WebSocketMessageService (base), Movement/Workspace/Service/CategoryPublishServiceWebSocket
@@ -323,7 +323,7 @@ No existe ningún servicio monolítico tipo `MovementService`.
 `MovementFactory` construye la entidad `Movement` resolviendo todas las FKs (category, currency, bank, user, workspace) a través de `CategoryResolver` y `CurrencyAddService.findBySymbol` (usa cache Caffeine, 5h TTL). La resolución de moneda es un único camino compartido — `CurrencyAddService.findBySymbol` normaliza el símbolo (trim + uppercase) y cachea — usado también por Income y Subscription.
 
 ### Strategy (File Import)
-`ExpenseFileStrategy` es clase abstracta. `BBVACreditImportService` y `GaliciaCreditImportService` se registran como beans. `MovementImportFileService` despacha por `match(bank)`.
+`ExpenseFileStrategy` es clase abstracta. Hoy la única implementación es `SantanderImportService` (BBVA y Galicia se eliminaron porque sus formatos cambiaron). `MovementImportFileService` despacha por `match(bank)`. Cada parser devuelve `ParsedExpense` con el tipo ya resuelto por línea (DEBITO/INGRESO/CREDITO/REINTEGRO) y el monto en positivo.
 
 ### Event-Driven (ApplicationEvents)
 Los servicios de escritura publican Spring `ApplicationEvent`s para coordinar efectos secundarios dentro de la misma transacción. Los listeners usan `@EventListener` + `@Transactional`.

@@ -1,5 +1,6 @@
 package api.m2.movements.events;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import java.time.LocalDateTime;
 
 /**
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
  * when someone accepts a workspace invitation, consumed here to push a live notification to the
  * other members instead of them finding out on their next unrelated request.
  */
+@RegisterReflectionForBinding
 public record InvitationAcceptedReceivedEvent(
         Long invitationId,
         Long workspaceId,

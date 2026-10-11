@@ -1,5 +1,6 @@
 package api.m2.movements.controller;
 
+import api.m2.movements.records.movements.ImportResultRecord;
 import api.m2.movements.records.movements.ExpenseToUpdate;
 import api.m2.movements.records.movements.MovementRecord;
 import api.m2.movements.records.movements.MovementSearchFilterRecord;
@@ -95,13 +96,13 @@ public class MovementController {
     )
     @PostMapping(value = "/import-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public void saveExpenseByFile(
+    public ImportResultRecord saveExpenseByFile(
             @Parameter(description = "Archivo bancario", required = true)
             @RequestParam("file") MultipartFile file,
 
             @Parameter(description = "Banco del cual proviene el archivo", required = true)
             @RequestParam("bank") String bank) {
-        movementImportFileService.importMovementsByFile(file, bank);
+        return movementImportFileService.importMovementsByFile(file, bank);
     }
 
     @Operation(
@@ -119,6 +120,19 @@ public class MovementController {
             @Valid @RequestBody ExpenseToUpdate expenseToUpdate,
             @PathVariable Long id) {
         movementAddService.updateMovement(expenseToUpdate, id);
+    }
+
+    @Operation(
+            summary = "Eliminar todos los movimientos",
+            description = "Elimina todos los movimientos cargados por el usuario autenticado.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Eliminados correctamente")
+            }
+    )
+    @DeleteMapping(value = "/all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAllMovements() {
+        movementAddService.deleteAllMovementsOfCurrentUser();
     }
 
     @Operation(
