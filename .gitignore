@@ -46,3 +46,7 @@ gradle.properties
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Archify (diagramas generados) ###
+.archify/
+.atl/
