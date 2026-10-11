@@ -1,10 +1,13 @@
 package api.m2.movements.constraints;
 
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.annotation.RegisterReflection;
 import api.m2.movements.enums.MovementType;
 import api.m2.movements.records.movements.MovementToAdd;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+@RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)
 public class CuotasValidator implements ConstraintValidator<ValidCuotas, MovementToAdd> {
 
     @Override

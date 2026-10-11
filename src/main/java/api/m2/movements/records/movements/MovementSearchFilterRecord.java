@@ -1,11 +1,13 @@
 package api.m2.movements.records.movements;
 
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import api.m2.movements.enums.MovementType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@RegisterReflectionForBinding
 public record MovementSearchFilterRecord(
         @Schema(description = "Métodos de pago para filtrar")
         List<MovementType> type,
