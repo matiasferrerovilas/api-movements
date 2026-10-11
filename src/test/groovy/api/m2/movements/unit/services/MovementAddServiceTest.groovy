@@ -1,6 +1,7 @@
 package api.m2.movements.unit.services
 
 import api.m2.movements.clients.identity.response.UserMe
+import api.m2.movements.entities.WorkspaceCategory
 import api.m2.movements.entities.commons.Category
 import api.m2.movements.entities.commons.Currency
 import api.m2.movements.entities.movements.Movement
@@ -20,11 +21,14 @@ import api.m2.movements.records.movements.MovementRecord
 import api.m2.movements.records.movements.MovementToAdd
 import api.m2.movements.records.workspaces.WorkspaceBaseRecord
 import api.m2.movements.repositories.MovementRepository
+import api.m2.movements.repositories.WorkspaceCategoryRepository
 import api.m2.movements.records.movements.ImportResultRecord
 import api.m2.movements.services.movements.MovementAddService
 import api.m2.movements.services.movements.MovementDuplicateFilter
 import api.m2.movements.services.movements.MovementFactory
 import api.m2.movements.services.movements.MovementItemService
+import api.m2.movements.services.movements.MovementPersister
+import api.m2.movements.services.movements.MovementRecordAssembler
 import api.m2.movements.services.user.UserService
 import api.m2.movements.entities.commons.Bank
 import api.m2.movements.services.workspaces.WorkspaceQueryService
@@ -46,6 +50,7 @@ class MovementAddServiceTest extends Specification {
     WorkspaceQueryService workspaceQueryService = Mock(WorkspaceQueryService)
     UserService userService = Mock(UserService)
     MovementDuplicateFilter movementDuplicateFilter = Mock(MovementDuplicateFilter)
+    WorkspaceCategoryRepository workspaceCategoryRepository = Mock(WorkspaceCategoryRepository)
 
     MovementAddService service
 
@@ -62,8 +67,11 @@ class MovementAddServiceTest extends Specification {
                 eventPublisher,
                 workspaceQueryService,
                 userService,
-                movementDuplicateFilter
+                movementDuplicateFilter,
+                new MovementPersister(movementRepository, movementItemService, eventPublisher),
+                new MovementRecordAssembler(movementMapper, Mappers.getMapper(CategoryMapper), workspaceCategoryRepository)
         )
+        workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(_ as Long) >> []
         workspaceQueryService.findWorkspaceNameById(_ as Long) >> "Familia"
         userService.getUserNamesByIds(_ as List<Long>) >> [:]
         movementItemService.getItems(_ as Long) >> []
@@ -124,6 +132,64 @@ class MovementAddServiceTest extends Specification {
         result.metadata().owner().id() == 10L
     }
 
+    // Los iconos viven en WorkspaceCategory, no en Category: MovementMapper.toRecord los deja en
+    // null, y el evento de websocket llegaba al front sin icono hasta el próximo refresh.
+    def buildMovementWithCategory(Long workspaceId) {
+        def movement = buildMovement(workspaceId)
+        movement.categories = [Category.builder().id(7L).description("HOGAR").build()] as Set
+        return movement
+    }
+
+    def workspaceCategoryFor(Movement movement) {
+        return WorkspaceCategory.builder()
+                .workspaceId(movement.workspaceId)
+                .category(movement.categories.first())
+                .iconName("ShoppingCartOutlined")
+                .iconColor("#ff0000")
+                .build()
+    }
+
+    def "saveMovement - should publish MovementRecord with the workspace's category icons"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null
+        )
+        def movement = buildMovementWithCategory(1L)
+        movementFactory.create(_ as MovementToAdd) >> movement
+        movementRepository.save(movement) >> movement
+
+        when:
+        def result = service.saveMovement(dto)
+
+        then:
+        1 * workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> [workspaceCategoryFor(movement)]
+        1 * eventPublisher.publishEvent({
+            it.categories().first().iconName() == "ShoppingCartOutlined" &&
+                    it.categories().first().iconColor() == "#ff0000"
+        })
+        result.categories().first().iconName() == "ShoppingCartOutlined"
+        result.categories().first().isActive()
+    }
+
+    def "saveMovement - should fall back to the default icon when the category has no workspace row"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null
+        )
+        def movement = buildMovementWithCategory(1L)
+        movementFactory.create(_ as MovementToAdd) >> movement
+        movementRepository.save(movement) >> movement
+
+        when:
+        def result = service.saveMovement(dto)
+
+        then:
+        result.categories().first().iconName() == "QuestionOutlined"
+        result.categories().first().iconColor() == "#d9d9d9"
+    }
+
     def "saveMovement - should throw PermissionDeniedException when user is not a member of the workspace"() {
         given:
         def dto = new MovementToAdd(
@@ -141,29 +207,6 @@ class MovementAddServiceTest extends Specification {
         then:
         thrown(PermissionDeniedException)
         0 * movementRepository.save(_ as Movement)
-    }
-
-    def "saveSystemMovement - should save movement without calling identity"() {
-        given:
-        def dto = new MovementToAdd(
-                new BigDecimal("500.00"), LocalDate.now(), "Ingreso recurrente",
-                ["HOGAR"], "INGRESO", "ARS", null, null, null, null, null
-        )
-        def movement = buildMovement(1L)
-
-        movementFactory.create(dto, 1L, 10L) >> movement
-        movementRepository.save(movement) >> movement
-
-        when:
-        def result = service.saveSystemMovement(dto, 1L, 10L)
-
-        then:
-        1 * eventPublisher.publishEvent(_ as MovementRecord)
-        0 * workspaceQueryService.findWorkspaceNameById(_ as Long)
-        0 * userService.getUserNamesByIds(_ as List<Long>)
-        result.metadata().workspace() == new WorkspaceBaseRecord(1L, null)
-        result.metadata().owner().id() == 10L
-        result.metadata().owner().givenName() == null
     }
 
     // Note: membership check is handled by MembershipCheckAspect, not the service directly.
@@ -398,94 +441,6 @@ class MovementAddServiceTest extends Specification {
         0 * eventPublisher.publishEvent(_)
     }
 
-    def buildCreditoMovement(Integer cuotaActual, Integer cuotasTotales, LocalDate lastCreditPayment) {
-        return Movement.builder()
-                .id(7L)
-                .amount(new BigDecimal("1000.00"))
-                .description("TV en cuotas")
-                .date(LocalDate.of(2026, 3, 15))
-                .type(MovementType.CREDITO)
-                .workspaceId(5L)
-                .ownerId(10L)
-                .categories([Category.builder().id(1L).description("HOGAR").build()] as Set)
-                .currency(Currency.builder().id(1L).symbol("ARS").build())
-                .bank(Bank.builder().id(1L).description("GALICIA").build())
-                .cuotaActual(cuotaActual)
-                .cuotasTotales(cuotasTotales)
-                .lastCreditPayment(lastCreditPayment)
-                .build()
-    }
-
-    def "generateNextCreditInstallments - should generate the next cuota for each pending CREDITO movement from the given month"() {
-        given:
-        def previous = buildCreditoMovement(1, 3, LocalDate.of(2026, 5, 15))
-        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [previous]
-        movementRepository.save(_ as Movement) >> { args -> args[0] }
-
-        when:
-        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
-
-        then:
-        count == 1
-        // El stub y el chequeo van en la misma interacción: separarlos en un given: aparte y un
-        // 1 * ... en then: hace que la interacción de then: (sin >>) le gane al stub de given:,
-        // devolviendo null en vez del movement esperado.
-        1 * movementFactory.create({ MovementToAdd dto ->
-            dto.cuotaActual() == 2 &&
-            dto.cuotasTotales() == 3 &&
-            dto.amount() == new BigDecimal("1000.00") &&
-            dto.description() == "TV en cuotas" &&
-            dto.type() == MovementType.CREDITO.name() &&
-            dto.currency() == "ARS" &&
-            dto.bank() == "GALICIA" &&
-            dto.categories() == [new CategoryUpdateRecord(null, "HOGAR")] &&
-            // La fecha de la última cuota se copia tal cual de la cuota anterior, nunca se
-            // recalcula acá — es MovementFactory el único lugar que decide entre copiar o calcular.
-            dto.lastCreditPayment() == LocalDate.of(2026, 5, 15)
-        }, 5L, 10L) >> buildMovement(5L)
-    }
-
-    def "generateNextCreditInstallments - should return zero and create nothing when there are no pending installments"() {
-        given:
-        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> []
-
-        when:
-        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
-
-        then:
-        count == 0
-        0 * movementFactory.create(_ as MovementToAdd, _ as Long, _ as Long)
-    }
-
-    def "generateNextCreditInstallments - should generate one movement per pending purchase, each with its own workspace and owner"() {
-        given:
-        def purchaseA = buildCreditoMovement(2, 6, LocalDate.of(2026, 7, 1))
-        def purchaseB = Movement.builder()
-                .id(8L)
-                .amount(new BigDecimal("500.00"))
-                .description("Celular")
-                .date(LocalDate.of(2026, 3, 20))
-                .type(MovementType.CREDITO)
-                .workspaceId(9L)
-                .ownerId(11L)
-                .categories([Category.builder().id(2L).description("TECNOLOGIA").build()] as Set)
-                .currency(Currency.builder().id(1L).symbol("ARS").build())
-                .cuotaActual(4)
-                .cuotasTotales(6)
-                .lastCreditPayment(LocalDate.of(2026, 6, 20))
-                .build()
-        movementRepository.findCreditoMovementsWithPendingInstallments(2026, 3) >> [purchaseA, purchaseB]
-        movementRepository.save(_ as Movement) >> { args -> args[0] }
-
-        when:
-        def count = service.generateNextCreditInstallments(YearMonth.of(2026, 3))
-
-        then:
-        count == 2
-        1 * movementFactory.create({ it.cuotaActual() == 3 }, 5L, 10L) >> buildMovement(5L)
-        1 * movementFactory.create({ it.cuotaActual() == 5 && it.bank() == null }, 9L, 11L) >> buildMovement(9L)
-    }
-
     def "saveExpenseAll - should save only new movements and report duplicates"() {
         given:
         def dto = new MovementToAdd(
@@ -504,6 +459,28 @@ class MovementAddServiceTest extends Specification {
         1 * movementRepository.saveAll({ it.size() == 1 && it[0].is(fresh) }) >> [fresh]
         1 * eventPublisher.publishEvent(_ as MovementRecord)
         result == new ImportResultRecord(1, 1)
+    }
+
+    def "saveExpenseAll - should load the workspace icons once and publish every record with them"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                [], "DEBITO", "EUR", 0, 0, "SANTANDER", null, null
+        )
+        def first = buildMovementWithCategory(1L)
+        def second = buildMovementWithCategory(1L)
+        movementFactory.create(_ as MovementToAdd) >>> [first, second]
+        movementDuplicateFilter.filterNew([first, second], 1L) >> [first, second]
+        movementRepository.saveAll(_ as List<Movement>) >> [first, second]
+
+        when:
+        service.saveExpenseAll([dto, dto])
+
+        then:
+        1 * workspaceCategoryRepository.findByWorkspaceIdAndIsActiveTrue(1L) >> [workspaceCategoryFor(first)]
+        2 * eventPublisher.publishEvent({
+            it.categories().first().iconName() == "ShoppingCartOutlined"
+        })
     }
 
     def "saveExpenseAll - should not save anything when every movement is a duplicate"() {

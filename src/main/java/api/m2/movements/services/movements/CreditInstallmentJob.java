@@ -22,12 +22,12 @@ import java.time.ZoneOffset;
 @RequiredArgsConstructor
 public class CreditInstallmentJob {
 
-    private final MovementAddService movementAddService;
+    private final SystemMovementAddService systemMovementAddService;
 
     @Scheduled(cron = "0 30 6 1 * *")
     public void generateNextInstallments() {
         var previousMonth = YearMonth.now(ZoneOffset.UTC).minusMonths(1);
-        int count = movementAddService.generateNextCreditInstallments(previousMonth);
+        int count = systemMovementAddService.generateNextCreditInstallments(previousMonth);
         log.info("Cuotas de crédito generadas: {} (a partir de movimientos de {})", count, previousMonth);
     }
 }

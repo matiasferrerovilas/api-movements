@@ -334,7 +334,7 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     /**
      * Compras en cuotas (CREDITO) del mes indicado a las que todavía les falta al menos una
-     * cuota — usado por {@link api.m2.movements.services.movements.MovementAddService
+     * cuota — usado por {@link api.m2.movements.services.movements.SystemMovementAddService
      * #generateNextCreditInstallments} para clonar cada una con la próxima cuota. Sin paginación,
      * así que fetch-joinear categories (ManyToMany) acá no choca con el problema de
      * firstResult/maxResults que sí aplica en {@link #getExpenseBy}.

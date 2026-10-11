@@ -14,6 +14,7 @@ import api.m2.movements.repositories.IncomeRepository;
 import api.m2.movements.services.currencies.CurrencyAddService;
 import api.m2.movements.services.currencies.CurrencyResolver;
 import api.m2.movements.services.movements.MovementAddService;
+import api.m2.movements.services.movements.SystemMovementAddService;
 import api.m2.movements.services.user.UserService;
 import api.m2.movements.services.workspaces.WorkspaceContextService;
 import api.m2.movements.services.workspaces.WorkspaceQueryService;
@@ -40,6 +41,7 @@ public class IncomeAddService {
     private final CurrencyAddService currencyAddService;
     private final CurrencyResolver currencyResolver;
     private final MovementAddService movementAddService;
+    private final SystemMovementAddService systemMovementAddService;
     private final BankRepository bankRepository;
 
     @Transactional
@@ -104,7 +106,7 @@ public class IncomeAddService {
         log.info("Generando {} movimientos de ingreso para usuario {}", incomes.size(), userId);
 
         for (var income : incomes) {
-            movementAddService.saveSystemMovement(
+            systemMovementAddService.saveMovement(
                     this.buildIncomeMovement(income.getAmount(), income.getCurrency().getSymbol(),
                             income.getBank().getDescription(), "Ingreso recurrente"),
                     income.getWorkspaceId(),

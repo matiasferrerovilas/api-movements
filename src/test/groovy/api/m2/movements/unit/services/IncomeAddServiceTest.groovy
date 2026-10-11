@@ -20,6 +20,7 @@ import api.m2.movements.services.workspaces.WorkspaceContextService
 import api.m2.movements.services.workspaces.WorkspaceQueryService
 import api.m2.movements.services.income.IncomeAddService
 import api.m2.movements.services.movements.MovementAddService
+import api.m2.movements.services.movements.SystemMovementAddService
 import api.m2.movements.services.user.UserService
 import org.mapstruct.factory.Mappers
 import spock.lang.Specification
@@ -37,6 +38,7 @@ class IncomeAddServiceTest extends Specification {
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     CurrencyResolver currencyResolver = Mock(CurrencyResolver)
     MovementAddService movementAddService = Mock(MovementAddService)
+    SystemMovementAddService systemMovementAddService = Mock(SystemMovementAddService)
     BankRepository bankRepository = Mock(BankRepository)
 
     IncomeAddService service
@@ -53,6 +55,7 @@ class IncomeAddServiceTest extends Specification {
                 currencyAddService,
                 currencyResolver,
                 movementAddService,
+                systemMovementAddService,
                 bankRepository
         )
     }
@@ -256,7 +259,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        2 * movementAddService.saveSystemMovement(_ as MovementToAdd, 10L, 1L)
+        2 * systemMovementAddService.saveMovement(_ as MovementToAdd, 10L, 1L)
     }
 
     def "generateRecurringIncomeForUser - should return zero when user has no incomes"() {
@@ -268,7 +271,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 0
-        0 * movementAddService.saveSystemMovement(_ as MovementToAdd, _ as Long, _ as Long)
+        0 * systemMovementAddService.saveMovement(_ as MovementToAdd, _ as Long, _ as Long)
     }
 
     def "generateRecurringIncomeForUser - should create movement with correct data"() {
@@ -283,7 +286,7 @@ class IncomeAddServiceTest extends Specification {
         service.generateRecurringIncomeForUser(1L)
 
         then:
-        1 * movementAddService.saveSystemMovement(_ as MovementToAdd, 5L, 1L) >> { List args ->
+        1 * systemMovementAddService.saveMovement(_ as MovementToAdd, 5L, 1L) >> { List args ->
             def m = args[0] as MovementToAdd
             assert m.amount() == new BigDecimal("2500.00")
             assert m.date() == LocalDate.now(ZoneOffset.UTC)
@@ -310,7 +313,7 @@ class IncomeAddServiceTest extends Specification {
 
         then:
         count == 2
-        1 * movementAddService.saveSystemMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, 10L, 1L)
-        1 * movementAddService.saveSystemMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, 20L, 1L)
+        1 * systemMovementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("80000.00") }, 10L, 1L)
+        1 * systemMovementAddService.saveMovement({ MovementToAdd m -> m.amount() == new BigDecimal("20000.00") }, 20L, 1L)
     }
 }
