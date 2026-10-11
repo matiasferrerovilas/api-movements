@@ -139,7 +139,7 @@ src/main/java/api/m2/movements/
 
 ## Despliegue
 
-La CI construye una imagen nativa **arm64** y la publica en Docker Hub (`mferrerovilas/api-movements`). Producción corre en <https://movement.eva-core.com>. En producción hacen falta, entre otras, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `RABBIT_URL`, `REDIS_URL`, `KC_URL_REALM`, `IDENTITY_API_URL` y `CORS_ALLOWED_ORIGINS` (Swagger queda deshabilitado). Las métricas están en `/actuator/prometheus`.
+La CI construye una imagen nativa **arm64** y la publica en Docker Hub. En producción hacen falta, entre otras, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `RABBIT_URL`, `REDIS_URL`, `KC_URL_REALM`, `IDENTITY_API_URL` y `CORS_ALLOWED_ORIGINS` (Swagger queda deshabilitado). Las métricas están en `/actuator/prometheus`.
 
 ## Contribuir
 
