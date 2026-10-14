@@ -1,6 +1,6 @@
 package api.m2.movements.services.onboarding;
 
-import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.IdentityGateway;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.records.currencies.CurrencyRecord;
 import api.m2.movements.records.currencies.CurrencyToAdd;
@@ -38,7 +38,7 @@ public class OnboardingService {
     private final UserSettingService userSettingService;
     private final CurrencyAddService currencyAddService;
     private final WorkspaceCurrencyService workspaceCurrencyService;
-    private final IdentityClient identityClient;
+    private final IdentityGateway identityGateway;
 
     @Transactional(rollbackFor = Exception.class)
     public void finish(OnBoardingForm onBoardingForm) {
@@ -49,7 +49,7 @@ public class OnboardingService {
         // Alta de usuario + workspaces iniciales en una sola llamada atómica a identity — si la
         // creación de los workspaces falla del lado de identity, el usuario recién creado también
         // se revierte allá, en vez de quedar huérfano como pasaba con dos POST separados.
-        var onboardingResult = identityClient.startOnboarding(new OnboardingStartRequest(userToAdd, workspacesToAdd));
+        var onboardingResult = identityGateway.startOnboarding(new OnboardingStartRequest(userToAdd, workspacesToAdd));
         var user = onboardingResult.user();
 
         var defaultWorkspace = onboardingResult.workspaces().stream()
@@ -152,6 +152,6 @@ public class OnboardingService {
     }
 
     public void markTourAsSeen() {
-        identityClient.markTourAsSeen();
+        identityGateway.markTourAsSeen();
     }
 }

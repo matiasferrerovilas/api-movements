@@ -1,6 +1,6 @@
 package api.m2.movements.services.user;
 
-import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.IdentityGateway;
 import api.m2.movements.clients.identity.requests.UserToAdd;
 import api.m2.movements.enums.UserType;
 import api.m2.movements.exceptions.PermissionDeniedException;
@@ -20,12 +20,12 @@ public class UserAddService {
     private static final String GIVEN_NAME_CLAIM = "given_name";
     private static final String FAMILY_NAME_CLAIM = "family_name";
 
-    private final IdentityClient identityClient;
+    private final IdentityGateway identityGateway;
 
     /**
      * Arma el payload de alta de usuario a partir del JWT autenticado, sin llamar todavía a
      * identity — lo usa {@code OnboardingService.finish()} para combinarlo con la creación de
-     * workspaces en una sola llamada atómica ({@link IdentityClient#startOnboarding}).
+     * workspaces en una sola llamada atómica ({@link IdentityGateway#startOnboarding}).
      */
     public UserToAdd buildUserToAdd(String userType) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -50,6 +50,6 @@ public class UserAddService {
 
     @Transactional
     public void changeUserFirstLoginStatus(Long userId) {
-        identityClient.changeUserFirstLoginStatus(userId);
+        identityGateway.changeUserFirstLoginStatus(userId);
     }
 }

@@ -1,6 +1,6 @@
 package api.m2.movements.services.workspaces;
 
-import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.IdentityGateway;
 import api.m2.movements.clients.identity.requests.AcceptRejectInvitationDTO;
 import api.m2.movements.clients.identity.requests.WorkspaceSendInvitationDTO;
 import api.m2.movements.configuration.CacheConfiguration;
@@ -26,11 +26,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceQueryService {
-    private final IdentityClient identityClient;
+    private final IdentityGateway identityGateway;
     private final UserService userService;
 
     public List<WorkspaceMemberDTO> getWorkspaces() {
-        return identityClient.getWorkspaces();
+        return identityGateway.getWorkspaces();
     }
 
     // Cacheado por 5hs (ver CacheConfiguration.IDENTITY_CACHE). @Cacheable en un método void solo
@@ -42,7 +42,7 @@ public class WorkspaceQueryService {
     @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'membership:' + #workspaceId + ':' + #userId")
     public void verifyUserIsMemberOfWorkspace(Long workspaceId, Long userId) {
         try {
-            identityClient.verifyMembership(workspaceId, userId);
+            identityGateway.verifyMembership(workspaceId, userId);
         } catch (RestClientResponseException e) {
             throw new PermissionDeniedException("No tienes permiso para operar sobre este recurso");
         }
@@ -65,7 +65,7 @@ public class WorkspaceQueryService {
     }
 
     public List<WorkspaceInvitationDTO> getMyInvitations() {
-        return identityClient.getInvitations();
+        return identityGateway.getInvitations();
     }
 
     /**
@@ -77,7 +77,7 @@ public class WorkspaceQueryService {
     @Cacheable(cacheNames = CacheConfiguration.NAMES_CACHE, key = "'workspace:' + #workspaceId", unless = "#result == null")
     public String findWorkspaceNameById(Long workspaceId) {
         try {
-            return identityClient.getWorkspaces().stream()
+            return identityGateway.getWorkspaces().stream()
                     .filter(workspace -> workspaceId.equals(workspace.workspaceId()))
                     .map(WorkspaceMemberDTO::workspaceName)
                     .findFirst()
@@ -90,18 +90,18 @@ public class WorkspaceQueryService {
     }
 
     public void sendInvitation(Long workspaceId, @Valid WorkspaceSendInvitationDTO body) {
-        identityClient.sendInvitation(workspaceId, body);
+        identityGateway.sendInvitation(workspaceId, body);
     }
 
     public void acceptRejectInvitation(@Valid AcceptRejectInvitationDTO body) {
-        identityClient.acceptRejectInvitation(body);
+        identityGateway.acceptRejectInvitation(body);
     }
 
     public List<WorkspaceSentInvitationDTO> getSentInvitations() {
-        return identityClient.getSentInvitations();
+        return identityGateway.getSentInvitations();
     }
 
     public void cancelInvitation(Long invitationId) {
-        identityClient.cancelInvitation(invitationId);
+        identityGateway.cancelInvitation(invitationId);
     }
 }

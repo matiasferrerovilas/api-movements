@@ -4,7 +4,7 @@ import api.m2.movements.entities.WorkspaceCurrency
 import api.m2.movements.entities.commons.Bank
 import api.m2.movements.entities.commons.Currency
 
-import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.IdentityGateway
 import api.m2.movements.clients.identity.requests.OnboardingStartRequest
 import api.m2.movements.clients.identity.requests.UserToAdd
 import api.m2.movements.clients.identity.response.OnboardingStartResponse
@@ -36,14 +36,14 @@ class OnboardingServiceTest extends Specification {
     UserSettingService userSettingService = Mock(UserSettingService)
     CurrencyAddService currencyAddService = Mock(CurrencyAddService)
     WorkspaceCurrencyService workspaceCurrencyService = Mock(WorkspaceCurrencyService)
-    IdentityClient identityClient = Mock(IdentityClient)
+    IdentityGateway identityGateway = Mock(IdentityGateway)
 
     OnboardingService service
 
     def setup() {
         service = new OnboardingService(userAddService, incomeAddService, bankAddService,
                 workspaceCategoryAssociationService, userSettingService, currencyAddService,
-                workspaceCurrencyService, identityClient)
+                workspaceCurrencyService, identityGateway)
     }
 
     def user(Long id) {
@@ -60,7 +60,7 @@ class OnboardingServiceTest extends Specification {
     def stubStartOnboarding(String userType, UserMe loggedUser, List<WorkspaceAdded> workspaces) {
         def builtUser = userToAdd(userType)
         userAddService.buildUserToAdd(userType) >> builtUser
-        identityClient.startOnboarding(_ as OnboardingStartRequest) >> new OnboardingStartResponse(loggedUser, workspaces)
+        identityGateway.startOnboarding(_ as OnboardingStartRequest) >> new OnboardingStartResponse(loggedUser, workspaces)
         return builtUser
     }
 
@@ -125,7 +125,7 @@ class OnboardingServiceTest extends Specification {
         service.finish(form)
 
         then:
-        1 * identityClient.startOnboarding({ OnboardingStartRequest req ->
+        1 * identityGateway.startOnboarding({ OnboardingStartRequest req ->
             req.workspaces()*.description() == ["Ahorros", "Principal"]
         }) >> new OnboardingStartResponse(loggedUser, [
                 new WorkspaceAdded(200L, "Ahorros"),

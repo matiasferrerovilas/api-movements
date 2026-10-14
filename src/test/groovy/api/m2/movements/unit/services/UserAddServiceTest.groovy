@@ -1,7 +1,7 @@
 package api.m2.movements.unit.services
 
 
-import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.IdentityGateway
 import api.m2.movements.enums.UserType
 import api.m2.movements.exceptions.PermissionDeniedException
 
@@ -15,12 +15,12 @@ import spock.lang.Specification
 
 class UserAddServiceTest extends Specification {
 
-    IdentityClient identityClient = Mock(IdentityClient)
+    IdentityGateway identityGateway = Mock(IdentityGateway)
 
     UserAddService service
 
     def setup() {
-        service = new UserAddService(identityClient)
+        service = new UserAddService(identityGateway)
     }
 
     def cleanup() {
@@ -43,7 +43,7 @@ class UserAddServiceTest extends Specification {
         result.familyName() == familyName
         result.isFirstLogin() == true
         result.userType() == UserType.PERSONAL
-        0 * identityClient._
+        0 * identityGateway._
     }
 
     def "buildUserToAdd - should build the payload with null givenName and familyName when not in JWT"() {
@@ -90,12 +90,12 @@ class UserAddServiceTest extends Specification {
         thrown(PermissionDeniedException)
     }
 
-    def "changeUserFirstLoginStatus - should delegate to IdentityClient"() {
+    def "changeUserFirstLoginStatus - should delegate to IdentityGateway"() {
         when:
         service.changeUserFirstLoginStatus(1L)
 
         then:
-        1 * identityClient.changeUserFirstLoginStatus(1L)
+        1 * identityGateway.changeUserFirstLoginStatus(1L)
     }
 
     private void setupJwtSecurityContext(String email, String givenName, String familyName) {

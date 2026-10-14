@@ -1,6 +1,6 @@
 package api.m2.movements.services.workspaces;
 
-import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.IdentityGateway;
 import api.m2.movements.enums.UserSettingKey;
 import api.m2.movements.exceptions.BusinessException;
 import api.m2.movements.clients.identity.requests.AddWorkspaceRecord;
@@ -20,7 +20,7 @@ import java.util.List;
 public class WorkspaceAddService {
     private final UserService userService;
     private final UserSettingService userSettingService;
-    private final IdentityClient identityClient;
+    private final IdentityGateway identityGateway;
     private final IdentityCacheInvalidator identityCacheInvalidator;
 
     @Transactional
@@ -28,14 +28,14 @@ public class WorkspaceAddService {
         if (StringUtils.isAllBlank(addWorkspaceRecord.description())) {
             throw new BusinessException("La descripción del workspace no puede estar vacía");
         }
-        identityClient.createWorkspaces(List.of(addWorkspaceRecord));
+        identityGateway.createWorkspaces(List.of(addWorkspaceRecord));
     }
 
     @Transactional
     public void leaveWorkspace(Long workspaceId) {
         Long userId = userService.getMe().id();
 
-        identityClient.leaveWorkspace(workspaceId);
+        identityGateway.leaveWorkspace(workspaceId);
         identityCacheInvalidator.invalidateAuthorization();
 
         userSettingService.getDefaultWorkspaceId(userId)
@@ -46,7 +46,7 @@ public class WorkspaceAddService {
     }
 
     public void removeMember(Long workspaceId, Long targetUserId) {
-        identityClient.removeMember(workspaceId, targetUserId);
+        identityGateway.removeMember(workspaceId, targetUserId);
         identityCacheInvalidator.invalidateAuthorization();
 
         // Igual que leaveWorkspace: si el workspace del que se lo echó era el default del

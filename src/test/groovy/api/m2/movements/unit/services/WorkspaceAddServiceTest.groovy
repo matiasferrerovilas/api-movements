@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.IdentityGateway
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.BusinessException
 import api.m2.movements.enums.UserSettingKey
@@ -17,7 +17,7 @@ class WorkspaceAddServiceTest extends Specification {
 
     UserService userService = Mock(UserService)
     UserSettingService userSettingService = Mock(UserSettingService)
-    IdentityClient identityClient = Mock(IdentityClient)
+    IdentityGateway identityGateway = Mock(IdentityGateway)
     IdentityCacheInvalidator identityCacheInvalidator = Mock(IdentityCacheInvalidator)
 
     WorkspaceAddService service
@@ -26,7 +26,7 @@ class WorkspaceAddServiceTest extends Specification {
         service = new WorkspaceAddService(
                 userService,
                 userSettingService,
-                identityClient,
+                identityGateway,
                 identityCacheInvalidator
         )
     }
@@ -35,7 +35,7 @@ class WorkspaceAddServiceTest extends Specification {
         return new UserMe(id, "user@test.com", "User", null, "PERSONAL", new UserMe.Metadata(false, true, [], null))
     }
 
-    def "createWorkspace - should delegate to IdentityClient"() {
+    def "createWorkspace - should delegate to IdentityGateway"() {
         given:
         def record = new AddWorkspaceRecord("Viajes")
 
@@ -43,7 +43,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.createWorkspace(record)
 
         then:
-        1 * identityClient.createWorkspaces([record])
+        1 * identityGateway.createWorkspaces([record])
     }
 
     def "createWorkspace - should throw BusinessException when description is blank"() {
@@ -55,13 +55,13 @@ class WorkspaceAddServiceTest extends Specification {
 
         then:
         thrown(BusinessException)
-        0 * identityClient.createWorkspaces(_ as List)
+        0 * identityGateway.createWorkspaces(_ as List)
     }
 
-    def "createWorkspace - should propagate IdentityClient failure"() {
+    def "createWorkspace - should propagate IdentityGateway failure"() {
         given:
         def record = new AddWorkspaceRecord("Hogar")
-        identityClient.createWorkspaces([record]) >> {
+        identityGateway.createWorkspaces([record]) >> {
             throw HttpClientErrorException.create(HttpStatus.CONFLICT, "Conflict", null, null, null)
         }
 
@@ -72,10 +72,10 @@ class WorkspaceAddServiceTest extends Specification {
         thrown(HttpClientErrorException)
     }
 
-    def "leaveWorkspace - should propagate IdentityClient failure"() {
+    def "leaveWorkspace - should propagate IdentityGateway failure"() {
         given:
         userService.getMe() >> userMe(5L)
-        identityClient.leaveWorkspace(99L) >> {
+        identityGateway.leaveWorkspace(99L) >> {
             throw HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null)
         }
 
@@ -96,7 +96,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.leaveWorkspace(99L)
 
         then:
-        1 * identityClient.leaveWorkspace(99L)
+        1 * identityGateway.leaveWorkspace(99L)
         1 * identityCacheInvalidator.invalidateAuthorization()
     }
 
@@ -108,7 +108,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.removeMember(10L, 7L)
 
         then:
-        1 * identityClient.removeMember(10L, 7L)
+        1 * identityGateway.removeMember(10L, 7L)
         1 * identityCacheInvalidator.invalidateAuthorization()
     }
 
@@ -121,7 +121,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.leaveWorkspace(10L)
 
         then:
-        1 * identityClient.leaveWorkspace(10L)
+        1 * identityGateway.leaveWorkspace(10L)
         1 * userSettingService.deleteByKey(UserSettingKey.DEFAULT_WORKSPACE)
     }
 
@@ -134,11 +134,11 @@ class WorkspaceAddServiceTest extends Specification {
         service.leaveWorkspace(10L)
 
         then:
-        1 * identityClient.leaveWorkspace(10L)
+        1 * identityGateway.leaveWorkspace(10L)
         0 * userSettingService.deleteByKey(_)
     }
 
-    def "removeMember - should delegate to IdentityClient"() {
+    def "removeMember - should delegate to IdentityGateway"() {
         given:
         userSettingService.getDefaultWorkspaceId(7L) >> Optional.empty()
 
@@ -146,7 +146,7 @@ class WorkspaceAddServiceTest extends Specification {
         service.removeMember(10L, 7L)
 
         then:
-        1 * identityClient.removeMember(10L, 7L)
+        1 * identityGateway.removeMember(10L, 7L)
     }
 
     def "removeMember - should clear the removed user's DEFAULT_WORKSPACE setting when it points to that workspace"() {
@@ -171,9 +171,9 @@ class WorkspaceAddServiceTest extends Specification {
         0 * userSettingService.deleteByKeyForUser(_, _)
     }
 
-    def "removeMember - should propagate IdentityClient failure (e.g. actor not authorized)"() {
+    def "removeMember - should propagate IdentityGateway failure (e.g. actor not authorized)"() {
         given:
-        identityClient.removeMember(10L, 7L) >> {
+        identityGateway.removeMember(10L, 7L) >> {
             throw HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", null, null, null)
         }
 

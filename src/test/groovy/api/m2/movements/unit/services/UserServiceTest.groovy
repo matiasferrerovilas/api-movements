@@ -1,6 +1,6 @@
 package api.m2.movements.unit.services
 
-import api.m2.movements.clients.identity.IdentityClient
+import api.m2.movements.clients.identity.IdentityGateway
 import api.m2.movements.clients.identity.response.UserMe
 import api.m2.movements.exceptions.PermissionDeniedException
 import api.m2.movements.exceptions.ServiceException
@@ -18,13 +18,13 @@ import spock.lang.Specification
 
 class UserServiceTest extends Specification {
 
-    IdentityClient identityClient = Mock(IdentityClient)
+    IdentityGateway identityGateway = Mock(IdentityGateway)
     CacheManager cacheManager = new ConcurrentMapCacheManager("names")
 
     UserService service
 
     def setup() {
-        service = new UserService(identityClient, cacheManager)
+        service = new UserService(identityGateway, cacheManager)
     }
 
     def cleanup() {
@@ -92,7 +92,7 @@ class UserServiceTest extends Specification {
     def "getUserNamesByIds - should return a map of user id to given name"() {
         given:
         def ids = [1L, 2L]
-        identityClient.getUsersByIds(ids) >> [
+        identityGateway.getUsersByIds(ids) >> [
                 new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null),
                 new UserMe(2L, "b@b.com", "Ana", "Perez", "ADMIN", null)
         ]
@@ -106,33 +106,33 @@ class UserServiceTest extends Specification {
 
     def "getUserNamesByIds - should only ask api-identity for the names that are not cached"() {
         given:
-        identityClient.getUsersByIds([1L]) >> [new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null)]
+        identityGateway.getUsersByIds([1L]) >> [new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null)]
         service.getUserNamesByIds([1L])
 
         when:
         def result = service.getUserNamesByIds([1L, 2L])
 
         then:
-        1 * identityClient.getUsersByIds([2L]) >> [new UserMe(2L, "b@b.com", "Ana", "Perez", "ADMIN", null)]
+        1 * identityGateway.getUsersByIds([2L]) >> [new UserMe(2L, "b@b.com", "Ana", "Perez", "ADMIN", null)]
         result == [1L: "Matias", 2L: "Ana"]
     }
 
     def "getUserNamesByIds - should not call api-identity at all when every name is cached"() {
         given:
-        identityClient.getUsersByIds([1L]) >> [new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null)]
+        identityGateway.getUsersByIds([1L]) >> [new UserMe(1L, "a@a.com", "Matias", "Fernandez", "ADMIN", null)]
         service.getUserNamesByIds([1L])
 
         when:
         def result = service.getUserNamesByIds([1L])
 
         then:
-        0 * identityClient.getUsersByIds(_)
+        0 * identityGateway.getUsersByIds(_)
         result == [1L: "Matias"]
     }
 
     def "getUserNamesByIds - should return an empty map instead of failing when api-identity is unreachable"() {
         given:
-        identityClient.getUsersByIds(_) >> { throw new ResourceAccessException("read timed out") }
+        identityGateway.getUsersByIds(_) >> { throw new ResourceAccessException("read timed out") }
 
         expect:
         service.getUserNamesByIds([1L]) == [:]
@@ -140,7 +140,7 @@ class UserServiceTest extends Specification {
 
     def "getUserNamesByIds - should return an empty map instead of failing on a server error from api-identity"() {
         given:
-        identityClient.getUsersByIds(_) >> { throw new ServiceException("api-identity caido") }
+        identityGateway.getUsersByIds(_) >> { throw new ServiceException("api-identity caido") }
 
         expect:
         service.getUserNamesByIds([1L]) == [:]
@@ -149,7 +149,7 @@ class UserServiceTest extends Specification {
     def "getUserNamesByIds - should retry on the next call after a failure, because failures are not cached"() {
         given:
         def calls = 0
-        identityClient.getUsersByIds([1L]) >> {
+        identityGateway.getUsersByIds([1L]) >> {
             if (calls++ == 0) {
                 throw new ResourceAccessException("read timed out")
             }
@@ -167,7 +167,7 @@ class UserServiceTest extends Specification {
 
     def "getUserNamesByIds - should skip users without a given name instead of failing"() {
         given:
-        identityClient.getUsersByIds([1L, 2L]) >> [
+        identityGateway.getUsersByIds([1L, 2L]) >> [
                 new UserMe(1L, "a@a.com", null, null, "ADMIN", null),
                 new UserMe(2L, "b@b.com", "Ana", "Perez", "ADMIN", null)
         ]

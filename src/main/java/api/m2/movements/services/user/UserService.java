@@ -1,6 +1,6 @@
 package api.m2.movements.services.user;
 
-import api.m2.movements.clients.identity.IdentityClient;
+import api.m2.movements.clients.identity.IdentityGateway;
 import api.m2.movements.configuration.CacheConfiguration;
 import api.m2.movements.exceptions.PermissionDeniedException;
 import api.m2.movements.exceptions.ServiceException;
@@ -31,7 +31,7 @@ public class UserService {
 
     private static final String USER_NAME_KEY_PREFIX = "user:";
 
-    private final IdentityClient identityClient;
+    private final IdentityGateway identityGateway;
     private final CacheManager cacheManager;
 
     // Cacheado por 5hs (ver CacheConfiguration.IDENTITY_CACHE) — antes esto disparaba un
@@ -49,7 +49,7 @@ public class UserService {
     // no por Class.forName, así que esquiva el problema en vez de requerir registrar el tipo.
     @Cacheable(cacheNames = CacheConfiguration.IDENTITY_CACHE, key = "'me:' + @userService.getAuthenticatedEmail()")
     public UserMe getMe() {
-        return identityClient.getMe(null);
+        return identityGateway.getMe(null);
     }
 
     /** Same as {@link #getMe()}, but also resolves the caller's role in {@code workspaceId} — null
@@ -57,7 +57,7 @@ public class UserService {
      * own notion of "active workspace"); api-identity has no such notion itself. */
     @Cacheable(cacheNames = CacheConfiguration.WORKSPACE_ROLE_CACHE, key = "'me:' + @userService.getAuthenticatedEmail() + ':' + #workspaceId")
     public UserMe getMe(Long workspaceId) {
-        return identityClient.getMe(workspaceId);
+        return identityGateway.getMe(workspaceId);
     }
 
     /**
@@ -87,7 +87,7 @@ public class UserService {
     private Map<Long, String> fetchUserNames(List<Long> ids, Cache cache) {
         try {
             Map<Long, String> fetched = new HashMap<>();
-            for (UserMe user : identityClient.getUsersByIds(ids)) {
+            for (UserMe user : identityGateway.getUsersByIds(ids)) {
                 if (user.givenName() == null) {
                     continue;
                 }
@@ -107,7 +107,7 @@ public class UserService {
     /** Nombre para mostrar: "Nombre Apellido" si hay, si no el email. Tolera givenName/familyName
      * en null (a diferencia de {@link #getUserNamesByIds}, que rompe con un value null en toMap). */
     public Map<Long, String> getUserDisplayNamesByIds(List<Long> ids) {
-        return identityClient.getUsersByIds(ids).stream()
+        return identityGateway.getUsersByIds(ids).stream()
                 .collect(Collectors.toMap(UserMe::id, UserService::displayName));
     }
 
