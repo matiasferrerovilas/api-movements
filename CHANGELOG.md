@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.0] - 2026-11-01
+
+### Changed
+- El gasto con tarjeta (`CREDITO`) cuenta en el mes en que se **paga** el resumen (el mes siguiente a
+  su fecha), no en el de la compra. Nueva columna generada `movements.cash_date` (changeset 065,
+  indexada con `workspace_id`): `date + 1 mes` para `CREDITO`, `date` para el resto. Pasan a
+  agruparse por `cash_date` el resumen mensual (totales por moneda y en USD, comparación con el mes
+  anterior, desglose y top por categoría, "Por usuario"), el balance por rango y por categoría y
+  año, la evolución mensual (ahora query nativa) y las proyecciones. Los presupuestos **no**
+  cambian: siguen por fecha de compra, porque topean el gasto al comprar.
+- Proyecciones: el balance actual solo suma lo que ya salió de la cuenta (`cash_date <= hoy`), así
+  que el crédito todavía no pagado no se descuenta hasta su mes de pago. Coincide con el promedio
+  mensual, que ya iba por fecha de pago.
+
 ## [2.14.1] - 2026-10-16
 
 ### Fixed
