@@ -41,6 +41,10 @@ public record MovementToAdd(
         @Size(max = 36, message = "El clientId no puede superar 36 caracteres")
         String clientId
 ) {
+    // Constructor de compatibilidad para los callers internos (cron de cuotas, suscripciones, ingresos,
+    // importación de archivos), que nunca mandan clientId. ParameterNumber no aplica: el DTO tiene
+    // 12 componentes y este constructor solo delega al canónico.
+    @SuppressWarnings("checkstyle:ParameterNumber")
     public MovementToAdd(BigDecimal amount, LocalDate date, String description,
                          List<CategoryUpdateRecord> categories, String type, String currency,
                          Integer cuotaActual, Integer cuotasTotales, String bank,
