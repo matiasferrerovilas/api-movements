@@ -22,12 +22,15 @@ import java.util.Set;
 
 @Repository
 public interface MovementRepository extends JpaRepository<Movement, Long> {
+
+    Optional<Movement> findByWorkspaceIdAndClientId(Long workspaceId, String clientId);
+
     @Query(value = """
             SELECT COALESCE(SUM(m.amount), 0)
             FROM movements m
             WHERE m.user_id = :userId
-                  AND (m.date >= :startDate)
-                  AND (m.date  <= :endDate)
+                  AND (m.cash_date >= :startDate)
+                  AND (m.cash_date <= :endDate)
                   AND m.type IN (:type)
                   AND m.currency_id IN (:currencies)
                    AND m.workspace_id IN (:groups)
@@ -77,19 +80,19 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     @Query(value = """
         SELECT
                     ca.description AS category,
-                    CAST(YEAR(g.`date`) AS SIGNED) as year,
-                    CAST(MONTH(g.`date`) AS SIGNED) as month,
+                    CAST(YEAR(g.cash_date) AS SIGNED) as year,
+                    CAST(MONTH(g.cash_date) AS SIGNED) as month,
                     c.symbol AS currencySymbol,
                     SUM(CASE WHEN g.type = "REINTEGRO" THEN -g.amount ELSE g.amount END) AS total
                         FROM movements g
                         INNER JOIN currency c ON g.currency_id = c.id
                         INNER JOIN movement_categories mc ON mc.movement_id = g.id
                         INNER JOIN category ca ON mc.category_id = ca.id
-                            WHERE YEAR(g.`date`) = :year AND MONTH(g.`date`) = :month
+                            WHERE YEAR(g.cash_date) = :year AND MONTH(g.cash_date) = :month
                                   AND g.type !="INGRESO"
                                    AND g.workspace_id IN (:groups)
                               AND c.symbol IN (:currencies)
-                        GROUP BY ca.description, CAST(YEAR(g.`date`) AS SIGNED), c.symbol, CAST(MONTH(g.`date`) AS SIGNED), g.workspace_id
+                        GROUP BY ca.description, CAST(YEAR(g.cash_date) AS SIGNED), c.symbol, CAST(MONTH(g.cash_date) AS SIGNED), g.workspace_id
     """, nativeQuery = true)
     Set<BalanceByCategoryRecord> getBalanceWithCategoryByYear(Integer year,
                                                               Integer month,
@@ -112,25 +115,22 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             @Param("month") int month
     );
 
-    @Query("""
-    SELECT MONTH(m.date)   AS month,
-           c.symbol        AS currencySymbol,
-           SUM(CASE WHEN m.type IN (
-                api.m2.movements.enums.MovementType.DEBITO,
-                api.m2.movements.enums.MovementType.CREDITO
-              ) THEN m.amount
-              WHEN m.type = api.m2.movements.enums.MovementType.REINTEGRO THEN -m.amount
-              ELSE 0 END) AS spent,
-           SUM(CASE WHEN m.type = api.m2.movements.enums.MovementType.INGRESO
-              THEN m.amount ELSE 0 END)   AS income
-    FROM Movement m
-    JOIN m.currency c
-    WHERE YEAR(m.date) = :year
+    // Nativa (no JPQL) porque agrupa por cash_date, columna generada que la entidad no mapea.
+    @Query(value = """
+    SELECT MONTH(m.cash_date) AS month,
+           c.symbol           AS currencySymbol,
+           SUM(CASE WHEN m.type IN ('DEBITO', 'CREDITO') THEN m.amount
+                    WHEN m.type = 'REINTEGRO' THEN -m.amount
+                    ELSE 0 END) AS spent,
+           SUM(CASE WHEN m.type = 'INGRESO' THEN m.amount ELSE 0 END) AS income
+    FROM movements m
+    JOIN currency c ON m.currency_id = c.id
+    WHERE YEAR(m.cash_date) = :year
       AND (:#{#workspaceIds == null || #workspaceIds.isEmpty()} = true
-           OR m.workspaceId IN :workspaceIds)
-    GROUP BY MONTH(m.date), c.symbol
-    ORDER BY MONTH(m.date)
-    """)
+           OR m.workspace_id IN (:workspaceIds))
+    GROUP BY MONTH(m.cash_date), c.symbol
+    ORDER BY MONTH(m.cash_date)
+    """, nativeQuery = true)
     List<MonthlyEvolutionProjection> findMonthlyEvolution(
             @Param("year") Integer year,
             @Param("workspaceIds") List<Long> workspaceIds
@@ -141,8 +141,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type = :type
               AND c.symbol = :currency
             """, nativeQuery = true)
@@ -175,8 +175,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.user_id IS NOT NULL
             GROUP BY m.user_id, c.symbol
             """, nativeQuery = true)
@@ -186,8 +186,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type = :type
               AND m.exchange_rate IS NOT NULL
             """, nativeQuery = true)
@@ -202,8 +202,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type IN (:types)
               AND c.symbol = :currency
             """, nativeQuery = true)
@@ -215,8 +215,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             SELECT COALESCE(SUM(m.amount / m.exchange_rate), 0)
             FROM movements m
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type IN (:types)
               AND m.exchange_rate IS NOT NULL
             """, nativeQuery = true)
@@ -246,8 +246,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             FROM movements m
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type IN (:types)
               AND m.exchange_rate IS NOT NULL
               AND c.symbol <> :currency
@@ -276,8 +276,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             INNER JOIN category ca ON mc.category_id = ca.id
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type IN ('DEBITO', 'CREDITO', 'REINTEGRO')
               AND c.symbol = :currency
             GROUP BY ca.description
@@ -294,8 +294,8 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
             INNER JOIN category ca ON mc.category_id = ca.id
             INNER JOIN currency c ON m.currency_id = c.id
             WHERE m.workspace_id = :workspaceId
-              AND YEAR(m.date) = :year
-              AND MONTH(m.date) = :month
+              AND YEAR(m.cash_date) = :year
+              AND MONTH(m.cash_date) = :month
               AND m.type IN ('DEBITO', 'CREDITO', 'REINTEGRO')
               AND c.symbol = :currency
             GROUP BY ca.description

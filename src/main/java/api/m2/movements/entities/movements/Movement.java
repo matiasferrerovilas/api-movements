@@ -106,4 +106,9 @@ public class Movement {
 
     @Column(name = "exchange_rate", precision = 15, scale = 6)
     private BigDecimal exchangeRate;
+
+    // Clave de idempotencia del alta (ver MovementToAdd.clientId). Null para movimientos que no
+    // vienen de un cliente con cola offline; único por workspace cuando está presente.
+    @Column(name = "client_id", length = 36)
+    private String clientId;
 }

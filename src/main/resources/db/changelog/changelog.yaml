@@ -188,3 +188,9 @@ databaseChangeLog:
   - include:
       file: 063_create_table_category_rule.sql
       relativeToChangelogFile: true
+  - include:
+      file: 064_add_movement_client_id.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 065_add_movement_cash_date.sql
+      relativeToChangelogFile: true

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.1] - 2026-10-16
+
+### Fixed
+- Alta de movimientos idempotente: `POST /v1/expenses` acepta un `clientId` opcional (UUID generado
+  por el cliente, changeset 064, único por workspace). Si llega repetido devuelve el movimiento ya
+  creado sin publicar evento ni guardar otro. Evita los duplicados cuando la app móvil reenvía su
+  cola offline después de que la respuesta original se perdió por un timeout.
+
 ## [2.14.0] - 2026-10-11
 
 ### Added

@@ -35,7 +35,16 @@ public class MovementAddService implements MovementSaver {
     /** Workspace y owner salen del contexto del request; además valida rol de escritura. */
     @Transactional
     public MovementRecord saveMovement(@Valid MovementToAdd dto) {
-        return this.saveAndLog(movementFactory.create(dto), dto);
+        var movement = movementFactory.create(dto);
+        if (dto.clientId() != null) {
+            var existing = movementRepository.findByWorkspaceIdAndClientId(
+                    movement.getWorkspaceId(), dto.clientId());
+            if (existing.isPresent()) {
+                log.info("Alta repetida ignorada: id={}, clientId={}", existing.get().getId(), dto.clientId());
+                return this.enrich(existing.get(), List.of());
+            }
+        }
+        return this.saveAndLog(movement, dto);
     }
 
     @Override

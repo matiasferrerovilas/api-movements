@@ -129,6 +129,43 @@ class MovementAddServiceTest extends Specification {
         1 * eventPublisher.publishEvent(_ as MovementRecord)
     }
 
+    def "saveMovement - should return the existing movement and not save again when clientId was already used"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null, "client-1"
+        )
+        def existing = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >> buildMovement(1L)
+        movementRepository.findByWorkspaceIdAndClientId(1L, "client-1") >> Optional.of(existing)
+
+        when:
+        def result = service.saveMovement(dto)
+
+        then:
+        0 * movementRepository.save(_)
+        0 * eventPublisher.publishEvent(_)
+        result.id() == 42L
+    }
+
+    def "saveMovement - should save normally when clientId is new"() {
+        given:
+        def dto = new MovementToAdd(
+                new BigDecimal("500.00"), LocalDate.now(), "Supermercado",
+                ["HOGAR"], "GASTO", "ARS", null, null, null, null, null, "client-2"
+        )
+        def movement = buildMovement(1L)
+        movementFactory.create(_ as MovementToAdd) >> movement
+        movementRepository.findByWorkspaceIdAndClientId(1L, "client-2") >> Optional.empty()
+
+        when:
+        service.saveMovement(dto)
+
+        then:
+        1 * movementRepository.save(_ as Movement) >> movement
+        1 * eventPublisher.publishEvent(_ as MovementRecord)
+    }
+
     def "saveMovement - should publish MovementRecord enriched with workspace and owner metadata"() {
         given:
         def dto = new MovementToAdd(
