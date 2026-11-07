@@ -5,11 +5,11 @@ buildscript {
 }
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.1.0'
+    id 'org.springframework.boot' version '4.1.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.liquibase.gradle' version '3.1.0'
-    id 'org.graalvm.buildtools.native' version '1.1.1'
-    id 'org.hibernate.orm' version '7.4.1.Final'
+    id 'org.graalvm.buildtools.native' version '1.1.14'
+    id 'org.hibernate.orm' version '7.4.3.Final'
     id 'checkstyle'
     id 'jacoco'
     id 'groovy'
@@ -58,19 +58,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    // Solo actuamos como resource server validando JWTs de Keycloak — nunca emitimos tokens ni
-    // somos un cliente OAuth2. Antes se declaraban también los starters de
-    // oauth2-authorization-server y security-oauth2-client, sin usar una sola clase de ninguno de
-    // los dos; las clases de resource-server (JwtDecoder, NimbusJwtDecoder, .oauth2ResourceServer())
-    // llegaban de rebote como dependencia transitiva de esos starters. Peso muerto de
-    // classpath/native-image para un rol que el servicio no cumple — este starter es el único que
-    // hace falta.
+
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
 
     // Cache
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -163,10 +157,10 @@ graalvmNative {
     binaries {
         main {
             imageName = 'application'
-            javaLauncher = javaToolchains.launcherFor {
+            javaLauncher.set(javaToolchains.launcherFor {
                 languageVersion = JavaLanguageVersion.of(25)
                 vendor = JvmVendorSpec.GRAAL_VM
-            }
+            })
             classpath.from(sourceSets.main.output)
         }
     }
